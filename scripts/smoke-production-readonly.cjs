@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+const fs = require('node:fs');
+const path = require('node:path');
+
 const productionBaseEnvName = 'SKR_PRODUCTION_BASE_URL';
 const canonicalApexHost = 'spacekonceptrental.com';
 const approvedWwwHost = `www.${canonicalApexHost}`;
@@ -9,16 +12,21 @@ const requestTimeoutMs = 10_000;
 const maxBodyBytes = 128 * 1024;
 const maxClientAssetBytes = 512 * 1024;
 const leakageScanOverlapCharacters = 4096;
-const maxClientAssetCount = 32;
+const maxClientAssetCount = 96;
 const safeMethods = new Set(['GET', 'HEAD']);
 const redirectStatuses = new Set([301, 302, 303, 307, 308]);
+const pageFilePattern = /^page\.(?:js|jsx|ts|tsx)$/;
+const staticRouteSegmentPattern = /^[a-z0-9][a-z0-9-]*$/;
+const repoRoot = path.resolve(__dirname, '..');
+const defaultAppDirectory = path.join(repoRoot, 'website', 'app');
+const defaultClientAssetDirectory = path.join(
+  repoRoot,
+  'website',
+  '.next',
+  'static',
+);
 
-const routeChecks = [
-  { path: '/', expectedStatuses: [200] },
-  { path: '/catalogue', expectedStatuses: [200] },
-  { path: '/setups', expectedStatuses: [200] },
-  { path: '/about', expectedStatuses: [200] },
-  { path: '/quote', expectedStatuses: [200] },
+const boundaryRouteChecks = [
   { path: '/contact', expectedStatuses: [404] },
   {
     path: '/admin',
@@ -113,6 +121,227 @@ function assertSafeMethod(method) {
   }
 
   return normalized;
+}
+
+function listPageFiles(directory) {
+  let entries;
+
+  try {
+    entries = fs.readdirSync(directory, { withFileTypes: true });
+  } catch {
+    fail('public_route_inventory_unavailable');
+  }
+
+  return entries.flatMap((entry) => {
+    const absolutePath = path.join(directory, entry.name);
+
+    if (entry.isDirectory()) {
+      return listPageFiles(absolutePath);
+    }
+
+    return pageFilePattern.test(entry.name) ? [absolutePath] : [];
+  });
+}
+
+function classifyPageRoute(appDirectory, pageFile) {
+  const relativePath = path.relative(appDirectory, pageFile);
+  const rawSegments = relativePath.split(path.sep).slice(0, -1);
+  const routeSegments = [];
+
+  for (const segment of rawSegments) {
+    if (/^\([^.)][^)]*\)$/.test(segment)) {
+      continue;
+    }
+
+    if (
+      segment.startsWith('@') ||
+      /^\(\.{1,3}\)/.test(segment) ||
+      segment.includes('(') ||
+      segment.includes(')')
+    ) {
+      fail('public_route_inventory_unclassified');
+    }
+
+    routeSegments.push(segment);
+  }
+
+  const routeTemplate =
+    routeSegments.length === 0 ? '/' : `/${routeSegments.join('/')}`;
+
+  if (routeSegments[0] === 'admin') {
+    return Object.freeze({
+      routeTemplate: routeSegments.length === 1 ? '/admin' : routeTemplate,
+      reason: 'protected-admin',
+    });
+  }
+
+  if (routeSegments[0] === 'api') {
+    return Object.freeze({
+      routeTemplate,
+      reason: 'api-route',
+    });
+  }
+
+  if (routeSegments.some((segment) => segment.startsWith('_'))) {
+    return Object.freeze({
+      routeTemplate,
+      reason: 'next-private-segment',
+    });
+  }
+
+  if (
+    routeSegments.some((segment) => /^\[(?:\[)?\.{0,3}[^\]]+\](?:\])?$/.test(segment))
+  ) {
+    return Object.freeze({
+      routeTemplate,
+      reason: 'dynamic-parameter-required',
+    });
+  }
+
+  if (routeSegments.some((segment) => !staticRouteSegmentPattern.test(segment))) {
+    fail('public_route_inventory_unclassified');
+  }
+
+  return Object.freeze({ routeTemplate, reason: 'public-static-page' });
+}
+
+function discoverPublicPageRouteInventory(options = {}) {
+  const appDirectory = path.resolve(
+    options.appDirectory ?? defaultAppDirectory,
+  );
+  const classifications = listPageFiles(appDirectory).map((pageFile) =>
+    classifyPageRoute(appDirectory, pageFile),
+  );
+  const publicRoutes = [];
+  const exclusions = [];
+  const seenPublicRoutes = new Set();
+
+  for (const classification of classifications) {
+    if (classification.reason !== 'public-static-page') {
+      exclusions.push(classification);
+      continue;
+    }
+
+    if (seenPublicRoutes.has(classification.routeTemplate)) {
+      fail('public_route_inventory_duplicate');
+    }
+
+    seenPublicRoutes.add(classification.routeTemplate);
+    publicRoutes.push(classification.routeTemplate);
+  }
+
+  publicRoutes.sort((left, right) => left.localeCompare(right));
+  exclusions.sort((left, right) =>
+    left.routeTemplate.localeCompare(right.routeTemplate),
+  );
+
+  if (!publicRoutes.includes('/')) {
+    fail('public_route_inventory_home_missing');
+  }
+
+  return Object.freeze({
+    publicRoutes: Object.freeze(publicRoutes),
+    exclusions: Object.freeze(exclusions),
+  });
+}
+
+function createRouteChecks(appDirectory) {
+  const inventory = discoverPublicPageRouteInventory({ appDirectory });
+  const publicChecks = inventory.publicRoutes.map((routePath) =>
+    Object.freeze({ path: routePath, expectedStatuses: [200] }),
+  );
+
+  return Object.freeze({
+    checks: Object.freeze([...publicChecks, ...boundaryRouteChecks]),
+    inventory,
+  });
+}
+
+function addApprovedClientAsset(assetPath, assetUrls) {
+  if (typeof assetPath !== 'string' || assetPath.includes('\\')) {
+    fail('client_asset_inventory_entry_not_approved');
+  }
+
+  const normalizedPath = assetPath.startsWith('/_next/')
+    ? assetPath
+    : `/_next/${assetPath}`;
+  let target;
+
+  try {
+    target = new URL(normalizedPath, canonicalApexOrigin);
+  } catch {
+    fail('client_asset_inventory_entry_not_approved');
+  }
+
+  if (
+    target.origin !== canonicalApexOrigin ||
+    target.username ||
+    target.password ||
+    target.port ||
+    target.search ||
+    target.hash ||
+    !target.pathname.startsWith('/_next/static/') ||
+    !target.pathname.endsWith('.js')
+  ) {
+    fail('client_asset_inventory_entry_not_approved');
+  }
+
+  assetUrls.add(target.toString());
+  if (assetUrls.size > maxClientAssetCount) {
+    fail('client_asset_count_exceeded');
+  }
+}
+
+function discoverDeployedClientAssetInventory(options = {}) {
+  const assetDirectory = path.resolve(
+    options.assetDirectory ?? defaultClientAssetDirectory,
+  );
+  const assetPaths = [];
+
+  function walk(directory) {
+    let entries;
+
+    try {
+      entries = fs.readdirSync(directory, { withFileTypes: true });
+    } catch {
+      fail('client_asset_inventory_unavailable');
+    }
+
+    for (const entry of entries) {
+      if (entry.isSymbolicLink()) {
+        fail('client_asset_inventory_entry_not_approved');
+      }
+
+      const absolutePath = path.join(directory, entry.name);
+      if (entry.isDirectory()) {
+        walk(absolutePath);
+        continue;
+      }
+
+      if (!entry.isFile() || !entry.name.endsWith('.js')) {
+        continue;
+      }
+
+      const relativePath = path
+        .relative(assetDirectory, absolutePath)
+        .split(path.sep)
+        .join('/');
+      assetPaths.push(`/_next/static/${relativePath}`);
+
+      if (assetPaths.length > maxClientAssetCount) {
+        fail('client_asset_count_exceeded');
+      }
+    }
+  }
+
+  walk(assetDirectory);
+  assetPaths.sort((left, right) => left.localeCompare(right));
+
+  if (assetPaths.length === 0) {
+    fail('client_asset_inventory_empty');
+  }
+
+  return Object.freeze(assetPaths);
 }
 
 function assertSafeRedirect(location, options = {}) {
@@ -279,11 +508,7 @@ function collectFirstPartyClientAssets(body, assetUrls) {
       fail('client_asset_reference_not_approved');
     }
 
-    assetUrls.add(target.toString());
-
-    if (assetUrls.size > maxClientAssetCount) {
-      fail('client_asset_count_exceeded');
-    }
+    addApprovedClientAsset(target.pathname, assetUrls);
   }
 }
 
@@ -390,6 +615,10 @@ async function checkWwwRedirect(fetchImpl) {
 async function runProductionReadOnlySmoke(options = {}) {
   const baseContract = assertProductionBaseUrl(options.rawBaseUrl);
   const fetchImpl = options.fetchImpl ?? globalThis.fetch;
+  const routeContract = createRouteChecks(options.appDirectory);
+  const deployedClientAssetPaths = discoverDeployedClientAssetInventory({
+    assetDirectory: options.clientAssetDirectory,
+  });
 
   if (typeof fetchImpl !== 'function') {
     fail('fetch_unavailable');
@@ -398,7 +627,11 @@ async function runProductionReadOnlySmoke(options = {}) {
   const results = [];
   const clientAssetUrls = new Set();
 
-  for (const check of routeChecks) {
+  for (const assetPath of deployedClientAssetPaths) {
+    addApprovedClientAsset(assetPath, clientAssetUrls);
+  }
+
+  for (const check of routeContract.checks) {
     results.push(await checkRoute(fetchImpl, check, clientAssetUrls));
   }
 
@@ -415,6 +648,8 @@ async function runProductionReadOnlySmoke(options = {}) {
     quoteSubmissionAttempted: false,
     oauthInitiated: false,
     authenticated: false,
+    publicRoutesDiscovered: routeContract.inventory.publicRoutes.length,
+    deployedClientAssetsDiscovered: deployedClientAssetPaths.length,
     clientAssetsScanned: clientAssetUrls.size,
     results,
   });
@@ -446,6 +681,8 @@ module.exports = {
   SmokeContractError,
   assertProductionBaseUrl,
   assertSafeMethod,
+  discoverDeployedClientAssetInventory,
+  discoverPublicPageRouteInventory,
   runProductionReadOnlySmoke,
   safeFailureResult,
 };

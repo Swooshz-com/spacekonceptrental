@@ -195,6 +195,15 @@ These values are server-only even when the Supabase anon key is used:
   short-lived, payload-bound quote admission proofs. It must match the private
   database configuration and must not be exposed to browser roles.
 
+Stage A requires the complete contract-classified Stage B quote/handoff set to
+be absent: `QUOTE_WORKSPACE_ID`, `QUOTE_SUBMISSION_ADMISSION_SECRET`,
+`N8N_ENQUIRY_HANDOFF_WEBHOOK_URL`,
+`N8N_ENQUIRY_HANDOFF_SHARED_SECRET`, and
+`N8N_ENQUIRY_HANDOFF_TIMEOUT_MS`. Presence blocks Stage A even when a value is
+empty, whitespace-only, or malformed. The validator derives this set from the
+Stage B contract and each variable's Stage A classification so additions
+cannot silently drift out of the gate.
+
 `CATALOGUE_WORKSPACE_ID` must match the reviewed
 `catalogue_public_workspace_config` active workspace row before DB-backed
 catalogue reads are enabled. `QUOTE_WORKSPACE_ID` must match the reviewed
@@ -271,7 +280,10 @@ when a compact JWT is used. A legacy `service_role` JWT is rejected.
 UUID-shaped catalogue/admin workspace identifiers and the same minimum
 entropy-like CSRF secret shape used by the full launch validator are also
 required. Completion runs only from a clean tracked checkout so evidence binds
-to exact commit contents. Presence-only placeholders do not satisfy
+to exact commit contents. Provider-admission evidence also includes a lowercase
+SHA-256 fingerprint derived from the canonical Supabase project reference and
+must exactly match the configured project. The concrete project reference
+remains outside tracked files. Presence-only placeholders do not satisfy
 completion.
 
 The approved RPC performs the metadata mutation, product audit insert, and

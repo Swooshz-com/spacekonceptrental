@@ -60,7 +60,8 @@ Google OAuth owner UAT:
 - deploy the requested immutable SHA and independently prove the resolved build
   SHA is exactly equal;
 - keep quote submission disabled;
-- keep every n8n workflow inactive and require no n8n configuration;
+- keep every n8n workflow inactive and require every Stage B-only quote and
+  enquiry-handoff environment name to be absent;
 - keep protected admin mutations technically disabled with server-only
   `ADMIN_MUTATIONS_ENABLED` set to the explicit disabled state; missing,
   blank, whitespace-padded, malformed, and false values
@@ -93,7 +94,10 @@ The secret-safe evidence JSON uses only the exact mechanism identifiers
 verification timestamp must parse successfully and must not be later than the
 validator's current time. It must be canonical UTC ISO-8601 with milliseconds,
 no more than 24 hours old, and bound to the requested immutable SHA. The
-approval reference must be a canonical comment URL on issue #291 or #301.
+approval reference must be a canonical comment URL on issue #291 or #301. It
+must also contain the exact lowercase SHA-256 fingerprint derived from the
+validated canonical Supabase project reference and match the configured
+`SUPABASE_URL`; do not record the project reference itself.
 Free-form mechanism labels, callback membership denial, stale or future-dated
 evidence, and evidence for another revision do not satisfy this gate.
 
@@ -148,9 +152,12 @@ Stage A requires only `SUPABASE_URL`, `SUPABASE_ANON_KEY`,
 `CATALOGUE_WORKSPACE_ID`, `ADMIN_TRUSTED_WORKSPACE_ID`,
 `ADMIN_EXPECTED_ORIGIN`, `ADMIN_EXPECTED_HOST`, and
 `ADMIN_CSRF_PROOF_SECRET`, plus `ADMIN_MUTATIONS_ENABLED` set explicitly to
-the disabled state. Stage A must not require a `QUOTE_*` or `N8N_*`
-value because quote remains disabled and n8n remains inactive. Stage B requires
-the full launch set enforced by the existing launch validator.
+the disabled state. Stage A requires `QUOTE_WORKSPACE_ID`,
+`QUOTE_SUBMISSION_ADMISSION_SECRET`, `N8N_ENQUIRY_HANDOFF_WEBHOOK_URL`,
+`N8N_ENQUIRY_HANDOFF_SHARED_SECRET`, and
+`N8N_ENQUIRY_HANDOFF_TIMEOUT_MS` to be absent. Presence is a hold even when
+the value is blank, whitespace, or malformed. Stage B requires the full launch
+set enforced by the existing launch validator.
 
 | Env name | Purpose |
 | --- | --- |
@@ -309,7 +316,11 @@ safe shape without printing values. It must remain on hold when a required
 Supabase, catalogue, admin workspace, canonical origin/host, CSRF, or mutation
 capability setting is absent/invalid; when the evidence file is absent,
 invalid, future-dated, or not `PASS`; or when the admin-mutation state is not
-the exact unpadded value `false`. A legacy compact `SUPABASE_ANON_KEY` is
+the exact unpadded value `false`. It also holds when any contract-classified
+Stage B quote or enquiry-handoff environment name is present, including blank
+or malformed values, or when provider evidence does not exactly match the
+configured project's canonical SHA-256 identity fingerprint. A legacy compact
+`SUPABASE_ANON_KEY` is
 accepted only when its decoded Supabase role is exactly `anon`; a legacy
 `service_role` JWT is rejected. Completion must run from a clean tracked
 checkout, and provider-admission evidence cannot bind to a dirty or unresolved
@@ -321,13 +332,22 @@ manual-redirect GET requests only; it does not authenticate, initiate OAuth,
 submit a quote, call n8n, or mutate external state. There is no direct provider
 API call by the smoke harness and no mutating provider call. Route rendering
 may exercise configured read-only Supabase-backed application paths through the
-deployed first-party application. The command also extracts, deduplicates, and
-scans at most 32 referenced same-origin `/_next/static/*.js` bundles, with the
-same leakage rules. Route HTML retains its 128 KiB response bound. Each client
-asset is scanned incrementally with only a 4,096-character overlap window and
-a separate 512 KiB total response ceiling, so current production bundles are
-covered without accumulating an entire bundle. It never fetches third-party
-script origins.
+deployed first-party application. The command derives every static public page
+from `website/app/**/page.*`, including `/categories`, `/events`, `/listings`,
+`/privacy`, and `/terms`. Route groups are removed from URL paths; protected
+admin pages, API routes, and dynamic pages requiring invented parameters are
+classified and not crawled. Unsupported route syntax fails the inventory
+closed. Dynamic-route and page-specific client chunks are covered without
+invented requests by deriving a complete inventory from the deployed
+`.next/static/**/*.js` asset tree. Symlinks and non-JavaScript files are not
+accepted as inventory entries. The command extracts, deduplicates, and scans
+at most 96 same-origin `/_next/static/*.js` client bundles with the same
+leakage rules. Route
+HTML retains its 128 KiB response bound. Each client asset is scanned
+incrementally with only a 4,096-character overlap window and a separate
+512 KiB total response ceiling, so current production bundles are covered
+without accumulating an entire bundle. It never fetches third-party script
+origins.
 
 ```powershell
 $env:SKR_PRODUCTION_BASE_URL = 'https://spacekonceptrental.com'
