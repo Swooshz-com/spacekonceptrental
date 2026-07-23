@@ -155,6 +155,9 @@ the full launch set enforced by the existing launch validator.
 | Env name | Purpose |
 | --- | --- |
 | `SUPABASE_URL` | Hosted Supabase project origin root used by server-side app paths. Stage A accepts only the canonical HTTPS project origin with a 20-character project-ref subdomain and optional trailing root slash; credentials, explicit ports, non-root paths, queries, and fragments are invalid. |
+
+Validate the supplied raw `SUPABASE_URL`; do not repair, strip, or normalise
+non-root or ambiguous path material into an otherwise acceptable origin.
 | `SUPABASE_ANON_KEY` | Server-side anon/public key used with RLS through first-party app paths. |
 | `CATALOGUE_WORKSPACE_ID` | Workspace gate for public catalogue/setup reads. |
 | `QUOTE_WORKSPACE_ID` | Workspace gate for quote/enquiry persistence. |
