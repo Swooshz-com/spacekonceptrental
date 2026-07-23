@@ -342,7 +342,9 @@ their bounded server-rendered HTML receives the same leakage scan without
 guessing a mutable production slug. Route groups are removed from URL paths;
 the explicitly reviewed protected-admin set and API routes are not crawled. A
 new admin page, unsupported route syntax, or public dynamic class without a
-reviewed deterministic probe fails the inventory closed.
+reviewed deterministic probe fails the inventory closed. An alternate
+`website/pages` Pages Router source is rejected rather than silently omitted
+from the canonical `website/app` inventory.
 
 `npm run build` emits a secret-safe hosted provenance manifest after the
 Next.js build. It records the exact checkout SHA, Next.js build ID, clean

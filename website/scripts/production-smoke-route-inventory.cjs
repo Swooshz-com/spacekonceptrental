@@ -302,6 +302,20 @@ function validateRouteInventory(routes) {
 
 function discoverPublicPageRouteInventory(options = {}) {
   const appDirectory = path.resolve(options.appDirectory);
+  const pagesDirectory = path.join(path.dirname(appDirectory), 'pages');
+
+  try {
+    fs.lstatSync(pagesDirectory);
+    fail('public_route_inventory_unsupported_pages_router');
+  } catch (error) {
+    if (
+      error instanceof RouteInventoryContractError ||
+      error?.code !== 'ENOENT'
+    ) {
+      throw error;
+    }
+  }
+
   const classifications = listPageFiles(appDirectory).map((pageFile) =>
     classifyPageRoute(appDirectory, pageFile),
   );

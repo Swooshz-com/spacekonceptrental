@@ -113,7 +113,8 @@ third-party script origins. Route HTML retains the 128 KiB response bound.
 The reviewed dynamic probes are same-origin GET requests only, do not submit a
 quote or login form, and do not initiate OAuth or call n8n. A newly introduced
 public dynamic route without an explicit reviewed probe fails provenance
-generation closed.
+generation closed. An alternate `website/pages` Pages Router source also fails
+closed so it cannot bypass the canonical `website/app` inventory.
 Client assets are scanned incrementally with only a 4,096-character overlap
 window and a separate 512 KiB total response ceiling; the harness does not
 accumulate an entire bundle.

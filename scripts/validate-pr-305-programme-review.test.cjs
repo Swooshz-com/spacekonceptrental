@@ -271,6 +271,26 @@ test('new public dynamic route classes require an explicit reviewed probe', () =
   );
 });
 
+test('an alternate Pages Router source fails closed instead of bypassing the app inventory', () => {
+  const websiteRoot = fs.mkdtempSync(
+    path.join(os.tmpdir(), 'skr-pr305-pages-router-'),
+  );
+  const appDirectory = path.join(websiteRoot, 'app');
+  writePage(appDirectory, '');
+  writePage(appDirectory, 'admin/login');
+  const pagesIndex = path.join(websiteRoot, 'pages', 'index.tsx');
+  fs.mkdirSync(path.dirname(pagesIndex), { recursive: true });
+  fs.writeFileSync(
+    pagesIndex,
+    'export default function Page() { return null; }\n',
+  );
+
+  assert.throws(
+    () => discoverPublicPageRouteInventory({ appDirectory }),
+    /public_route_inventory_unsupported_pages_router/,
+  );
+});
+
 test('untracked build-affecting source prevents provenance generation', () => {
   const websiteRoot = fs.mkdtempSync(
     path.join(os.tmpdir(), 'skr-pr305-untracked-source-'),
