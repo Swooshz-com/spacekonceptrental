@@ -183,6 +183,8 @@ These values are server-only even when the Supabase anon key is used:
   by server helpers. Stage A requires HTTPS, a 20-character project-ref
   subdomain, and either no path or only the trailing root slash; credentials,
   explicit ports, non-root paths, queries, and fragments fail.
+  Validate the supplied raw value without repairing or normalising ambiguous
+  path material into an otherwise acceptable origin.
 - `SUPABASE_ANON_KEY`: server-side anon key used with RLS through first-party
   server routes, repositories, and session-bound server clients.
 - `CATALOGUE_WORKSPACE_ID`: trusted server-side workspace gate for DB-backed
