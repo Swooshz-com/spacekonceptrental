@@ -264,7 +264,8 @@ export async function handleAdminQuoteRequestStatusUpdateRoute(
       {
         requestedOperation: "quote.write",
         requestMethod,
-        request
+        request,
+        requiresMutationCapability: true
       },
       {
         requestMetadata: {

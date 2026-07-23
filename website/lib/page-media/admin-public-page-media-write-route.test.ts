@@ -135,7 +135,8 @@ describe("admin public page media write route", () => {
       {
         requestedOperation: "hero.write",
         requestMethod: "POST",
-        request: expect.any(Request)
+        request: expect.any(Request),
+        requiresMutationCapability: true
       },
       expect.objectContaining({
         gate: expect.objectContaining({

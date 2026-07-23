@@ -785,7 +785,8 @@ export async function handleAdminProductWriteRoute(
       {
         requestedOperation: config.operation,
         requestMethod,
-        request
+        request,
+        requiresMutationCapability: true
       },
       {
         requestMetadata: {

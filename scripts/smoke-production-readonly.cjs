@@ -25,6 +25,19 @@ const routeChecks = [
 ];
 
 const forbiddenPublicResponsePatterns = [
+  {
+    code: 'supabase_endpoint_material',
+    pattern:
+      /https:\/\/[a-z0-9](?:[a-z0-9-]{3,61}[a-z0-9])?\.supabase\.co(?=[:/\s"'<>]|$)/i,
+  },
+  {
+    code: 'supabase_jwt_material',
+    pattern: /\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{20,}\b/,
+  },
+  {
+    code: 'supabase_key_material',
+    pattern: /\bsb_(?:secret|publishable)_[A-Za-z0-9_-]{16,}\b/,
+  },
   { code: 'server_env_name', pattern: /\b(?:SUPABASE_(?:URL|ANON_KEY|SERVICE_ROLE_KEY)|ADMIN_CSRF_PROOF_SECRET|ADMIN_TRUSTED_WORKSPACE_ID|CATALOGUE_WORKSPACE_ID|QUOTE_WORKSPACE_ID|N8N_(?:CHAT|ENQUIRY_HANDOFF)_[A-Z0-9_]+)\b/i },
   { code: 'sql_detail', pattern: /\b(?:SQLSTATE|PostgreSQL query|relation ["'][^"']+["'] does not exist)\b/i },
   { code: 'stack_trace', pattern: /\b(?:stack trace|Unhandled Runtime Error|Internal Server Error\s+at\s+)\b/i },

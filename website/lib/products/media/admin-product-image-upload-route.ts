@@ -311,7 +311,8 @@ async function authorizeUpload(
       {
         requestedOperation: productImageWriteOperation,
         requestMethod,
-        request
+        request,
+        requiresMutationCapability: true
       },
       {
         requestMetadata: {

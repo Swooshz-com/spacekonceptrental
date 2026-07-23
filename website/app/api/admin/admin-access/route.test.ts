@@ -124,7 +124,8 @@ describe("POST /api/admin/admin-access", () => {
     expect(resolveServerAdminRuntimeRouteGateAdapter).toHaveBeenCalledWith(
       expect.objectContaining({
         requestedOperation: "membership.manage",
-        requestMethod: "POST"
+        requestMethod: "POST",
+        requiresMutationCapability: true
       }),
       expect.anything()
     );

@@ -36,6 +36,25 @@ https://spacekonceptrental.com/api/admin/login/callback
 The separate Google-to-Supabase provider callback remains external provider
 configuration and must not be confused with the application callback.
 
+## Mandatory Provider Admission Prerequisite
+
+Do not begin owner OAuth UAT until the hosted Supabase Auth project has a
+directly verified `PASS` for one reviewed admission mechanism:
+
+- new-user signup disabled while the pre-provisioned owner account remains
+  usable; or
+- an equivalent before-user-created / pre-user-creation admission hook that
+  permits only approved owner/admin identities before account creation.
+
+Record `PASS | HOLD - NOT VERIFIED | FAIL`, admission mechanism class,
+verification timestamp, operator/approval reference, existing-owner readiness,
+and no-public-signup result. `HOLD - NOT VERIFIED` blocks UAT and Stage A
+completion. Authentication or membership denial after callback is not evidence
+that user creation was prevented. Repository tests cannot prove this live
+provider state. A later authorised operator must use the strongest suitable
+official Supabase interface or API without exposing secrets, private emails,
+project references, provider values, or credentials.
+
 ## Source Boundaries
 
 - Login page: `website/app/admin/login/page.tsx`
@@ -66,7 +85,8 @@ approved outside this runbook. Do not create or change them during UAT.
 - Negative-test actors or fixtures, when available, are pre-existing and
   approved for wrong-workspace, inactive-user, and insufficient-role checks.
 - `ADMIN_TRUSTED_WORKSPACE_ID`, `ADMIN_EXPECTED_ORIGIN`,
-  `ADMIN_EXPECTED_HOST`, and `ADMIN_CSRF_PROOF_SECRET` are configured
+  `ADMIN_EXPECTED_HOST`, `ADMIN_CSRF_PROOF_SECRET`, and
+  `ADMIN_MUTATIONS_ENABLED` in its explicit disabled state are configured
   server-side without exposing their values.
 - The canonical production values are represented by the operator as safe
   equality results only:
@@ -74,6 +94,9 @@ approved outside this runbook. Do not create or change them during UAT.
   - expected host equals `spacekonceptrental.com`.
 - Quote submission remains disabled and n8n remains inactive throughout this
   Stage A UAT.
+- Every protected admin mutation is denied by the server-only capability gate;
+  login, callback, logout, session reads, and protected admin-page reads remain
+  available.
 
 If any prerequisite is missing, stop. Do not repair provider configuration,
 records, roles, memberships, or environment values from this UAT procedure.
@@ -137,6 +160,9 @@ UAT operation. This repository follow-up does not open or control a browser.
    `owner` or `admin` role.
 4. Do not perform product, category, listing, workspace, membership, quote, or
    provider mutations as part of authentication UAT.
+5. Confirm a representative protected admin write attempt is denied before
+   repository/provider mutation using only secret-safe status evidence. Do not
+   change records to manufacture this evidence.
 
 ### 5. Negative authorisation checks
 
@@ -196,6 +222,8 @@ Pass only when every applicable step above has secret-safe evidence and:
 - logout succeeds and the former session is rejected;
 - quote submission remained disabled;
 - n8n remained inactive;
+- admin mutations remained disabled;
+- provider signup admission had a direct `PASS` before UAT began;
 - no customer quote was submitted.
 
 Repository tests and a production read-only smoke pass do not substitute for

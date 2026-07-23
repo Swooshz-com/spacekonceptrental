@@ -51,6 +51,25 @@ function createMockFetch(overrides = {}) {
   };
 }
 
+function syntheticLegacySupabaseJwt() {
+  const encode = (value) =>
+    Buffer.from(JSON.stringify(value), 'utf8').toString('base64url');
+
+  return [
+    encode({ alg: 'HS256', typ: 'JWT' }),
+    encode({ iss: 'supabase', role: 'service_role' }),
+    's'.repeat(43),
+  ].join('.');
+}
+
+function syntheticModernKey(kind) {
+  return ['sb', kind, 'r'.repeat(22), 'c'.repeat(8)].join('_');
+}
+
+function syntheticSupabaseProjectUrl() {
+  return ['https://synthetic-project-ref', 'supabase', 'co'].join('.');
+}
+
 test('accepts only the canonical HTTPS apex and approved www origin', () => {
   assert.equal(
     assertProductionBaseUrl(apex).suppliedHost,
@@ -180,6 +199,92 @@ test('public responses fail closed on obvious provider, SQL, stack, env, or secr
       /public_response_leakage/,
     );
   }
+});
+
+test('public responses reject concrete Supabase endpoint material with a stable safe code', async () => {
+  const leaked = syntheticSupabaseProjectUrl();
+  const mock = createMockFetch({
+    [`${apex}/about`]: response(200, leaked),
+  });
+
+  let error;
+  try {
+    await runProductionReadOnlySmoke({ rawBaseUrl: apex, fetchImpl: mock.fetch });
+  } catch (caught) {
+    error = caught;
+  }
+
+  assert.match(error?.code ?? '', /public_response_leakage_supabase_endpoint_material/);
+  assert.doesNotMatch(JSON.stringify(safeFailureResult(error)), new RegExp(leaked));
+});
+
+test('public responses reject legacy Supabase JWT material with a stable safe code', async () => {
+  const leaked = syntheticLegacySupabaseJwt();
+  const mock = createMockFetch({
+    [`${apex}/catalogue`]: response(200, leaked),
+  });
+
+  let error;
+  try {
+    await runProductionReadOnlySmoke({ rawBaseUrl: apex, fetchImpl: mock.fetch });
+  } catch (caught) {
+    error = caught;
+  }
+
+  assert.match(error?.code ?? '', /public_response_leakage_supabase_jwt_material/);
+  assert.doesNotMatch(JSON.stringify(safeFailureResult(error)), new RegExp(leaked.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+});
+
+test('public responses reject modern Supabase secret and publishable key material', async () => {
+  for (const kind of ['secret', 'publishable']) {
+    const leaked = syntheticModernKey(kind);
+    const mock = createMockFetch({
+      [`${apex}/setups`]: response(200, leaked),
+    });
+
+    let error;
+    try {
+      await runProductionReadOnlySmoke({ rawBaseUrl: apex, fetchImpl: mock.fetch });
+    } catch (caught) {
+      error = caught;
+    }
+
+    assert.match(error?.code ?? '', /public_response_leakage_supabase_key_material/);
+    assert.doesNotMatch(JSON.stringify(safeFailureResult(error)), new RegExp(leaked));
+  }
+});
+
+test('Supabase prose and unrelated dotted or base64-like text remain allowed', async () => {
+  const mock = createMockFetch({
+    [`${apex}/about`]: response(
+      200,
+      'This application uses Supabase. Documentation token: abc.def.ghi and YWJjZA==.',
+    ),
+  });
+
+  const result = await runProductionReadOnlySmoke({
+    rawBaseUrl: apex,
+    fetchImpl: mock.fetch,
+  });
+
+  assert.equal(result.outcome, 'passed');
+});
+
+test('www redirect bodies reject Supabase material without echoing it', async () => {
+  const leaked = syntheticModernKey('secret');
+  const mock = createMockFetch({
+    [`${www}/`]: response(308, leaked, { Location: `${apex}/` }),
+  });
+
+  let error;
+  try {
+    await runProductionReadOnlySmoke({ rawBaseUrl: apex, fetchImpl: mock.fetch });
+  } catch (caught) {
+    error = caught;
+  }
+
+  assert.match(error?.code ?? '', /public_response_leakage_supabase_key_material/);
+  assert.doesNotMatch(JSON.stringify(safeFailureResult(error)), new RegExp(leaked));
 });
 
 test('www redirect response bodies receive the same bounded leakage scan', async () => {

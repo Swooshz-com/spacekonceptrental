@@ -94,6 +94,7 @@ function baseLaunchEnv(overrides = {}) {
     ADMIN_EXPECTED_HOST: 'owner.spacekoncept.example',
     ADMIN_CSRF_PROOF_SECRET:
       'csrf-proof-placeholder-for-tests-only-1234567890',
+    ADMIN_MUTATIONS_ENABLED: 'false',
     QUOTE_SUBMISSION_ADMISSION_SECRET:
       'quote-admission-placeholder-for-tests-only-1234567890',
     N8N_ENQUIRY_HANDOFF_WEBHOOK_URL: 'https://example.invalid/n8n/enquiry',
@@ -179,6 +180,18 @@ test('launch mode passes with safe placeholder env values', () => {
   assert.match(output, /configured/i);
   assert.match(output, /n8n enquiry handoff env is server-only/i);
   assert.match(output, /6 anon and 10 authenticated/i);
+});
+
+test('launch mode requires an explicit valid admin mutation state', () => {
+  for (const value of ['', 'TRUE', 'enabled', '1']) {
+    const result = runReadiness(
+      baseLaunchEnv({ ADMIN_MUTATIONS_ENABLED: value }),
+    );
+    const output = combinedOutput(result);
+
+    assert.notEqual(result.status, 0);
+    assert.match(output, /ADMIN_MUTATIONS_ENABLED/);
+  }
 });
 
 test('launch mode requires a read-only live public SECURITY DEFINER catalog', () => {

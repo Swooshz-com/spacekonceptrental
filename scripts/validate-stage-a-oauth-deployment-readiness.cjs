@@ -30,6 +30,7 @@ const REQUIRED_STAGE_A_ENV = [
   'ADMIN_EXPECTED_ORIGIN',
   'ADMIN_EXPECTED_HOST',
   'ADMIN_CSRF_PROOF_SECRET',
+  'ADMIN_MUTATIONS_ENABLED',
 ];
 
 const REQUIRED_STAGE_A_INVARIANTS = [
@@ -38,6 +39,8 @@ const REQUIRED_STAGE_A_INVARIANTS = [
   'n8n-inactive',
   'no-customer-quote-submission',
   'anonymous-admin-denial',
+  'admin-mutations-disabled',
+  'provider-signup-admission-verified',
   'google-oauth-owner-uat',
 ];
 
@@ -56,7 +59,17 @@ const REQUIRED_STAGE_B_INVARIANTS = [
   'durable-idempotency',
   'delivery-evidence',
   'deliberate-quote-enablement',
+  'admin-mutation-state-explicit',
   'quote-email-runtime-readiness',
+];
+
+const REQUIRED_PROVIDER_ADMISSION_FIELDS = [
+  'admissionMechanism',
+  'verificationStatus',
+  'verifiedAt',
+  'operatorApprovalReference',
+  'existingOwnerReadiness',
+  'noPublicSignupResult',
 ];
 
 function validateExactSet(issues, label, actualValues, expectedValues) {
@@ -76,7 +89,12 @@ function validateExactSet(issues, label, actualValues, expectedValues) {
   }
 }
 
-function validateStageARepositoryReadiness({ contract: contractOverride } = {}) {
+function validateStageARepositoryReadiness({
+  contract: contractOverride,
+  env = process.env,
+  providerAdmissionEvidence,
+  repositoryOnly = false,
+} = {}) {
   const issues = [];
   const contract = contractOverride ?? readJson(contractPath);
   const stages = contract.launchReadiness?.stages;
@@ -103,6 +121,53 @@ function validateStageARepositoryReadiness({ contract: contractOverride } = {}) 
 
   if (stageA.n8nRequired !== false || stageA.quoteEnablementAllowed !== false) {
     issues.push('stage_a_safety_invariants_invalid');
+  }
+
+  if (stageA.adminMutationsRequiredState !== 'disabled') {
+    issues.push('stage_a_admin_mutation_contract_invalid');
+  }
+
+  const providerContract = stageA.providerAdmissionEvidence;
+  if (
+    providerContract?.requiredStatus !== 'PASS' ||
+    providerContract?.holdStatus !== 'HOLD - NOT VERIFIED' ||
+    providerContract?.repositoryTestsCanSatisfy !== false
+  ) {
+    issues.push('stage_a_provider_admission_contract_invalid');
+  }
+  validateExactSet(
+    issues,
+    'stage_a_provider_admission_field',
+    providerContract?.requiredFields,
+    REQUIRED_PROVIDER_ADMISSION_FIELDS,
+  );
+
+  if (!repositoryOnly) {
+    const adminMutationState = env.ADMIN_MUTATIONS_ENABLED?.trim();
+
+    if (adminMutationState === 'true') {
+      issues.push('stage_a_admin_mutations_not_disabled');
+    } else if (adminMutationState !== 'false') {
+      issues.push('stage_a_admin_mutations_not_proven_disabled');
+    }
+  }
+
+  if (!repositoryOnly) {
+    const evidence = providerAdmissionEvidence;
+    const evidenceComplete =
+      evidence?.verificationStatus === 'PASS' &&
+      evidence?.existingOwnerReadiness === 'PASS' &&
+      evidence?.noPublicSignupResult === 'PASS' &&
+      typeof evidence?.admissionMechanism === 'string' &&
+      evidence.admissionMechanism.trim().length > 0 &&
+      typeof evidence?.verifiedAt === 'string' &&
+      !Number.isNaN(Date.parse(evidence.verifiedAt)) &&
+      typeof evidence?.operatorApprovalReference === 'string' &&
+      evidence.operatorApprovalReference.trim().length > 0;
+
+    if (!evidenceComplete) {
+      issues.push('stage_a_provider_admission_not_verified');
+    }
   }
 
   validateExactSet(
@@ -156,20 +221,48 @@ function validateStageARepositoryReadiness({ contract: contractOverride } = {}) 
 }
 
 if (require.main === module) {
-  const issues = validateStageARepositoryReadiness();
+  const args = process.argv.slice(2);
+  const repositoryOnly = args.includes('--repository-only');
+  const evidenceIndex = args.indexOf('--provider-admission-evidence');
+  let providerAdmissionEvidence;
+
+  if (evidenceIndex >= 0 && args[evidenceIndex + 1]) {
+    try {
+      providerAdmissionEvidence = readJson(
+        path.resolve(process.cwd(), args[evidenceIndex + 1]),
+      );
+    } catch {
+      providerAdmissionEvidence = null;
+    }
+  }
+
+  const issues = validateStageARepositoryReadiness({
+    repositoryOnly,
+    providerAdmissionEvidence,
+  });
 
   if (issues.length > 0) {
-    console.error('Stage A OAuth deployment readiness: failed.');
+    console.error('Stage A OAuth deployment readiness: failed or held.');
     for (const issue of issues) {
       console.error(`- ${issue}`);
     }
     process.exitCode = 1;
   } else {
-    console.log('Stage A OAuth deployment readiness: passed.');
+    console.log(
+      repositoryOnly
+        ? 'Stage A repository contract readiness: passed.'
+        : 'Stage A OAuth deployment readiness: passed.',
+    );
     console.log('Repository static security checks: passed.');
     console.log('Node runtime contract: Node 24.');
     console.log('Quote enablement required: no.');
     console.log('Active n8n configuration required: no.');
+    console.log('Admin mutations required state: disabled.');
+    console.log(
+      repositoryOnly
+        ? 'Provider admission completion evidence evaluated: no.'
+        : 'Provider admission completion evidence: passed.',
+    );
     console.log('Provider or production operation performed: no.');
   }
 }

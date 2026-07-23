@@ -51,6 +51,7 @@ const requiredEnvNames = [
   'ADMIN_EXPECTED_ORIGIN',
   'ADMIN_EXPECTED_HOST',
   'ADMIN_CSRF_PROOF_SECRET',
+  'ADMIN_MUTATIONS_ENABLED',
   'N8N_ENQUIRY_HANDOFF_WEBHOOK_URL',
   'N8N_ENQUIRY_HANDOFF_SHARED_SECRET',
 ];
@@ -90,6 +91,10 @@ const obviousSecretPatterns = [
   {
     label: 'Email provider API key pattern',
     pattern: /\bre_[A-Za-z0-9]{24,}\b/g,
+  },
+  {
+    label: 'Supabase secret key pattern',
+    pattern: /\bsb_secret_[A-Za-z0-9_-]{16,}\b/g,
   },
   {
     label: 'SendGrid API key pattern',
@@ -430,6 +435,20 @@ function validateEnvContract(env) {
 
   if (csrfSecretValue && !csrfSecret.ok) {
     addIssue(issues, 'ADMIN_CSRF_PROOF_SECRET', csrfSecret.summary);
+  }
+
+  const adminMutationsEnabled = readEnv(env, 'ADMIN_MUTATIONS_ENABLED');
+
+  if (
+    adminMutationsEnabled &&
+    adminMutationsEnabled !== 'true' &&
+    adminMutationsEnabled !== 'false'
+  ) {
+    addIssue(
+      issues,
+      'ADMIN_MUTATIONS_ENABLED',
+      'must be exactly true or false',
+    );
   }
   const quoteAdmissionSecretValue = readEnv(
     env,

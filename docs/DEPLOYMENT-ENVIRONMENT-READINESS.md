@@ -87,6 +87,9 @@ helpers:
 - `ADMIN_EXPECTED_HOST`: trusted expected admin request host.
 - `ADMIN_CSRF_PROOF_SECRET`: server-only proof signing secret for admin CSRF
   proof material.
+- `ADMIN_MUTATIONS_ENABLED`: fail-closed server-only admin-write capability.
+  Only exact lowercase `true` enables writes. Stage A requires explicit
+  `false`; missing, blank, malformed, or false values deny mutation routes.
 
 Trusted client IP header values must name only headers overwritten by the
 deployment proxy or CDN. In-process quote and chat throttling remains
@@ -220,6 +223,8 @@ paths:
 - `ADMIN_EXPECTED_ORIGIN`: expected first-party admin origin.
 - `ADMIN_EXPECTED_HOST`: expected first-party admin host.
 - `ADMIN_CSRF_PROOF_SECRET`: server-only CSRF proof signing secret.
+- `ADMIN_MUTATIONS_ENABLED`: fail-closed protected-admin mutation capability;
+  never expose it through `NEXT_PUBLIC_*`.
 
 `ADMIN_TRUSTED_WORKSPACE_ID` must be reviewed separately from
 `CATALOGUE_WORKSPACE_ID` and `QUOTE_WORKSPACE_ID`. It must not be supplied by
@@ -245,6 +250,14 @@ first-party admin API route, CSRF/session/workspace/admin gate, and
 `categories`, `products`, `product_images`, and product audit inserts are
 blocked.
 
+Every protected admin mutation also requires the server-only
+`ADMIN_MUTATIONS_ENABLED` capability. Stage A requires the capability to be
+disabled while login, callback, logout, session reads, and protected admin-page
+reads remain functional. Missing, blank, malformed, and false values fail
+closed before repository or provider mutation. Exact lowercase `true` is a
+later separately reviewed activation and does not replace authentication,
+workspace, role, CSRF, Origin/Referer, or validation controls.
+
 The approved RPC performs the metadata mutation, product audit insert, and
 local search-index job enqueue in one database transaction. Reviewers should
 confirm admin UI writes still enqueue a local search-index job and that no
@@ -266,6 +279,7 @@ Forbidden exposure includes:
 - No `NEXT_PUBLIC_SKR_DEMO_CONTENT`; the public demo-content runtime switch is
   removed and forbidden.
 - No browser-visible n8n URLs.
+- No client/public exposure of `ADMIN_MUTATIONS_ENABLED`.
 - No browser Supabase unless separately approved.
 - No `SUPABASE_SERVICE_ROLE_KEY` in runtime paths.
 - No service-role key in browser/client/public env.
@@ -287,6 +301,9 @@ Service-role key prohibition in runtime paths remains active. never put service-
 - Admin: protected admin paths fail closed or render generic unavailable states
   when admin auth, workspace, request-security, CSRF, Supabase, or RLS
   dependencies are missing.
+- Admin mutations: deny with a stable privacy-safe result before repository or
+  provider mutation unless `ADMIN_MUTATIONS_ENABLED` is exact lowercase
+  `true`.
 
 ## Required pre-deployment review
 

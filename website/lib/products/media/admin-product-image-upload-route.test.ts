@@ -265,7 +265,8 @@ describe("admin product image upload route", () => {
       {
         requestedOperation: "productImage.write",
         requestMethod: "POST",
-        request: expect.any(Request)
+        request: expect.any(Request),
+        requiresMutationCapability: true
       },
       expect.objectContaining({
         gate: expect.objectContaining({

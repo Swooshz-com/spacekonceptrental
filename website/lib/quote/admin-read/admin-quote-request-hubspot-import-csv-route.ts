@@ -212,7 +212,8 @@ export async function handleAdminQuoteRequestHubSpotImportCsvRoute(
       {
         requestedOperation: "quote.write",
         requestMethod,
-        request
+        request,
+        requiresMutationCapability: true
       },
       {
         requestMetadata: {

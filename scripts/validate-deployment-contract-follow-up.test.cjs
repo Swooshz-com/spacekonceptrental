@@ -233,7 +233,10 @@ test('Node 24 and deterministic npm ci are aligned across repo, CI, lockfile, an
 });
 
 test('Stage A repository-safe validator passes without provider env or n8n configuration', () => {
-  assert.deepEqual(validateStageARepositoryReadiness(), []);
+  assert.deepEqual(
+    validateStageARepositoryReadiness({ repositoryOnly: true }),
+    [],
+  );
 });
 
 test('Stage A validator rejects contract safety weakening and privileged additions', () => {
@@ -252,7 +255,10 @@ test('Stage A validator rejects contract safety weakening and privileged additio
     (name) => name !== 'reviewed-n8n-enquiry-workflow',
   );
 
-  const issues = validateStageARepositoryReadiness({ contract: weakened });
+  const issues = validateStageARepositoryReadiness({
+    contract: weakened,
+    repositoryOnly: true,
+  });
 
   assert.ok(
     issues.includes(

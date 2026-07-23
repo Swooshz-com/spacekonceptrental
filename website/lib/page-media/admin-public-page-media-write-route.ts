@@ -209,7 +209,8 @@ async function verifyAdminWriteBoundary(
       {
         requestedOperation: publicMediaWriteOperation,
         requestMethod,
-        request
+        request,
+        requiresMutationCapability: true
       },
       {
         requestMetadata: {

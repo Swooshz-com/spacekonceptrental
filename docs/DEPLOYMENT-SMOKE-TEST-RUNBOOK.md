@@ -56,12 +56,21 @@ This runbook covers:
 ### Stage A - Controlled OAuth Deployment
 
 Stage A is read-only apart from the separately approved exact-SHA deployment
-and real-owner Google OAuth UAT. Quote submission remains disabled and n8n
-remains inactive. Google OAuth owner UAT status is `PASS | HOLD - NOT RUN |
+and real-owner Google OAuth UAT. Protected admin mutations are technically
+disabled by server-only `ADMIN_MUTATIONS_ENABLED` in its explicit disabled
+state; authentication,
+session, and protected admin read paths remain available. Quote submission
+remains disabled and n8n remains inactive. Google OAuth owner UAT status is `PASS | HOLD - NOT RUN |
 FAIL`. Stage A remains incomplete and held until real-owner Google OAuth UAT
 passes. A controlled exact-SHA deployment may exist for that UAT, but its Stage
 A record remains `HOLD - NOT RUN`, not `PASS`, until the UAT passes. Required
 smoke evidence is:
+
+- provider signup admission is directly verified as `PASS` before UAT, using
+  disabled new-user signup with existing-owner readiness or a reviewed
+  before-user-created/pre-user-creation admission hook; `HOLD - NOT VERIFIED`
+  blocks Stage A and repository tests cannot prove this provider state;
+- protected admin writes are denied before repository/provider mutation;
 
 - public read routes `/`, `/catalogue`, `/setups`, `/about`, and `/quote` return
   `200`;
@@ -295,8 +304,13 @@ traffic:
 - `npm run validate:production-security-readiness` locally without real
   production secrets.
 - `npm run test:deployment-contract-follow-up`.
-- `npm run validate:stage-a-oauth-deployment-readiness`; this Stage A path must
-  pass without active n8n configuration.
+- `npm run validate:stage-a-oauth-readiness`; this repository-only Stage A path
+  must pass without active n8n configuration and cannot prove provider
+  admission.
+- After separately authorised provider verification,
+  `npm run validate:stage-a-oauth-deployment-readiness -- --provider-admission-evidence <temporary-secret-safe-evidence-path>`;
+  this completion path still requires no n8n but holds without explicit
+  disabled admin-mutation state and provider-admission `PASS` evidence.
 - `git diff --check`.
 
 ## Stage B Manual Smoke-test Checklist

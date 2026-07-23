@@ -145,7 +145,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       {
         requestedOperation: "membership.manage",
         requestMethod,
-        request
+        request,
+        requiresMutationCapability: true
       },
       {
         requestMetadata: {

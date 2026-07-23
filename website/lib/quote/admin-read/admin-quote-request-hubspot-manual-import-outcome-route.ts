@@ -218,7 +218,8 @@ export async function handleAdminQuoteRequestHubSpotManualImportOutcomeRoute(
       {
         requestedOperation: "quote.write",
         requestMethod,
-        request
+        request,
+        requiresMutationCapability: true
       },
       {
         requestMetadata: {

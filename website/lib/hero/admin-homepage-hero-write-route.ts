@@ -315,7 +315,8 @@ async function verifyAdminWriteBoundary(
       {
         requestedOperation: heroWriteOperation,
         requestMethod,
-        request
+        request,
+        requiresMutationCapability: true
       },
       {
         requestMetadata: {

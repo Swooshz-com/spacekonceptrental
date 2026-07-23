@@ -259,7 +259,8 @@ export async function handleAdminQuoteRequestCrmHandoffStatusUpdateRoute(
       {
         requestedOperation: "quote.write",
         requestMethod,
-        request
+        request,
+        requiresMutationCapability: true
       },
       {
         requestMetadata: {
