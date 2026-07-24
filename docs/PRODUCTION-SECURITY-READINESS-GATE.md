@@ -92,7 +92,7 @@ server-side env has been configured there.
 | Mode | How to run | Missing/invalid launch env |
 | --- | --- | --- |
 | Stage A repository-safe | `npm run validate:stage-a-oauth-readiness` | Requires no provider env, quote configuration, active n8n configuration, or live catalog; does not satisfy provider admission evidence. |
-| Stage A completion | `npm run validate:stage-a-oauth-deployment-readiness -- --provider-admission-evidence <temporary-secret-safe-evidence-path>` | Validates every Stage A runtime env name/safe shape, exact unpadded disabled admin-mutation state, and direct provider-admission `PASS` evidence; holds when any cannot be proven. |
+| Stage A completion | `npm run validate:stage-a-oauth-deployment-readiness -- --provider-admission-evidence <temporary-secret-safe-evidence-path>` | Validates every Stage A runtime env name/safe shape, exact unpadded disabled admin-mutation state, absence of every contract-classified Stage B quote/handoff name, and direct project-bound provider-admission `PASS` evidence; holds when any cannot be proven. |
 | Stage B local/dev | No mode env, or mode set to local | Reports missing full-launch env and missing live catalog as warnings; exits success if static checks pass. |
 | Stage B launch | `npm run validate:production-security-readiness -- --launch --public-security-definer-catalog $catalogPath` | Enforces full env, static checks, complete live function catalog, and exact reviewed privilege contracts. |
 
@@ -112,7 +112,13 @@ For Stage A, only `SUPABASE_URL`, `SUPABASE_ANON_KEY`,
 disabled state, are required
 by the deployment contract. Stage A
 requires no active n8n configuration, no quote-persistence/admission
-configuration, and no quote enablement.
+configuration, and no quote enablement. The contract-derived Stage B-only set
+must be absent, not merely blank:
+`QUOTE_WORKSPACE_ID`, `QUOTE_SUBMISSION_ADMISSION_SECRET`,
+`N8N_ENQUIRY_HANDOFF_WEBHOOK_URL`,
+`N8N_ENQUIRY_HANDOFF_SHARED_SECRET`, and
+`N8N_ENQUIRY_HANDOFF_TIMEOUT_MS`. Blank, whitespace, and malformed presence
+all fail closed by environment name only.
 
 The table below is the full Stage B launch set enforced by
 `validate:production-security-readiness -- --launch`:
@@ -184,7 +190,15 @@ The command also checks tracked files for narrow launch blockers:
 - obvious committed secret token patterns
 - legacy compact JWTs whose decoded Supabase payload identifies either the
   `anon` or `service_role` credential role, without printing the token
+- modern Supabase secret/publishable keys and legacy credential JWTs in UTF-8,
+  BOM-confirmed UTF-16LE/UTF-16BE, or the narrowly detected alternating-NUL
+  shape of BOM-less ASCII UTF-16 text
 - Delivery Log documentation that stops describing technical metadata only
+
+Tracked-file reads are capped at 2 MiB per file. Oversized files fail the
+security scan instead of being silently accepted. NUL-containing content that
+does not satisfy the BOM or strict alternating-NUL UTF-16 classification
+remains treated as binary and is not broadly decoded.
 
 The launch command also validates the full read-only live public `SECURITY
 DEFINER` catalog. It preserves the six intentional anonymous application RPCs
@@ -270,6 +284,8 @@ Hold controlled OAuth deployment if any of these are true:
   rollback-target evidence is unavailable;
 - quote submission is not proven disabled;
 - n8n is not proven inactive;
+- any contract-classified Stage B quote or enquiry-handoff environment name is
+  present, including a blank, whitespace, or malformed value;
 - admin mutations are enabled or cannot be proven disabled;
 - provider signup admission is not directly verified as `PASS` through either
   disabled new-user signup with existing-owner readiness, or a reviewed
@@ -291,12 +307,16 @@ callback does not prove user creation prevention, and repository tests cannot
 prove provider state. A future authorised verification must use the strongest
 suitable official Supabase interface or API, record only a timestamp,
 mechanism class, operator/approval reference, existing-owner readiness, and
-  no-public-signup result, and expose no secrets or private/provider identifiers.
+no-public-signup result, plus the lowercase SHA-256 fingerprint of the canonical
+project reference. Do not record the project reference itself or any secret.
 Evidence must use exact admission mechanism `new-user-signup-disabled` or
 `before-user-created-admission-hook`. Its verification timestamp must be
 canonical UTC ISO-8601 with milliseconds, must not be in the future, and must
 be no more than 24 hours old. It must name the requested immutable SHA and use
-a canonical #291 or #301 issue-comment URL as the approval reference.
+a canonical #291 or #301 issue-comment URL as the approval reference. The
+project fingerprint must exactly match the fingerprint derived from the
+validated canonical `SUPABASE_URL`; missing, malformed, uppercase, or
+mismatched fingerprints remain held.
 
 Stage A accepts a modern `sb_publishable_*` key or a legacy compact Supabase JWT
 only when the decoded legacy role is exactly `anon`. A legacy `service_role`

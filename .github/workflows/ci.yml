@@ -29,6 +29,9 @@ jobs:
       - name: Test post-303 Stage A boundaries
         run: npm run test:post-303-stage-a-boundaries
 
+      - name: Test post-304 delayed review boundaries
+        run: npm run test:post-304-delayed-review
+
       - name: Validate Stage A OAuth readiness
         run: npm run validate:stage-a-oauth-readiness
 

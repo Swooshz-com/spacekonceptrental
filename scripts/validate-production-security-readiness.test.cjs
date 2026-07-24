@@ -220,7 +220,7 @@ test('static scan detects legacy Supabase service-role and anon JWTs without ech
     const output = combinedOutput(result);
 
     assert.notEqual(result.status, 0);
-    assert.match(output, /Supabase legacy credential JWT pattern/i);
+    assert.match(output, /supabase_legacy_jwt_material/);
     assert.doesNotMatch(
       output,
       new RegExp(leaked.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')),
@@ -268,8 +268,8 @@ test('Supabase credential detection covers docs tests contracts SQL and extensio
   assert.match(output, /docs\/contracts\/leak\.json/);
   assert.match(output, /supabase\/migrations\/leak\.sql/);
   assert.match(output, /Dockerfile/);
-  assert.match(output, /Supabase secret key pattern/);
-  assert.match(output, /Supabase publishable key pattern/);
+  assert.match(output, /supabase_secret_key_material/);
+  assert.match(output, /supabase_publishable_key_material/);
   assert.doesNotMatch(output, new RegExp(legacyJwt.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   assert.doesNotMatch(output, new RegExp(modernSecret));
   assert.doesNotMatch(output, new RegExp(modernPublishable));

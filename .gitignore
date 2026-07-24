@@ -4,6 +4,7 @@ node_modules/
 # Next.js / TypeScript build output
 .next/
 website/.next/
+website/public/.well-known/skr-build-provenance.json
 *.tsbuildinfo
 
 # Environment and local secrets

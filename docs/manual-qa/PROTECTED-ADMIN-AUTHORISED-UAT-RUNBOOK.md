@@ -48,7 +48,11 @@ directly verified `PASS` for one reviewed admission mechanism:
 
 Record `PASS | HOLD - NOT VERIFIED | FAIL`, admission mechanism class,
 verification timestamp, operator/approval reference, existing-owner readiness,
-requested immutable SHA, and no-public-signup result. `HOLD - NOT VERIFIED` blocks UAT and Stage A
+requested immutable SHA, no-public-signup result, and the exact lowercase
+SHA-256 fingerprint derived from the validated canonical Supabase project
+reference. The fingerprint must match the configured project, while the
+concrete project reference remains outside tracked evidence. `HOLD - NOT
+VERIFIED` blocks UAT and Stage A
 completion. Authentication or membership denial after callback is not evidence
 that user creation was prevented. Repository tests cannot prove this live
 provider state. A later authorised operator must use the strongest suitable
@@ -60,7 +64,9 @@ The evidence mechanism must be exactly `new-user-signup-disabled` or
 verification timestamp must be valid and not later than the validator's
 current time. It must be canonical UTC ISO-8601 with milliseconds, no more
 than 24 hours old, bound to the requested immutable SHA, and linked to the
-canonical approval comment on issue #291 or #301.
+canonical approval comment on issue #291 or #301. Missing, malformed,
+normalisation-ambiguous, uppercase, or project-mismatched fingerprints are
+invalid.
 
 ## Source Boundaries
 

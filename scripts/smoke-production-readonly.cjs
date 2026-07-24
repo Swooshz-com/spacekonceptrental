@@ -1,24 +1,42 @@
 #!/usr/bin/env node
 
+const crypto = require('node:crypto');
+const path = require('node:path');
+const {
+  calculateInventoryDigest,
+} = require('../website/scripts/generate-production-build-provenance.cjs');
+const {
+  RouteInventoryContractError,
+  calculateRouteInventoryDigest,
+  discoverPublicPageRouteInventory: discoverPublicPageRouteInventoryImpl,
+  maxPublicRouteCount,
+  validateRouteInventory,
+} = require('../website/scripts/production-smoke-route-inventory.cjs');
+
 const productionBaseEnvName = 'SKR_PRODUCTION_BASE_URL';
+const productionExpectedRevisionEnvName = 'SKR_PRODUCTION_EXPECTED_SHA';
+const productionExpectedBuildIdEnvName = 'SKR_PRODUCTION_EXPECTED_BUILD_ID';
 const canonicalApexHost = 'spacekonceptrental.com';
 const approvedWwwHost = `www.${canonicalApexHost}`;
 const canonicalApexOrigin = `https://${canonicalApexHost}`;
 const approvedWwwOrigin = `https://${approvedWwwHost}`;
 const requestTimeoutMs = 10_000;
 const maxBodyBytes = 128 * 1024;
+const maxBuildProvenanceBytes = 64 * 1024;
 const maxClientAssetBytes = 512 * 1024;
 const leakageScanOverlapCharacters = 4096;
-const maxClientAssetCount = 32;
+const maxClientAssetCount = 96;
 const safeMethods = new Set(['GET', 'HEAD']);
 const redirectStatuses = new Set([301, 302, 303, 307, 308]);
+const repoRoot = path.resolve(__dirname, '..');
+const defaultAppDirectory = path.join(repoRoot, 'website', 'app');
+const buildProvenancePath =
+  '/.well-known/skr-build-provenance.json';
+const revisionPattern = /^[0-9a-f]{40}$/;
+const buildIdPattern = /^[A-Za-z0-9._-]{8,128}$/;
+const digestPattern = /^[0-9a-f]{64}$/;
 
-const routeChecks = [
-  { path: '/', expectedStatuses: [200] },
-  { path: '/catalogue', expectedStatuses: [200] },
-  { path: '/setups', expectedStatuses: [200] },
-  { path: '/about', expectedStatuses: [200] },
-  { path: '/quote', expectedStatuses: [200] },
+const boundaryRouteChecks = [
   { path: '/contact', expectedStatuses: [404] },
   {
     path: '/admin',
@@ -115,6 +133,160 @@ function assertSafeMethod(method) {
   return normalized;
 }
 
+function discoverPublicPageRouteInventory(options = {}) {
+  try {
+    return discoverPublicPageRouteInventoryImpl({
+      appDirectory: options.appDirectory ?? defaultAppDirectory,
+    });
+  } catch (error) {
+    if (error instanceof RouteInventoryContractError) {
+      fail(error.code);
+    }
+    throw error;
+  }
+}
+
+function assertApprovedClientAssetPath(assetPath) {
+  if (typeof assetPath !== 'string' || assetPath.includes('\\')) {
+    fail('build_provenance_asset_entry_not_approved');
+  }
+
+  let target;
+
+  try {
+    target = new URL(assetPath, canonicalApexOrigin);
+  } catch {
+    fail('build_provenance_asset_entry_not_approved');
+  }
+
+  if (
+    assetPath !== target.pathname ||
+    assetPath.includes('%') ||
+    target.origin !== canonicalApexOrigin ||
+    target.username ||
+    target.password ||
+    target.port ||
+    target.search ||
+    target.hash ||
+    !target.pathname.startsWith('/_next/static/') ||
+    !target.pathname.endsWith('.js')
+  ) {
+    fail('build_provenance_asset_entry_not_approved');
+  }
+
+  return target.toString();
+}
+
+function assertExpectedRevision(rawValue) {
+  if (typeof rawValue !== 'string' || !revisionPattern.test(rawValue)) {
+    fail('build_provenance_expected_revision_invalid');
+  }
+
+  return rawValue;
+}
+
+function assertExpectedBuildId(rawValue) {
+  if (typeof rawValue !== 'string' || !buildIdPattern.test(rawValue)) {
+    fail('build_provenance_expected_build_id_invalid');
+  }
+
+  return rawValue;
+}
+
+function validateHostedBuildProvenance(
+  candidate,
+  expectedRevision,
+  expectedBuildId,
+) {
+  if (
+    !candidate ||
+    typeof candidate !== 'object' ||
+    Array.isArray(candidate) ||
+    candidate.schemaVersion !== 2 ||
+    candidate.reviewedSha !== expectedRevision ||
+    candidate.buildId !== expectedBuildId ||
+    candidate.trackedCheckoutClean !== true ||
+    candidate.sourceCheckoutClean !== true ||
+    !Number.isSafeInteger(candidate.routeCount) ||
+    candidate.routeCount < 1 ||
+    candidate.routeCount > maxPublicRouteCount ||
+    !digestPattern.test(candidate.routeInventorySha256 ?? '') ||
+    !Array.isArray(candidate.routes) ||
+    candidate.routes.length !== candidate.routeCount ||
+    !Number.isSafeInteger(candidate.assetCount) ||
+    candidate.assetCount < 1 ||
+    candidate.assetCount > maxClientAssetCount ||
+    !digestPattern.test(candidate.inventorySha256 ?? '') ||
+    !Array.isArray(candidate.assets) ||
+    candidate.assets.length !== candidate.assetCount
+  ) {
+    fail('build_provenance_identity_mismatch');
+  }
+
+  let routes;
+
+  try {
+    routes = validateRouteInventory(candidate.routes);
+  } catch (error) {
+    if (error instanceof RouteInventoryContractError) {
+      fail(error.code);
+    }
+    throw error;
+  }
+
+  if (
+    calculateRouteInventoryDigest(routes) !==
+    candidate.routeInventorySha256
+  ) {
+    fail('build_provenance_route_inventory_incomplete');
+  }
+
+  const assets = [];
+  const seenPaths = new Set();
+
+  for (const entry of candidate.assets) {
+    if (
+      !entry ||
+      typeof entry !== 'object' ||
+      Array.isArray(entry) ||
+      !digestPattern.test(entry.sha256 ?? '')
+    ) {
+      fail('build_provenance_asset_entry_not_approved');
+    }
+
+    const assetUrl = assertApprovedClientAssetPath(entry.path);
+    if (seenPaths.has(entry.path)) {
+      fail('build_provenance_asset_inventory_duplicate');
+    }
+
+    seenPaths.add(entry.path);
+    assets.push(
+      Object.freeze({
+        path: entry.path,
+        url: assetUrl,
+        sha256: entry.sha256,
+      }),
+    );
+  }
+
+  const sortedAssets = [...assets].sort((left, right) =>
+    left.path.localeCompare(right.path),
+  );
+  if (
+    sortedAssets.some((entry, index) => entry.path !== assets[index].path) ||
+    calculateInventoryDigest(sortedAssets) !== candidate.inventorySha256
+  ) {
+    fail('build_provenance_asset_inventory_incomplete');
+  }
+
+  return Object.freeze({
+    reviewedSha: candidate.reviewedSha,
+    buildId: candidate.buildId,
+    routes,
+    assets: Object.freeze(sortedAssets),
+  });
+}
+
 function assertSafeRedirect(location, options = {}) {
   if (!location) {
     fail('redirect_location_missing');
@@ -189,6 +361,7 @@ async function scanBoundedClientAsset(response) {
 
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
+  const digest = crypto.createHash('sha256');
   let totalBytes = 0;
   let overlap = '';
 
@@ -205,6 +378,7 @@ async function scanBoundedClientAsset(response) {
       fail('client_asset_body_too_large');
     }
 
+    digest.update(value);
     const text = decoder.decode(value, { stream: true });
     const scanWindow = overlap + text;
     assertNoPublicLeakage(scanWindow);
@@ -213,6 +387,7 @@ async function scanBoundedClientAsset(response) {
 
   const finalText = overlap + decoder.decode();
   assertNoPublicLeakage(finalText);
+  return digest.digest('hex');
 }
 
 function decodeHtmlAttributeValue(value) {
@@ -279,8 +454,7 @@ function collectFirstPartyClientAssets(body, assetUrls) {
       fail('client_asset_reference_not_approved');
     }
 
-    assetUrls.add(target.toString());
-
+    assetUrls.add(assertApprovedClientAssetPath(target.pathname));
     if (assetUrls.size > maxClientAssetCount) {
       fail('client_asset_count_exceeded');
     }
@@ -344,17 +518,64 @@ async function checkRoute(fetchImpl, check, assetUrls) {
   });
 }
 
-async function checkClientAssets(fetchImpl, assetUrls) {
-  for (const assetUrl of assetUrls) {
-    const target = new URL(assetUrl);
+async function fetchHostedBuildProvenance(
+  fetchImpl,
+  expectedRevision,
+  expectedBuildId,
+) {
+  const target = new URL(buildProvenancePath, canonicalApexOrigin);
+  const response = await safeFetch(fetchImpl, target, {
+    method: 'GET',
+    accept: 'application/json',
+  });
+
+  if (response.status !== 200) {
+    fail('build_provenance_status_unexpected');
+  }
+
+  const body = await readBoundedText(response, maxBuildProvenanceBytes);
+  assertNoPublicLeakage(body);
+
+  let candidate;
+
+  try {
+    candidate = JSON.parse(body);
+  } catch {
+    fail('build_provenance_invalid');
+  }
+
+  return validateHostedBuildProvenance(
+    candidate,
+    expectedRevision,
+    expectedBuildId,
+  );
+}
+
+async function checkClientAssets(fetchImpl, buildProvenance, referencedAssets) {
+  const approvedAssetUrls = new Set(
+    buildProvenance.assets.map((asset) => asset.url),
+  );
+
+  for (const referencedAsset of referencedAssets) {
+    if (!approvedAssetUrls.has(referencedAsset)) {
+      fail('client_asset_reference_not_in_build_provenance');
+    }
+  }
+
+  for (const asset of buildProvenance.assets) {
+    const target = new URL(asset.url);
     const response = await safeFetch(fetchImpl, target, {
       method: 'GET',
       accept: 'application/javascript,text/javascript',
     });
-    await scanBoundedClientAsset(response);
 
     if (response.status !== 200) {
       fail('client_asset_status_unexpected');
+    }
+
+    const digest = await scanBoundedClientAsset(response);
+    if (digest !== asset.sha256) {
+      fail('client_asset_digest_mismatch');
     }
   }
 }
@@ -389,6 +610,8 @@ async function checkWwwRedirect(fetchImpl) {
 
 async function runProductionReadOnlySmoke(options = {}) {
   const baseContract = assertProductionBaseUrl(options.rawBaseUrl);
+  const expectedRevision = assertExpectedRevision(options.rawExpectedRevision);
+  const expectedBuildId = assertExpectedBuildId(options.rawExpectedBuildId);
   const fetchImpl = options.fetchImpl ?? globalThis.fetch;
 
   if (typeof fetchImpl !== 'function') {
@@ -396,14 +619,34 @@ async function runProductionReadOnlySmoke(options = {}) {
   }
 
   const results = [];
-  const clientAssetUrls = new Set();
+  const referencedClientAssetUrls = new Set();
+  const buildProvenance = await fetchHostedBuildProvenance(
+    fetchImpl,
+    expectedRevision,
+    expectedBuildId,
+  );
+  const routeChecks = [
+    ...buildProvenance.routes.map((route) =>
+      Object.freeze({
+        path: route.path,
+        expectedStatuses: route.expectedStatuses,
+      }),
+    ),
+    ...boundaryRouteChecks,
+  ];
 
   for (const check of routeChecks) {
-    results.push(await checkRoute(fetchImpl, check, clientAssetUrls));
+    results.push(
+      await checkRoute(fetchImpl, check, referencedClientAssetUrls),
+    );
   }
 
   results.push(await checkWwwRedirect(fetchImpl));
-  await checkClientAssets(fetchImpl, clientAssetUrls);
+  await checkClientAssets(
+    fetchImpl,
+    buildProvenance,
+    referencedClientAssetUrls,
+  );
 
   return Object.freeze({
     schemaVersion: 1,
@@ -415,7 +658,11 @@ async function runProductionReadOnlySmoke(options = {}) {
     quoteSubmissionAttempted: false,
     oauthInitiated: false,
     authenticated: false,
-    clientAssetsScanned: clientAssetUrls.size,
+    publicRoutesDiscovered: buildProvenance.routes.length,
+    reviewedRevisionVerified: true,
+    deployedBuildIdentityVerified: true,
+    deployedClientAssetsDiscovered: buildProvenance.assets.length,
+    clientAssetsScanned: buildProvenance.assets.length,
     results,
   });
 }
@@ -432,6 +679,8 @@ function safeFailureResult(error) {
 if (require.main === module) {
   runProductionReadOnlySmoke({
     rawBaseUrl: process.env[productionBaseEnvName],
+    rawExpectedRevision: process.env[productionExpectedRevisionEnvName],
+    rawExpectedBuildId: process.env[productionExpectedBuildIdEnvName],
   })
     .then((result) => {
       process.stdout.write(`${JSON.stringify(result)}\n`);
@@ -446,6 +695,8 @@ module.exports = {
   SmokeContractError,
   assertProductionBaseUrl,
   assertSafeMethod,
+  discoverPublicPageRouteInventory,
   runProductionReadOnlySmoke,
   safeFailureResult,
+  validateHostedBuildProvenance,
 };

@@ -3,6 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
 const {
+  deriveSupabaseProjectIdentity,
   validateStageARepositoryReadiness: validateStageARepositoryReadinessImpl,
 } = require('./validate-stage-a-oauth-deployment-readiness.cjs');
 
@@ -169,6 +170,9 @@ const providerAdmissionEvidence = {
   requestedImmutableSha: testRevision,
   existingOwnerReadiness: 'PASS',
   noPublicSignupResult: 'PASS',
+  supabaseProjectIdentityFingerprint: deriveSupabaseProjectIdentity(
+    stageACompletionEnv.SUPABASE_URL,
+  ),
 };
 
 const evidenceNowMs = Date.parse('2026-07-23T00:05:00.000Z');
@@ -289,6 +293,7 @@ test('Stage A contract requires disabled admin mutations and verified provider a
     'requestedImmutableSha',
     'existingOwnerReadiness',
     'noPublicSignupResult',
+    'supabaseProjectIdentityFingerprint',
   ]);
 });
 
@@ -503,6 +508,10 @@ test('Stage A documents keep provider admission on HOLD until independently veri
   assert.match(combined, /24 hours/i);
   assert.match(combined, /requested immutable SHA/i);
   assert.match(combined, /\/_next\/static\/\*\.js/);
+  assert.match(combined, /Local `website\/\.next`.*not.*deployed-build evidence/is);
+  assert.match(combined, /SKR_PRODUCTION_EXPECTED_BUILD_ID/);
+  assert.match(combined, /hosted provenance manifest/i);
+  assert.match(combined, /complete inventory/i);
   assert.match(combined, /never fetches? third-party script origins?/i);
   assert.match(combined, /clean tracked checkout/i);
   assert.match(combined, /legacy\s+[`]?service_role[`]? JWT is rejected/i);

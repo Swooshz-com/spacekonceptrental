@@ -16,6 +16,7 @@
     "validate:stage-a-oauth-deployment-readiness": "node scripts/validate-stage-a-oauth-deployment-readiness.cjs",
     "validate:stage-a-oauth-readiness": "node scripts/validate-stage-a-oauth-deployment-readiness.cjs --repository-only",
     "test:post-303-stage-a-boundaries": "node --test scripts/smoke-production-readonly.test.cjs scripts/validate-post-303-stage-a-boundaries.test.cjs",
+    "test:post-304-delayed-review": "node --test scripts/validate-post-304-delayed-review.test.cjs scripts/validate-pr-305-amendment.test.cjs scripts/validate-pr-305-programme-review.test.cjs",
     "validate:quote-email-runtime-readiness": "node scripts/validate-quote-email-runtime-readiness.cjs",
     "validate:release-candidate-suite": "node scripts/validate-release-candidate-suite.cjs",
     "validate:protected-admin-enquiry-inbox-triage-foundation": "node scripts/validate-protected-admin-enquiry-inbox-triage-foundation.cjs",

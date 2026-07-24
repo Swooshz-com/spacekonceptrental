@@ -1,15 +1,53 @@
 const assert = require('node:assert/strict');
+const crypto = require('node:crypto');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
 const test = require('node:test');
+const {
+  calculateInventoryDigest,
+} = require('../website/scripts/generate-production-build-provenance.cjs');
+const {
+  calculateRouteInventoryDigest,
+  discoverPublicPageRouteInventory,
+} = require('../website/scripts/production-smoke-route-inventory.cjs');
 const {
   SmokeContractError,
   assertProductionBaseUrl,
   assertSafeMethod,
-  runProductionReadOnlySmoke,
+  runProductionReadOnlySmoke: runProductionReadOnlySmokeImpl,
   safeFailureResult,
 } = require('./smoke-production-readonly.cjs');
 
 const apex = 'https://spacekonceptrental.com';
 const www = 'https://www.spacekonceptrental.com';
+const expectedRevision = 'a'.repeat(40);
+const expectedBuildId = 'synthetic-build-current';
+const buildProvenanceUrl =
+  `${apex}/.well-known/skr-build-provenance.json`;
+const safeClientAssetDirectory = fs.mkdtempSync(
+  path.join(os.tmpdir(), 'skr-smoke-client-assets-'),
+);
+const safeClientAssetPath = path.join(
+  safeClientAssetDirectory,
+  'chunks',
+  'inventory-safe.js',
+);
+const safeClientAssetUrl =
+  `${apex}/_next/static/chunks/inventory-safe.js`;
+const productionRouteInventory = discoverPublicPageRouteInventory({
+  appDirectory: path.join(__dirname, '..', 'website', 'app'),
+});
+fs.mkdirSync(path.dirname(safeClientAssetPath), { recursive: true });
+fs.writeFileSync(safeClientAssetPath, 'globalThis.__skrSafe = true;\n');
+
+function runProductionReadOnlySmoke(options) {
+  return runProductionReadOnlySmokeImpl({
+    rawExpectedRevision: expectedRevision,
+    rawExpectedBuildId: expectedBuildId,
+    ...options,
+  });
+}
 
 function response(status, body = 'safe public response', headers = {}) {
   return new Response(body, { status, headers });
@@ -18,11 +56,10 @@ function response(status, body = 'safe public response', headers = {}) {
 function createMockFetch(overrides = {}) {
   const calls = [];
   const defaults = new Map([
-    [`${apex}/`, response(200)],
-    [`${apex}/catalogue`, response(200)],
-    [`${apex}/setups`, response(200)],
-    [`${apex}/about`, response(200)],
-    [`${apex}/quote`, response(200)],
+    ...productionRouteInventory.routes.map((route) => [
+      new URL(route.path, apex).toString(),
+      response(200),
+    ]),
     [`${apex}/contact`, response(404)],
     [
       `${apex}/admin`,
@@ -32,6 +69,7 @@ function createMockFetch(overrides = {}) {
       `${www}/`,
       response(308, '', { Location: `${apex}/` }),
     ],
+    [safeClientAssetUrl, response(200, 'globalThis.__skrSafe = true;')],
   ]);
   const configured = new Map([...defaults, ...Object.entries(overrides)]);
 
@@ -40,6 +78,49 @@ function createMockFetch(overrides = {}) {
     fetch: async (target, options) => {
       const url = target.toString();
       calls.push({ url, options });
+      if (url === buildProvenanceUrl && !configured.has(url)) {
+        const assets = [];
+
+        for (const [configuredUrl, configuredResponse] of configured) {
+          const parsed = new URL(configuredUrl);
+          if (
+            parsed.origin !== apex ||
+            !parsed.pathname.startsWith('/_next/static/') ||
+            !parsed.pathname.endsWith('.js')
+          ) {
+            continue;
+          }
+
+          const body = Buffer.from(
+            await configuredResponse.clone().arrayBuffer(),
+          );
+          assets.push({
+            path: parsed.pathname,
+            sha256: crypto.createHash('sha256').update(body).digest('hex'),
+          });
+        }
+
+        assets.sort((left, right) => left.path.localeCompare(right.path));
+        return response(
+          200,
+          JSON.stringify({
+            schemaVersion: 2,
+            reviewedSha: expectedRevision,
+            buildId: expectedBuildId,
+            trackedCheckoutClean: true,
+            sourceCheckoutClean: true,
+            routeCount: productionRouteInventory.routes.length,
+            routeInventorySha256: calculateRouteInventoryDigest(
+              productionRouteInventory.routes,
+            ),
+            routes: productionRouteInventory.routes,
+            assetCount: assets.length,
+            inventorySha256: calculateInventoryDigest(assets),
+            assets,
+          }),
+          { 'Content-Type': 'application/json' },
+        );
+      }
       const configuredResponse = configured.get(url);
 
       if (!configuredResponse) {
@@ -116,7 +197,10 @@ test('production smoke performs only safe manual-redirect GET requests', async (
   assert.equal(result.quoteSubmissionAttempted, false);
   assert.equal(result.oauthInitiated, false);
   assert.equal(result.authenticated, false);
-  assert.equal(mock.calls.length, 8);
+  assert.equal(
+    mock.calls.length,
+    productionRouteInventory.routes.length + 5,
+  );
 
   for (const call of mock.calls) {
     assert.equal(call.options.method, 'GET');
@@ -344,7 +428,7 @@ test('client bundle scanning is canonical, deduplicated, and does not fetch thir
     fetchImpl: mock.fetch,
   });
 
-  assert.equal(result.clientAssetsScanned, 1);
+  assert.equal(result.clientAssetsScanned, 2);
   assert.equal(
     mock.calls.filter((call) => call.url === assetUrl).length,
     1,
@@ -373,7 +457,7 @@ test('browser-valid unquoted and entity-encoded client bundle references cannot 
     fetchImpl: mock.fetch,
   });
 
-  assert.equal(result.clientAssetsScanned, 2);
+  assert.equal(result.clientAssetsScanned, 3);
   assert.ok(mock.calls.some((call) => call.url === unquotedAsset));
   assert.ok(mock.calls.some((call) => call.url === entityAsset));
 });
@@ -391,7 +475,7 @@ test('large current-shape client bundles are streamed under a separate total bou
     fetchImpl: mock.fetch,
   });
 
-  assert.equal(result.clientAssetsScanned, 1);
+  assert.equal(result.clientAssetsScanned, 2);
   assert.ok(mock.calls.some((call) => call.url === assetUrl));
 });
 

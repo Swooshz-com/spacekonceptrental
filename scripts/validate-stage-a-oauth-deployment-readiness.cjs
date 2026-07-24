@@ -2,6 +2,7 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+const { createHash } = require('node:crypto');
 const { spawnSync } = require('node:child_process');
 const {
   scanStaticSecurity,
@@ -72,6 +73,7 @@ const REQUIRED_PROVIDER_ADMISSION_FIELDS = [
   'requestedImmutableSha',
   'existingOwnerReadiness',
   'noPublicSignupResult',
+  'supabaseProjectIdentityFingerprint',
 ];
 
 const ALLOWED_PROVIDER_ADMISSION_MECHANISMS = [
@@ -94,12 +96,12 @@ function hasConfiguredValue(env, name) {
   return typeof env[name] === 'string' && env[name].trim().length > 0;
 }
 
-function isSafeHttpsUrl(value) {
+function resolveCanonicalSupabaseProjectRef(value) {
   try {
     const parsed = new URL(value);
     const canonicalOrigin = `https://${parsed.hostname}`;
 
-    return (
+    const valid =
       parsed.protocol === 'https:' &&
       /^[a-z0-9]{20}\.supabase\.co$/.test(parsed.hostname) &&
       !parsed.username &&
@@ -108,11 +110,41 @@ function isSafeHttpsUrl(value) {
       !parsed.search &&
       !parsed.hash &&
       parsed.pathname === '/' &&
-      (value === canonicalOrigin || value === `${canonicalOrigin}/`)
-    );
+      (value === canonicalOrigin || value === `${canonicalOrigin}/`);
+
+    return valid ? parsed.hostname.slice(0, -'.supabase.co'.length) : null;
   } catch {
-    return false;
+    return null;
   }
+}
+
+function isSafeHttpsUrl(value) {
+  return resolveCanonicalSupabaseProjectRef(value) !== null;
+}
+
+function deriveSupabaseProjectIdentity(value) {
+  const projectRef = resolveCanonicalSupabaseProjectRef(value);
+
+  if (!projectRef) {
+    return null;
+  }
+
+  return `sha256:${createHash('sha256').update(projectRef, 'utf8').digest('hex')}`;
+}
+
+function deriveStageAForbiddenEnvNames(contract) {
+  const stageA =
+    contract?.launchReadiness?.stages?.stageAControlledOAuthDeployment;
+  const stageB = contract?.launchReadiness?.stages?.stageBFullEnquiryLaunch;
+  const stageARequired = new Set(stageA?.requiredEnvNames ?? []);
+  const stageBRequired = (stageB?.requiredEnvNames ?? []).filter(
+    (name) => !stageARequired.has(name),
+  );
+  const metadataForbidden = (contract?.variables ?? [])
+    .filter((entry) => entry.stageAConfiguredState === 'forbidden')
+    .map((entry) => entry.name);
+
+  return [...new Set([...stageBRequired, ...metadataForbidden])];
 }
 
 function hasSafeSecretShape(value) {
@@ -312,11 +344,18 @@ function validateStageARepositoryReadiness({
   if (!repositoryOnly) {
     validateStageARuntimeEnv(issues, env);
     const adminMutationState = env.ADMIN_MUTATIONS_ENABLED;
+    const forbiddenStageBEnvNames = deriveStageAForbiddenEnvNames(contract);
 
     if (adminMutationState === 'true') {
       issues.push('stage_a_admin_mutations_not_disabled');
     } else if (adminMutationState !== 'false') {
       issues.push('stage_a_admin_mutations_not_proven_disabled');
+    }
+
+    for (const name of forbiddenStageBEnvNames) {
+      if (Object.prototype.hasOwnProperty.call(env, name)) {
+        issues.push(`stage_a_forbidden_stage_b_env_present:${name}`);
+      }
     }
 
     if (expectedRevision === null) {
@@ -335,6 +374,11 @@ function validateStageARepositoryReadiness({
       canonicalEvidenceTimestampPattern.test(evidence.verifiedAt) &&
       Number.isFinite(verifiedAtMs) &&
       new Date(verifiedAtMs).toISOString() === evidence.verifiedAt;
+    const configuredProjectIdentity = deriveSupabaseProjectIdentity(
+      env.SUPABASE_URL,
+    );
+    const evidenceProjectIdentity =
+      evidence?.supabaseProjectIdentityFingerprint;
     const evidenceComplete =
       evidence?.verificationStatus === 'PASS' &&
       evidence?.existingOwnerReadiness === 'PASS' &&
@@ -350,7 +394,10 @@ function validateStageARepositoryReadiness({
       approvalReferencePattern.test(evidence.operatorApprovalReference) &&
       typeof expectedRevision === 'string' &&
       /^[0-9a-f]{40}$/.test(expectedRevision) &&
-      evidence?.requestedImmutableSha === expectedRevision;
+      evidence?.requestedImmutableSha === expectedRevision &&
+      typeof configuredProjectIdentity === 'string' &&
+      /^sha256:[0-9a-f]{64}$/.test(evidenceProjectIdentity ?? '') &&
+      evidenceProjectIdentity === configuredProjectIdentity;
 
     if (!evidenceComplete) {
       issues.push('stage_a_provider_admission_not_verified');
@@ -455,5 +502,7 @@ if (require.main === module) {
 }
 
 module.exports = {
+  deriveStageAForbiddenEnvNames,
+  deriveSupabaseProjectIdentity,
   validateStageARepositoryReadiness,
 };

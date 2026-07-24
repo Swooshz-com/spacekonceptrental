@@ -288,6 +288,10 @@ test('production smoke source has an immutable safe-method boundary and preview 
   assert.match(productionSmoke, /new Set\(\['GET', 'HEAD'\]\)/);
   assert.doesNotMatch(productionSmoke, /method:\s*['"](?:POST|PUT|PATCH|DELETE)['"]/i);
   assert.match(productionSmoke, /SKR_PRODUCTION_BASE_URL/);
+  assert.match(productionSmoke, /SKR_PRODUCTION_EXPECTED_SHA/);
+  assert.match(productionSmoke, /SKR_PRODUCTION_EXPECTED_BUILD_ID/);
+  assert.match(productionSmoke, /build_provenance_identity_mismatch/);
+  assert.doesNotMatch(productionSmoke, /defaultClientAssetDirectory/);
   assert.match(productionSmoke, /spacekonceptrental\.com/);
   assert.match(previewSmoke, /SKR_PREVIEW_BASE_URL/);
   assert.doesNotMatch(previewSmoke, /SKR_PRODUCTION_BASE_URL/);

@@ -69,6 +69,8 @@ private dashboard links, workspace/admin identifiers, or customer data.
 - Clean tracked checkout at validation time: `<PASS-or-FAIL>`
 - Existing-owner readiness: `<PASS-FAIL-or-HOLD>`
 - No-public-signup result: `<PASS-FAIL-or-HOLD>`
+- Supabase project identity fingerprint:
+  `<sha256:64-lowercase-hex-derived-from-canonical-project-ref>`
 
 `HOLD - NOT VERIFIED` blocks owner OAuth UAT and Stage A completion. A callback
 or membership denial does not prove user creation was prevented. Repository
@@ -77,7 +79,10 @@ suitable official Supabase interface or API under separate authorisation, and
 never record private emails, project references, provider values, or secrets.
 PASS evidence must be no more than 24 hours old and must match the requested
 immutable SHA; stale, non-canonical, self-attested, or revision-mismatched
-evidence remains `HOLD - NOT VERIFIED`. A dirty or unresolved tracked checkout
+evidence remains `HOLD - NOT VERIFIED`. The project fingerprint must exactly
+match the fingerprint derived from the validated canonical `SUPABASE_URL`.
+Missing, malformed, uppercase, or mismatched fingerprints remain held. Never
+record the concrete project reference. A dirty or unresolved tracked checkout
 also remains held because the evidence cannot be bound to the exact commit.
 Reference the secret-safe output of
 `npm run validate:stage-a-oauth-deployment-readiness -- --provider-admission-evidence <temporary-secret-safe-evidence-path>`;
@@ -168,6 +173,7 @@ do not record provider credentials or environment values.
 - Anonymous admin denial: `<result-and-evidence-reference>`
 - Google OAuth owner UAT status (`PASS | HOLD - NOT RUN | FAIL`): `<status-and-evidence-reference>`
 - Provider signup admission status (`PASS | HOLD - NOT VERIFIED | FAIL`): `<status-and-evidence-reference>`
+- Provider project fingerprint equality: `<PASS-or-FAIL>`
 - Existing-owner readiness: `<PASS-FAIL-or-HOLD>`
 - No-public-signup result: `<PASS-FAIL-or-HOLD>`
 - Admin mutations remained disabled: `<PASS-or-FAIL>`
@@ -204,6 +210,8 @@ Record presence/validity results by name only. Never include a value.
 - Admin CSRF protection configuration: `<PASS-or-FAIL-by-env-name>`
 - Admin mutation capability (`ADMIN_MUTATIONS_ENABLED`): `<stage-A-explicitly-disabled-or-reviewed-later-state>`
 - n8n enquiry handoff configuration: `<PASS-or-FAIL-or-stage-A-not-required>`
+- Stage A absence of every contract-classified Stage B quote/handoff name:
+  `<PASS-or-FAIL-by-env-name>`
 - No `NEXT_PUBLIC_SUPABASE_*`: `<PASS-or-FAIL>`
 - No `NEXT_PUBLIC_N8N*`: `<PASS-or-FAIL>`
 - No service-role runtime path: `<PASS-or-FAIL>`
@@ -215,11 +223,19 @@ Record presence/validity results by name only. Never include a value.
 | --- | --- | --- |
 | `/` | `200` | `<status-and-timestamp>` |
 | `/catalogue` | `200` | `<status-and-timestamp>` |
+| `/categories` | `200` | `<status-and-timestamp>` |
+| `/events` | `200` | `<status-and-timestamp>` |
+| `/listings` | `200` | `<status-and-timestamp>` |
+| `/privacy` | `200` | `<status-and-timestamp>` |
 | `/setups` | `200` | `<status-and-timestamp>` |
+| `/terms` | `200` | `<status-and-timestamp>` |
 | `/about` | `200` | `<status-and-timestamp>` |
 | `/quote` read | `200`; no submission in Stage A | `<status-and-timestamp>` |
 | `/contact` | intended `404` | `<status-and-timestamp>` |
 | anonymous `/admin` | denied or canonical first-party login redirect | `<status-and-timestamp>` |
+| anonymous `/admin/login` HTML | `200`; leakage-scanned by GET only; no form submission or OAuth initiation | `<status-and-timestamp>` |
+| `/catalogue/[slug]` reviewed probe | `200`; bounded same-origin GET and leakage scan | `<status-and-timestamp>` |
+| `/listings/[slug]` reviewed probe | `200`; bounded same-origin GET and leakage scan | `<status-and-timestamp>` |
 | approved `www` root | canonical redirect to apex | `<status-and-timestamp>` |
 | redirect authority | no localhost/internal proxy authority | `<PASS-or-FAIL>` |
 | public response leakage | no provider/SQL/stack/env/secret leakage in route bodies or bounded referenced first-party Next.js bundles | `<PASS-or-FAIL>` |
@@ -230,7 +246,23 @@ Attach or reference the secret-safe machine-readable output from
 There is no direct provider API call by the smoke harness and no mutating
 provider call. Route rendering may exercise configured read-only Supabase-backed
 application paths through the deployed first-party application. The harness
-also scans at most 32 deduplicated same-origin `/_next/static/*.js` assets with
+uses the exact hosted provenance route inventory generated from the reviewed
+Next.js app tree, treats `/admin/login` as an anonymously reachable public HTML
+page, and includes reviewed deterministic probes for `/catalogue/[slug]` and
+`/listings/[slug]`. It excludes the explicit protected-admin/API set and fails
+closed on new unclassified admin pages, unsupported route syntax, or an
+unprobeable public dynamic route.
+Record the exact `SKR_PRODUCTION_EXPECTED_SHA` and
+`SKR_PRODUCTION_EXPECTED_BUILD_ID` inputs and the machine-readable confirmation
+that hosted build provenance matched both, came from a source-clean build, and
+had complete valid route-inventory and asset-inventory digests. Source-clean
+means no tracked change and no untracked or ignored build-affecting input; only
+the narrow documented generated-output allowlist is permitted. Local
+`website/.next` content and the runner's local route tree are not deployed-
+build evidence. The hosted manifest is generated by `npm run build`, rejects
+symlinked or oversized JavaScript assets, and every listed hosted asset is
+digest-checked. The smoke scans at most 96
+same-origin `/_next/static/*.js` assets with
 the same leakage rules and never fetches third-party script origins. Route HTML
 retains its 128 KiB response bound. Client assets are streamed through a
 4,096-character overlap window with a separate 512 KiB total response ceiling;

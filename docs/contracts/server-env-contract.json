@@ -36,6 +36,8 @@
         "n8nRequired": false,
         "quoteEnablementAllowed": false,
         "adminMutationsRequiredState": "disabled",
+        "stageBConfiguredEnvState": "all-stage-b-only-variable-names-absent",
+        "stageBConfiguredEnvSource": "variables.stageAConfiguredState=forbidden plus Stage B required names not required by Stage A",
         "providerAdmissionEvidence": {
           "requiredStatus": "PASS",
           "holdStatus": "HOLD - NOT VERIFIED",
@@ -43,6 +45,7 @@
           "maximumEvidenceAgeHours": 24,
           "timestampFormat": "canonical-utc-iso-8601-milliseconds",
           "approvalReferenceFormat": "canonical-issue-comment-url",
+          "projectIdentityFormat": "sha256-lowercase-hex-of-canonical-supabase-project-ref",
           "allowedMechanisms": [
             "new-user-signup-disabled",
             "before-user-created-admission-hook"
@@ -54,7 +57,8 @@
             "operatorApprovalReference",
             "requestedImmutableSha",
             "existingOwnerReadiness",
-            "noPublicSignupResult"
+            "noPublicSignupResult",
+            "supabaseProjectIdentityFingerprint"
           ]
         }
       },
@@ -118,9 +122,11 @@
       "visibility": "local-command-control",
       "variables": [
         "SKR_PRODUCTION_READINESS_MODE",
-        "SKR_PRODUCTION_BASE_URL"
+        "SKR_PRODUCTION_BASE_URL",
+        "SKR_PRODUCTION_EXPECTED_SHA",
+        "SKR_PRODUCTION_EXPECTED_BUILD_ID"
       ],
-      "rule": "Use SKR_PRODUCTION_READINESS_MODE only for the readiness command and SKR_PRODUCTION_BASE_URL only as the canonical-host input to the operator-run read-only smoke command. Neither is application runtime configuration."
+      "rule": "Use SKR_PRODUCTION_READINESS_MODE only for the readiness command. Use SKR_PRODUCTION_BASE_URL, SKR_PRODUCTION_EXPECTED_SHA, and SKR_PRODUCTION_EXPECTED_BUILD_ID only as canonical target and immutable build-identity inputs to the operator-run read-only smoke command. None is application runtime configuration."
     },
     {
       "name": "Public-safe client env",
@@ -212,6 +218,24 @@
       "notes": "Accepts only the canonical production apex or approved www HTTPS origin and is not stored as application runtime configuration."
     },
     {
+      "name": "SKR_PRODUCTION_EXPECTED_SHA",
+      "visibility": "local-command-control",
+      "feature": "Production read-only smoke revision binding",
+      "requiredFor": "Operator-run production read-only smoke command only",
+      "browserAllowed": false,
+      "status": "operator-command-only",
+      "notes": "Must be the exact lowercase 40-character reviewed and requested deployment SHA; it is matched against hosted source-clean build provenance containing the canonical route and asset inventory digests and is not stored as application runtime configuration."
+    },
+    {
+      "name": "SKR_PRODUCTION_EXPECTED_BUILD_ID",
+      "visibility": "local-command-control",
+      "feature": "Production read-only smoke deployed-build binding",
+      "requiredFor": "Operator-run production read-only smoke command only",
+      "browserAllowed": false,
+      "status": "operator-command-only",
+      "notes": "Must be the exact non-secret Next.js build identifier emitted by the accepted source-clean build provenance; it is matched against the hosted route-and-asset provenance and is not stored as application runtime configuration."
+    },
+    {
       "name": "SUPABASE_URL",
       "visibility": "server-only",
       "feature": "Supabase runtime",
@@ -245,6 +269,7 @@
       "requiredFor": "Approved first-party quote request persistence",
       "browserAllowed": false,
       "status": "future-deployment-required",
+      "stageAConfiguredState": "forbidden",
       "notes": "Trusted server-side workspace gate for public quote submissions."
     },
     {
@@ -254,6 +279,7 @@
       "requiredFor": "Purpose-separated payload-bound admission proofs for durable quote creation",
       "browserAllowed": false,
       "status": "future-deployment-required",
+      "stageAConfiguredState": "forbidden",
       "notes": "Must match separately provisioned private database configuration; never include values in docs."
     },
     {
@@ -353,6 +379,7 @@
       "requiredFor": "Server-side n8n webhook endpoint after SKR enquiry persistence",
       "browserAllowed": false,
       "status": "future-deployment-required",
+      "stageAConfiguredState": "forbidden",
       "notes": "Real values must stay in server-side hosting config only and must not appear in docs, admin UI, logs, browser code, or PR bodies."
     },
     {
@@ -362,6 +389,7 @@
       "requiredFor": "HMAC signing for the server-side n8n enquiry handoff request",
       "browserAllowed": false,
       "status": "future-deployment-required-secret",
+      "stageAConfiguredState": "forbidden",
       "notes": "Secret value must never be printed, committed, exposed to admin UI, or sent to the browser."
     },
     {
@@ -371,6 +399,7 @@
       "requiredFor": "Optional bounded timeout tuning for the server-side n8n handoff request",
       "browserAllowed": false,
       "status": "optional-dev",
+      "stageAConfiguredState": "forbidden",
       "notes": "Optional server-side tuning value with safe runtime defaults and upper bounds."
     }
   ],

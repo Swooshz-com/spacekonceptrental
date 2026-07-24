@@ -14,6 +14,8 @@ const defaultMode = 'local';
 const launchMode = 'launch';
 const supportedModes = new Set([defaultMode, launchMode]);
 const maxN8nTimeoutMs = 30000;
+const maxTrackedFileScanBytes = 2 * 1024 * 1024;
+const utf16HeuristicSampleBytes = 4096;
 const publicRuntimeExtensions = new Set([
   '.cjs',
   '.css',
@@ -86,11 +88,11 @@ const compactJwtPattern =
   /\beyJ[A-Za-z0-9_-]{8,512}\.[A-Za-z0-9_-]{8,2048}\.[A-Za-z0-9_-]{20,512}\b/g;
 const supabaseKeyPatterns = [
   {
-    label: 'Supabase secret key pattern',
+    label: 'supabase_secret_key_material',
     pattern: /\bsb_secret_[A-Za-z0-9_-]{16,}\b/g,
   },
   {
-    label: 'Supabase publishable key pattern',
+    label: 'supabase_publishable_key_material',
     pattern: /\bsb_publishable_[A-Za-z0-9_-]{16,}\b/g,
   },
 ];
@@ -560,12 +562,93 @@ function listTrackedFiles(scanRoot, overrideFiles) {
 
 function readFileSafe(filePath) {
   try {
+    if (fs.statSync(filePath).size > maxTrackedFileScanBytes) {
+      return undefined;
+    }
+
     const content = fs.readFileSync(filePath);
+
+    if (content.length >= 2 && content[0] === 0xff && content[1] === 0xfe) {
+      const encoded = content.subarray(2);
+
+      return encoded.length % 2 === 0 ? encoded.toString('utf16le') : null;
+    }
+
+    if (content.length >= 2 && content[0] === 0xfe && content[1] === 0xff) {
+      const encoded = content.subarray(2);
+
+      if (encoded.length % 2 !== 0) {
+        return null;
+      }
+
+      const littleEndian = Buffer.allocUnsafe(encoded.length);
+      for (let index = 0; index < encoded.length; index += 2) {
+        littleEndian[index] = encoded[index + 1];
+        littleEndian[index + 1] = encoded[index];
+      }
+
+      return littleEndian.toString('utf16le');
+    }
+
+    if (
+      content.length >= 3 &&
+      content[0] === 0xef &&
+      content[1] === 0xbb &&
+      content[2] === 0xbf
+    ) {
+      return content.subarray(3).toString('utf8');
+    }
+
+    const bomlessUtf16 = detectBomlessUtf16Endian(content);
+    if (bomlessUtf16 === 'le') {
+      return content.toString('utf16le');
+    }
+    if (bomlessUtf16 === 'be') {
+      const littleEndian = Buffer.allocUnsafe(content.length);
+      for (let index = 0; index < content.length; index += 2) {
+        littleEndian[index] = content[index + 1];
+        littleEndian[index + 1] = content[index];
+      }
+      return littleEndian.toString('utf16le');
+    }
 
     return content.includes(0) ? null : content.toString('utf8');
   } catch {
     return undefined;
   }
+}
+
+function detectBomlessUtf16Endian(content) {
+  if (content.length < 8 || content.length % 2 !== 0 || !content.includes(0)) {
+    return null;
+  }
+
+  const sampleLength = Math.min(
+    content.length,
+    utf16HeuristicSampleBytes - (utf16HeuristicSampleBytes % 2),
+  );
+  let evenNuls = 0;
+  let oddNuls = 0;
+  const pairs = sampleLength / 2;
+
+  for (let index = 0; index < sampleLength; index += 2) {
+    evenNuls += content[index] === 0 ? 1 : 0;
+    oddNuls += content[index + 1] === 0 ? 1 : 0;
+  }
+
+  const evenRatio = evenNuls / pairs;
+  const oddRatio = oddNuls / pairs;
+
+  // This deliberately narrow ASCII-text heuristic recognizes the alternating
+  // NUL shape produced by BOM-less UTF-16 while refusing arbitrary binaries.
+  if (oddRatio >= 0.6 && evenRatio <= 0.05) {
+    return 'le';
+  }
+  if (evenRatio >= 0.6 && oddRatio <= 0.05) {
+    return 'be';
+  }
+
+  return null;
 }
 
 function isAllowedEnvReferenceFile(displayPath) {
@@ -698,7 +781,7 @@ function scanStaticSecurity(scanRoot, trackedFiles) {
       addIssue(
         issues,
         displayPath,
-        'Supabase legacy credential JWT pattern',
+        'supabase_legacy_jwt_material',
       );
     }
 
