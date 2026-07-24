@@ -3,6 +3,7 @@
 const crypto = require('node:crypto');
 const path = require('node:path');
 const {
+  approvedProvenanceModes,
   calculateInventoryDigest,
 } = require('../website/scripts/generate-production-build-provenance.cjs');
 const {
@@ -198,6 +199,10 @@ function validateHostedBuildProvenance(
   expectedRevision,
   expectedBuildId,
 ) {
+  const provenanceMode = candidate?.provenanceMode;
+  const isGitCheckout = provenanceMode === 'git-checkout';
+  const isDeploymentSource = provenanceMode === 'deployment-source';
+
   if (
     !candidate ||
     typeof candidate !== 'object' ||
@@ -205,8 +210,11 @@ function validateHostedBuildProvenance(
     candidate.schemaVersion !== 2 ||
     candidate.reviewedSha !== expectedRevision ||
     candidate.buildId !== expectedBuildId ||
-    candidate.trackedCheckoutClean !== true ||
-    candidate.sourceCheckoutClean !== true ||
+    !approvedProvenanceModes.has(provenanceMode) ||
+    (isGitCheckout && candidate.trackedCheckoutClean !== true) ||
+    (isGitCheckout && candidate.sourceCheckoutClean !== true) ||
+    (isDeploymentSource && candidate.trackedCheckoutClean !== false) ||
+    (isDeploymentSource && candidate.sourceCheckoutClean !== false) ||
     !Number.isSafeInteger(candidate.routeCount) ||
     candidate.routeCount < 1 ||
     candidate.routeCount > maxPublicRouteCount ||

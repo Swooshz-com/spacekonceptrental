@@ -74,6 +74,8 @@ function createSmokeFixture(
           schemaVersion: 2,
           reviewedSha,
           buildId,
+          provenanceMode: 'git-checkout',
+          revisionSource: 'git',
           trackedCheckoutClean: true,
           sourceCheckoutClean: true,
           routeCount: routes.length,

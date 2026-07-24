@@ -13,6 +13,7 @@ const maxClientAssetCount = 96;
 const maxClientAssetBytes = 512 * 1024;
 const revisionPattern = /^[0-9a-f]{40}$/;
 const buildIdPattern = /^[A-Za-z0-9._-]{8,128}$/;
+const approvedProvenanceModes = new Set(['git-checkout', 'deployment-source']);
 const approvedIgnoredCheckoutPaths = Object.freeze([
   'node_modules/',
   'website/.next/',
@@ -84,6 +85,108 @@ function assertSourceCheckoutClean(rawStatus) {
   }
 
   return true;
+}
+
+function normalizeRevisionCandidate(value) {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const trimmed = value.trim();
+
+  return revisionPattern.test(trimmed) ? trimmed : null;
+}
+
+function hasLocalGitDir(repoRoot) {
+  try {
+    fs.accessSync(path.join(repoRoot, '.git'));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function tryGitRevision(repoRoot) {
+  if (!hasLocalGitDir(repoRoot)) {
+    return null;
+  }
+
+  try {
+    const raw = execFileSync('git', ['rev-parse', 'HEAD'], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+      windowsHide: true,
+    });
+
+    return normalizeRevisionCandidate(raw);
+  } catch {
+    return null;
+  }
+}
+
+function tryGitCheckoutStatus(repoRoot) {
+  if (!hasLocalGitDir(repoRoot)) {
+    return null;
+  }
+
+  try {
+    return execFileSync(
+      'git',
+      [
+        'status',
+        '--porcelain=v1',
+        '-z',
+        '--untracked-files=all',
+        '--ignored=matching',
+      ],
+      {
+        cwd: repoRoot,
+        encoding: 'buffer',
+        maxBuffer: 2 * 1024 * 1024,
+      },
+    );
+  } catch {
+    return null;
+  }
+}
+
+function resolveRevision(options) {
+  const repoRoot = options.repoRoot;
+  const explicitRevision = normalizeRevisionCandidate(options.revision);
+  const gitRevision = tryGitRevision(repoRoot);
+  const sourceCommit = normalizeRevisionCandidate(
+    process.env.SOURCE_COMMIT,
+  );
+
+  if (explicitRevision !== null) {
+    if (gitRevision !== null && explicitRevision !== gitRevision) {
+      fail('build_provenance_revision_source_mismatch');
+    }
+
+    if (sourceCommit !== null && explicitRevision !== sourceCommit) {
+      fail('build_provenance_revision_source_mismatch');
+    }
+
+    return { revision: explicitRevision, revisionSource: 'explicit' };
+  }
+
+  if (gitRevision !== null && sourceCommit !== null) {
+    if (gitRevision !== sourceCommit) {
+      fail('build_provenance_revision_source_mismatch');
+    }
+
+    return { revision: gitRevision, revisionSource: 'git' };
+  }
+
+  if (gitRevision !== null) {
+    return { revision: gitRevision, revisionSource: 'git' };
+  }
+
+  if (sourceCommit !== null) {
+    return { revision: sourceCommit, revisionSource: 'source-commit' };
+  }
+
+  fail('build_provenance_revision_unavailable');
 }
 
 function inventoryClientAssets(assetDirectory) {
@@ -166,47 +269,31 @@ function generateProductionBuildProvenance(options = {}) {
     options.websiteRoot ?? path.join(__dirname, '..'),
   );
   const nextDirectory = path.join(websiteRoot, '.next');
-  let revision = options.revision;
-  let checkoutStatus = options.checkoutStatus;
 
-  if (revision === undefined) {
-    try {
-      revision = execFileSync('git', ['rev-parse', 'HEAD'], {
-        cwd: repoRoot,
-        encoding: 'utf8',
-      }).trim();
-    } catch {
-      fail('build_provenance_revision_unavailable');
-    }
-  }
+  const { revision, revisionSource } = resolveRevision({
+    repoRoot,
+    revision: options.revision,
+  });
+
+  let checkoutStatus = options.checkoutStatus;
+  let checkoutStatusAvailable = false;
 
   if (checkoutStatus === undefined) {
-    try {
-      checkoutStatus = execFileSync(
-        'git',
-        [
-          'status',
-          '--porcelain=v1',
-          '-z',
-          '--untracked-files=all',
-          '--ignored=matching',
-        ],
-        {
-          cwd: repoRoot,
-          encoding: 'buffer',
-          maxBuffer: 2 * 1024 * 1024,
-        },
-      );
-    } catch {
-      fail('build_provenance_source_checkout_status_unavailable');
-    }
+    checkoutStatus = tryGitCheckoutStatus(repoRoot);
+    checkoutStatusAvailable = checkoutStatus !== null;
+  } else {
+    checkoutStatusAvailable = true;
   }
 
-  if (!revisionPattern.test(revision)) {
-    fail('build_provenance_revision_invalid');
+  const gitCheckoutInspected = checkoutStatusAvailable;
+
+  if (gitCheckoutInspected) {
+    assertSourceCheckoutClean(checkoutStatus);
   }
 
-  assertSourceCheckoutClean(checkoutStatus);
+  const provenanceMode = gitCheckoutInspected
+    ? 'git-checkout'
+    : 'deployment-source';
 
   let buildId;
 
@@ -228,8 +315,10 @@ function generateProductionBuildProvenance(options = {}) {
     schemaVersion: 2,
     reviewedSha: revision,
     buildId,
-    trackedCheckoutClean: true,
-    sourceCheckoutClean: true,
+    provenanceMode,
+    revisionSource,
+    trackedCheckoutClean: gitCheckoutInspected,
+    sourceCheckoutClean: gitCheckoutInspected,
     routeCount: routeInventory.routes.length,
     routeInventorySha256: calculateRouteInventoryDigest(
       routeInventory.routes,
@@ -264,13 +353,25 @@ function generateProductionBuildProvenance(options = {}) {
 
 if (require.main === module) {
   try {
-    const result = generateProductionBuildProvenance();
+    const cliOptions = {};
+
+    if (process.env.PROVENANCE_REPO_ROOT) {
+      cliOptions.repoRoot = process.env.PROVENANCE_REPO_ROOT;
+    }
+
+    if (process.env.PROVENANCE_WEBSITE_ROOT) {
+      cliOptions.websiteRoot = process.env.PROVENANCE_WEBSITE_ROOT;
+    }
+
+    const result = generateProductionBuildProvenance(cliOptions);
     process.stdout.write(
       `${JSON.stringify({
         schemaVersion: 2,
         outcome: 'passed',
         reviewedSha: result.manifest.reviewedSha,
         buildId: result.manifest.buildId,
+        provenanceMode: result.manifest.provenanceMode,
+        revisionSource: result.manifest.revisionSource,
         trackedCheckoutClean: result.manifest.trackedCheckoutClean,
         sourceCheckoutClean: result.manifest.sourceCheckoutClean,
         routeCount: result.manifest.routeCount,
@@ -292,8 +393,13 @@ if (require.main === module) {
 
 module.exports = {
   assertSourceCheckoutClean,
+  approvedProvenanceModes,
   calculateInventoryDigest,
   generateProductionBuildProvenance,
   inventoryClientAssets,
   isApprovedIgnoredCheckoutPath,
+  normalizeRevisionCandidate,
+  resolveRevision,
+  tryGitCheckoutStatus,
+  tryGitRevision,
 };
