@@ -47,7 +47,7 @@
     "test:owner-flow-smoke": "node --test scripts/smoke-owner-flow-local.test.cjs",
     "test:production-security-readiness": "node --test scripts/validate-production-security-readiness.test.cjs",
     "test:deployment-contract-follow-up": "node --test scripts/smoke-production-readonly.test.cjs scripts/validate-deployment-contract-follow-up.test.cjs",
-    "test:hosted-contract-follow-up": "node --test scripts/smoke-production-readonly.test.cjs scripts/validate-deployment-contract-follow-up.test.cjs",
+    "test:hosted-contract-follow-up": "node --test scripts/smoke-production-readonly.test.cjs scripts/validate-deployment-contract-follow-up.test.cjs scripts/test-provenance-source-commit.cjs",
     "test:supabase-seed": "node scripts/test-supabase-seed.cjs",
     "test:supabase-rls": "node scripts/test-supabase-rls.cjs",
     "test:supabase-migrations": "node --test scripts/validate-supabase-migrations.test.cjs",

@@ -14,6 +14,7 @@ const maxClientAssetBytes = 512 * 1024;
 const revisionPattern = /^[0-9a-f]{40}$/;
 const buildIdPattern = /^[A-Za-z0-9._-]{8,128}$/;
 const approvedProvenanceModes = new Set(['git-checkout', 'deployment-source']);
+const approvedRevisionSources = new Set(['explicit', 'git', 'source-commit']);
 const approvedIgnoredCheckoutPaths = Object.freeze([
   'node_modules/',
   'website/.next/',
@@ -87,14 +88,22 @@ function assertSourceCheckoutClean(rawStatus) {
   return true;
 }
 
-function normalizeRevisionCandidate(value) {
+function classifyRevisionCandidate(value) {
   if (typeof value !== 'string') {
-    return null;
+    return { state: 'absent' };
   }
 
   const trimmed = value.trim();
 
-  return revisionPattern.test(trimmed) ? trimmed : null;
+  if (trimmed.length === 0) {
+    return { state: 'malformed' };
+  }
+
+  if (!revisionPattern.test(trimmed)) {
+    return { state: 'malformed' };
+  }
+
+  return { state: 'valid', value: trimmed };
 }
 
 function hasLocalGitDir(repoRoot) {
@@ -106,31 +115,39 @@ function hasLocalGitDir(repoRoot) {
   }
 }
 
-function tryGitRevision(repoRoot) {
+function discoverGitRevision(repoRoot) {
   if (!hasLocalGitDir(repoRoot)) {
-    return null;
+    return { state: 'absent' };
   }
 
+  let raw;
+
   try {
-    const raw = execFileSync('git', ['rev-parse', 'HEAD'], {
+    raw = execFileSync('git', ['rev-parse', 'HEAD'], {
       cwd: repoRoot,
       encoding: 'utf8',
       windowsHide: true,
     });
-
-    return normalizeRevisionCandidate(raw);
   } catch {
-    return null;
+    fail('build_provenance_git_revision_command_failed');
   }
+
+  const trimmed = raw.trim();
+
+  if (!revisionPattern.test(trimmed)) {
+    fail('build_provenance_git_revision_malformed');
+  }
+
+  return { state: 'valid', value: trimmed };
 }
 
-function tryGitCheckoutStatus(repoRoot) {
+function discoverGitCheckoutStatus(repoRoot) {
   if (!hasLocalGitDir(repoRoot)) {
-    return null;
+    return { state: 'absent' };
   }
 
   try {
-    return execFileSync(
+    const status = execFileSync(
       'git',
       [
         'status',
@@ -145,48 +162,68 @@ function tryGitCheckoutStatus(repoRoot) {
         maxBuffer: 2 * 1024 * 1024,
       },
     );
+
+    return { state: 'available', value: status };
   } catch {
-    return null;
+    fail('build_provenance_checkout_status_command_failed');
   }
 }
 
 function resolveRevision(options) {
   const repoRoot = options.repoRoot;
-  const explicitRevision = normalizeRevisionCandidate(options.revision);
-  const gitRevision = tryGitRevision(repoRoot);
-  const sourceCommit = normalizeRevisionCandidate(
+  const explicitSource = classifyRevisionCandidate(options.revision);
+  const gitSource = discoverGitRevision(repoRoot);
+  const sourceCommitSource = classifyRevisionCandidate(
     process.env.SOURCE_COMMIT,
   );
 
-  if (explicitRevision !== null) {
-    if (gitRevision !== null && explicitRevision !== gitRevision) {
+  if (explicitSource.state === 'malformed') {
+    fail('build_provenance_revision_invalid');
+  }
+
+  if (sourceCommitSource.state === 'malformed') {
+    fail('build_provenance_revision_invalid');
+  }
+
+  if (gitSource.state === 'malformed') {
+    fail('build_provenance_git_revision_malformed');
+  }
+
+  const validSources = [];
+
+  if (explicitSource.state === 'valid') {
+    validSources.push({ name: 'explicit', value: explicitSource.value });
+  }
+
+  if (gitSource.state === 'valid') {
+    validSources.push({ name: 'git', value: gitSource.value });
+  }
+
+  if (sourceCommitSource.state === 'valid') {
+    validSources.push({ name: 'source-commit', value: sourceCommitSource.value });
+  }
+
+  if (validSources.length === 0) {
+    fail('build_provenance_revision_unavailable');
+  }
+
+  for (let i = 1; i < validSources.length; i++) {
+    if (validSources[i].value !== validSources[0].value) {
       fail('build_provenance_revision_source_mismatch');
     }
-
-    if (sourceCommit !== null && explicitRevision !== sourceCommit) {
-      fail('build_provenance_revision_source_mismatch');
-    }
-
-    return { revision: explicitRevision, revisionSource: 'explicit' };
   }
 
-  if (gitRevision !== null && sourceCommit !== null) {
-    if (gitRevision !== sourceCommit) {
-      fail('build_provenance_revision_source_mismatch');
-    }
+  let revisionSource;
 
-    return { revision: gitRevision, revisionSource: 'git' };
+  if (explicitSource.state === 'valid') {
+    revisionSource = 'explicit';
+  } else if (gitSource.state === 'valid') {
+    revisionSource = 'git';
+  } else {
+    revisionSource = 'source-commit';
   }
 
-  if (gitRevision !== null) {
-    return { revision: gitRevision, revisionSource: 'git' };
-  }
-
-  if (sourceCommit !== null) {
-    return { revision: sourceCommit, revisionSource: 'source-commit' };
-  }
-
-  fail('build_provenance_revision_unavailable');
+  return { revision: validSources[0].value, revisionSource };
 }
 
 function inventoryClientAssets(assetDirectory) {
@@ -270,30 +307,27 @@ function generateProductionBuildProvenance(options = {}) {
   );
   const nextDirectory = path.join(websiteRoot, '.next');
 
+  const gitMetadataPresent = hasLocalGitDir(repoRoot);
   const { revision, revisionSource } = resolveRevision({
     repoRoot,
     revision: options.revision,
   });
 
-  let checkoutStatus = options.checkoutStatus;
-  let checkoutStatusAvailable = false;
+  let checkoutStatus;
 
-  if (checkoutStatus === undefined) {
-    checkoutStatus = tryGitCheckoutStatus(repoRoot);
-    checkoutStatusAvailable = checkoutStatus !== null;
+  if (options.checkoutStatus !== undefined) {
+    checkoutStatus = { state: 'available', value: options.checkoutStatus };
   } else {
-    checkoutStatusAvailable = true;
+    checkoutStatus = discoverGitCheckoutStatus(repoRoot);
   }
 
-  const gitCheckoutInspected = checkoutStatusAvailable;
+  const gitCheckoutInspected = checkoutStatus.state === 'available';
 
   if (gitCheckoutInspected) {
-    assertSourceCheckoutClean(checkoutStatus);
+    assertSourceCheckoutClean(checkoutStatus.value);
   }
 
-  const provenanceMode = gitCheckoutInspected
-    ? 'git-checkout'
-    : 'deployment-source';
+  const provenanceMode = gitMetadataPresent ? 'git-checkout' : 'deployment-source';
 
   let buildId;
 
@@ -394,12 +428,13 @@ if (require.main === module) {
 module.exports = {
   assertSourceCheckoutClean,
   approvedProvenanceModes,
+  approvedRevisionSources,
   calculateInventoryDigest,
+  classifyRevisionCandidate,
+  discoverGitCheckoutStatus,
+  discoverGitRevision,
   generateProductionBuildProvenance,
   inventoryClientAssets,
   isApprovedIgnoredCheckoutPath,
-  normalizeRevisionCandidate,
-  resolveRevision,
-  tryGitCheckoutStatus,
-  tryGitRevision,
+  hasLocalGitDir,
 };
