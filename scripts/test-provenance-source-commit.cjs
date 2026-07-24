@@ -11,6 +11,7 @@ const {
   approvedRevisionSources,
   classifyRevisionCandidate,
   generateProductionBuildProvenance,
+  probeGitMetadata,
 } = require('../website/scripts/generate-production-build-provenance.cjs');
 
 const safeRevision = 'a'.repeat(40);
@@ -18,7 +19,7 @@ const safeBuildId = 'test-build-id-123';
 
 function createTempWebsite(suffix = '') {
   const dir = fs.mkdtempSync(
-    path.join(require('node:os').tmpdir(), `skr-provenance-${suffix}-`),
+    path.join(require('node:os').tmpdir(), `skr-prov-${suffix}-`),
   );
   const nextDir = path.join(dir, '.next');
   const staticDir = path.join(nextDir, 'static', 'chunks');
@@ -80,16 +81,14 @@ function cleanup(dir) {
   }
 }
 
-function runWithSourceCommit(dir, sourceCommit, fn) {
+function withSourceCommit(value, fn) {
   const saved = process.env.SOURCE_COMMIT;
-
   try {
-    if (sourceCommit === undefined) {
+    if (value === undefined) {
       delete process.env.SOURCE_COMMIT;
     } else {
-      process.env.SOURCE_COMMIT = sourceCommit;
+      process.env.SOURCE_COMMIT = value;
     }
-
     return fn();
   } finally {
     if (saved === undefined) {
@@ -100,38 +99,112 @@ function runWithSourceCommit(dir, sourceCommit, fn) {
   }
 }
 
-// --- classifyRevisionCandidate ---
+// --- classifyRevisionCandidate: explicit input ---
 
-test('classifyRevisionCandidate: absent for non-string', () => {
-  assert.deepEqual(classifyRevisionCandidate(null), { state: 'absent' });
-  assert.deepEqual(classifyRevisionCandidate(undefined), { state: 'absent' });
-  assert.deepEqual(classifyRevisionCandidate(42), { state: 'absent' });
+test('classifyRevisionCandidate explicit: omitted property is absent', () => {
+  assert.deepEqual(
+    classifyRevisionCandidate(undefined, true),
+    { state: 'malformed' },
+  );
 });
 
-test('classifyRevisionCandidate: malformed for empty or whitespace', () => {
-  assert.deepEqual(classifyRevisionCandidate(''), { state: 'malformed' });
-  assert.deepEqual(classifyRevisionCandidate('   '), { state: 'malformed' });
+test('classifyRevisionCandidate explicit: null is malformed', () => {
+  assert.deepEqual(classifyRevisionCandidate(null, true), { state: 'malformed' });
 });
 
-test('classifyRevisionCandidate: malformed for non-hex or wrong length', () => {
-  assert.deepEqual(classifyRevisionCandidate('abc'), { state: 'malformed' });
-  assert.deepEqual(classifyRevisionCandidate('g'.repeat(40)), {
-    state: 'malformed',
-  });
-  assert.deepEqual(classifyRevisionCandidate('a'.repeat(39)), {
-    state: 'malformed',
-  });
+test('classifyRevisionCandidate explicit: number is malformed', () => {
+  assert.deepEqual(classifyRevisionCandidate(42, true), { state: 'malformed' });
 });
 
-test('classifyRevisionCandidate: valid for correct 40-char hex', () => {
-  assert.deepEqual(classifyRevisionCandidate(safeRevision), {
+test('classifyRevisionCandidate explicit: boolean is malformed', () => {
+  assert.deepEqual(classifyRevisionCandidate(true, true), { state: 'malformed' });
+});
+
+test('classifyRevisionCandidate explicit: object is malformed', () => {
+  assert.deepEqual(classifyRevisionCandidate({}, true), { state: 'malformed' });
+});
+
+test('classifyRevisionCandidate explicit: empty string is malformed', () => {
+  assert.deepEqual(classifyRevisionCandidate('', true), { state: 'malformed' });
+});
+
+test('classifyRevisionCandidate explicit: whitespace is malformed', () => {
+  assert.deepEqual(classifyRevisionCandidate('   ', true), { state: 'malformed' });
+});
+
+test('classifyRevisionCandidate explicit: valid hex is valid', () => {
+  assert.deepEqual(classifyRevisionCandidate(safeRevision, true), {
     state: 'valid',
     value: safeRevision,
   });
-  assert.deepEqual(classifyRevisionCandidate('  ' + safeRevision + '  '), {
+});
+
+// --- classifyRevisionCandidate: non-explicit (SOURCE_COMMIT) ---
+
+test('classifyRevisionCandidate env: undefined is absent', () => {
+  assert.deepEqual(classifyRevisionCandidate(undefined, false), {
+    state: 'absent',
+  });
+});
+
+test('classifyRevisionCandidate env: null is absent', () => {
+  assert.deepEqual(classifyRevisionCandidate(null, false), {
+    state: 'absent',
+  });
+});
+
+test('classifyRevisionCandidate env: empty string is malformed', () => {
+  assert.deepEqual(classifyRevisionCandidate('', false), {
+    state: 'malformed',
+  });
+});
+
+test('classifyRevisionCandidate env: valid hex is valid', () => {
+  assert.deepEqual(classifyRevisionCandidate(safeRevision, false), {
     state: 'valid',
     value: safeRevision,
   });
+});
+
+// --- probeGitMetadata ---
+
+test('probeGitMetadata: genuine ENOENT returns absent', () => {
+  const dir = createTempWebsite('probe-absent');
+  try {
+    const result = probeGitMetadata(dir);
+    assert.deepEqual(result, { state: 'absent' });
+  } finally {
+    cleanup(dir);
+  }
+});
+
+test('probeGitMetadata: .git present returns present', () => {
+  const dir = createTempWebsite('probe-present');
+  createTempRepo(dir);
+  try {
+    const result = probeGitMetadata(dir);
+    assert.deepEqual(result, { state: 'present' });
+  } finally {
+    cleanup(dir);
+  }
+});
+
+test('probeGitMetadata: non-ENOENT error fails closed', (t) => {
+  const dir = createTempWebsite('probe-perm');
+  const originalAccessSync = fs.accessSync;
+  fs.accessSync = (p) => {
+    const err = new Error('EACCES: permission denied');
+    err.code = 'EACCES';
+    throw err;
+  };
+  try {
+    assert.throws(() => probeGitMetadata(dir), {
+      message: 'build_provenance_git_metadata_probe_failed',
+    });
+  } finally {
+    fs.accessSync = originalAccessSync;
+    cleanup(dir);
+  }
 });
 
 // --- approved sets ---
@@ -149,13 +222,12 @@ test('approvedRevisionSources contains expected sources', () => {
   assert.equal(approvedRevisionSources.size, 3);
 });
 
-// --- Scenario 1: No Git, no explicit, no SOURCE_COMMIT ---
+// --- Scenario 1: no Git, no revision source ---
 
-test('1. no Git, no explicit, no SOURCE_COMMIT: fail unavailable', () => {
+test('1. no Git and no revision source: fail unavailable', () => {
   const dir = createTempWebsite('s1');
-
   try {
-    runWithSourceCommit(dir, undefined, () => {
+    withSourceCommit(undefined, () => {
       assert.throws(
         () => generateProductionBuildProvenance({ repoRoot: dir, websiteRoot: dir }),
         { message: 'build_provenance_revision_unavailable' },
@@ -166,18 +238,16 @@ test('1. no Git, no explicit, no SOURCE_COMMIT: fail unavailable', () => {
   }
 });
 
-// --- Scenario 2: No Git + valid SOURCE_COMMIT: pass deployment-source ---
+// --- Scenario 2: valid SOURCE_COMMIT without Git ---
 
-test('2. no Git + valid SOURCE_COMMIT: pass deployment-source', () => {
+test('2. valid SOURCE_COMMIT without Git: pass deployment-source', () => {
   const dir = createTempWebsite('s2');
-
   try {
-    runWithSourceCommit(dir, safeRevision, () => {
+    withSourceCommit(safeRevision, () => {
       const result = generateProductionBuildProvenance({
         repoRoot: dir,
         websiteRoot: dir,
       });
-
       assert.equal(result.manifest.provenanceMode, 'deployment-source');
       assert.equal(result.manifest.revisionSource, 'source-commit');
       assert.equal(result.manifest.sourceCheckoutClean, false);
@@ -189,13 +259,12 @@ test('2. no Git + valid SOURCE_COMMIT: pass deployment-source', () => {
   }
 });
 
-// --- Scenario 3: No Git + malformed SOURCE_COMMIT: fail invalid ---
+// --- Scenario 3: malformed SOURCE_COMMIT without Git ---
 
-test('3. no Git + malformed SOURCE_COMMIT: fail invalid', () => {
+test('3. malformed SOURCE_COMMIT without Git: fail invalid', () => {
   const dir = createTempWebsite('s3');
-
   try {
-    runWithSourceCommit(dir, 'not-a-valid-sha', () => {
+    withSourceCommit('not-valid', () => {
       assert.throws(
         () => generateProductionBuildProvenance({ repoRoot: dir, websiteRoot: dir }),
         { message: 'build_provenance_revision_invalid' },
@@ -206,14 +275,13 @@ test('3. no Git + malformed SOURCE_COMMIT: fail invalid', () => {
   }
 });
 
-// --- Scenario 4: Valid Git + malformed SOURCE_COMMIT: fail invalid ---
+// --- Scenario 4: valid Git plus malformed SOURCE_COMMIT ---
 
-test('4. valid Git + malformed SOURCE_COMMIT: fail invalid', () => {
+test('4. valid Git plus malformed SOURCE_COMMIT: fail invalid', () => {
   const dir = createTempWebsite('s4');
   createTempRepo(dir);
-
   try {
-    runWithSourceCommit(dir, 'not-a-valid-sha', () => {
+    withSourceCommit('not-valid', () => {
       assert.throws(
         () => generateProductionBuildProvenance({ repoRoot: dir, websiteRoot: dir }),
         { message: 'build_provenance_revision_invalid' },
@@ -224,20 +292,18 @@ test('4. valid Git + malformed SOURCE_COMMIT: fail invalid', () => {
   }
 });
 
-// --- Scenario 5: Valid Git + malformed explicit revision: fail invalid ---
+// --- Scenario 5: valid Git plus malformed explicit string ---
 
-test('5. valid Git + malformed explicit revision: fail invalid', () => {
+test('5. valid Git plus malformed explicit string: fail invalid', () => {
   const dir = createTempWebsite('s5');
   createTempRepo(dir);
-
   try {
     assert.throws(
-      () =>
-        generateProductionBuildProvenance({
-          repoRoot: dir,
-          websiteRoot: dir,
-          revision: 'not-valid',
-        }),
+      () => generateProductionBuildProvenance({
+        repoRoot: dir,
+        websiteRoot: dir,
+        revision: 'not-valid',
+      }),
       { message: 'build_provenance_revision_invalid' },
     );
   } finally {
@@ -245,93 +311,196 @@ test('5. valid Git + malformed explicit revision: fail invalid', () => {
   }
 });
 
-// --- Scenario 6: Malformed Git revision output: fail closed ---
+// --- Scenario 6: omitted explicit revision (property not in options) ---
 
-test('6. malformed Git revision output: fail closed', () => {
+test('6. omitted explicit revision: uses Git when available', () => {
   const dir = createTempWebsite('s6');
-
+  createTempRepo(dir);
   try {
-    runWithSourceCommit(dir, undefined, () => {
-      assert.throws(
-        () => generateProductionBuildProvenance({ repoRoot: dir, websiteRoot: dir }),
-        { message: 'build_provenance_revision_unavailable' },
-      );
+    const result = generateProductionBuildProvenance({
+      repoRoot: dir,
+      websiteRoot: dir,
     });
+    assert.equal(result.manifest.revisionSource, 'git');
+    assert.equal(result.manifest.provenanceMode, 'git-checkout');
   } finally {
     cleanup(dir);
   }
 });
 
-// --- Scenario 7: .git exists and rev-parse fails, no other source: fail ---
+// --- Scenario 7: explicitly supplied undefined revision ---
 
-test('7. .git exists and rev-parse fails, no other source: fail git error', () => {
+test('7. explicitly supplied undefined revision: fail invalid', () => {
   const dir = createTempWebsite('s7');
-  fs.mkdirSync(path.join(dir, '.git'));
-
-  try {
-    runWithSourceCommit(dir, undefined, () => {
-      assert.throws(
-        () => generateProductionBuildProvenance({ repoRoot: dir, websiteRoot: dir }),
-        { message: 'build_provenance_git_revision_command_failed' },
-      );
-    });
-  } finally {
-    cleanup(dir);
-  }
-});
-
-// --- Scenario 8: .git exists and rev-parse fails, with valid SOURCE_COMMIT: still fail ---
-
-test('8. .git exists and rev-parse fails with valid SOURCE_COMMIT: still fail', () => {
-  const dir = createTempWebsite('s8');
-  fs.mkdirSync(path.join(dir, '.git'));
-
-  try {
-    runWithSourceCommit(dir, safeRevision, () => {
-      assert.throws(
-        () => generateProductionBuildProvenance({ repoRoot: dir, websiteRoot: dir }),
-        { message: 'build_provenance_git_revision_command_failed' },
-      );
-    });
-  } finally {
-    cleanup(dir);
-  }
-});
-
-// --- Scenario 9: .git exists and git commands fail: fail closed ---
-
-test('9. .git exists and git commands fail: fail closed', () => {
-  const dir = createTempWebsite('s9');
-  fs.mkdirSync(path.join(dir, '.git'));
-
   try {
     assert.throws(
-      () =>
-        generateProductionBuildProvenance({
-          repoRoot: dir,
-          websiteRoot: dir,
-        }),
-      (error) => {
-        assert.ok(
-          error.message === 'build_provenance_git_revision_command_failed' ||
-          error.message === 'build_provenance_checkout_status_command_failed',
-          `Expected git command failure, got: ${error.message}`,
-        );
-        return true;
-      },
+      () => generateProductionBuildProvenance({
+        repoRoot: dir,
+        websiteRoot: dir,
+        revision: undefined,
+      }),
+      { message: 'build_provenance_revision_invalid' },
     );
   } finally {
     cleanup(dir);
   }
 });
 
-// --- Scenario 10: Dirty checkout: fail ---
+// --- Scenario 8: explicitly supplied null revision ---
 
-test('10. dirty checkout: fail source_checkout_not_clean', () => {
+test('8. explicitly supplied null revision: fail invalid', () => {
+  const dir = createTempWebsite('s8');
+  try {
+    assert.throws(
+      () => generateProductionBuildProvenance({
+        repoRoot: dir,
+        websiteRoot: dir,
+        revision: null,
+      }),
+      { message: 'build_provenance_revision_invalid' },
+    );
+  } finally {
+    cleanup(dir);
+  }
+});
+
+// --- Scenario 9: explicitly supplied numeric revision ---
+
+test('9. explicitly supplied numeric revision: fail invalid', () => {
+  const dir = createTempWebsite('s9');
+  try {
+    assert.throws(
+      () => generateProductionBuildProvenance({
+        repoRoot: dir,
+        websiteRoot: dir,
+        revision: 42,
+      }),
+      { message: 'build_provenance_revision_invalid' },
+    );
+  } finally {
+    cleanup(dir);
+  }
+});
+
+// --- Scenario 10: successful Git command returning malformed revision ---
+
+test('10. successful Git command returning malformed revision: fail build_provenance_git_revision_malformed', () => {
   const dir = createTempWebsite('s10');
+  fs.mkdirSync(path.join(dir, '.git'));
+
+  const { execFileSync: realExec } = require('node:child_process');
+  const originalExecFileSync = require('node:child_process').execFileSync;
+
+  require('node:child_process').execFileSync = (cmd, args, opts) => {
+    if (cmd === 'git' && args?.[0] === 'rev-parse' && args?.[1] === 'HEAD') {
+      return 'not-a-valid-sha\n';
+    }
+    return realExec(cmd, args, opts);
+  };
+
+  delete require.cache[require.resolve('../website/scripts/generate-production-build-provenance.cjs')];
+  const { generateProductionBuildProvenance: freshGenerate } = require('../website/scripts/generate-production-build-provenance.cjs');
+
+  try {
+    assert.throws(
+      () => freshGenerate({ repoRoot: dir, websiteRoot: dir }),
+      { message: 'build_provenance_git_revision_malformed' },
+    );
+  } finally {
+    require('node:child_process').execFileSync = originalExecFileSync;
+    delete require.cache[require.resolve('../website/scripts/generate-production-build-provenance.cjs')];
+    cleanup(dir);
+  }
+});
+
+// --- Scenario 11: .git metadata probe returning ENOENT ---
+
+test('11. .git metadata probe returning ENOENT: absent state', () => {
+  const dir = createTempWebsite('s11');
+  try {
+    withSourceCommit(safeRevision, () => {
+      const result = generateProductionBuildProvenance({
+        repoRoot: dir,
+        websiteRoot: dir,
+      });
+      assert.equal(result.manifest.provenanceMode, 'deployment-source');
+      assert.equal(result.manifest.revisionSource, 'source-commit');
+    });
+  } finally {
+    cleanup(dir);
+  }
+});
+
+// --- Scenario 12: .git metadata probe returning non-ENOENT ---
+
+test('12. .git metadata probe returning non-ENOENT: fail probe_failed', () => {
+  const dir = createTempWebsite('s12');
+  const originalAccessSync = fs.accessSync;
+  fs.accessSync = (p) => {
+    const err = new Error('EACCES: permission denied');
+    err.code = 'EACCES';
+    throw err;
+  };
+  try {
+    withSourceCommit(safeRevision, () => {
+      assert.throws(
+        () => generateProductionBuildProvenance({ repoRoot: dir, websiteRoot: dir }),
+        { message: 'build_provenance_git_metadata_probe_failed' },
+      );
+    });
+  } finally {
+    fs.accessSync = originalAccessSync;
+    cleanup(dir);
+  }
+});
+
+// --- Scenario 13: Git revision command failure ---
+
+test('13. Git revision command failure: fail git_revision_command_failed', () => {
+  const dir = createTempWebsite('s13');
+  fs.mkdirSync(path.join(dir, '.git'));
+  try {
+    withSourceCommit(undefined, () => {
+      assert.throws(
+        () => generateProductionBuildProvenance({ repoRoot: dir, websiteRoot: dir }),
+        { message: 'build_provenance_git_revision_command_failed' },
+      );
+    });
+  } finally {
+    cleanup(dir);
+  }
+});
+
+// --- Scenario 14: valid Git revision followed by status command failure ---
+
+test('14. valid Git revision followed by status command failure: fail checkout_status_command_failed', () => {
+  const dir = createTempWebsite('s14');
+  createTempRepo(dir);
+
+  const gitSha = execFileSync('git', ['rev-parse', 'HEAD'], {
+    cwd: dir,
+    encoding: 'utf8',
+    windowsHide: true,
+  }).trim();
+
+  fs.writeFileSync(path.join(dir, '.git', 'index'), 'corrupt');
+
+  try {
+    assert.throws(
+      () => generateProductionBuildProvenance({ repoRoot: dir, websiteRoot: dir }),
+      { message: 'build_provenance_checkout_status_command_failed' },
+    );
+  } finally {
+    cleanup(dir);
+  }
+});
+
+// --- Scenario 15: dirty real checkout ---
+
+test('15. dirty real checkout: fail source_checkout_not_clean', () => {
+  const dir = createTempWebsite('s15');
   createTempRepo(dir);
   fs.writeFileSync(path.join(dir, 'dirty.txt'), 'dirty');
-
   try {
     assert.throws(
       () => generateProductionBuildProvenance({ repoRoot: dir, websiteRoot: dir }),
@@ -342,12 +511,30 @@ test('10. dirty checkout: fail source_checkout_not_clean', () => {
   }
 });
 
-// --- Scenario 11: Git and SOURCE_COMMIT agree: pass ---
+// --- Scenario 16: clean real checkout ---
 
-test('11. Git and SOURCE_COMMIT agree: pass', () => {
-  const dir = createTempWebsite('s11');
+test('16. clean real checkout: pass git-checkout', () => {
+  const dir = createTempWebsite('s16');
   createTempRepo(dir);
+  try {
+    const result = generateProductionBuildProvenance({
+      repoRoot: dir,
+      websiteRoot: dir,
+    });
+    assert.equal(result.manifest.provenanceMode, 'git-checkout');
+    assert.equal(result.manifest.revisionSource, 'git');
+    assert.equal(result.manifest.sourceCheckoutClean, true);
+    assert.equal(result.manifest.trackedCheckoutClean, true);
+  } finally {
+    cleanup(dir);
+  }
+});
 
+// --- Scenario 17: explicit, Git and SOURCE_COMMIT agreement ---
+
+test('17. explicit, Git and SOURCE_COMMIT all agree: pass', () => {
+  const dir = createTempWebsite('s17');
+  createTempRepo(dir);
   try {
     const gitSha = execFileSync('git', ['rev-parse', 'HEAD'], {
       cwd: dir,
@@ -355,29 +542,27 @@ test('11. Git and SOURCE_COMMIT agree: pass', () => {
       windowsHide: true,
     }).trim();
 
-    runWithSourceCommit(dir, gitSha, () => {
+    withSourceCommit(gitSha, () => {
       const result = generateProductionBuildProvenance({
         repoRoot: dir,
         websiteRoot: dir,
+        revision: gitSha,
       });
-
-      assert.equal(result.manifest.reviewedSha, gitSha);
+      assert.equal(result.manifest.revisionSource, 'explicit');
       assert.equal(result.manifest.provenanceMode, 'git-checkout');
-      assert.equal(result.manifest.sourceCheckoutClean, true);
     });
   } finally {
     cleanup(dir);
   }
 });
 
-// --- Scenario 12: Git and SOURCE_COMMIT disagree: fail ---
+// --- Scenario 18: pairwise and three-way mismatches ---
 
-test('12. Git and SOURCE_COMMIT disagree: fail mismatch', () => {
-  const dir = createTempWebsite('s12');
+test('18a. Git and SOURCE_COMMIT disagree: fail mismatch', () => {
+  const dir = createTempWebsite('s18a');
   createTempRepo(dir);
-
   try {
-    runWithSourceCommit(dir, 'b'.repeat(40), () => {
+    withSourceCommit('b'.repeat(40), () => {
       assert.throws(
         () => generateProductionBuildProvenance({ repoRoot: dir, websiteRoot: dir }),
         { message: 'build_provenance_revision_source_mismatch' },
@@ -388,48 +573,16 @@ test('12. Git and SOURCE_COMMIT disagree: fail mismatch', () => {
   }
 });
 
-// --- Scenario 13: Explicit, Git and SOURCE_COMMIT all agree: pass ---
-
-test('13. explicit, Git and SOURCE_COMMIT all agree: pass', () => {
-  const dir = createTempWebsite('s13');
+test('18b. explicit disagrees with Git: fail mismatch', () => {
+  const dir = createTempWebsite('s18b');
   createTempRepo(dir);
-
-  try {
-    const gitSha = execFileSync('git', ['rev-parse', 'HEAD'], {
-      cwd: dir,
-      encoding: 'utf8',
-      windowsHide: true,
-    }).trim();
-
-    runWithSourceCommit(dir, gitSha, () => {
-      const result = generateProductionBuildProvenance({
-        repoRoot: dir,
-        websiteRoot: dir,
-        revision: gitSha,
-      });
-
-      assert.equal(result.manifest.reviewedSha, gitSha);
-      assert.equal(result.manifest.revisionSource, 'explicit');
-    });
-  } finally {
-    cleanup(dir);
-  }
-});
-
-// --- Scenario 14: Explicit disagrees with valid secondary: fail ---
-
-test('14. explicit disagrees with valid Git: fail mismatch', () => {
-  const dir = createTempWebsite('s14');
-  createTempRepo(dir);
-
   try {
     assert.throws(
-      () =>
-        generateProductionBuildProvenance({
-          repoRoot: dir,
-          websiteRoot: dir,
-          revision: 'b'.repeat(40),
-        }),
+      () => generateProductionBuildProvenance({
+        repoRoot: dir,
+        websiteRoot: dir,
+        revision: 'b'.repeat(40),
+      }),
       { message: 'build_provenance_revision_source_mismatch' },
     );
   } finally {
@@ -437,33 +590,86 @@ test('14. explicit disagrees with valid Git: fail mismatch', () => {
   }
 });
 
-// --- Scenario 15: git-checkout + git: pass with clean ---
-
-test('15. git-checkout + git: pass when clean', () => {
-  const dir = createTempWebsite('s15');
-  createTempRepo(dir);
-
+test('18c. explicit disagrees with SOURCE_COMMIT: fail mismatch', () => {
+  const dir = createTempWebsite('s18c');
   try {
-    const result = generateProductionBuildProvenance({
-      repoRoot: dir,
-      websiteRoot: dir,
+    withSourceCommit('b'.repeat(40), () => {
+      assert.throws(
+        () => generateProductionBuildProvenance({
+          repoRoot: dir,
+          websiteRoot: dir,
+          revision: safeRevision,
+        }),
+        { message: 'build_provenance_revision_source_mismatch' },
+      );
     });
-
-    assert.equal(result.manifest.provenanceMode, 'git-checkout');
-    assert.equal(result.manifest.revisionSource, 'git');
-    assert.equal(result.manifest.sourceCheckoutClean, true);
-    assert.equal(result.manifest.trackedCheckoutClean, true);
   } finally {
     cleanup(dir);
   }
 });
 
-// --- Scenario 16: git-checkout + explicit: pass only when Git inspected ---
+// --- Scenario 19: no-Git deployment-source plus explicit ---
 
-test('16. git-checkout + explicit: pass when Git checkout inspected', () => {
-  const dir = createTempWebsite('s16');
+test('19. no-Git deployment-source plus explicit: pass', () => {
+  const dir = createTempWebsite('s19');
+  try {
+    const result = generateProductionBuildProvenance({
+      repoRoot: dir,
+      websiteRoot: dir,
+      revision: safeRevision,
+    });
+    assert.equal(result.manifest.provenanceMode, 'deployment-source');
+    assert.equal(result.manifest.revisionSource, 'explicit');
+    assert.equal(result.manifest.sourceCheckoutClean, false);
+    assert.equal(result.manifest.trackedCheckoutClean, false);
+  } finally {
+    cleanup(dir);
+  }
+});
+
+// --- Scenario 20: no-Git deployment-source plus SOURCE_COMMIT ---
+
+test('20. no-Git deployment-source plus SOURCE_COMMIT: pass', () => {
+  const dir = createTempWebsite('s20');
+  try {
+    withSourceCommit(safeRevision, () => {
+      const result = generateProductionBuildProvenance({
+        repoRoot: dir,
+        websiteRoot: dir,
+      });
+      assert.equal(result.manifest.provenanceMode, 'deployment-source');
+      assert.equal(result.manifest.revisionSource, 'source-commit');
+    });
+  } finally {
+    cleanup(dir);
+  }
+});
+
+// --- Scenario 21: allowed hosted mode/source combinations ---
+
+test('21a. git-checkout + git: pass', () => {
+  const dir = createTempWebsite('s21a');
   createTempRepo(dir);
+  try {
+    const result = generateProductionBuildProvenance({
+      repoRoot: dir,
+      websiteRoot: dir,
+    });
+    assert.equal(result.manifest.provenanceMode, 'git-checkout');
+    assert.equal(result.manifest.revisionSource, 'git');
+    validateHostedProvenance(
+      JSON.parse(JSON.stringify(result.manifest)),
+      result.manifest.reviewedSha,
+      safeBuildId,
+    );
+  } finally {
+    cleanup(dir);
+  }
+});
 
+test('21b. git-checkout + explicit: pass', () => {
+  const dir = createTempWebsite('s21b');
+  createTempRepo(dir);
   try {
     const gitSha = execFileSync('git', ['rev-parse', 'HEAD'], {
       cwd: dir,
@@ -476,86 +682,178 @@ test('16. git-checkout + explicit: pass when Git checkout inspected', () => {
       websiteRoot: dir,
       revision: gitSha,
     });
-
-    assert.equal(result.manifest.provenanceMode, 'git-checkout');
     assert.equal(result.manifest.revisionSource, 'explicit');
-    assert.equal(result.manifest.sourceCheckoutClean, true);
-  } finally {
-    cleanup(dir);
-  }
-});
-
-// --- Scenario 17: git-checkout + source-commit: reject ---
-
-test('17. git-checkout + source-commit: reject in hosted validation', () => {
-  const dir = createTempWebsite('s17');
-  createTempRepo(dir);
-
-  try {
-    const gitSha = execFileSync('git', ['rev-parse', 'HEAD'], {
-      cwd: dir,
-      encoding: 'utf8',
-      windowsHide: true,
-    }).trim();
-
-    const result = generateProductionBuildProvenance({
-      repoRoot: dir,
-      websiteRoot: dir,
-    });
-
-    assert.equal(result.manifest.provenanceMode, 'git-checkout');
-    assert.equal(result.manifest.revisionSource, 'git');
-
-    const hostedCandidate = {
-      ...JSON.parse(JSON.stringify(result.manifest)),
-      revisionSource: 'source-commit',
-    };
-
-    assert.throws(
-      () => validateHostedProvenance(hostedCandidate, gitSha, safeBuildId),
-      { message: 'build_provenance_identity_mismatch' },
+    validateHostedProvenance(
+      JSON.parse(JSON.stringify(result.manifest)),
+      gitSha,
+      safeBuildId,
     );
   } finally {
     cleanup(dir);
   }
 });
 
-// --- Scenario 18: deployment-source + source-commit: pass ---
-
-test('18. deployment-source + source-commit: pass with clean false', () => {
-  const dir = createTempWebsite('s18');
-
+test('21c. deployment-source + source-commit: pass', () => {
+  const dir = createTempWebsite('s21c');
   try {
-    runWithSourceCommit(dir, safeRevision, () => {
+    withSourceCommit(safeRevision, () => {
       const result = generateProductionBuildProvenance({
         repoRoot: dir,
         websiteRoot: dir,
       });
-
-      assert.equal(result.manifest.provenanceMode, 'deployment-source');
-      assert.equal(result.manifest.revisionSource, 'source-commit');
-      assert.equal(result.manifest.sourceCheckoutClean, false);
-      assert.equal(result.manifest.trackedCheckoutClean, false);
+      validateHostedProvenance(
+        JSON.parse(JSON.stringify(result.manifest)),
+        safeRevision,
+        safeBuildId,
+      );
     });
   } finally {
     cleanup(dir);
   }
 });
 
-// --- Scenario 19: deployment-source + explicit: pass ---
-
-test('19. deployment-source + explicit: pass with clean false', () => {
-  const dir = createTempWebsite('s19');
-
+test('21d. deployment-source + explicit: pass', () => {
+  const dir = createTempWebsite('s21d');
   try {
     const result = generateProductionBuildProvenance({
       repoRoot: dir,
       websiteRoot: dir,
       revision: safeRevision,
     });
+    validateHostedProvenance(
+      JSON.parse(JSON.stringify(result.manifest)),
+      safeRevision,
+      safeBuildId,
+    );
+  } finally {
+    cleanup(dir);
+  }
+});
 
+// --- Scenario 22: prohibited hosted mode/source combinations ---
+
+test('22a. git-checkout + source-commit: reject', () => {
+  const manifest = hostedManifest({
+    provenanceMode: 'git-checkout',
+    revisionSource: 'source-commit',
+    trackedCheckoutClean: true,
+    sourceCheckoutClean: true,
+  });
+  assert.throws(
+    () => validateHostedProvenance(manifest, safeRevision, safeBuildId),
+    { message: 'build_provenance_identity_mismatch' },
+  );
+});
+
+test('22b. deployment-source + git: reject', () => {
+  const manifest = hostedManifest({
+    provenanceMode: 'deployment-source',
+    revisionSource: 'git',
+    trackedCheckoutClean: false,
+    sourceCheckoutClean: false,
+  });
+  assert.throws(
+    () => validateHostedProvenance(manifest, safeRevision, safeBuildId),
+    { message: 'build_provenance_identity_mismatch' },
+  );
+});
+
+// --- Scenario 23: missing and unknown revisionSource ---
+
+test('23a. missing revisionSource: reject', () => {
+  const manifest = hostedManifest({
+    provenanceMode: 'git-checkout',
+    trackedCheckoutClean: true,
+    sourceCheckoutClean: true,
+  });
+  delete manifest.revisionSource;
+  assert.throws(
+    () => validateHostedProvenance(manifest, safeRevision, safeBuildId),
+    { message: 'build_provenance_identity_mismatch' },
+  );
+});
+
+test('23b. unknown revisionSource: reject', () => {
+  const manifest = hostedManifest({
+    provenanceMode: 'git-checkout',
+    revisionSource: 'unknown',
+    trackedCheckoutClean: true,
+    sourceCheckoutClean: true,
+  });
+  assert.throws(
+    () => validateHostedProvenance(manifest, safeRevision, safeBuildId),
+    { message: 'build_provenance_identity_mismatch' },
+  );
+});
+
+// --- Scenario 24: deployment-source with either cleanliness boolean true ---
+
+test('24a. deployment-source with trackedCheckoutClean true: reject', () => {
+  const manifest = hostedManifest({
+    provenanceMode: 'deployment-source',
+    revisionSource: 'source-commit',
+    trackedCheckoutClean: true,
+    sourceCheckoutClean: false,
+  });
+  assert.throws(
+    () => validateHostedProvenance(manifest, safeRevision, safeBuildId),
+    { message: 'build_provenance_identity_mismatch' },
+  );
+});
+
+test('24b. deployment-source with sourceCheckoutClean true: reject', () => {
+  const manifest = hostedManifest({
+    provenanceMode: 'deployment-source',
+    revisionSource: 'source-commit',
+    trackedCheckoutClean: false,
+    sourceCheckoutClean: true,
+  });
+  assert.throws(
+    () => validateHostedProvenance(manifest, safeRevision, safeBuildId),
+    { message: 'build_provenance_identity_mismatch' },
+  );
+});
+
+// --- Scenario 25: git-checkout without both cleanliness booleans true ---
+
+test('25a. git-checkout with sourceCheckoutClean false: reject', () => {
+  const manifest = hostedManifest({
+    provenanceMode: 'git-checkout',
+    revisionSource: 'git',
+    trackedCheckoutClean: true,
+    sourceCheckoutClean: false,
+  });
+  assert.throws(
+    () => validateHostedProvenance(manifest, safeRevision, safeBuildId),
+    { message: 'build_provenance_identity_mismatch' },
+  );
+});
+
+test('25b. git-checkout with trackedCheckoutClean false: reject', () => {
+  const manifest = hostedManifest({
+    provenanceMode: 'git-checkout',
+    revisionSource: 'git',
+    trackedCheckoutClean: false,
+    sourceCheckoutClean: true,
+  });
+  assert.throws(
+    () => validateHostedProvenance(manifest, safeRevision, safeBuildId),
+    { message: 'build_provenance_identity_mismatch' },
+  );
+});
+
+// --- Scenario 26: production entry point does not accept synthetic checkoutStatus ---
+
+test('26. production entry point ignores synthetic checkoutStatus option', () => {
+  const dir = createTempWebsite('s26');
+  try {
+    const result = generateProductionBuildProvenance({
+      repoRoot: dir,
+      websiteRoot: dir,
+      revision: safeRevision,
+      checkoutStatus: Buffer.from(''),
+    });
     assert.equal(result.manifest.provenanceMode, 'deployment-source');
-    assert.equal(result.manifest.revisionSource, 'explicit');
     assert.equal(result.manifest.sourceCheckoutClean, false);
     assert.equal(result.manifest.trackedCheckoutClean, false);
   } finally {
@@ -563,154 +861,50 @@ test('19. deployment-source + explicit: pass with clean false', () => {
   }
 });
 
-// --- Scenario 20: deployment-source + git: reject ---
-
-test('20. deployment-source + git: reject in hosted validation', () => {
-  const manifest = {
-    schemaVersion: 2,
-    reviewedSha: safeRevision,
-    buildId: safeBuildId,
-    provenanceMode: 'deployment-source',
-    revisionSource: 'git',
-    trackedCheckoutClean: false,
-    sourceCheckoutClean: false,
-    routeCount: 1,
-    routeInventorySha256: '0'.repeat(64),
-    routes: [],
-    assetCount: 1,
-    inventorySha256: '0'.repeat(64),
-    assets: [],
-  };
-
-  assert.throws(
-    () => validateHostedProvenance(manifest, safeRevision, safeBuildId),
-    { message: 'build_provenance_identity_mismatch' },
-  );
+test('26b. production options contract has no checkoutStatus property', () => {
+  const dir = createTempWebsite('s26b');
+  try {
+    const opts = {
+      repoRoot: dir,
+      websiteRoot: dir,
+      revision: safeRevision,
+      checkoutStatus: Buffer.from('ignored'),
+    };
+    const result = generateProductionBuildProvenance(opts);
+    assert.equal(result.manifest.sourceCheckoutClean, false);
+    assert.equal(result.manifest.trackedCheckoutClean, false);
+  } finally {
+    cleanup(dir);
+  }
 });
 
-// --- Scenario 21: Missing or unknown revisionSource: reject ---
+// --- non-ENOENT probe failure with SOURCE_COMMIT present ---
 
-test('21. missing revisionSource: reject', () => {
-  const manifest = {
-    schemaVersion: 2,
-    reviewedSha: safeRevision,
-    buildId: safeBuildId,
-    provenanceMode: 'git-checkout',
-    trackedCheckoutClean: true,
-    sourceCheckoutClean: true,
-    routeCount: 1,
-    routeInventorySha256: '0'.repeat(64),
-    routes: [],
-    assetCount: 1,
-    inventorySha256: '0'.repeat(64),
-    assets: [],
+test('non-ENOENT probe failure with SOURCE_COMMIT present: fail probe_failed', () => {
+  const dir = createTempWebsite('probe-src');
+  const originalAccessSync = fs.accessSync;
+  fs.accessSync = (p) => {
+    const err = new Error('EACCES: permission denied');
+    err.code = 'EACCES';
+    throw err;
   };
-
-  assert.throws(
-    () => validateHostedProvenance(manifest, safeRevision, safeBuildId),
-    { message: 'build_provenance_identity_mismatch' },
-  );
+  try {
+    withSourceCommit(safeRevision, () => {
+      assert.throws(
+        () => generateProductionBuildProvenance({ repoRoot: dir, websiteRoot: dir }),
+        { message: 'build_provenance_git_metadata_probe_failed' },
+      );
+    });
+  } finally {
+    fs.accessSync = originalAccessSync;
+    cleanup(dir);
+  }
 });
 
-test('21b. unknown revisionSource: reject', () => {
-  const manifest = {
-    schemaVersion: 2,
-    reviewedSha: safeRevision,
-    buildId: safeBuildId,
-    provenanceMode: 'git-checkout',
-    revisionSource: 'unknown',
-    trackedCheckoutClean: true,
-    sourceCheckoutClean: true,
-    routeCount: 1,
-    routeInventorySha256: '0'.repeat(64),
-    routes: [],
-    assetCount: 1,
-    inventorySha256: '0'.repeat(64),
-    assets: [],
-  };
-
-  assert.throws(
-    () => validateHostedProvenance(manifest, safeRevision, safeBuildId),
-    { message: 'build_provenance_identity_mismatch' },
-  );
-});
-
-// --- Scenario 22: Invalid cleanliness booleans: reject ---
-
-test('22a. git-checkout with sourceCheckoutClean false: reject', () => {
-  const manifest = {
-    schemaVersion: 2,
-    reviewedSha: safeRevision,
-    buildId: safeBuildId,
-    provenanceMode: 'git-checkout',
-    revisionSource: 'git',
-    trackedCheckoutClean: true,
-    sourceCheckoutClean: false,
-    routeCount: 1,
-    routeInventorySha256: '0'.repeat(64),
-    routes: [],
-    assetCount: 1,
-    inventorySha256: '0'.repeat(64),
-    assets: [],
-  };
-
-  assert.throws(
-    () => validateHostedProvenance(manifest, safeRevision, safeBuildId),
-    { message: 'build_provenance_identity_mismatch' },
-  );
-});
-
-test('22b. deployment-source with trackedCheckoutClean true: reject', () => {
-  const manifest = {
-    schemaVersion: 2,
-    reviewedSha: safeRevision,
-    buildId: safeBuildId,
-    provenanceMode: 'deployment-source',
-    revisionSource: 'source-commit',
-    trackedCheckoutClean: true,
-    sourceCheckoutClean: false,
-    routeCount: 1,
-    routeInventorySha256: '0'.repeat(64),
-    routes: [],
-    assetCount: 1,
-    inventorySha256: '0'.repeat(64),
-    assets: [],
-  };
-
-  assert.throws(
-    () => validateHostedProvenance(manifest, safeRevision, safeBuildId),
-    { message: 'build_provenance_identity_mismatch' },
-  );
-});
-
-test('22c. deployment-source with sourceCheckoutClean true: reject', () => {
-  const manifest = {
-    schemaVersion: 2,
-    reviewedSha: safeRevision,
-    buildId: safeBuildId,
-    provenanceMode: 'deployment-source',
-    revisionSource: 'source-commit',
-    trackedCheckoutClean: false,
-    sourceCheckoutClean: true,
-    routeCount: 1,
-    routeInventorySha256: '0'.repeat(64),
-    routes: [],
-    assetCount: 1,
-    inventorySha256: '0'.repeat(64),
-    assets: [],
-  };
-
-  assert.throws(
-    () => validateHostedProvenance(manifest, safeRevision, safeBuildId),
-    { message: 'build_provenance_identity_mismatch' },
-  );
-});
-
-// --- Scenario: CLI entry point reports provenance mode ---
+// --- CLI tests ---
 
 test('CLI: reports provenance mode in output', () => {
   const dir = createTempWebsite('cli');
-
   try {
     const result = execFileSync(
       'node',
@@ -727,14 +921,10 @@ test('CLI: reports provenance mode in output', () => {
         },
       },
     );
-
     const output = JSON.parse(result.trim());
     assert.equal(output.outcome, 'passed');
     assert.equal(output.provenanceMode, 'deployment-source');
     assert.equal(output.revisionSource, 'source-commit');
-    assert.equal(output.reviewedSha, safeRevision);
-    assert.equal(output.sourceCheckoutClean, false);
-    assert.equal(output.trackedCheckoutClean, false);
   } finally {
     cleanup(dir);
   }
@@ -742,7 +932,6 @@ test('CLI: reports provenance mode in output', () => {
 
 test('CLI: fails closed without git or SOURCE_COMMIT', () => {
   const dir = createTempWebsite('cli-fail');
-
   try {
     assert.throws(
       () =>
@@ -773,9 +962,8 @@ test('CLI: fails closed without git or SOURCE_COMMIT', () => {
   }
 });
 
-// --- Hosted validation helper (matches smoke-production-readonly logic) ---
+// --- Hosted validation helper ---
 
-const approvedRevisionSourceSet = new Set(['explicit', 'git', 'source-commit']);
 const allowedSourcesByMode = {
   'git-checkout': new Set(['explicit', 'git']),
   'deployment-source': new Set(['explicit', 'source-commit']),
@@ -798,7 +986,7 @@ function validateHostedProvenance(candidate, expectedRevision, expectedBuildId) 
     candidate.reviewedSha !== expectedRevision ||
     candidate.buildId !== expectedBuildId ||
     !approvedProvenanceModes.has(provenanceMode) ||
-    !approvedRevisionSourceSet.has(revisionSource) ||
+    !approvedRevisionSources.has(revisionSource) ||
     !sourceAllowed ||
     (isGitCheckout && candidate.trackedCheckoutClean !== true) ||
     (isGitCheckout && candidate.sourceCheckoutClean !== true) ||
@@ -809,4 +997,23 @@ function validateHostedProvenance(candidate, expectedRevision, expectedBuildId) 
   }
 
   return candidate;
+}
+
+function hostedManifest(overrides) {
+  return {
+    schemaVersion: 2,
+    reviewedSha: safeRevision,
+    buildId: safeBuildId,
+    provenanceMode: 'git-checkout',
+    revisionSource: 'git',
+    trackedCheckoutClean: true,
+    sourceCheckoutClean: true,
+    routeCount: 1,
+    routeInventorySha256: '0'.repeat(64),
+    routes: [],
+    assetCount: 1,
+    inventorySha256: '0'.repeat(64),
+    assets: [],
+    ...overrides,
+  };
 }

@@ -88,9 +88,19 @@ function assertSourceCheckoutClean(rawStatus) {
   return true;
 }
 
-function classifyRevisionCandidate(value) {
-  if (typeof value !== 'string') {
-    return { state: 'absent' };
+function classifyRevisionCandidate(value, isExplicitInput) {
+  if (isExplicitInput) {
+    if (value === undefined || value === null) {
+      return { state: 'malformed' };
+    }
+
+    if (typeof value !== 'string') {
+      return { state: 'malformed' };
+    }
+  } else {
+    if (typeof value !== 'string') {
+      return { state: 'absent' };
+    }
   }
 
   const trimmed = value.trim();
@@ -106,17 +116,23 @@ function classifyRevisionCandidate(value) {
   return { state: 'valid', value: trimmed };
 }
 
-function hasLocalGitDir(repoRoot) {
+function probeGitMetadata(repoRoot) {
+  const gitPath = path.join(repoRoot, '.git');
+
   try {
-    fs.accessSync(path.join(repoRoot, '.git'));
-    return true;
-  } catch {
-    return false;
+    fs.accessSync(gitPath);
+    return { state: 'present' };
+  } catch (error) {
+    if (error !== null && typeof error === 'object' && error.code === 'ENOENT') {
+      return { state: 'absent' };
+    }
+
+    fail('build_provenance_git_metadata_probe_failed');
   }
 }
 
-function discoverGitRevision(repoRoot) {
-  if (!hasLocalGitDir(repoRoot)) {
+function discoverGitRevision(repoRoot, gitState) {
+  if (gitState.state !== 'present') {
     return { state: 'absent' };
   }
 
@@ -141,8 +157,8 @@ function discoverGitRevision(repoRoot) {
   return { state: 'valid', value: trimmed };
 }
 
-function discoverGitCheckoutStatus(repoRoot) {
-  if (!hasLocalGitDir(repoRoot)) {
+function discoverGitCheckoutStatus(repoRoot, gitState) {
+  if (gitState.state !== 'present') {
     return { state: 'absent' };
   }
 
@@ -171,11 +187,17 @@ function discoverGitCheckoutStatus(repoRoot) {
 
 function resolveRevision(options) {
   const repoRoot = options.repoRoot;
-  const explicitSource = classifyRevisionCandidate(options.revision);
-  const gitSource = discoverGitRevision(repoRoot);
+  const hasExplicitProperty = Object.hasOwn(options, 'revision');
+  const explicitSource = hasExplicitProperty
+    ? classifyRevisionCandidate(options.revision, true)
+    : { state: 'absent' };
+  const gitState = probeGitMetadata(repoRoot);
+  const gitSource = discoverGitRevision(repoRoot, gitState);
   const sourceCommitSource = classifyRevisionCandidate(
     process.env.SOURCE_COMMIT,
+    false,
   );
+  if (process.env._PROV_DEBUG) console.error('DEBUG explicit:', JSON.stringify(explicitSource), 'git:', JSON.stringify(gitSource), 'sc:', JSON.stringify(sourceCommitSource));
 
   if (explicitSource.state === 'malformed') {
     fail('build_provenance_revision_invalid');
@@ -223,7 +245,7 @@ function resolveRevision(options) {
     revisionSource = 'source-commit';
   }
 
-  return { revision: validSources[0].value, revisionSource };
+  return { revision: validSources[0].value, revisionSource, gitState };
 }
 
 function inventoryClientAssets(assetDirectory) {
@@ -307,27 +329,23 @@ function generateProductionBuildProvenance(options = {}) {
   );
   const nextDirectory = path.join(websiteRoot, '.next');
 
-  const gitMetadataPresent = hasLocalGitDir(repoRoot);
-  const { revision, revisionSource } = resolveRevision({
-    repoRoot,
-    revision: options.revision,
-  });
-
-  let checkoutStatus;
-
-  if (options.checkoutStatus !== undefined) {
-    checkoutStatus = { state: 'available', value: options.checkoutStatus };
-  } else {
-    checkoutStatus = discoverGitCheckoutStatus(repoRoot);
+  const resolveOptions = { repoRoot };
+  if (Object.hasOwn(options, 'revision')) {
+    resolveOptions.revision = options.revision;
   }
 
+  const { revision, revisionSource, gitState } = resolveRevision(resolveOptions);
+
+  const checkoutStatus = discoverGitCheckoutStatus(repoRoot, gitState);
   const gitCheckoutInspected = checkoutStatus.state === 'available';
 
   if (gitCheckoutInspected) {
     assertSourceCheckoutClean(checkoutStatus.value);
   }
 
-  const provenanceMode = gitMetadataPresent ? 'git-checkout' : 'deployment-source';
+  const provenanceMode = gitState.state === 'present'
+    ? 'git-checkout'
+    : 'deployment-source';
 
   let buildId;
 
@@ -436,5 +454,5 @@ module.exports = {
   generateProductionBuildProvenance,
   inventoryClientAssets,
   isApprovedIgnoredCheckoutPath,
-  hasLocalGitDir,
+  probeGitMetadata,
 };
