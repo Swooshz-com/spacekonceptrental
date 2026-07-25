@@ -850,9 +850,124 @@ test('25b. git-checkout with trackedCheckoutClean false: reject', () => {
   );
 });
 
-// --- Scenario 26: production entry point does not accept synthetic checkoutStatus ---
+// --- Scenario 26: missing and unknown provenanceMode ---
 
-test('26. production entry point ignores synthetic checkoutStatus option', () => {
+test('26a. missing provenanceMode: reject', () => {
+  const manifest = hostedManifest({
+    provenanceMode: 'git-checkout',
+    revisionSource: 'git',
+    trackedCheckoutClean: true,
+    sourceCheckoutClean: true,
+  });
+  delete manifest.provenanceMode;
+  assert.throws(
+    () => validateHostedBuildProvenance(manifest, safeRevision, safeBuildId),
+    { message: 'build_provenance_identity_mismatch' },
+  );
+});
+
+test('26b. unknown provenanceMode: reject', () => {
+  const manifest = hostedManifest({
+    provenanceMode: 'unknown-mode',
+    revisionSource: 'git',
+    trackedCheckoutClean: true,
+    sourceCheckoutClean: true,
+  });
+  assert.throws(
+    () => validateHostedBuildProvenance(manifest, safeRevision, safeBuildId),
+    { message: 'build_provenance_identity_mismatch' },
+  );
+});
+
+// --- Scenario 27: both cleanliness booleans false for git-checkout ---
+
+test('27. git-checkout with both cleanliness booleans false: reject', () => {
+  const manifest = hostedManifest({
+    provenanceMode: 'git-checkout',
+    revisionSource: 'git',
+    trackedCheckoutClean: false,
+    sourceCheckoutClean: false,
+  });
+  assert.throws(
+    () => validateHostedBuildProvenance(manifest, safeRevision, safeBuildId),
+    { message: 'build_provenance_identity_mismatch' },
+  );
+});
+
+// --- Scenario 28: both cleanliness booleans true for deployment-source ---
+
+test('28. deployment-source with both cleanliness booleans true: reject', () => {
+  const manifest = hostedManifest({
+    provenanceMode: 'deployment-source',
+    revisionSource: 'source-commit',
+    trackedCheckoutClean: true,
+    sourceCheckoutClean: true,
+  });
+  assert.throws(
+    () => validateHostedBuildProvenance(manifest, safeRevision, safeBuildId),
+    { message: 'build_provenance_identity_mismatch' },
+  );
+});
+
+// --- Scenario 29: missing cleanliness values ---
+
+test('29a. git-checkout missing trackedCheckoutClean: reject', () => {
+  const manifest = hostedManifest({
+    provenanceMode: 'git-checkout',
+    revisionSource: 'git',
+    sourceCheckoutClean: true,
+  });
+  delete manifest.trackedCheckoutClean;
+  assert.throws(
+    () => validateHostedBuildProvenance(manifest, safeRevision, safeBuildId),
+    { message: 'build_provenance_identity_mismatch' },
+  );
+});
+
+test('29b. git-checkout missing sourceCheckoutClean: reject', () => {
+  const manifest = hostedManifest({
+    provenanceMode: 'git-checkout',
+    revisionSource: 'git',
+    trackedCheckoutClean: true,
+  });
+  delete manifest.sourceCheckoutClean;
+  assert.throws(
+    () => validateHostedBuildProvenance(manifest, safeRevision, safeBuildId),
+    { message: 'build_provenance_identity_mismatch' },
+  );
+});
+
+// --- Scenario 30: non-boolean cleanliness values ---
+
+test('30a. git-checkout with non-boolean trackedCheckoutClean: reject', () => {
+  const manifest = hostedManifest({
+    provenanceMode: 'git-checkout',
+    revisionSource: 'git',
+    trackedCheckoutClean: 'yes',
+    sourceCheckoutClean: true,
+  });
+  assert.throws(
+    () => validateHostedBuildProvenance(manifest, safeRevision, safeBuildId),
+    { message: 'build_provenance_identity_mismatch' },
+  );
+});
+
+test('30b. git-checkout with non-boolean sourceCheckoutClean: reject', () => {
+  const manifest = hostedManifest({
+    provenanceMode: 'git-checkout',
+    revisionSource: 'git',
+    trackedCheckoutClean: true,
+    sourceCheckoutClean: 1,
+  });
+  assert.throws(
+    () => validateHostedBuildProvenance(manifest, safeRevision, safeBuildId),
+    { message: 'build_provenance_identity_mismatch' },
+  );
+});
+
+// --- Scenario 31: production entry point does not accept synthetic checkoutStatus ---
+
+test('31a. production entry point ignores synthetic checkoutStatus option', () => {
   const dir = createTempWebsite('s26');
   try {
     const result = generateProductionBuildProvenance({
@@ -869,7 +984,7 @@ test('26. production entry point ignores synthetic checkoutStatus option', () =>
   }
 });
 
-test('26b. production options contract has no checkoutStatus property', () => {
+test('31b. production options contract has no checkoutStatus property', () => {
   const dir = createTempWebsite('s26b');
   try {
     const opts = {
