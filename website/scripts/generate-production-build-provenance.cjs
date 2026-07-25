@@ -13,6 +13,8 @@ const maxClientAssetCount = 96;
 const maxClientAssetBytes = 512 * 1024;
 const revisionPattern = /^[0-9a-f]{40}$/;
 const buildIdPattern = /^[A-Za-z0-9._-]{8,128}$/;
+const approvedProvenanceModes = new Set(['git-checkout', 'deployment-source']);
+const approvedRevisionSources = new Set(['explicit', 'git', 'source-commit']);
 const approvedIgnoredCheckoutPaths = Object.freeze([
   'node_modules/',
   'website/.next/',
@@ -84,6 +86,165 @@ function assertSourceCheckoutClean(rawStatus) {
   }
 
   return true;
+}
+
+function classifyRevisionCandidate(value, isExplicitInput) {
+  if (isExplicitInput) {
+    if (value === undefined || value === null) {
+      return { state: 'malformed' };
+    }
+
+    if (typeof value !== 'string') {
+      return { state: 'malformed' };
+    }
+  } else {
+    if (typeof value !== 'string') {
+      return { state: 'absent' };
+    }
+  }
+
+  const trimmed = value.trim();
+
+  if (trimmed.length === 0) {
+    return { state: 'malformed' };
+  }
+
+  if (!revisionPattern.test(trimmed)) {
+    return { state: 'malformed' };
+  }
+
+  return { state: 'valid', value: trimmed };
+}
+
+function probeGitMetadata(repoRoot) {
+  const gitPath = path.join(repoRoot, '.git');
+
+  try {
+    fs.accessSync(gitPath);
+    return { state: 'present' };
+  } catch (error) {
+    if (error !== null && typeof error === 'object' && error.code === 'ENOENT') {
+      return { state: 'absent' };
+    }
+
+    fail('build_provenance_git_metadata_probe_failed');
+  }
+}
+
+function discoverGitRevision(repoRoot, gitState) {
+  if (gitState.state !== 'present') {
+    return { state: 'absent' };
+  }
+
+  let raw;
+
+  try {
+    raw = execFileSync('git', ['rev-parse', 'HEAD'], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+      windowsHide: true,
+    });
+  } catch {
+    fail('build_provenance_git_revision_command_failed');
+  }
+
+  const trimmed = raw.trim();
+
+  if (!revisionPattern.test(trimmed)) {
+    fail('build_provenance_git_revision_malformed');
+  }
+
+  return { state: 'valid', value: trimmed };
+}
+
+function discoverGitCheckoutStatus(repoRoot, gitState) {
+  if (gitState.state !== 'present') {
+    return { state: 'absent' };
+  }
+
+  try {
+    const status = execFileSync(
+      'git',
+      [
+        'status',
+        '--porcelain=v1',
+        '-z',
+        '--untracked-files=all',
+        '--ignored=matching',
+      ],
+      {
+        cwd: repoRoot,
+        encoding: 'buffer',
+        maxBuffer: 2 * 1024 * 1024,
+      },
+    );
+
+    return { state: 'available', value: status };
+  } catch {
+    fail('build_provenance_checkout_status_command_failed');
+  }
+}
+
+function resolveRevision(options) {
+  const repoRoot = options.repoRoot;
+  const hasExplicitProperty = Object.hasOwn(options, 'revision');
+  const explicitSource = hasExplicitProperty
+    ? classifyRevisionCandidate(options.revision, true)
+    : { state: 'absent' };
+  const gitState = probeGitMetadata(repoRoot);
+  const gitSource = discoverGitRevision(repoRoot, gitState);
+  const sourceCommitSource = classifyRevisionCandidate(
+    process.env.SOURCE_COMMIT,
+    false,
+  );
+
+  if (explicitSource.state === 'malformed') {
+    fail('build_provenance_revision_invalid');
+  }
+
+  if (sourceCommitSource.state === 'malformed') {
+    fail('build_provenance_revision_invalid');
+  }
+
+  if (gitSource.state === 'malformed') {
+    fail('build_provenance_git_revision_malformed');
+  }
+
+  const validSources = [];
+
+  if (explicitSource.state === 'valid') {
+    validSources.push({ name: 'explicit', value: explicitSource.value });
+  }
+
+  if (gitSource.state === 'valid') {
+    validSources.push({ name: 'git', value: gitSource.value });
+  }
+
+  if (sourceCommitSource.state === 'valid') {
+    validSources.push({ name: 'source-commit', value: sourceCommitSource.value });
+  }
+
+  if (validSources.length === 0) {
+    fail('build_provenance_revision_unavailable');
+  }
+
+  for (let i = 1; i < validSources.length; i++) {
+    if (validSources[i].value !== validSources[0].value) {
+      fail('build_provenance_revision_source_mismatch');
+    }
+  }
+
+  let revisionSource;
+
+  if (explicitSource.state === 'valid') {
+    revisionSource = 'explicit';
+  } else if (gitSource.state === 'valid') {
+    revisionSource = 'git';
+  } else {
+    revisionSource = 'source-commit';
+  }
+
+  return { revision: validSources[0].value, revisionSource, gitState };
 }
 
 function inventoryClientAssets(assetDirectory) {
@@ -166,47 +327,24 @@ function generateProductionBuildProvenance(options = {}) {
     options.websiteRoot ?? path.join(__dirname, '..'),
   );
   const nextDirectory = path.join(websiteRoot, '.next');
-  let revision = options.revision;
-  let checkoutStatus = options.checkoutStatus;
 
-  if (revision === undefined) {
-    try {
-      revision = execFileSync('git', ['rev-parse', 'HEAD'], {
-        cwd: repoRoot,
-        encoding: 'utf8',
-      }).trim();
-    } catch {
-      fail('build_provenance_revision_unavailable');
-    }
+  const resolveOptions = { repoRoot };
+  if (Object.hasOwn(options, 'revision')) {
+    resolveOptions.revision = options.revision;
   }
 
-  if (checkoutStatus === undefined) {
-    try {
-      checkoutStatus = execFileSync(
-        'git',
-        [
-          'status',
-          '--porcelain=v1',
-          '-z',
-          '--untracked-files=all',
-          '--ignored=matching',
-        ],
-        {
-          cwd: repoRoot,
-          encoding: 'buffer',
-          maxBuffer: 2 * 1024 * 1024,
-        },
-      );
-    } catch {
-      fail('build_provenance_source_checkout_status_unavailable');
-    }
+  const { revision, revisionSource, gitState } = resolveRevision(resolveOptions);
+
+  const checkoutStatus = discoverGitCheckoutStatus(repoRoot, gitState);
+  const gitCheckoutInspected = checkoutStatus.state === 'available';
+
+  if (gitCheckoutInspected) {
+    assertSourceCheckoutClean(checkoutStatus.value);
   }
 
-  if (!revisionPattern.test(revision)) {
-    fail('build_provenance_revision_invalid');
-  }
-
-  assertSourceCheckoutClean(checkoutStatus);
+  const provenanceMode = gitState.state === 'present'
+    ? 'git-checkout'
+    : 'deployment-source';
 
   let buildId;
 
@@ -228,8 +366,10 @@ function generateProductionBuildProvenance(options = {}) {
     schemaVersion: 2,
     reviewedSha: revision,
     buildId,
-    trackedCheckoutClean: true,
-    sourceCheckoutClean: true,
+    provenanceMode,
+    revisionSource,
+    trackedCheckoutClean: gitCheckoutInspected,
+    sourceCheckoutClean: gitCheckoutInspected,
     routeCount: routeInventory.routes.length,
     routeInventorySha256: calculateRouteInventoryDigest(
       routeInventory.routes,
@@ -264,13 +404,25 @@ function generateProductionBuildProvenance(options = {}) {
 
 if (require.main === module) {
   try {
-    const result = generateProductionBuildProvenance();
+    const cliOptions = {};
+
+    if (process.env.PROVENANCE_REPO_ROOT) {
+      cliOptions.repoRoot = process.env.PROVENANCE_REPO_ROOT;
+    }
+
+    if (process.env.PROVENANCE_WEBSITE_ROOT) {
+      cliOptions.websiteRoot = process.env.PROVENANCE_WEBSITE_ROOT;
+    }
+
+    const result = generateProductionBuildProvenance(cliOptions);
     process.stdout.write(
       `${JSON.stringify({
         schemaVersion: 2,
         outcome: 'passed',
         reviewedSha: result.manifest.reviewedSha,
         buildId: result.manifest.buildId,
+        provenanceMode: result.manifest.provenanceMode,
+        revisionSource: result.manifest.revisionSource,
         trackedCheckoutClean: result.manifest.trackedCheckoutClean,
         sourceCheckoutClean: result.manifest.sourceCheckoutClean,
         routeCount: result.manifest.routeCount,
@@ -292,8 +444,14 @@ if (require.main === module) {
 
 module.exports = {
   assertSourceCheckoutClean,
+  approvedProvenanceModes,
+  approvedRevisionSources,
   calculateInventoryDigest,
+  classifyRevisionCandidate,
+  discoverGitCheckoutStatus,
+  discoverGitRevision,
   generateProductionBuildProvenance,
   inventoryClientAssets,
   isApprovedIgnoredCheckoutPath,
+  probeGitMetadata,
 };

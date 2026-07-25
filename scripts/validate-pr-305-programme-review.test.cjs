@@ -1,5 +1,6 @@
 const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
+const { execFileSync } = require('node:child_process');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
@@ -74,6 +75,8 @@ function createSmokeFixture(
           schemaVersion: 2,
           reviewedSha,
           buildId,
+          provenanceMode: 'git-checkout',
+          revisionSource: 'git',
           trackedCheckoutClean: true,
           sourceCheckoutClean: true,
           routeCount: routes.length,
@@ -297,18 +300,41 @@ test('untracked build-affecting source prevents provenance generation', () => {
   );
   const nextDirectory = path.join(websiteRoot, '.next');
   const assetDirectory = path.join(nextDirectory, 'static', 'chunks');
-  const untrackedPage = path.join(
-    websiteRoot,
-    'app',
-    'unreviewed',
-    'page.tsx',
-  );
+  const appDir = path.join(websiteRoot, 'app');
   fs.mkdirSync(assetDirectory, { recursive: true });
-  fs.mkdirSync(path.dirname(untrackedPage), { recursive: true });
+  fs.mkdirSync(path.join(appDir, 'admin', 'login'), { recursive: true });
+  fs.mkdirSync(path.join(appDir, 'categories'), { recursive: true });
+  fs.mkdirSync(path.join(appDir, 'events'), { recursive: true });
+  fs.mkdirSync(path.join(appDir, 'listings', '[slug]'), { recursive: true });
+  fs.mkdirSync(path.join(appDir, 'privacy'), { recursive: true });
+  fs.mkdirSync(path.join(appDir, 'terms'), { recursive: true });
+  fs.mkdirSync(path.join(appDir, 'catalogue', '[slug]'), { recursive: true });
   fs.writeFileSync(path.join(nextDirectory, 'BUILD_ID'), buildId);
   fs.writeFileSync(path.join(assetDirectory, 'safe.js'), assetBody);
+  fs.writeFileSync(path.join(appDir, 'page.tsx'), 'export default function Page() { return null; }\n');
+  fs.writeFileSync(path.join(appDir, 'admin', 'login', 'page.tsx'), 'export default function Page() { return null; }\n');
+  fs.writeFileSync(path.join(appDir, 'categories', 'page.tsx'), 'export default function Page() { return null; }\n');
+  fs.writeFileSync(path.join(appDir, 'events', 'page.tsx'), 'export default function Page() { return null; }\n');
+  fs.writeFileSync(path.join(appDir, 'listings', '[slug]', 'page.tsx'), 'export default function Page() { return null; }\n');
+  fs.writeFileSync(path.join(appDir, 'privacy', 'page.tsx'), 'export default function Page() { return null; }\n');
+  fs.writeFileSync(path.join(appDir, 'terms', 'page.tsx'), 'export default function Page() { return null; }\n');
+  fs.writeFileSync(path.join(appDir, 'catalogue', '[slug]', 'page.tsx'), 'export default function Page() { return null; }\n');
+
+  execFileSync('git', ['init'], { cwd: websiteRoot, windowsHide: true });
+  execFileSync('git', ['config', 'user.email', 'test@test'], { cwd: websiteRoot, windowsHide: true });
+  execFileSync('git', ['config', 'user.name', 'Test'], { cwd: websiteRoot, windowsHide: true });
+  execFileSync('git', ['add', '.'], { cwd: websiteRoot, windowsHide: true });
+  execFileSync('git', ['commit', '-m', 'init'], { cwd: websiteRoot, windowsHide: true });
+
+  const repoSha = execFileSync('git', ['rev-parse', 'HEAD'], {
+    cwd: websiteRoot,
+    encoding: 'utf8',
+    windowsHide: true,
+  }).trim();
+
+  fs.mkdirSync(path.join(appDir, 'unreviewed'), { recursive: true });
   fs.writeFileSync(
-    untrackedPage,
+    path.join(appDir, 'unreviewed', 'page.tsx'),
     'export default function Page() { return null; }\n',
   );
 
@@ -317,8 +343,7 @@ test('untracked build-affecting source prevents provenance generation', () => {
       generateProductionBuildProvenance({
         repoRoot: websiteRoot,
         websiteRoot,
-        revision: reviewedSha,
-        checkoutStatus: '?? website/app/unreviewed/page.tsx\0',
+        revision: repoSha,
       }),
     /build_provenance_source_checkout_not_clean/,
   );

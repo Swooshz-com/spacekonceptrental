@@ -58,6 +58,8 @@ function provenanceManifest(overrides = {}) {
     schemaVersion: 2,
     reviewedSha: reviewedSha,
     buildId: deployedBuildId,
+    provenanceMode: 'git-checkout',
+    revisionSource: 'git',
     trackedCheckoutClean: true,
     sourceCheckoutClean: true,
     routeCount: routes.length,
@@ -292,6 +294,17 @@ test('mismatched SHA, missing metadata, dirty provenance, and incomplete invento
     provenanceManifest({ routeInventorySha256: '0'.repeat(64) }),
     provenanceManifest({ assetCount: 2 }),
     provenanceManifest({ inventorySha256: '0'.repeat(64) }),
+    provenanceManifest({ provenanceMode: 'unknown' }),
+    provenanceManifest({
+      provenanceMode: 'deployment-source',
+      trackedCheckoutClean: true,
+      sourceCheckoutClean: true,
+    }),
+    provenanceManifest({
+      provenanceMode: 'deployment-source',
+      trackedCheckoutClean: false,
+      sourceCheckoutClean: true,
+    }),
   ];
 
   for (const manifest of variants) {
@@ -389,13 +402,14 @@ test('production build generation binds the complete inventory to revision and b
     repoRoot: websiteRoot,
     websiteRoot,
     revision: reviewedSha,
-    checkoutStatus: '',
   });
 
   assert.equal(generated.manifest.reviewedSha, reviewedSha);
   assert.equal(generated.manifest.buildId, deployedBuildId);
-  assert.equal(generated.manifest.trackedCheckoutClean, true);
-  assert.equal(generated.manifest.sourceCheckoutClean, true);
+  assert.equal(generated.manifest.provenanceMode, 'deployment-source');
+  assert.equal(generated.manifest.revisionSource, 'explicit');
+  assert.equal(generated.manifest.trackedCheckoutClean, false);
+  assert.equal(generated.manifest.sourceCheckoutClean, false);
   assert.equal(generated.manifest.routeCount, 2);
   assert.equal(generated.manifest.assetCount, 1);
   assert.deepEqual(

@@ -107,6 +107,8 @@ function createMockFetch(overrides = {}) {
             schemaVersion: 2,
             reviewedSha: expectedRevision,
             buildId: expectedBuildId,
+            provenanceMode: 'git-checkout',
+            revisionSource: 'git',
             trackedCheckoutClean: true,
             sourceCheckoutClean: true,
             routeCount: productionRouteInventory.routes.length,
