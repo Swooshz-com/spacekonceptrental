@@ -197,7 +197,6 @@ function resolveRevision(options) {
     process.env.SOURCE_COMMIT,
     false,
   );
-  if (process.env._PROV_DEBUG) console.error('DEBUG explicit:', JSON.stringify(explicitSource), 'git:', JSON.stringify(gitSource), 'sc:', JSON.stringify(sourceCommitSource));
 
   if (explicitSource.state === 'malformed') {
     fail('build_provenance_revision_invalid');

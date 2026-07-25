@@ -9,10 +9,18 @@ const test = require('node:test');
 const {
   approvedProvenanceModes,
   approvedRevisionSources,
+  calculateInventoryDigest,
   classifyRevisionCandidate,
   generateProductionBuildProvenance,
   probeGitMetadata,
 } = require('../website/scripts/generate-production-build-provenance.cjs');
+const {
+  calculateRouteInventoryDigest,
+  validateRouteInventory,
+} = require('../website/scripts/production-smoke-route-inventory.cjs');
+const {
+  validateHostedBuildProvenance,
+} = require('./smoke-production-readonly.cjs');
 
 const safeRevision = 'a'.repeat(40);
 const safeBuildId = 'test-build-id-123';
@@ -657,7 +665,7 @@ test('21a. git-checkout + git: pass', () => {
     });
     assert.equal(result.manifest.provenanceMode, 'git-checkout');
     assert.equal(result.manifest.revisionSource, 'git');
-    validateHostedProvenance(
+    validateHostedBuildProvenance(
       JSON.parse(JSON.stringify(result.manifest)),
       result.manifest.reviewedSha,
       safeBuildId,
@@ -683,7 +691,7 @@ test('21b. git-checkout + explicit: pass', () => {
       revision: gitSha,
     });
     assert.equal(result.manifest.revisionSource, 'explicit');
-    validateHostedProvenance(
+    validateHostedBuildProvenance(
       JSON.parse(JSON.stringify(result.manifest)),
       gitSha,
       safeBuildId,
@@ -701,7 +709,7 @@ test('21c. deployment-source + source-commit: pass', () => {
         repoRoot: dir,
         websiteRoot: dir,
       });
-      validateHostedProvenance(
+      validateHostedBuildProvenance(
         JSON.parse(JSON.stringify(result.manifest)),
         safeRevision,
         safeBuildId,
@@ -720,7 +728,7 @@ test('21d. deployment-source + explicit: pass', () => {
       websiteRoot: dir,
       revision: safeRevision,
     });
-    validateHostedProvenance(
+    validateHostedBuildProvenance(
       JSON.parse(JSON.stringify(result.manifest)),
       safeRevision,
       safeBuildId,
@@ -740,7 +748,7 @@ test('22a. git-checkout + source-commit: reject', () => {
     sourceCheckoutClean: true,
   });
   assert.throws(
-    () => validateHostedProvenance(manifest, safeRevision, safeBuildId),
+    () => validateHostedBuildProvenance(manifest, safeRevision, safeBuildId),
     { message: 'build_provenance_identity_mismatch' },
   );
 });
@@ -753,7 +761,7 @@ test('22b. deployment-source + git: reject', () => {
     sourceCheckoutClean: false,
   });
   assert.throws(
-    () => validateHostedProvenance(manifest, safeRevision, safeBuildId),
+    () => validateHostedBuildProvenance(manifest, safeRevision, safeBuildId),
     { message: 'build_provenance_identity_mismatch' },
   );
 });
@@ -768,7 +776,7 @@ test('23a. missing revisionSource: reject', () => {
   });
   delete manifest.revisionSource;
   assert.throws(
-    () => validateHostedProvenance(manifest, safeRevision, safeBuildId),
+    () => validateHostedBuildProvenance(manifest, safeRevision, safeBuildId),
     { message: 'build_provenance_identity_mismatch' },
   );
 });
@@ -781,7 +789,7 @@ test('23b. unknown revisionSource: reject', () => {
     sourceCheckoutClean: true,
   });
   assert.throws(
-    () => validateHostedProvenance(manifest, safeRevision, safeBuildId),
+    () => validateHostedBuildProvenance(manifest, safeRevision, safeBuildId),
     { message: 'build_provenance_identity_mismatch' },
   );
 });
@@ -796,7 +804,7 @@ test('24a. deployment-source with trackedCheckoutClean true: reject', () => {
     sourceCheckoutClean: false,
   });
   assert.throws(
-    () => validateHostedProvenance(manifest, safeRevision, safeBuildId),
+    () => validateHostedBuildProvenance(manifest, safeRevision, safeBuildId),
     { message: 'build_provenance_identity_mismatch' },
   );
 });
@@ -809,7 +817,7 @@ test('24b. deployment-source with sourceCheckoutClean true: reject', () => {
     sourceCheckoutClean: true,
   });
   assert.throws(
-    () => validateHostedProvenance(manifest, safeRevision, safeBuildId),
+    () => validateHostedBuildProvenance(manifest, safeRevision, safeBuildId),
     { message: 'build_provenance_identity_mismatch' },
   );
 });
@@ -824,7 +832,7 @@ test('25a. git-checkout with sourceCheckoutClean false: reject', () => {
     sourceCheckoutClean: false,
   });
   assert.throws(
-    () => validateHostedProvenance(manifest, safeRevision, safeBuildId),
+    () => validateHostedBuildProvenance(manifest, safeRevision, safeBuildId),
     { message: 'build_provenance_identity_mismatch' },
   );
 });
@@ -837,7 +845,7 @@ test('25b. git-checkout with trackedCheckoutClean false: reject', () => {
     sourceCheckoutClean: true,
   });
   assert.throws(
-    () => validateHostedProvenance(manifest, safeRevision, safeBuildId),
+    () => validateHostedBuildProvenance(manifest, safeRevision, safeBuildId),
     { message: 'build_provenance_identity_mismatch' },
   );
 });
@@ -962,42 +970,19 @@ test('CLI: fails closed without git or SOURCE_COMMIT', () => {
   }
 });
 
-// --- Hosted validation helper ---
+// --- Hosted validation fixtures ---
 
-const allowedSourcesByMode = {
-  'git-checkout': new Set(['explicit', 'git']),
-  'deployment-source': new Set(['explicit', 'source-commit']),
-};
+const testRoutes = validateRouteInventory([
+  { template: '/', path: '/', kind: 'public-static-page', expectedStatuses: [200] },
+  { template: '/admin/login', path: '/admin/login', kind: 'anonymous-admin-page', expectedStatuses: [200] },
+]);
 
-function validateHostedProvenance(candidate, expectedRevision, expectedBuildId) {
-  const provenanceMode = candidate?.provenanceMode;
-  const revisionSource = candidate?.revisionSource;
-  const isGitCheckout = provenanceMode === 'git-checkout';
-  const isDeploymentSource = provenanceMode === 'deployment-source';
-  const allowedSources = allowedSourcesByMode[provenanceMode];
-  const sourceAllowed =
-    allowedSources !== undefined && allowedSources.has(revisionSource);
+const testRouteDigest = calculateRouteInventoryDigest(testRoutes);
 
-  if (
-    !candidate ||
-    typeof candidate !== 'object' ||
-    Array.isArray(candidate) ||
-    candidate.schemaVersion !== 2 ||
-    candidate.reviewedSha !== expectedRevision ||
-    candidate.buildId !== expectedBuildId ||
-    !approvedProvenanceModes.has(provenanceMode) ||
-    !approvedRevisionSources.has(revisionSource) ||
-    !sourceAllowed ||
-    (isGitCheckout && candidate.trackedCheckoutClean !== true) ||
-    (isGitCheckout && candidate.sourceCheckoutClean !== true) ||
-    (isDeploymentSource && candidate.trackedCheckoutClean !== false) ||
-    (isDeploymentSource && candidate.sourceCheckoutClean !== false)
-  ) {
-    throw new Error('build_provenance_identity_mismatch');
-  }
-
-  return candidate;
-}
+const testAssetPath = '/_next/static/test.js';
+const testAssetSha256 = crypto.createHash('sha256').update('test').digest('hex');
+const testAssets = [{ path: testAssetPath, sha256: testAssetSha256 }];
+const testAssetDigest = calculateInventoryDigest(testAssets);
 
 function hostedManifest(overrides) {
   return {
@@ -1008,12 +993,44 @@ function hostedManifest(overrides) {
     revisionSource: 'git',
     trackedCheckoutClean: true,
     sourceCheckoutClean: true,
-    routeCount: 1,
-    routeInventorySha256: '0'.repeat(64),
-    routes: [],
-    assetCount: 1,
-    inventorySha256: '0'.repeat(64),
-    assets: [],
+    routeCount: testRoutes.length,
+    routeInventorySha256: testRouteDigest,
+    routes: testRoutes,
+    assetCount: testAssets.length,
+    inventorySha256: testAssetDigest,
+    assets: testAssets,
     ...overrides,
   };
 }
+
+// --- Structural regression: no debug hooks in production generator ---
+
+test('production generator source contains no debug hooks', () => {
+  const sourcePath = path.join(__dirname, '..', 'website', 'scripts', 'generate-production-build-provenance.cjs');
+  const source = fs.readFileSync(sourcePath, 'utf8');
+  assert.ok(!source.includes('_PROV_DEBUG'), 'must not contain _PROV_DEBUG');
+  assert.ok(!source.includes('DEBUG explicit'), 'must not contain DEBUG explicit');
+  assert.ok(
+    !/^.*console\.log\(.*\).*$/m.test(source),
+    'must not contain unapproved console.log',
+  );
+
+  const consoleErrorLines = source.split(/\r?\n/).filter(
+    (line) => line.includes('console.error') && !line.trim().startsWith('//'),
+  );
+  assert.equal(consoleErrorLines.length, 0, 'must not contain unapproved console.error');
+
+  const sourceCommitDirectOutput = source.split(/\r?\n/).filter(
+    (line) =>
+      line.includes('process.env.SOURCE_COMMIT') &&
+      (line.includes('console.log') || line.includes('console.error')),
+  );
+  assert.equal(
+    sourceCommitDirectOutput.length,
+    0,
+    'must not directly output process.env.SOURCE_COMMIT',
+  );
+
+  assert.ok(source.includes('process.stdout.write'), 'must retain stdout path');
+  assert.ok(source.includes('process.stderr.write'), 'must retain stderr path');
+});
