@@ -69,6 +69,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -81,6 +83,23 @@ jobs:
         working-directory: website
         run: npm ci
 
+      - name: Self-test production dependency audit validator
+        working-directory: website
+        run: npm run validate:production-audit-self-test
+
+      - name: Enforce zero production dependency vulnerabilities
+        working-directory: website
+        env:
+          EXPECTED_AUDIT_REVISION: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: >-
+          node scripts/validate-production-audit.cjs
+          --baseline security/production-dependency-audit-baseline.json
+          --evidence-output "${RUNNER_TEMP}/production-dependency-audit-evidence.json"
+
+      - name: Validate Linux sharp native image operation
+        working-directory: website
+        run: npm run test:sharp-native
+
       - name: Run website tests
         working-directory: website
         run: npm run test
@@ -92,6 +111,15 @@ jobs:
       - name: Build website
         working-directory: website
         run: npm run build
+
+      - name: Upload production dependency audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-dependency-audit-${{ github.event.pull_request.head.sha || github.sha }}
+          path: ${{ runner.temp }}/production-dependency-audit-evidence.json
+          if-no-files-found: error
+          retention-days: 30
 
   tracked-file-safety:
     name: Tracked file safety

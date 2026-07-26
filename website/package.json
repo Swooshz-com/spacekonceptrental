@@ -11,16 +11,23 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:sharp-native": "node scripts/validate-sharp-native.cjs",
+    "validate:production-audit": "node scripts/validate-production-audit.cjs",
+    "validate:production-audit-self-test": "node scripts/validate-production-audit.cjs --self-test",
     "test:admin-access-playwright": "playwright test --config=playwright.admin-access.config.ts",
     "test:public-regression-playwright": "playwright test --config=playwright.public-regression.config.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.106.2",
-    "next": "^16.2.6",
+    "next": "16.2.12",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "server-only": "^0.0.1"
+  },
+  "overrides": {
+    "postcss": "8.5.23",
+    "sharp": "0.35.3"
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",

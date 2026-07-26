@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "scope": "production-dependencies-only",
+  "before": {
+    "baseRevision": "522ed73c81640fb2c5a626fd48bd40f317749421",
+    "command": "npm audit --omit=dev --json",
+    "exitCode": 1,
+    "vulnerabilityTotals": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 3,
+      "critical": 0,
+      "total": 3
+    },
+    "vulnerablePackageNodes": [
+      "next",
+      "postcss",
+      "sharp"
+    ],
+    "advisoryIdentifiers": [
+      "GHSA-4633-3j49-mh5q",
+      "GHSA-4c39-4ccg-62r3",
+      "GHSA-68g3-v927-f742",
+      "GHSA-6g55-p6wh-862q",
+      "GHSA-6gpp-xcg3-4w24",
+      "GHSA-89xv-2m56-2m9x",
+      "GHSA-955p-x3mx-jcvp",
+      "GHSA-f88m-g3jw-g9cj",
+      "GHSA-m99w-x7hq-7vfj",
+      "GHSA-p9j2-gv94-2wf4",
+      "GHSA-q8wf-6r8g-63ch",
+      "GHSA-qx2v-qp2m-jg93",
+      "GHSA-r28c-9q8g-f849"
+    ],
+    "rawJsonSha256": "68811200574e49daf1f4a7c7c6e286e87b84d6d012bb60595f5b1712b4b3ee5f",
+    "safety": {
+      "rawJsonCommitted": false,
+      "secretExposureClassification": "none",
+      "containsPrivateLocalPath": false
+    }
+  }
+}
