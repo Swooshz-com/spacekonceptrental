@@ -230,4 +230,37 @@ describe("QuoteRequestForm", () => {
     expect(source).not.toContain("NEXT_PUBLIC_SUPABASE");
     expect(source).not.toContain("fetch(");
   });
+
+  it("focuses the selection fieldset and shows inline error when selection is the only error", () => {
+    render(<QuoteRequestForm />);
+
+    fireEvent.change(screen.getByLabelText(/your name/i), {
+      target: { value: "Maya Tan" }
+    });
+    fireEvent.change(screen.getByLabelText(/preferred contact method/i), {
+      target: { value: "email" }
+    });
+    fireEvent.change(screen.getByLabelText(/email address/i), {
+      target: { value: "maya@example.test" }
+    });
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: /submission unavailable during review/i
+      })
+    );
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      /select a published catalogue listing or add a valid manual requirement/i
+    );
+    const inlineError = document.getElementById("quote-selection-error");
+    expect(inlineError).toBeInTheDocument();
+    expect(inlineError).toHaveClass("quote-form__field-error");
+    const fieldset = document.getElementById("quote-selection");
+    expect(fieldset).toHaveAttribute("tabindex", "-1");
+    expect(fieldset).toHaveAttribute(
+      "aria-describedby",
+      "quote-selection-error"
+    );
+    expect(document.activeElement).toBe(fieldset);
+  });
 });

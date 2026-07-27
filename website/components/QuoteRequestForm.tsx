@@ -58,6 +58,17 @@ function writeSelection(selection: QuoteSelection) {
 
 function focusFirstError(form: HTMLFormElement, errors: FieldErrors) {
   const firstName = Object.keys(errors)[0];
+
+  if (firstName === "selection") {
+    const target = document.getElementById("quote-selection");
+
+    if (target) {
+      target.focus();
+    }
+
+    return;
+  }
+
   const target = firstName
     ? form.elements.namedItem(firstName)
     : undefined;
@@ -358,8 +369,22 @@ export default function QuoteRequestForm({
         </div>
       </fieldset>
 
-      <fieldset id="quote-selection">
+      <fieldset
+        aria-describedby={
+          fieldErrors.selection ? "quote-selection-error" : undefined
+        }
+        id="quote-selection"
+        tabIndex={-1}
+      >
         <legend>Manual requirements</legend>
+        {fieldErrors.selection ? (
+          <small
+            className="quote-form__field-error"
+            id="quote-selection-error"
+          >
+            {fieldErrors.selection}
+          </small>
+        ) : null}
         <p>
           Use a separate manual row only when the catalogue does not describe
           the item. It will be reviewed and does not create a catalogue item,

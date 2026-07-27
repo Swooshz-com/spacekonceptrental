@@ -16,9 +16,9 @@ async function resolveQuoteListingContext(searchParams: QuotePageProps["searchPa
   const resolved = await searchParams;
   const slug = normalizePublicListingSlug(firstSearchParam(resolved.listing));
   const quantity = normalizePublicQuoteQuantity(firstSearchParam(resolved.qty));
-  const hasValidFallback = slug && (resolved.qty === undefined || quantity);
-  const realProduct = hasValidFallback ? await getPublicProductBySlug(slug) : null;
-  return { product: realProduct, requestedSlug: slug, quantity: hasValidFallback ? quantity ?? 1 : undefined };
+  const hasValidFallback = Boolean(slug && quantity);
+  const realProduct = hasValidFallback && slug ? await getPublicProductBySlug(slug) : null;
+  return { product: realProduct, requestedSlug: slug, quantity: hasValidFallback ? quantity : undefined };
 }
 function quoteProductImageSrc(product: PublicCatalogueProduct) { const image = product.images?.[0]?.publicUrl; return image ?? stitchImageSrc(fallbackProductImage(product)); }
 

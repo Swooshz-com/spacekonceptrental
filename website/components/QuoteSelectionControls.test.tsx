@@ -41,7 +41,7 @@ describe("QuoteSelectionControls", () => {
     cleanup();
   });
 
-  it("persists catalogue references in v2 session storage and updates same-tab consumers", () => {
+  it("persists catalogue references in v2 session storage with subkind and updates same-tab consumers", () => {
     render(
       <>
         <QuoteSelectionButton item={chair} />
@@ -60,7 +60,8 @@ describe("QuoteSelectionControls", () => {
           reference: "lounge-chair",
           quantity: 1,
           source: "catalogue",
-          order: 0
+          order: 0,
+          subkind: "rental"
         }
       ]
     });
@@ -81,7 +82,8 @@ describe("QuoteSelectionControls", () => {
             reference: "lounge-chair",
             quantity: 98,
             source: "catalogue",
-            order: 0
+            order: 0,
+            subkind: "rental"
           }
         ]
       })
@@ -103,7 +105,7 @@ describe("QuoteSelectionControls", () => {
     expect(storedRows().rows).toEqual([]);
   });
 
-  it("retains stale references and renders unavailable recovery without substitution", () => {
+  it("retains stale references and renders unavailable recovery with distinct labels", () => {
     window.sessionStorage.setItem(
       QUOTE_SELECTION_STORAGE_KEY,
       JSON.stringify({
@@ -114,7 +116,8 @@ describe("QuoteSelectionControls", () => {
             reference: "retired-chair",
             quantity: 2,
             source: "catalogue",
-            order: 0
+            order: 0,
+            subkind: "rental"
           }
         ]
       })
@@ -128,11 +131,11 @@ describe("QuoteSelectionControls", () => {
     );
 
     expect(screen.getByText("Catalogue unavailable right now")).toBeInTheDocument();
-    expect(screen.getByText("Unavailable selection")).toBeInTheDocument();
+    expect(screen.getByText("Unavailable selection: retired-chair")).toBeInTheDocument();
     expect(screen.getByText(/remove this item or browse/i)).toBeInTheDocument();
     expect(
       screen.getByRole("button", {
-        name: /remove unavailable selection from selection/i
+        name: /remove unavailable selection: retired-chair from selection/i
       })
     ).toBeInTheDocument();
     expect(storedRows().rows[0]?.reference).toBe("retired-chair");
@@ -185,7 +188,7 @@ describe("QuoteSelectionControls", () => {
     expect(screen.getByText("Catalogue unavailable right now")).toBeInTheDocument();
   });
 
-  it("seeds only one validated URL fallback row in the current tab", () => {
+  it("seeds only one validated URL fallback row with subkind in the current tab", () => {
     render(
       <QuoteSelectionSummary
         catalogueAvailable
@@ -207,7 +210,8 @@ describe("QuoteSelectionControls", () => {
         reference: "lounge-chair",
         quantity: 3,
         source: "url",
-        order: 0
+        order: 0,
+        subkind: "rental"
       }
     ]);
   });
@@ -251,5 +255,236 @@ describe("QuoteSelectionControls", () => {
         "Botanical Wedding"
       ].join("\n")
     );
+  });
+
+  it("preserves manual rows when adding a catalogue item", () => {
+    window.sessionStorage.setItem(
+      QUOTE_SELECTION_STORAGE_KEY,
+      JSON.stringify({
+        version: 2,
+        rows: [
+          {
+            kind: "manual",
+            key: "manual-a",
+            description: "Custom counter",
+            quantity: 2,
+            source: "manual",
+            order: 0
+          }
+        ]
+      })
+    );
+
+    render(
+      <>
+        <QuoteSelectionButton item={chair} />
+        <QuoteSelectionSummary
+          catalogueAvailable
+          validItems={[{ kind: "rental", slug: "lounge-chair", name: "Lounge Chair" }]}
+        />
+      </>
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /increase lounge chair/i }));
+
+    const rows = storedRows().rows;
+
+    expect(rows).toHaveLength(2);
+    expect(rows[0]?.kind).toBe("manual");
+    expect(rows[1]?.kind).toBe("catalogue");
+  });
+
+  it("preserves manual rows when removing a catalogue item", () => {
+    window.sessionStorage.setItem(
+      QUOTE_SELECTION_STORAGE_KEY,
+      JSON.stringify({
+        version: 2,
+        rows: [
+          {
+            kind: "manual",
+            key: "manual-a",
+            description: "Custom counter",
+            quantity: 2,
+            source: "manual",
+            order: 0
+          },
+          {
+            kind: "catalogue",
+            reference: "lounge-chair",
+            quantity: 1,
+            source: "catalogue",
+            order: 1,
+            subkind: "rental"
+          }
+        ]
+      })
+    );
+
+    render(
+      <QuoteSelectionSummary
+        catalogueAvailable
+        validItems={[{ kind: "rental", slug: "lounge-chair", name: "Lounge Chair" }]}
+      />
+    );
+
+    const decrementButtons = screen.getAllByRole("button", { name: /decrease lounge chair/i });
+    fireEvent.click(decrementButtons[0]!);
+
+    const rows = storedRows().rows;
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.kind).toBe("manual");
+  });
+
+  it("preserves setup kind after navigation/reload simulation", () => {
+    window.sessionStorage.setItem(
+      QUOTE_SELECTION_STORAGE_KEY,
+      JSON.stringify({
+        version: 2,
+        rows: [
+          {
+            kind: "catalogue",
+            reference: "botanical-wedding",
+            quantity: 1,
+            source: "catalogue",
+            order: 0,
+            subkind: "setup"
+          }
+        ]
+      })
+    );
+
+    render(
+      <QuoteSelectionSummary
+        catalogueAvailable
+        validItems={[
+          { kind: "setup", slug: "botanical-wedding", name: "Botanical Wedding", category: "Setups" }
+        ]}
+      />
+    );
+
+    expect(screen.getByText("Botanical Wedding")).toBeInTheDocument();
+    expect(screen.getByText("Setups")).toBeInTheDocument();
+  });
+
+  it("distinguishes multiple unavailable rows with distinct labels and remove controls", () => {
+    window.sessionStorage.setItem(
+      QUOTE_SELECTION_STORAGE_KEY,
+      JSON.stringify({
+        version: 2,
+        rows: [
+          {
+            kind: "catalogue",
+            reference: "retired-chair",
+            quantity: 1,
+            source: "catalogue",
+            order: 0,
+            subkind: "rental"
+          },
+          {
+            kind: "catalogue",
+            reference: "old-table",
+            quantity: 2,
+            source: "catalogue",
+            order: 1,
+            subkind: "rental"
+          }
+        ]
+      })
+    );
+
+    render(
+      <>
+        <QuoteSelectionDataBoundary validItems={[]} />
+        <QuoteSelectionSummary catalogueAvailable={false} validItems={[]} />
+      </>
+    );
+
+    expect(screen.getByText("Unavailable selection: retired-chair")).toBeInTheDocument();
+    expect(screen.getByText("Unavailable selection: old-table")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /remove unavailable selection: retired-chair from selection/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /remove unavailable selection: old-table from selection/i })
+    ).toBeInTheDocument();
+  });
+
+  it("does not seed URL fallback when selection has existing manual rows", () => {
+    window.sessionStorage.setItem(
+      QUOTE_SELECTION_STORAGE_KEY,
+      JSON.stringify({
+        version: 2,
+        rows: [
+          {
+            kind: "manual",
+            key: "manual-a",
+            description: "Custom counter",
+            quantity: 1,
+            source: "manual",
+            order: 0
+          }
+        ]
+      })
+    );
+
+    render(
+      <QuoteSelectionSummary
+        catalogueAvailable
+        fallbackItems={[{ ...chair, quantity: 3 }]}
+        requestedSlug="lounge-chair"
+        validItems={[
+          {
+            kind: "rental",
+            slug: "lounge-chair",
+            name: "Lounge Chair"
+          }
+        ]}
+      />
+    );
+
+    const rows = storedRows().rows;
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.kind).toBe("manual");
+  });
+
+  it("does not seed URL fallback when selection has existing catalogue rows", () => {
+    window.sessionStorage.setItem(
+      QUOTE_SELECTION_STORAGE_KEY,
+      JSON.stringify({
+        version: 2,
+        rows: [
+          {
+            kind: "catalogue",
+            reference: "table",
+            quantity: 1,
+            source: "catalogue",
+            order: 0,
+            subkind: "rental"
+          }
+        ]
+      })
+    );
+
+    render(
+      <QuoteSelectionSummary
+        catalogueAvailable
+        fallbackItems={[{ ...chair, quantity: 3 }]}
+        requestedSlug="lounge-chair"
+        validItems={[
+          {
+            kind: "rental",
+            slug: "lounge-chair",
+            name: "Lounge Chair"
+          }
+        ]}
+      />
+    );
+
+    const rows = storedRows().rows;
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.reference).toBe("table");
   });
 });

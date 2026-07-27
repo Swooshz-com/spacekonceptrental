@@ -815,6 +815,7 @@ describe("POST /api/quote", () => {
     const repository = vi.fn();
     const emailHandoff = vi.fn();
     const handoffFinalizer = vi.fn();
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
 
     const response = await handleDisabledQuotePost(
       request,
@@ -825,15 +826,29 @@ describe("POST /api/quote", () => {
     const body = await response.json();
 
     expect(response.status).toBe(503);
-    expect(body).toEqual({
-      error: {
-        code: "QUOTE_SUBMISSION_DISABLED",
-        message:
-          "Quote submission is unavailable while this service is under review."
-      }
-    });
+    expect(body.error.code).toBe("QUOTE_SUBMISSION_DISABLED");
+    expect(body.error.message).toBe(
+      "Quote submission is unavailable while this service is under review."
+    );
+    expect(body.reference).toEqual(expect.any(String));
+    expect(body.reference.length).toBeGreaterThan(0);
     expect(bodyRead).not.toHaveBeenCalled();
     expect(repository).not.toHaveBeenCalled();
     expect(emailHandoff).not.toHaveBeenCalled();
     expect(handoffFinalizer).not.toHaveBeenCalled();
+    expect(errorSpy).toHaveBeenCalledWith(
+      "application_error",
+      expect.objectContaining({
+        category: "QUOTE_SUBMISSION_DISABLED",
+        errorReference: body.reference,
+        route: "POST /api/quote",
+        statusCode: 503
+      })
+    );
+    const serializedLog = JSON.stringify(errorSpy.mock.calls);
+    expect(serializedLog).not.toContain("{malformed");
+    expect(serializedLog).not.toContain("SUPABASE");
+    expect(serializedLog).not.toContain("N8N");
+
+    errorSpy.mockRestore();
   });

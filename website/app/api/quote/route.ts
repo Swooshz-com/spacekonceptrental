@@ -44,16 +44,28 @@ const FALLBACK_MESSAGE =
 const SUBMISSION_DISABLED_MESSAGE =
   "Quote submission is unavailable while this service is under review.";
 
-function submissionDisabledResponse() {
-  return Response.json(
+function submissionDisabledResponse(request: Request) {
+  const reference = createRequestId();
+  const response = Response.json(
     {
       error: {
         code: "QUOTE_SUBMISSION_DISABLED",
         message: SUBMISSION_DISABLED_MESSAGE
-      }
+      },
+      reference
     },
     { status: 503 }
   );
+
+  logApplicationError({
+    category: "QUOTE_SUBMISSION_DISABLED",
+    reference,
+    request,
+    route: "POST /api/quote",
+    statusCode: 503
+  });
+
+  return response;
 }
 
 function createRequestId() {
@@ -429,7 +441,7 @@ export async function handleQuotePost(
   handoffFinalizer: QuoteHandoffFinalizer = finalizeQuoteHandoff
 ): Promise<Response> {
   if (!QUOTE_SUBMISSION_ENABLED) {
-    return submissionDisabledResponse();
+    return submissionDisabledResponse(request);
   }
 
   return handleQuotePostEnabledForTests(

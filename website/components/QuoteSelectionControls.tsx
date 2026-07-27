@@ -7,9 +7,14 @@ import {
   QUOTE_SELECTION_MAX_QUANTITY,
   QUOTE_SELECTION_MAX_ROWS,
   QUOTE_SELECTION_STORAGE_KEY,
+  allRowsFromSelection,
+  applyCatalogueChange,
   createCatalogueSelection,
+  normalizeQuoteSelection,
   parseStoredQuoteSelection,
-  serializeQuoteSelection
+  serializeQuoteSelection,
+  shouldSeedUrlFallback,
+  type CatalogueSelectionSubkind
 } from "../lib/quote/selection-model";
 
 export type QuoteSelectionItem = {
@@ -191,27 +196,22 @@ function selectionQuantityStep(
     : 1;
 }
 
-function readQuoteSelection() {
+function readQuoteSelection(): QuoteSelectionItem[] {
   if (typeof window === "undefined") {
     return [];
   }
 
   try {
-    const parsed = parseStoredQuoteSelection(
+    const rows = allRowsFromSelection(
       window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY)
     );
 
-    if (!parsed.ok) {
-      window.sessionStorage.removeItem(QUOTE_SELECTION_STORAGE_KEY);
-      return [];
-    }
-
-    return parsed.value.rows
+    return rows
       .filter((row) => row.kind === "catalogue")
       .map((row) => ({
         slug: row.reference,
         name: row.reference,
-        kind: "rental" as const,
+        kind: row.subkind,
         quantity: row.quantity,
         selectionSource: row.source
       }));
@@ -225,27 +225,53 @@ function writeQuoteSelection(items: QuoteSelectionItem[]) {
     return;
   }
 
-  const normalized = createCatalogueSelection(
-    items
-      .filter((item) => item.kind !== "setup-included")
-      .map((item) => ({
-        reference: item.slug,
-        quantity: item.quantity,
-        source: item.selectionSource ?? "catalogue"
-      }))
+  const serialized = window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY);
+  const current = parseStoredQuoteSelection(serialized);
+  const manualRows = current.ok
+    ? current.value.rows.filter((row) => row.kind === "manual")
+    : [];
+
+  const catalogueItems = items.filter(
+    (item) => item.kind === "rental" || item.kind === "setup"
   );
+
+  const catalogueResult = createCatalogueSelection(
+    catalogueItems.map((item) => ({
+      reference: item.slug,
+      quantity: item.quantity,
+      source: item.selectionSource ?? "catalogue",
+      subkind: (item.kind === "setup" ? "setup" : "rental") as CatalogueSelectionSubkind
+    }))
+  );
+
+  if (!catalogueResult.ok) {
+    return;
+  }
+
+  const nextSelection = {
+    version: 2 as const,
+    rows: [
+      ...manualRows.map((row, index) => ({ ...row, order: index })),
+      ...catalogueResult.value.rows.map((row, index) => ({
+        ...row,
+        order: manualRows.length + index
+      }))
+    ]
+  };
+
+  const normalized = normalizeQuoteSelection(nextSelection);
 
   if (!normalized.ok) {
     return;
   }
 
-  const serialized = serializeQuoteSelection(normalized.value);
+  const nextSerialized = serializeQuoteSelection(normalized.value);
 
-  if (!serialized) {
+  if (!nextSerialized) {
     return;
   }
 
-  window.sessionStorage.setItem(QUOTE_SELECTION_STORAGE_KEY, serialized);
+  window.sessionStorage.setItem(QUOTE_SELECTION_STORAGE_KEY, nextSerialized);
   window.dispatchEvent(new Event(quoteSelectionChangeEvent));
 }
 
@@ -254,19 +280,26 @@ function writeUrlFallback(item: QuoteSelectionItem) {
     return;
   }
 
+  const serialized = window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY);
+
+  if (!shouldSeedUrlFallback(serialized)) {
+    return;
+  }
+
   const normalized = createCatalogueSelection([
-      {
-        reference: item.slug,
-        quantity: item.quantity,
-        source: "url"
-      }
-    ]);
-  const serialized = normalized.ok
+    {
+      reference: item.slug,
+      quantity: item.quantity,
+      source: "url",
+      subkind: (item.kind === "setup" ? "setup" : "rental") as CatalogueSelectionSubkind
+    }
+  ]);
+  const nextSerialized = normalized.ok
     ? serializeQuoteSelection(normalized.value)
     : undefined;
 
-  if (serialized) {
-    window.sessionStorage.setItem(QUOTE_SELECTION_STORAGE_KEY, serialized);
+  if (nextSerialized) {
+    window.sessionStorage.setItem(QUOTE_SELECTION_STORAGE_KEY, nextSerialized);
     window.dispatchEvent(new Event(quoteSelectionChangeEvent));
   }
 }
@@ -335,6 +368,23 @@ function removeStoredQuoteSelectionItem(item: QuoteSelectionItem) {
   const normalizedItem = normalizeQuoteItem(item);
 
   if (!normalizedItem) {
+    return;
+  }
+
+  if (normalizedItem.kind === "rental" || normalizedItem.kind === "setup") {
+    const serialized = window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY);
+    const result = applyCatalogueChange(serialized, {
+      reference: normalizedItem.slug,
+      subkind: normalizedItem.kind as CatalogueSelectionSubkind,
+      quantity: 0,
+      source: "catalogue"
+    });
+
+    if (result.ok) {
+      window.sessionStorage.setItem(QUOTE_SELECTION_STORAGE_KEY, result.serialized);
+      window.dispatchEvent(new Event(quoteSelectionChangeEvent));
+    }
+
     return;
   }
 
@@ -654,12 +704,12 @@ export function QuoteSelectionSummary({
           ...item,
           category: canonical.category,
           imageSrc: canonical.imageSrc,
-          kind: canonical.kind,
+          kind: item.kind,
           name: canonical.name ?? canonical.slug
         }
       : {
           ...item,
-          name: "Unavailable selection",
+          name: `Unavailable selection: ${item.slug}`,
           unavailable: true
         };
   });

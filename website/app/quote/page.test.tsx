@@ -33,7 +33,8 @@ describe("QuotePage", () => {
     { listing: "lounge-chair", qty: "0" },
     { listing: "lounge-chair", qty: "100" },
     { listing: "lounge-chair", qty: "1.5" },
-    { listing: "lounge-chair", qty: "1e2" }
+    { listing: "lounge-chair", qty: "1e2" },
+    { listing: "lounge-chair" }
   ])("rejects malformed or forged URL fallback %#", async (searchParams) => {
     render(await QuotePage({ searchParams: Promise.resolve(searchParams) }));
 

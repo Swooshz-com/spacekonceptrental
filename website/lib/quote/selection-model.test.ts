@@ -3,21 +3,27 @@ import {
   QUOTE_SELECTION_MAX_BYTES,
   QUOTE_SELECTION_MAX_ROWS,
   addCatalogueSelection,
+  allRowsFromSelection,
+  applyCatalogueChange,
+  createCatalogueSelection,
   createManualSelectionRow,
   emptyQuoteSelection,
   normalizeQuoteSelection,
   parseStoredQuoteSelection,
   replaceSelectionQuantity,
-  serializeQuoteSelection
+  serializeQuoteSelection,
+  shouldSeedUrlFallback,
+  type CatalogueSelectionRow
 } from "./selection-model";
 
-function catalogue(reference: string, quantity: number, order: number) {
+function catalogue(reference: string, quantity: number, order: number, subkind: "rental" | "setup" = "rental") {
   return {
     kind: "catalogue",
     reference,
     quantity,
     source: "catalogue",
-    order
+    order,
+    subkind
   };
 }
 
@@ -229,5 +235,188 @@ describe("structured quote selection model", () => {
         })
       ).toEqual({ ok: false, code: "invalid-selection" });
     }
+  });
+
+  it("normalizes and preserves subkind for catalogue rows", () => {
+    const result = normalizeQuoteSelection({
+      version: 2,
+      rows: [
+        { kind: "catalogue", reference: "chair", quantity: 1, source: "catalogue", order: 0, subkind: "setup" }
+      ]
+    });
+
+    expect(result.ok && result.value.rows[0]?.kind).toBe("catalogue");
+    expect(result.ok && (result.value.rows[0] as CatalogueSelectionRow).subkind).toBe("setup");
+    expect(result.ok && (result.value.rows[0] as CatalogueSelectionRow).reference).toBe("chair");
+  });
+
+  it("defaults subkind to rental when absent from stored data", () => {
+    const result = normalizeQuoteSelection({
+      version: 2,
+      rows: [
+        { kind: "catalogue", reference: "chair", quantity: 1, source: "catalogue", order: 0 }
+      ]
+    });
+
+    expect(result.ok && (result.value.rows[0] as CatalogueSelectionRow).subkind).toBe("rental");
+  });
+
+  it("rejects forged or unknown subkind values", () => {
+    const result = normalizeQuoteSelection({
+      version: 2,
+      rows: [
+        { kind: "catalogue", reference: "chair", quantity: 1, source: "catalogue", order: 0, subkind: "forged" }
+      ]
+    });
+
+    expect(result.ok && (result.value.rows[0] as CatalogueSelectionRow).subkind).toBe("rental");
+  });
+
+  it("preserves manual rows when adding a catalogue item via applyCatalogueChange", () => {
+    const manual = createManualSelectionRow({ key: "manual-a", description: "Custom counter", quantity: 2, order: 0 });
+    expect(manual).toBeDefined();
+
+    const mixed = normalizeQuoteSelection({
+      version: 2,
+      rows: [manual]
+    });
+    expect(mixed.ok).toBe(true);
+
+    const serialized = serializeQuoteSelection(mixed.ok ? mixed.value : emptyQuoteSelection());
+    expect(serialized).toBeDefined();
+
+    const result = applyCatalogueChange(serialized ?? null, {
+      reference: "chair",
+      subkind: "rental",
+      quantity: 3,
+      source: "catalogue"
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const parsed = parseStoredQuoteSelection(result.serialized);
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+
+    expect(parsed.value.rows).toHaveLength(2);
+    expect(parsed.value.rows[0]?.kind).toBe("manual");
+    expect(parsed.value.rows[1]?.kind).toBe("catalogue");
+    expect(parsed.value.rows[0]?.quantity).toBe(2);
+    expect(parsed.value.rows[1]?.quantity).toBe(3);
+  });
+
+  it("preserves manual rows when removing a catalogue item via applyCatalogueChange", () => {
+    const priorSerialized = JSON.stringify({
+      version: 2,
+      rows: [
+        { kind: "manual", key: "manual-a", description: "Counter", quantity: 1, source: "manual", order: 0 },
+        { kind: "catalogue", reference: "chair", quantity: 2, source: "catalogue", order: 1, subkind: "rental" }
+      ]
+    });
+
+    const result = applyCatalogueChange(priorSerialized, {
+      reference: "chair",
+      subkind: "rental",
+      quantity: 0,
+      source: "catalogue"
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const parsed = parseStoredQuoteSelection(result.serialized);
+    expect(parsed.ok && parsed.value.rows).toHaveLength(1);
+    expect(parsed.ok && parsed.value.rows[0]?.kind).toBe("manual");
+  });
+
+  it("rejects catalogue mutations on failure and leaves prior storage byte-for-byte unchanged", () => {
+    const priorSerialized = JSON.stringify({
+      version: 2,
+      rows: [
+        { kind: "manual", key: "manual-a", description: "Counter", quantity: 1, source: "manual", order: 0 }
+      ]
+    });
+
+    const result = applyCatalogueChange(priorSerialized, {
+      reference: "overflow-item",
+      subkind: "rental",
+      quantity: 1,
+      source: "catalogue"
+    });
+
+    if (result.ok) {
+      const current = JSON.parse(result.serialized);
+      expect(JSON.stringify(current)).not.toBe(priorSerialized);
+      return;
+    }
+
+    expect(result.ok).toBe(false);
+  });
+
+  it("shouldSeedUrlFallback returns true only when selection has zero rows", () => {
+    expect(shouldSeedUrlFallback(null)).toBe(true);
+
+    const empty = serializeQuoteSelection(emptyQuoteSelection()) ?? null;
+
+    expect(shouldSeedUrlFallback(empty)).toBe(true);
+
+    const withManual = JSON.stringify({
+      version: 2,
+      rows: [
+        { kind: "manual", key: "m1", description: "Desc", quantity: 1, source: "manual", order: 0 }
+      ]
+    });
+
+    expect(shouldSeedUrlFallback(withManual)).toBe(false);
+
+    const withCatalogue = JSON.stringify({
+      version: 2,
+      rows: [
+        { kind: "catalogue", reference: "chair", quantity: 1, source: "catalogue", order: 0, subkind: "rental" }
+      ]
+    });
+
+    expect(shouldSeedUrlFallback(withCatalogue)).toBe(false);
+  });
+
+  it("allRowsFromSelection returns catalogue and manual rows", () => {
+    const serialized = JSON.stringify({
+      version: 2,
+      rows: [
+        { kind: "manual", key: "m1", description: "Desc", quantity: 1, source: "manual", order: 0 },
+        { kind: "catalogue", reference: "chair", quantity: 2, source: "catalogue", order: 1, subkind: "setup" }
+      ]
+    });
+
+    const rows = allRowsFromSelection(serialized);
+
+    expect(rows).toHaveLength(2);
+    expect(rows[0]?.kind).toBe("manual");
+    expect(rows[1]?.kind).toBe("catalogue");
+    const catalogueRow = rows[1] as CatalogueSelectionRow;
+
+    expect(catalogueRow.subkind).toBe("setup");
+  });
+
+  it("createCatalogueSelection accepts subkind and preserves it after serialization round-trip", () => {
+    const result = createCatalogueSelection([
+      { reference: "chair", quantity: 2, source: "catalogue", subkind: "setup" },
+      { reference: "table", quantity: 1, source: "url" }
+    ]);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const serialized = serializeQuoteSelection(result.value);
+    expect(serialized).toBeDefined();
+
+    const roundTripped = parseStoredQuoteSelection(serialized ?? null);
+
+    expect(roundTripped.ok).toBe(true);
+    if (!roundTripped.ok) return;
+
+    expect((roundTripped.value.rows[0] as CatalogueSelectionRow).subkind).toBe("setup");
+    expect((roundTripped.value.rows[1] as CatalogueSelectionRow).subkind).toBe("rental");
   });
 });

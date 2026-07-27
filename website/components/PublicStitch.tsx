@@ -29,20 +29,12 @@ export const stitchImages = { chairImage, sofaImage, corporateImage, galaImage, 
 export function quoteSelectionValidItemsForCatalogue(
   catalogue: PublicCatalogue
 ): QuoteSelectionValidItem[] {
-  return catalogue.products.flatMap((product) => [
-    {
-      category: productCategory(product),
-      kind: "rental" as const,
-      name: product.name,
-      slug: product.slug
-    },
-    {
-      category: productCategory(product),
-      kind: "setup" as const,
-      name: product.name,
-      slug: product.slug
-    }
-  ]);
+  return catalogue.products.map((product) => ({
+    category: productCategory(product),
+    kind: productCategory(product).toLowerCase() === "setups" ? "setup" as const : "rental" as const,
+    name: product.name,
+    slug: product.slug
+  }));
 }
 
 const homeCategoryImageUrls = [

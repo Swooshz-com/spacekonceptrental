@@ -8,6 +8,7 @@ export const QUOTE_MANUAL_DESCRIPTION_MAX_LENGTH = 180;
 export const QUOTE_MANUAL_NOTES_MAX_LENGTH = 500;
 
 export type CatalogueSelectionSource = "catalogue" | "url";
+export type CatalogueSelectionSubkind = "rental" | "setup";
 
 export type CatalogueSelectionRow = {
   kind: "catalogue";
@@ -15,6 +16,7 @@ export type CatalogueSelectionRow = {
   quantity: number;
   source: CatalogueSelectionSource;
   order: number;
+  subkind: CatalogueSelectionSubkind;
 };
 
 export type ManualSelectionRow = {
@@ -94,6 +96,8 @@ function normalizeCatalogueRow(
       "quantity",
       "source",
       "order"
+    ], [
+      "subkind"
     ]) ||
     value.kind !== "catalogue" ||
     (value.source !== "catalogue" && value.source !== "url") ||
@@ -107,6 +111,8 @@ function normalizeCatalogueRow(
       ? value.reference.trim().toLowerCase()
       : "";
   const order = normalizeOrder(value.order);
+  const subkind: CatalogueSelectionSubkind =
+    value.subkind === "setup" ? "setup" : "rental";
 
   if (!publicReferencePattern.test(reference) || order === undefined) {
     return undefined;
@@ -117,7 +123,8 @@ function normalizeCatalogueRow(
     reference,
     quantity: value.quantity,
     source: value.source,
-    order
+    order,
+    subkind
   };
 }
 
@@ -306,7 +313,8 @@ export function addCatalogueSelection(
   selection: QuoteSelection,
   reference: string,
   quantity = 1,
-  source: CatalogueSelectionSource = "catalogue"
+  source: CatalogueSelectionSource = "catalogue",
+  subkind: CatalogueSelectionSubkind = "rental"
 ): QuoteSelectionResult {
   return normalizeQuoteSelection({
     version: QUOTE_SELECTION_VERSION,
@@ -317,6 +325,7 @@ export function addCatalogueSelection(
         reference,
         quantity,
         source,
+        subkind,
         order: selection.rows.length
       }
     ]
@@ -387,14 +396,144 @@ export function createCatalogueSelection(
     reference: string;
     quantity: number;
     source: CatalogueSelectionSource;
+    subkind?: CatalogueSelectionSubkind;
   }>
 ): QuoteSelectionResult {
   return normalizeQuoteSelection({
     version: QUOTE_SELECTION_VERSION,
     rows: items.map((item, position) => ({
       kind: "catalogue",
-      ...item,
+      reference: item.reference,
+      quantity: item.quantity,
+      source: item.source,
+      subkind: item.subkind ?? "rental",
       order: position
     }))
   });
+}
+
+export type ApplyCatalogueChangeInput = {
+  reference: string;
+  subkind: CatalogueSelectionSubkind;
+  quantity?: number;
+  source: CatalogueSelectionSource;
+};
+
+export function applyCatalogueChange(
+  storedSerialized: string | null,
+  change: ApplyCatalogueChangeInput
+): { ok: true; serialized: string } | { ok: false; code: QuoteSelectionErrorCode } {
+  const current = parseStoredQuoteSelection(storedSerialized);
+
+  if (!current.ok) {
+    return { ok: false, code: current.code };
+  }
+
+  const priorSerialized = storedSerialized
+    ? JSON.stringify(current.value)
+    : JSON.stringify(emptyQuoteSelection());
+
+  const catalogueRows = current.value.rows.filter(
+    (row) => row.kind === "catalogue"
+  );
+  const manualRows = current.value.rows.filter(
+    (row) => row.kind === "manual"
+  );
+
+  if (typeof change.quantity === "number" && change.quantity === 0) {
+    const nextCatalogueRows = catalogueRows.filter(
+      (row) => !(row.reference === change.reference && row.subkind === change.subkind)
+    );
+
+    const next = normalizeQuoteSelection({
+      version: QUOTE_SELECTION_VERSION,
+      rows: [
+        ...manualRows.map((row, index) => ({ ...row, order: index })),
+        ...nextCatalogueRows.map((row, index) => ({ ...row, order: manualRows.length + index }))
+      ]
+    });
+
+    if (!next.ok) {
+      return { ok: false, code: next.code };
+    }
+
+    const serialized = serializeQuoteSelection(next.value);
+
+    if (!serialized) {
+      return { ok: false, code: "byte-limit" };
+    }
+
+    return { ok: true, serialized };
+  }
+
+  const existingIndex = catalogueRows.findIndex(
+    (row) => row.reference === change.reference && row.subkind === change.subkind
+  );
+
+  let nextCatalogueRows: CatalogueSelectionRow[];
+
+  if (existingIndex === -1) {
+    const newRow: CatalogueSelectionRow = {
+      kind: "catalogue",
+      reference: change.reference,
+      quantity: change.quantity ?? 1,
+      source: change.source,
+      subkind: change.subkind,
+      order: catalogueRows.length
+    };
+    nextCatalogueRows = [...catalogueRows, newRow];
+  } else {
+    const newQty = change.quantity ?? existingIndex >= 0
+      ? (catalogueRows[existingIndex]?.quantity ?? 0) + 1
+      : 1;
+    nextCatalogueRows = catalogueRows.map((row, index) =>
+      index === existingIndex ? { ...row, quantity: newQty } : row
+    );
+  }
+
+  const orderedRows: QuoteSelectionRow[] = [
+    ...manualRows.map((row, index) => ({ ...row, order: index })),
+    ...nextCatalogueRows.map((row, index) => ({ ...row, order: manualRows.length + index }))
+  ];
+
+  const next = normalizeQuoteSelection({
+    version: QUOTE_SELECTION_VERSION,
+    rows: orderedRows
+  });
+
+  if (!next.ok) {
+    return { ok: false, code: next.code };
+  }
+
+  const serialized = serializeQuoteSelection(next.value);
+
+  if (!serialized) {
+    return { ok: false, code: "byte-limit" };
+  }
+
+  return { ok: true, serialized };
+}
+
+export function shouldSeedUrlFallback(storedSerialized: string | null) {
+  const current = parseStoredQuoteSelection(storedSerialized);
+
+  return current.ok && current.value.rows.length === 0;
+}
+
+export function selectionContainsRow(
+  storedSerialized: string | null,
+  reference: string,
+  subkind: CatalogueSelectionSubkind
+) {
+  const current = parseStoredQuoteSelection(storedSerialized);
+
+  return current.ok && current.value.rows.some(
+    (row) => row.kind === "catalogue" && row.reference === reference && row.subkind === subkind
+  );
+}
+
+export function allRowsFromSelection(storedSerialized: string | null): QuoteSelectionRow[] {
+  const current = parseStoredQuoteSelection(storedSerialized);
+
+  return current.ok ? current.value.rows : [];
 }
