@@ -269,7 +269,8 @@ describe("structured quote selection model", () => {
       ]
     });
 
-    expect(result.ok && (result.value.rows[0] as CatalogueSelectionRow).subkind).toBe("rental");
+    expect(result.ok).toBe(false);
+    expect(result.ok ? undefined : result.code).toBe("invalid-selection");
   });
 
   it("preserves manual rows when adding a catalogue item via applyCatalogueChange", () => {
@@ -418,5 +419,322 @@ describe("structured quote selection model", () => {
 
     expect((roundTripped.value.rows[0] as CatalogueSelectionRow).subkind).toBe("setup");
     expect((roundTripped.value.rows[1] as CatalogueSelectionRow).subkind).toBe("rental");
+  });
+
+  describe("canonical kind enforcement", () => {
+    it("rejects explicit non-rental non-setup subkind values", () => {
+      for (const forged of ["unknown", "RENTAL", "Setup", "", 1, null, true, {}, []]) {
+        const result = normalizeQuoteSelection({
+          version: 2,
+          rows: [
+            {
+              kind: "catalogue",
+              reference: "chair",
+              quantity: 1,
+              source: "catalogue",
+              order: 0,
+              subkind: forged === null ? null : forged
+            }
+          ]
+        });
+
+        expect(result.ok).toBe(false);
+      }
+    });
+
+    it("accepts explicit rental and setup subkind values", () => {
+      const rental = normalizeQuoteSelection({
+        version: 2,
+        rows: [
+          { kind: "catalogue", reference: "chair", quantity: 1, source: "catalogue", order: 0, subkind: "rental" }
+        ]
+      });
+
+      expect(rental.ok && (rental.value.rows[0] as CatalogueSelectionRow).subkind).toBe("rental");
+
+      const setup = normalizeQuoteSelection({
+        version: 2,
+        rows: [
+          { kind: "catalogue", reference: "chair", quantity: 1, source: "catalogue", order: 0, subkind: "setup" }
+        ]
+      });
+
+      expect(setup.ok && (setup.value.rows[0] as CatalogueSelectionRow).subkind).toBe("setup");
+    });
+
+    it("does not aggregate same-slug rows with different subkinds", () => {
+      const result = normalizeQuoteSelection({
+        version: 2,
+        rows: [
+          { kind: "catalogue", reference: "chair", quantity: 30, source: "catalogue", order: 0, subkind: "rental" },
+          { kind: "catalogue", reference: "chair", quantity: 40, source: "catalogue", order: 1, subkind: "setup" }
+        ]
+      });
+
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+
+      expect(result.value.rows).toHaveLength(2);
+      expect((result.value.rows[0] as CatalogueSelectionRow).quantity).toBe(30);
+      expect((result.value.rows[0] as CatalogueSelectionRow).subkind).toBe("rental");
+      expect((result.value.rows[1] as CatalogueSelectionRow).quantity).toBe(40);
+      expect((result.value.rows[1] as CatalogueSelectionRow).subkind).toBe("setup");
+    });
+  });
+
+  describe("explicit quantity semantics", () => {
+    it("replaces existing row quantity with explicit value", () => {
+      const serialized = JSON.stringify({
+        version: 2,
+        rows: [
+          { kind: "catalogue", reference: "chair", quantity: 5, source: "catalogue", order: 0, subkind: "rental" }
+        ]
+      });
+
+      const result = applyCatalogueChange(serialized, {
+        reference: "chair",
+        subkind: "rental",
+        quantity: 37,
+        source: "catalogue"
+      });
+
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.value.rows[0]?.quantity).toBe(37);
+    });
+
+    it("increments existing row by one when quantity is undefined", () => {
+      const serialized = JSON.stringify({
+        version: 2,
+        rows: [
+          { kind: "catalogue", reference: "chair", quantity: 5, source: "catalogue", order: 0, subkind: "rental" }
+        ]
+      });
+
+      const result = applyCatalogueChange(serialized, {
+        reference: "chair",
+        subkind: "rental",
+        source: "catalogue"
+      });
+
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.value.rows[0]?.quantity).toBe(6);
+    });
+
+    it("creates new row with quantity 1 when quantity is undefined", () => {
+      const result = applyCatalogueChange(null, {
+        reference: "chair",
+        subkind: "rental",
+        source: "catalogue"
+      });
+
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.value.rows).toHaveLength(1);
+      expect(result.value.rows[0]?.quantity).toBe(1);
+    });
+
+    it("creates new row with exact supplied quantity", () => {
+      const result = applyCatalogueChange(null, {
+        reference: "chair",
+        subkind: "rental",
+        quantity: 42,
+        source: "catalogue"
+      });
+
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.value.rows).toHaveLength(1);
+      expect(result.value.rows[0]?.quantity).toBe(42);
+    });
+
+    it.each([100, 1.5, -1, Number.POSITIVE_INFINITY, Number.NaN])(
+      "rejects invalid explicit quantity %s",
+      (quantity) => {
+        const result = applyCatalogueChange(null, {
+          reference: "chair",
+          subkind: "rental",
+          quantity,
+          source: "catalogue"
+        });
+
+        expect(result.ok).toBe(false);
+        expect(result.ok ? undefined : result.code).toBe("quantity-overflow");
+      }
+    );
+  });
+
+  describe("transactional fail-closed writes", () => {
+    it("returns error and does not mutate on invalid subkind in stored data", () => {
+      const malformed = JSON.stringify({
+        version: 2,
+        rows: [
+          { kind: "catalogue", reference: "chair", quantity: 1, source: "catalogue", order: 0, subkind: "forged" }
+        ]
+      });
+
+      const result = applyCatalogueChange(malformed, {
+        reference: "chair",
+        subkind: "rental",
+        quantity: 2,
+        source: "catalogue"
+      });
+
+      expect(result.ok).toBe(false);
+    });
+
+    it("returns error for unknown version without mutating", () => {
+      const result = applyCatalogueChange('{"version":1,"rows":[]}', {
+        reference: "chair",
+        subkind: "rental",
+        source: "catalogue"
+      });
+
+      expect(result.ok).toBe(false);
+    });
+
+    it("returns error for row limit without mutating", () => {
+      const rows = Array.from({ length: QUOTE_SELECTION_MAX_ROWS }, (_, i) => ({
+        kind: "catalogue" as const,
+        reference: `item-${i}`,
+        quantity: 1,
+        source: "catalogue" as const,
+        order: i,
+        subkind: "rental" as const
+      }));
+
+      const serialized = JSON.stringify({ version: 2, rows });
+
+      const result = applyCatalogueChange(serialized, {
+        reference: "new-item",
+        subkind: "rental",
+        source: "catalogue"
+      });
+
+      expect(result.ok).toBe(false);
+    });
+
+    it("returns error for quantity overflow on increment without mutating", () => {
+      const serialized = JSON.stringify({
+        version: 2,
+        rows: [
+          { kind: "catalogue", reference: "chair", quantity: 99, source: "catalogue", order: 0, subkind: "rental" }
+        ]
+      });
+
+      const result = applyCatalogueChange(serialized, {
+        reference: "chair",
+        subkind: "rental",
+        source: "catalogue"
+      });
+
+      expect(result.ok).toBe(false);
+      expect(result.ok ? undefined : result.code).toBe("quantity-overflow");
+    });
+  });
+
+  describe("stable mixed-row order", () => {
+    it("preserves manual row position when incrementing a later catalogue row", () => {
+      const serialized = JSON.stringify({
+        version: 2,
+        rows: [
+          { kind: "catalogue", reference: "chair-a", quantity: 1, source: "catalogue", order: 0, subkind: "rental" },
+          { kind: "manual", key: "manual-b", description: "Custom B", quantity: 1, source: "manual", order: 1 },
+          { kind: "catalogue", reference: "chair-c", quantity: 1, source: "catalogue", order: 2, subkind: "rental" }
+        ]
+      });
+
+      const result = applyCatalogueChange(serialized, {
+        reference: "chair-c",
+        subkind: "rental",
+        source: "catalogue"
+      });
+
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+
+      expect(result.value.rows).toHaveLength(3);
+      expect(result.value.rows[0]?.kind).toBe("catalogue");
+      expect((result.value.rows[0] as CatalogueSelectionRow).reference).toBe("chair-a");
+      expect(result.value.rows[1]?.kind).toBe("manual");
+      expect(result.value.rows[2]?.kind).toBe("catalogue");
+      expect((result.value.rows[2] as CatalogueSelectionRow).reference).toBe("chair-c");
+      expect(result.value.rows[2]?.quantity).toBe(2);
+    });
+
+    it("preserves order when removing a middle catalogue row", () => {
+      const serialized = JSON.stringify({
+        version: 2,
+        rows: [
+          { kind: "catalogue", reference: "chair-a", quantity: 1, source: "catalogue", order: 0, subkind: "rental" },
+          { kind: "manual", key: "manual-b", description: "Custom B", quantity: 1, source: "manual", order: 1 },
+          { kind: "catalogue", reference: "chair-c", quantity: 1, source: "catalogue", order: 2, subkind: "rental" }
+        ]
+      });
+
+      const result = applyCatalogueChange(serialized, {
+        reference: "chair-a",
+        subkind: "rental",
+        quantity: 0,
+        source: "catalogue"
+      });
+
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+
+      expect(result.value.rows).toHaveLength(2);
+      expect(result.value.rows[0]?.kind).toBe("manual");
+      expect(result.value.rows[1]?.kind).toBe("catalogue");
+      expect((result.value.rows[1] as CatalogueSelectionRow).reference).toBe("chair-c");
+    });
+
+    it("preserves manual-before-catalogue order", () => {
+      const serialized = JSON.stringify({
+        version: 2,
+        rows: [
+          { kind: "manual", key: "manual-a", description: "A", quantity: 1, source: "manual", order: 0 },
+          { kind: "catalogue", reference: "chair-b", quantity: 1, source: "catalogue", order: 1, subkind: "rental" },
+          { kind: "manual", key: "manual-c", description: "C", quantity: 1, source: "manual", order: 2 }
+        ]
+      });
+
+      const result = applyCatalogueChange(serialized, {
+        reference: "chair-b",
+        subkind: "rental",
+        source: "catalogue"
+      });
+
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+
+      expect(result.value.rows).toHaveLength(3);
+      expect(result.value.rows[0]?.kind).toBe("manual");
+      expect(result.value.rows[1]?.kind).toBe("catalogue");
+      expect(result.value.rows[2]?.kind).toBe("manual");
+    });
+
+    it("appends new rows after final current row", () => {
+      const serialized = JSON.stringify({
+        version: 2,
+        rows: [
+          { kind: "catalogue", reference: "chair-a", quantity: 1, source: "catalogue", order: 0, subkind: "rental" }
+        ]
+      });
+
+      const result = applyCatalogueChange(serialized, {
+        reference: "chair-d",
+        subkind: "rental",
+        quantity: 1,
+        source: "catalogue"
+      });
+
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+
+      expect(result.value.rows).toHaveLength(2);
+      expect((result.value.rows[0] as CatalogueSelectionRow).reference).toBe("chair-a");
+      expect((result.value.rows[1] as CatalogueSelectionRow).reference).toBe("chair-d");
+    });
   });
 });

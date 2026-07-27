@@ -20,7 +20,9 @@ import {
   QuoteSelectionBadge,
   QuoteSelectionButton,
   type QuoteSelectionItem,
-  type QuoteSelectionValidItem
+  type QuoteSelectionValidItem,
+  type SetupRecipe,
+  type SetupIncludedPiece
 } from "./QuoteSelectionControls";
 import { SetupImageCarousel } from "./SetupImageCarousel";
 
@@ -35,6 +37,52 @@ export function quoteSelectionValidItemsForCatalogue(
     name: product.name,
     slug: product.slug
   }));
+}
+
+export function quoteSetupRecipes(
+  catalogue: PublicCatalogue
+): SetupRecipe[] {
+  const setupProducts = catalogue.products.filter(
+    (product) => productCategory(product).toLowerCase() === "setups"
+  );
+
+  return setupProducts.map((setup) => {
+    const includedPieces: SetupIncludedPiece[] = catalogue.products
+      .filter(
+        (product) =>
+          productCategory(product).toLowerCase() !== "setups" &&
+          product.slug !== setup.slug
+      )
+      .slice(0, 20)
+      .map((product) => ({
+        slug: product.slug,
+        publicName: product.name,
+        baseQuantity: 1,
+        imageSrc: product.images?.[0]?.publicUrl ?? stitchImageSrc(fallbackProductImage(product)),
+        detailPath: `/catalogue/${product.slug}`
+      }));
+
+    return {
+      slug: setup.slug,
+      publicName: setup.name,
+      includedPieces
+    };
+  });
+}
+
+export function quoteCanonicalIdentityLookup(
+  catalogue: PublicCatalogue
+): Map<string, { slug: string; kind: "rental" | "setup" }> {
+  const map = new Map<string, { slug: string; kind: "rental" | "setup" }>();
+
+  for (const product of catalogue.products) {
+    const kind: "rental" | "setup" =
+      productCategory(product).toLowerCase() === "setups" ? "setup" : "rental";
+
+    map.set(product.slug, { slug: product.slug, kind });
+  }
+
+  return map;
 }
 
 const homeCategoryImageUrls = [

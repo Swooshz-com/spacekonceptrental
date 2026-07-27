@@ -14,7 +14,8 @@ import {
   parseStoredQuoteSelection,
   serializeQuoteSelection,
   shouldSeedUrlFallback,
-  type CatalogueSelectionSubkind
+  type CatalogueSelectionSubkind,
+  type QuoteSelectionRow
 } from "../lib/quote/selection-model";
 
 export type QuoteSelectionItem = {
@@ -42,6 +43,20 @@ export type QuoteSelectionValidItem = {
   kind: "rental" | "setup";
   name?: string;
   slug: string;
+};
+
+export type SetupRecipe = {
+  slug: string;
+  publicName: string;
+  includedPieces: SetupIncludedPiece[];
+};
+
+export type SetupIncludedPiece = {
+  slug: string;
+  publicName: string;
+  baseQuantity: number;
+  imageSrc?: string;
+  detailPath: string;
 };
 
 const quoteSelectionChangeEvent = "skr:quote-selection-change";
@@ -371,29 +386,21 @@ function removeStoredQuoteSelectionItem(item: QuoteSelectionItem) {
     return;
   }
 
-  if (normalizedItem.kind === "rental" || normalizedItem.kind === "setup") {
-    const serialized = window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY);
-    const result = applyCatalogueChange(serialized, {
-      reference: normalizedItem.slug,
-      subkind: normalizedItem.kind as CatalogueSelectionSubkind,
-      quantity: 0,
-      source: "catalogue"
-    });
+  const subkind: CatalogueSelectionSubkind =
+    normalizedItem.kind === "setup" ? "setup" : "rental";
 
-    if (result.ok) {
-      window.sessionStorage.setItem(QUOTE_SELECTION_STORAGE_KEY, result.serialized);
-      window.dispatchEvent(new Event(quoteSelectionChangeEvent));
-    }
+  const serialized = window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY);
+  const result = applyCatalogueChange(serialized, {
+    reference: normalizedItem.slug,
+    subkind,
+    quantity: 0,
+    source: "catalogue"
+  });
 
-    return;
+  if (result.ok) {
+    window.sessionStorage.setItem(QUOTE_SELECTION_STORAGE_KEY, result.serialized);
+    window.dispatchEvent(new Event(quoteSelectionChangeEvent));
   }
-
-  writeQuoteSelection(
-    readQuoteSelection().filter(
-      (selected) =>
-        quoteSelectionItemKey(selected) !== quoteSelectionItemKey(normalizedItem)
-    )
-  );
 }
 
 export function formatQuoteSelectionItems(items: QuoteSelectionItem[]) {
@@ -683,6 +690,7 @@ export function QuoteSelectionSummary({
   fallbackItems = [],
   requestedSlug,
   search,
+  setupRecipes,
   validItems = []
 }: {
   catalogueAvailable?: boolean;
@@ -691,12 +699,13 @@ export function QuoteSelectionSummary({
   fallbackItems?: QuoteSelectionSummaryItem[];
   requestedSlug?: string;
   search?: string;
+  setupRecipes?: SetupRecipe[];
   validItems?: QuoteSelectionValidItem[];
 }) {
   const [items, setItems] = useState<QuoteSelectionItem[]>([]);
   const resolvedItems = items.map((item) => {
     const canonical = validItems.find(
-      (candidate) => candidate.slug === item.slug
+      (candidate) => candidate.slug === item.slug && candidate.kind === item.kind
     );
 
     return canonical
@@ -704,7 +713,7 @@ export function QuoteSelectionSummary({
           ...item,
           category: canonical.category,
           imageSrc: canonical.imageSrc,
-          kind: item.kind,
+          kind: canonical.kind,
           name: canonical.name ?? canonical.slug
         }
       : {
@@ -713,8 +722,35 @@ export function QuoteSelectionSummary({
           unavailable: true
         };
   });
-  const visibleItems: QuoteSelectionSummaryItem[] = resolvedItems.length
-    ? resolvedItems
+
+  const recipeEnhancedItems = resolvedItems.map((item) => {
+    if (item.kind !== "setup" || item.unavailable) {
+      return item;
+    }
+
+    const recipe = setupRecipes?.find((r) => r.slug === item.slug);
+
+    if (!recipe) {
+      return item;
+    }
+
+    const includedItems: QuoteSelectionItem[] = recipe.includedPieces.map(
+      (piece) => ({
+        slug: piece.slug,
+        name: piece.publicName,
+        kind: "setup-included" as const,
+        quantity: Math.min(999, piece.baseQuantity * item.quantity),
+        setupBaseQuantity: piece.baseQuantity,
+        setupName: recipe.publicName,
+        setupSlug: recipe.slug,
+        imageSrc: piece.imageSrc
+      })
+    );
+
+    return { ...item, includedItems };
+  });
+  const visibleItems: QuoteSelectionSummaryItem[] = recipeEnhancedItems.length
+    ? recipeEnhancedItems
     : fallbackItems;
   const hasDiscoveryContext = Boolean(requestedSlug || category || event || search);
   const groupedItems = getGroupedSelectionItems(visibleItems);
@@ -860,70 +896,23 @@ export function QuoteSelectionButton({ item }: { item: QuoteSelectionItem }) {
       return;
     }
 
-    const currentItems = readQuoteSelection();
-    const includedItems = normalizeIncludedItems(item);
-    const itemsToUpsert = [normalizedItem, ...includedItems];
-    const existingItem = currentItems.find(
-      (selected) =>
-        quoteSelectionItemKey(selected) === quoteSelectionItemKey(normalizedItem)
-    );
-    let nextItems = currentItems.map((selected) => {
-      const sourceItem = itemsToUpsert.find(
-        (upsertItem) =>
-          quoteSelectionItemKey(upsertItem) === quoteSelectionItemKey(selected)
-      );
+    const subkind: CatalogueSelectionSubkind =
+      normalizedItem.kind === "setup" ? "setup" : "rental";
 
-      if (!sourceItem) {
-        return selected;
-      }
-
-      return mergeQuoteItemMetadata(
-        selected,
-        sourceItem,
-        clampQuoteQuantity(
-          sourceItem.kind,
-          selected.quantity + selectionQuantityStep(sourceItem, item)
-        )
-      );
+    const serialized = window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY);
+    const result = applyCatalogueChange(serialized, {
+      reference: normalizedItem.slug,
+      subkind,
+      source: "catalogue"
     });
 
-    if (!existingItem) {
-      nextItems = [...nextItems, normalizedItem];
+    if (!result.ok) {
+      return;
     }
 
-    const nextSetupQuantity =
-      normalizedItem.kind === "setup"
-        ? (nextItems.find(
-            (selected) =>
-              quoteSelectionItemKey(selected) === quoteSelectionItemKey(normalizedItem)
-          )?.quantity ?? normalizedItem.quantity)
-        : undefined;
-
-    includedItems.forEach((includedItem) => {
-      if (
-        !nextItems.some(
-          (selected) =>
-            quoteSelectionItemKey(selected) === quoteSelectionItemKey(includedItem)
-        )
-      ) {
-        nextItems.push({
-          ...includedItem,
-          quantity:
-            nextSetupQuantity !== undefined
-              ? Math.min(
-                  maxIncludedQuoteItemQuantity,
-                  (includedItem.setupBaseQuantity ?? includedItem.quantity) *
-                    nextSetupQuantity
-                )
-              : includedItem.quantity
-        });
-      }
-    });
-
-    nextItems = nextItems.slice(0, maxStoredQuoteItems);
-
-    writeQuoteSelection(nextItems);
-    setItems(nextItems);
+    window.sessionStorage.setItem(QUOTE_SELECTION_STORAGE_KEY, result.serialized);
+    window.dispatchEvent(new Event(quoteSelectionChangeEvent));
+    setItems(readQuoteSelection());
   }
 
   function handleDecrementQuantity(event: MouseEvent<HTMLButtonElement>) {
@@ -935,45 +924,43 @@ export function QuoteSelectionButton({ item }: { item: QuoteSelectionItem }) {
       return;
     }
 
-    const includedItems = normalizeIncludedItems(item);
-    const itemsToUpdate = [normalizedItem, ...includedItems];
-    const nextItems = readQuoteSelection()
-      .map((selected) => {
-        const sourceItem = itemsToUpdate.find(
-          (updateItem) =>
-            quoteSelectionItemKey(updateItem) === quoteSelectionItemKey(selected)
-        );
+    const subkind: CatalogueSelectionSubkind =
+      normalizedItem.kind === "setup" ? "setup" : "rental";
 
-        if (!sourceItem) {
-          return selected;
-        }
+    const serialized = window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY);
+    const current = parseStoredQuoteSelection(serialized);
 
-        return mergeQuoteItemMetadata(
-          selected,
-          sourceItem,
-          sourceItem.kind === "setup-included"
-            ? Math.max(
-                0,
-                selected.quantity - selectionQuantityStep(sourceItem, item)
-              )
-            : selected.quantity - selectionQuantityStep(sourceItem, item)
-        );
-      })
-      .filter((selected, _index, selectedItems) => {
-        if (selected.kind === "setup-included") {
-          return selectedItems.some(
-            (candidate) =>
-              candidate.kind === "setup" &&
-              candidate.slug === selected.setupSlug &&
-              candidate.quantity > 0
-          );
-        }
+    if (!current.ok) {
+      return;
+    }
 
-        return selected.quantity > 0;
-      });
+    const existing = current.value.rows.find(
+      (row) =>
+        row.kind === "catalogue" &&
+        row.reference === normalizedItem.slug &&
+        row.subkind === subkind
+    );
 
-    writeQuoteSelection(nextItems);
-    setItems(nextItems);
+    if (!existing) {
+      return;
+    }
+
+    const newQty = existing.quantity - 1;
+
+    const result = applyCatalogueChange(serialized, {
+      reference: normalizedItem.slug,
+      subkind,
+      quantity: newQty,
+      source: "catalogue"
+    });
+
+    if (!result.ok) {
+      return;
+    }
+
+    window.sessionStorage.setItem(QUOTE_SELECTION_STORAGE_KEY, result.serialized);
+    window.dispatchEvent(new Event(quoteSelectionChangeEvent));
+    setItems(readQuoteSelection());
   }
 
   return (

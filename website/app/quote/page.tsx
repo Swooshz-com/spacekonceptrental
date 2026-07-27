@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import QuoteRequestForm from "../../components/QuoteRequestForm";
 import { QuoteSelectionDataBoundary, QuoteSelectionSummary } from "../../components/QuoteSelectionControls";
-import { fallbackProductImage, productCategory, quoteSelectionValidItemsForCatalogue, StitchPageIntro, stitchImageSrc } from "../../components/PublicStitch";
+import { fallbackProductImage, productCategory, quoteCanonicalIdentityLookup, quoteSelectionValidItemsForCatalogue, quoteSetupRecipes, StitchPageIntro, stitchImageSrc } from "../../components/PublicStitch";
 import { getPublicCatalogue, getPublicProductBySlug } from "../../lib/catalogue/catalogue-repository";
 import { normalizePublicListingSlug, normalizePublicQuoteQuantity } from "../../lib/catalogue/quote-handoff";
 import type { PublicCatalogueProduct } from "../../lib/catalogue/types";
@@ -22,13 +22,18 @@ async function resolveQuoteListingContext(searchParams: QuotePageProps["searchPa
 }
 function quoteProductImageSrc(product: PublicCatalogueProduct) { const image = product.images?.[0]?.publicUrl; return image ?? stitchImageSrc(fallbackProductImage(product)); }
 
-function SelectionPanel({ catalogueAvailable, product, quantity, requestedSlug, validItems }: { catalogueAvailable: boolean; product: PublicCatalogueProduct | null; quantity?: number; requestedSlug?: string; validItems: ReturnType<typeof quoteSelectionValidItemsForCatalogue> }) {
+function SelectionPanel({ catalogueAvailable, product, quantity, requestedSlug, setupRecipes, validItems }: { catalogueAvailable: boolean; product: PublicCatalogueProduct | null; quantity?: number; requestedSlug?: string; setupRecipes?: ReturnType<typeof quoteSetupRecipes>; validItems: ReturnType<typeof quoteSelectionValidItemsForCatalogue> }) {
   const fallbackItems = product && quantity ? [{ slug: product.slug, name: product.name, category: productCategory(product), quantity, imageSrc: quoteProductImageSrc(product) }] : [];
-  return <QuoteSelectionSummary catalogueAvailable={catalogueAvailable} fallbackItems={fallbackItems} requestedSlug={requestedSlug} validItems={validItems} />;
+  return <QuoteSelectionSummary catalogueAvailable={catalogueAvailable} fallbackItems={fallbackItems} requestedSlug={requestedSlug} setupRecipes={setupRecipes} validItems={validItems} />;
 }
 
 function NextStepsPanel() {
   return <section className="stitch-quote-card stitch-quote-next"><p className="stitch-eyebrow">What happens next?</p><h2>What happens next?</h2><ol><li>Enquiry</li><li>Selection review</li><li>Tailored proposal</li><li>Direct team follow-up</li></ol></section>;
+}
+
+function buildCanonicalAcceptanceList(catalogue: Awaited<ReturnType<typeof getPublicCatalogue>>) {
+  const lookup = quoteCanonicalIdentityLookup(catalogue);
+  return Array.from(lookup.values());
 }
 
 export default async function QuotePage({ searchParams }: QuotePageProps = {}) {
@@ -37,5 +42,7 @@ export default async function QuotePage({ searchParams }: QuotePageProps = {}) {
     resolveQuoteListingContext(searchParams)
   ]);
   const validItems = quoteSelectionValidItemsForCatalogue(catalogue);
-  return <><QuoteSelectionDataBoundary validItems={validItems} /><section className="stitch-quote-hero"><div className="stitch-container"><StitchPageIntro eyebrow="Request Quote" title="Request a Rental Quote" intro="The form is enquiry intake only. The team will review your details and follow up with a tailored proposal. It does not set aside furniture or finish rental details. Submission remains unavailable during the current review." /></div></section><section className="stitch-section stitch-quote-page"><div className="stitch-container"><div className="stitch-quote-layout"><div className="stitch-quote-left"><SelectionPanel catalogueAvailable={catalogue.source !== "fallback"} product={context.product} quantity={context.quantity} requestedSlug={context.requestedSlug} validItems={validItems} /><NextStepsPanel /></div><section className="stitch-quote-form-panel"><h2>Enquiry Details</h2><QuoteRequestForm initialListingSlug={context.requestedSlug} validCatalogueReferences={catalogue.products.map((product) => product.slug)} /></section></div></div></section></>;
+  const setupRecipes = quoteSetupRecipes(catalogue);
+  const canonicalIdentities = buildCanonicalAcceptanceList(catalogue);
+  return <><QuoteSelectionDataBoundary validItems={validItems} /><section className="stitch-quote-hero"><div className="stitch-container"><StitchPageIntro eyebrow="Request Quote" title="Request a Rental Quote" intro="The form is enquiry intake only. The team will review your details and follow up with a tailored proposal. It does not set aside furniture or finish rental details. Submission remains unavailable during the current review." /></div></section><section className="stitch-section stitch-quote-page"><div className="stitch-container"><div className="stitch-quote-layout"><div className="stitch-quote-left"><SelectionPanel catalogueAvailable={catalogue.source !== "fallback"} product={context.product} quantity={context.quantity} requestedSlug={context.requestedSlug} setupRecipes={setupRecipes} validItems={validItems} /><NextStepsPanel /></div><section className="stitch-quote-form-panel"><h2>Enquiry Details</h2><QuoteRequestForm initialListingSlug={context.requestedSlug} validCatalogueReferences={canonicalIdentities.map((ci) => ci.slug)} /></section></div></div></section></>;
 }

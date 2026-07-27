@@ -111,21 +111,36 @@ function normalizeCatalogueRow(
       ? value.reference.trim().toLowerCase()
       : "";
   const order = normalizeOrder(value.order);
-  const subkind: CatalogueSelectionSubkind =
-    value.subkind === "setup" ? "setup" : "rental";
 
   if (!publicReferencePattern.test(reference) || order === undefined) {
     return undefined;
   }
 
-  return {
-    kind: "catalogue",
-    reference,
-    quantity: value.quantity,
-    source: value.source,
-    order,
-    subkind
-  };
+  const rawSubkind = value.subkind;
+
+  if (rawSubkind === undefined) {
+    return {
+      kind: "catalogue",
+      reference,
+      quantity: value.quantity,
+      source: value.source,
+      order,
+      subkind: "rental"
+    };
+  }
+
+  if (rawSubkind === "rental" || rawSubkind === "setup") {
+    return {
+      kind: "catalogue",
+      reference,
+      quantity: value.quantity,
+      source: value.source,
+      order,
+      subkind: rawSubkind
+    };
+  }
+
+  return undefined;
 }
 
 function normalizePlainText(value: unknown, maximumLength: number) {
@@ -245,7 +260,7 @@ export function normalizeQuoteSelection(value: unknown): QuoteSelectionResult {
         left.row.order - right.row.order || left.index - right.index
     );
   const canonicalRows: QuoteSelectionRow[] = [];
-  const catalogueByReference = new Map<string, CatalogueSelectionRow>();
+  const catalogueByKey = new Map<string, CatalogueSelectionRow>();
 
   for (const { row } of ordered) {
     if (row.kind === "manual") {
@@ -253,11 +268,12 @@ export function normalizeQuoteSelection(value: unknown): QuoteSelectionResult {
       continue;
     }
 
-    const existing = catalogueByReference.get(row.reference);
+    const compositeKey = `${row.reference}:${row.subkind}`;
+    const existing = catalogueByKey.get(compositeKey);
 
     if (!existing) {
       const next = { ...row, order: canonicalRows.length };
-      catalogueByReference.set(row.reference, next);
+      catalogueByKey.set(compositeKey, next);
       canonicalRows.push(next);
       continue;
     }
@@ -422,96 +438,120 @@ export type ApplyCatalogueChangeInput = {
 export function applyCatalogueChange(
   storedSerialized: string | null,
   change: ApplyCatalogueChangeInput
-): { ok: true; serialized: string } | { ok: false; code: QuoteSelectionErrorCode } {
+): { ok: true; serialized: string; value: QuoteSelection } | { ok: false; code: QuoteSelectionErrorCode } {
   const current = parseStoredQuoteSelection(storedSerialized);
 
   if (!current.ok) {
     return { ok: false, code: current.code };
   }
 
-  const priorSerialized = storedSerialized
-    ? JSON.stringify(current.value)
-    : JSON.stringify(emptyQuoteSelection());
+  const { quantity: rawQty } = change;
 
-  const catalogueRows = current.value.rows.filter(
-    (row) => row.kind === "catalogue"
-  );
-  const manualRows = current.value.rows.filter(
-    (row) => row.kind === "manual"
-  );
-
-  if (typeof change.quantity === "number" && change.quantity === 0) {
-    const nextCatalogueRows = catalogueRows.filter(
-      (row) => !(row.reference === change.reference && row.subkind === change.subkind)
-    );
-
-    const next = normalizeQuoteSelection({
-      version: QUOTE_SELECTION_VERSION,
-      rows: [
-        ...manualRows.map((row, index) => ({ ...row, order: index })),
-        ...nextCatalogueRows.map((row, index) => ({ ...row, order: manualRows.length + index }))
-      ]
-    });
-
-    if (!next.ok) {
-      return { ok: false, code: next.code };
+  if (rawQty !== undefined) {
+    if (
+      typeof rawQty !== "number" ||
+      !Number.isFinite(rawQty) ||
+      !Number.isInteger(rawQty) ||
+      rawQty < 0 ||
+      rawQty > QUOTE_SELECTION_MAX_QUANTITY
+    ) {
+      return { ok: false, code: "quantity-overflow" };
     }
-
-    const serialized = serializeQuoteSelection(next.value);
-
-    if (!serialized) {
-      return { ok: false, code: "byte-limit" };
-    }
-
-    return { ok: true, serialized };
   }
 
-  const existingIndex = catalogueRows.findIndex(
-    (row) => row.reference === change.reference && row.subkind === change.subkind
+  const rows = [...current.value.rows];
+  const existingIndex = rows.findIndex(
+    (row) => row.kind === "catalogue" &&
+      row.reference === change.reference &&
+      row.subkind === change.subkind
   );
 
-  let nextCatalogueRows: CatalogueSelectionRow[];
+  if (rawQty === 0) {
+    if (existingIndex === -1) {
+      return { ok: true, serialized: storedSerialized ?? JSON.stringify(emptyQuoteSelection()), value: current.value };
+    }
 
-  if (existingIndex === -1) {
-    const newRow: CatalogueSelectionRow = {
-      kind: "catalogue",
-      reference: change.reference,
-      quantity: change.quantity ?? 1,
-      source: change.source,
-      subkind: change.subkind,
-      order: catalogueRows.length
-    };
-    nextCatalogueRows = [...catalogueRows, newRow];
+    rows.splice(existingIndex, 1);
+  } else if (rawQty === undefined) {
+    if (existingIndex === -1) {
+      rows.push({
+        kind: "catalogue",
+        reference: change.reference,
+        quantity: 1,
+        source: change.source,
+        subkind: change.subkind,
+        order: rows.length
+      });
+    } else {
+      const newQty = (rows[existingIndex] as CatalogueSelectionRow).quantity + 1;
+
+      if (newQty > QUOTE_SELECTION_MAX_QUANTITY) {
+        return { ok: false, code: "quantity-overflow" };
+      }
+
+      (rows[existingIndex] as CatalogueSelectionRow).quantity = newQty;
+    }
   } else {
-    const newQty = change.quantity ?? existingIndex >= 0
-      ? (catalogueRows[existingIndex]?.quantity ?? 0) + 1
-      : 1;
-    nextCatalogueRows = catalogueRows.map((row, index) =>
-      index === existingIndex ? { ...row, quantity: newQty } : row
-    );
+    if (existingIndex === -1) {
+      rows.push({
+        kind: "catalogue",
+        reference: change.reference,
+        quantity: rawQty,
+        source: change.source,
+        subkind: change.subkind,
+        order: rows.length
+      });
+    } else {
+      (rows[existingIndex] as CatalogueSelectionRow).quantity = rawQty;
+    }
   }
 
-  const orderedRows: QuoteSelectionRow[] = [
-    ...manualRows.map((row, index) => ({ ...row, order: index })),
-    ...nextCatalogueRows.map((row, index) => ({ ...row, order: manualRows.length + index }))
-  ];
-
-  const next = normalizeQuoteSelection({
-    version: QUOTE_SELECTION_VERSION,
-    rows: orderedRows
-  });
-
-  if (!next.ok) {
-    return { ok: false, code: next.code };
+  if (rows.length > QUOTE_SELECTION_MAX_ROWS) {
+    return { ok: false, code: "raw-row-limit" };
   }
 
-  const serialized = serializeQuoteSelection(next.value);
+  const reordered = rows.map((row, index) => ({ ...row, order: index }));
 
-  if (!serialized) {
+  const { rows: reorderedRows, ...rest } = { version: QUOTE_SELECTION_VERSION, rows: reordered };
+
+  const selection: QuoteSelection = { ...rest, rows: reorderedRows };
+
+  if (byteLength(JSON.stringify(selection)) > QUOTE_SELECTION_MAX_BYTES) {
     return { ok: false, code: "byte-limit" };
   }
 
-  return { ok: true, serialized };
+  const serialized = JSON.stringify(selection);
+
+  return { ok: true, serialized, value: selection };
+}
+
+export function commitCatalogueChange(
+  storageGet: () => string | null,
+  storageSet: (serialized: string) => void,
+  storageGetAfterWrite: () => string | null,
+  change: ApplyCatalogueChangeInput
+): { ok: true; value: QuoteSelection; serialized: string; dispatchEvent: () => void } | { ok: false; code: QuoteSelectionErrorCode } {
+  const priorSerialized = storageGet();
+  const result = applyCatalogueChange(priorSerialized, change);
+
+  if (!result.ok) {
+    return { ok: false, code: result.code };
+  }
+
+  storageSet(result.serialized);
+
+  const committed = storageGetAfterWrite();
+
+  if (committed !== result.serialized) {
+    return { ok: false, code: "invalid-selection" };
+  }
+
+  return {
+    ok: true,
+    value: result.value,
+    serialized: result.serialized,
+    dispatchEvent: () => {}
+  };
 }
 
 export function shouldSeedUrlFallback(storedSerialized: string | null) {
