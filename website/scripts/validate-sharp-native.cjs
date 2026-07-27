@@ -86,9 +86,27 @@ function runWorker(options = {}) {
   const maxOutputBytes = options.maxOutputBytes ?? MAX_OUTPUT_BYTES;
   const schedule = options.setTimeout ?? setTimeout;
   const cancel = options.clearTimeout ?? clearTimeout;
-  const child = spawnChild();
+  let child;
+  try {
+    child = spawnChild();
+  } catch {
+    return Promise.reject(
+      new SharpValidationError("Sharp worker could not be executed", {
+        phase: "spawn",
+      }),
+    );
+  }
 
-  invariant(child && child.stdout && child.stderr, "Sharp worker did not start");
+  if (!child || !child.stdout || !child.stderr) {
+    if (child && typeof child.unref === "function") {
+      child.unref();
+    }
+    return Promise.reject(
+      new SharpValidationError("Sharp worker could not be executed", {
+        phase: "spawn",
+      }),
+    );
+  }
 
   return new Promise((resolve, reject) => {
     let stdout = Buffer.alloc(0);
@@ -99,19 +117,53 @@ function runWorker(options = {}) {
     let deadlineTimer;
     let gracefulTimer;
     let forcedTimer;
+    let signalInFlight;
+    let defendDetachedChildUntilClose = false;
+    let spawnConfirmed =
+      Number.isSafeInteger(child.pid) && child.pid > 0;
+    const signalDeliveryFailures = new Set();
 
     function clearTimers() {
-      cancel(deadlineTimer);
-      cancel(gracefulTimer);
-      cancel(forcedTimer);
+      for (const timer of [deadlineTimer, gracefulTimer, forcedTimer]) {
+        if (timer !== undefined) {
+          cancel(timer);
+        }
+      }
     }
 
-    function settle(error, receipt) {
+    function detachProcessHandles() {
+      child.stdout.destroy();
+      child.stderr.destroy();
+      if (typeof child.unref === "function") {
+        child.unref();
+      }
+    }
+
+    function removeChildLifecycleListeners() {
+      child.removeListener("error", onChildError);
+      child.removeListener("close", onChildClose);
+    }
+
+    function removeOwnedListeners({ preserveChildLifecycle = false } = {}) {
+      child.stdout.removeListener("data", onStdoutData);
+      child.stderr.removeListener("data", onStderrData);
+      child.removeListener("spawn", onSpawn);
+      if (!preserveChildLifecycle) {
+        removeChildLifecycleListeners();
+      }
+    }
+
+    function settle(error, receipt, options = {}) {
       if (settled) {
         return;
       }
       settled = true;
       clearTimers();
+      defendDetachedChildUntilClose =
+        options.defendDetachedChildUntilClose === true;
+      removeOwnedListeners({
+        preserveChildLifecycle: defendDetachedChildUntilClose,
+      });
       if (error) {
         reject(error);
       } else {
@@ -120,10 +172,18 @@ function runWorker(options = {}) {
     }
 
     function requestSignal(signal) {
+      signalInFlight = signal;
       try {
-        return child.kill(signal);
+        const delivered = child.kill(signal);
+        if (!delivered) {
+          signalDeliveryFailures.add(signal);
+        }
+        return delivered;
       } catch {
+        signalDeliveryFailures.add(signal);
         return false;
+      } finally {
+        signalInFlight = undefined;
       }
     }
 
@@ -134,26 +194,33 @@ function runWorker(options = {}) {
       terminalReason = reason;
       state = "terminating";
       requestSignal("SIGTERM");
+      if (settled || state !== "terminating") {
+        return;
+      }
       gracefulTimer = schedule(() => {
         if (settled || state !== "terminating") {
           return;
         }
         state = "forcing";
         requestSignal("SIGKILL");
+        if (settled || state !== "forcing") {
+          return;
+        }
         forcedTimer = schedule(() => {
           if (settled || state !== "forcing") {
             return;
           }
-          child.stdout.destroy();
-          child.stderr.destroy();
-          if (typeof child.unref === "function") {
-            child.unref();
-          }
+          detachProcessHandles();
           settle(
             new SharpValidationError(
               `${terminalReason}; worker termination could not be confirmed`,
-              { termination: "inconclusive" },
+              {
+                termination: "inconclusive",
+                signalDeliveryFailures: signalDeliveryFailures.size,
+              },
             ),
+            undefined,
+            { defendDetachedChildUntilClose: true },
           );
         }, forcedExitMs);
       }, gracefulExitMs);
@@ -167,16 +234,47 @@ function runWorker(options = {}) {
       return next.subarray(0, maxOutputBytes + 1);
     }
 
-    child.stdout.on("data", (chunk) => {
+    function onStdoutData(chunk) {
       stdout = appendOutput(stdout, chunk, "stdout");
-    });
-    child.stderr.on("data", (chunk) => {
+    }
+
+    function onStderrData(chunk) {
       stderr = appendOutput(stderr, chunk, "stderr");
-    });
-    child.once("error", () => {
-      settle(new SharpValidationError("Sharp worker could not be executed"));
-    });
-    child.on("close", (code, signal) => {
+    }
+
+    function onSpawn() {
+      spawnConfirmed = true;
+    }
+
+    function onChildError() {
+      if (settled) {
+        return;
+      }
+      if (signalInFlight) {
+        signalDeliveryFailures.add(signalInFlight);
+      } else {
+        signalDeliveryFailures.add("child-error");
+      }
+      if (!spawnConfirmed && state === "running") {
+        detachProcessHandles();
+        settle(
+          new SharpValidationError("Sharp worker could not be executed", {
+            phase: "spawn",
+          }),
+        );
+        return;
+      }
+      if (state === "running") {
+        beginTermination("Sharp worker reported an execution failure");
+      }
+    }
+
+    function onChildClose(code, signal) {
+      if (defendDetachedChildUntilClose) {
+        defendDetachedChildUntilClose = false;
+        removeChildLifecycleListeners();
+        return;
+      }
       if (settled) {
         return;
       }
@@ -186,6 +284,7 @@ function runWorker(options = {}) {
             termination: state === "forcing" ? "forced" : "graceful",
             exitCode: code,
             signal,
+            signalDeliveryFailures: signalDeliveryFailures.size,
           }),
         );
         return;
@@ -212,7 +311,13 @@ function runWorker(options = {}) {
       } catch (error) {
         settle(error);
       }
-    });
+    }
+
+    child.stdout.on("data", onStdoutData);
+    child.stderr.on("data", onStderrData);
+    child.once("spawn", onSpawn);
+    child.on("error", onChildError);
+    child.on("close", onChildClose);
 
     deadlineTimer = schedule(() => {
       beginTermination(`Sharp operation exceeded ${deadlineMs} ms`);

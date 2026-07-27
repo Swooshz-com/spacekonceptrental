@@ -8,6 +8,12 @@ const test = require("node:test");
 const REPOSITORY_ROOT = path.resolve(__dirname, "..", "..");
 const WORKFLOW_PATH = path.join(REPOSITORY_ROOT, ".github", "workflows", "ci.yml");
 const PACKAGE_PATH = path.join(REPOSITORY_ROOT, "website", "package.json");
+const REVIEW_SEQUENCE_PATH = path.join(
+  REPOSITORY_ROOT,
+  "website",
+  "security",
+  "dependency-remediation-review-sequencing.json",
+);
 
 function readWorkflow() {
   return fs.readFileSync(WORKFLOW_PATH, "utf8").replace(/\r\n/g, "\n");
@@ -80,30 +86,63 @@ test("merge-result and exact-head authorities cannot silently substitute", () =>
   assert.match(audit, /Enforce zero production dependency vulnerabilities/);
 });
 
-test("audit evidence is uploaded immediately with a controlled sealed path", () => {
+test("audit evidence upload requires validator-owned admission proof", () => {
   const audit = extractJob(readWorkflow(), "exact-head-production-audit");
   const enforceIndex = audit.indexOf(
     "- name: Enforce zero production dependency vulnerabilities",
   );
+  const verifyIndex = audit.indexOf(
+    "- name: Verify production audit upload admission",
+  );
   const uploadIndex = audit.indexOf(
     "- name: Upload production dependency audit evidence",
   );
+  const outcomeIndex = audit.indexOf(
+    "- name: Enforce production audit and admission outcomes",
+  );
   assert.notEqual(enforceIndex, -1);
+  assert.notEqual(verifyIndex, -1);
   assert.notEqual(uploadIndex, -1);
-  assert.ok(enforceIndex < uploadIndex);
-  const between = audit.slice(enforceIndex, uploadIndex);
-  assert.equal((between.match(/^\s*- name: /gm) ?? []).length, 1);
+  assert.notEqual(outcomeIndex, -1);
+  assert.ok(enforceIndex < verifyIndex);
+  assert.ok(verifyIndex < uploadIndex);
+  assert.ok(uploadIndex < outcomeIndex);
+  const betweenVerificationAndUpload = audit.slice(verifyIndex, uploadIndex);
+  assert.equal(
+    (betweenVerificationAndUpload.match(/^\s*- name: /gm) ?? []).length,
+    1,
+  );
   assert.match(audit, /mktemp -d/);
   assert.match(audit, /chmod 700/);
+  assert.match(audit, /randomBytes\(32\)/);
   assert.match(
     audit,
     /production-dependency-audit-evidence\.json/,
   );
   assert.match(
     audit,
+    /production-dependency-audit-upload-admission\.json/,
+  );
+  assert.match(audit, /--verify-upload-admission/);
+  assert.match(
+    audit,
     /path: \$\{\{ steps\.audit-path\.outputs\.evidence \}\}/,
   );
-  assert.match(audit, /if: always\(\)/);
+  assert.match(
+    audit,
+    /if: steps\.audit-admission\.outcome == 'success'/,
+  );
+  const uploadStep = audit.slice(uploadIndex, outcomeIndex);
+  assert.doesNotMatch(uploadStep, /if: always\(\)/);
+  assert.match(
+    audit,
+    /AUDIT_STATUS: \$\{\{ steps\.production-audit\.outputs\.status \}\}/,
+  );
+  assert.match(
+    audit,
+    /ADMISSION_OUTCOME: \$\{\{ steps\.audit-admission\.outcome \}\}/,
+  );
+  assert.doesNotMatch(audit, /continue-on-error: true/);
 });
 
 test("both bounded jobs have workflow-level timeout defence", () => {
@@ -122,6 +161,23 @@ test("accepted dependency resolution remains exact", () => {
   assert.equal(manifest.overrides.postcss, "8.5.23");
   assert.equal(manifest.overrides.sharp, "0.35.3");
   assert.equal(manifest.engines.node, ">=24 <25");
+});
+
+test("dependency remediation review sequencing is explicit and forbids auto-merge", () => {
+  const contract = JSON.parse(fs.readFileSync(REVIEW_SEQUENCE_PATH, "utf8"));
+  assert.equal(contract.schemaVersion, 1);
+  assert.equal(contract.scope, "dependency-remediation-final-review");
+  assert.deepEqual(contract.requiredOrder, [
+    "Keep the pull request draft while implementation changes.",
+    "Freeze the exact candidate head.",
+    "Trigger the final automated review.",
+    "Wait for that review to complete.",
+    "Repair findings and retrigger as needed.",
+    "Require a completed clean review on the unchanged head.",
+    "Perform controller acceptance afterward.",
+    "Merge without triggering another review event.",
+  ]);
+  assert.equal(contract.automaticMergeAllowed, false);
 });
 
 function escapeRegExp(value) {

@@ -96,6 +96,10 @@ jobs:
         working-directory: website
         run: npm run test:production-audit-remediation
 
+      - name: Test production audit upload admission
+        working-directory: website
+        run: npm run test:production-audit-upload-admission
+
       - name: Create private audit evidence directory
         id: audit-path
         shell: bash
@@ -104,25 +108,62 @@ jobs:
           audit_dir="$(mktemp -d "${RUNNER_TEMP}/production-dependency-audit.XXXXXXXXXX")"
           chmod 700 "$audit_dir"
           evidence_path="${audit_dir}/production-dependency-audit-evidence.json"
+          admission_path="${audit_dir}/production-dependency-audit-upload-admission.json"
+          admission_challenge="$(node -e 'process.stdout.write(require("node:crypto").randomBytes(32).toString("hex"))')"
+          echo "::add-mask::${admission_challenge}"
           echo "evidence=${evidence_path}" >> "$GITHUB_OUTPUT"
+          echo "admission=${admission_path}" >> "$GITHUB_OUTPUT"
+          echo "challenge=${admission_challenge}" >> "$GITHUB_OUTPUT"
 
       - name: Enforce zero production dependency vulnerabilities
+        id: production-audit
+        working-directory: website
+        shell: bash
+        env:
+          EXPECTED_AUDIT_REVISION: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set +e
+          node scripts/validate-production-audit.cjs \
+            --baseline security/production-dependency-audit-baseline.json \
+            --evidence-output "${{ steps.audit-path.outputs.evidence }}" \
+            --admission-output "${{ steps.audit-path.outputs.admission }}" \
+            --admission-challenge "${{ steps.audit-path.outputs.challenge }}"
+          audit_status="$?"
+          set -e
+          echo "status=${audit_status}" >> "$GITHUB_OUTPUT"
+
+      - name: Verify production audit upload admission
+        id: audit-admission
+        if: always()
         working-directory: website
         env:
           EXPECTED_AUDIT_REVISION: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
         run: >-
           node scripts/validate-production-audit.cjs
-          --baseline security/production-dependency-audit-baseline.json
+          --verify-upload-admission
           --evidence-output "${{ steps.audit-path.outputs.evidence }}"
+          --admission-output "${{ steps.audit-path.outputs.admission }}"
+          --admission-challenge "${{ steps.audit-path.outputs.challenge }}"
 
       - name: Upload production dependency audit evidence
-        if: always()
+        if: steps.audit-admission.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
           name: production-dependency-audit-${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
           path: ${{ steps.audit-path.outputs.evidence }}
           if-no-files-found: error
           retention-days: 30
+
+      - name: Enforce production audit and admission outcomes
+        if: always()
+        shell: bash
+        env:
+          AUDIT_STATUS: ${{ steps.production-audit.outputs.status }}
+          ADMISSION_OUTCOME: ${{ steps.audit-admission.outcome }}
+        run: |
+          set -euo pipefail
+          test "$AUDIT_STATUS" = "0"
+          test "$ADMISSION_OUTCOME" = "success"
 
   website-validation:
     name: Website validation

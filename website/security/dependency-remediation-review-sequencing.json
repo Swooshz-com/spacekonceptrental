@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "scope": "dependency-remediation-final-review",
+  "requiredOrder": [
+    "Keep the pull request draft while implementation changes.",
+    "Freeze the exact candidate head.",
+    "Trigger the final automated review.",
+    "Wait for that review to complete.",
+    "Repair findings and retrigger as needed.",
+    "Require a completed clean review on the unchanged head.",
+    "Perform controller acceptance afterward.",
+    "Merge without triggering another review event."
+  ],
+  "automaticMergeAllowed": false
+}
