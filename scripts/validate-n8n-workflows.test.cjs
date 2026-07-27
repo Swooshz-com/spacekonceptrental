@@ -598,7 +598,7 @@ test('enquiry handoff docs and browser form stay readiness-only and secret-free'
   assert.doesNotMatch(combinedDocs, /sk-[A-Za-z0-9_-]{20,}/i);
 
   const quoteFormSource = readText(path.join(repoRoot, 'website/components/QuoteRequestForm.tsx'));
-  assert.match(quoteFormSource, /fetch\("\/api\/quote"/);
+  assert.doesNotMatch(quoteFormSource, /fetch\s*\(/);
   assert.doesNotMatch(quoteFormSource, /N8N_ENQUIRY_HANDOFF_WEBHOOK_URL/);
   assert.doesNotMatch(quoteFormSource, /N8N_ENQUIRY_HANDOFF_SHARED_SECRET/);
   assert.doesNotMatch(quoteFormSource, /webhook/i);
