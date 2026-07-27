@@ -118,6 +118,7 @@ function runWorker(options = {}) {
     let gracefulTimer;
     let forcedTimer;
     let signalInFlight;
+    let defendDetachedChildUntilClose = false;
     let spawnConfirmed =
       Number.isSafeInteger(child.pid) && child.pid > 0;
     const signalDeliveryFailures = new Set();
@@ -138,21 +139,31 @@ function runWorker(options = {}) {
       }
     }
 
-    function removeOwnedListeners() {
-      child.stdout.removeListener("data", onStdoutData);
-      child.stderr.removeListener("data", onStderrData);
-      child.removeListener("spawn", onSpawn);
+    function removeChildLifecycleListeners() {
       child.removeListener("error", onChildError);
       child.removeListener("close", onChildClose);
     }
 
-    function settle(error, receipt) {
+    function removeOwnedListeners({ preserveChildLifecycle = false } = {}) {
+      child.stdout.removeListener("data", onStdoutData);
+      child.stderr.removeListener("data", onStderrData);
+      child.removeListener("spawn", onSpawn);
+      if (!preserveChildLifecycle) {
+        removeChildLifecycleListeners();
+      }
+    }
+
+    function settle(error, receipt, options = {}) {
       if (settled) {
         return;
       }
       settled = true;
       clearTimers();
-      removeOwnedListeners();
+      defendDetachedChildUntilClose =
+        options.defendDetachedChildUntilClose === true;
+      removeOwnedListeners({
+        preserveChildLifecycle: defendDetachedChildUntilClose,
+      });
       if (error) {
         reject(error);
       } else {
@@ -208,6 +219,8 @@ function runWorker(options = {}) {
                 signalDeliveryFailures: signalDeliveryFailures.size,
               },
             ),
+            undefined,
+            { defendDetachedChildUntilClose: true },
           );
         }, forcedExitMs);
       }, gracefulExitMs);
@@ -234,6 +247,9 @@ function runWorker(options = {}) {
     }
 
     function onChildError() {
+      if (settled) {
+        return;
+      }
       if (signalInFlight) {
         signalDeliveryFailures.add(signalInFlight);
       } else {
@@ -254,6 +270,11 @@ function runWorker(options = {}) {
     }
 
     function onChildClose(code, signal) {
+      if (defendDetachedChildUntilClose) {
+        defendDetachedChildUntilClose = false;
+        removeChildLifecycleListeners();
+        return;
+      }
       if (settled) {
         return;
       }

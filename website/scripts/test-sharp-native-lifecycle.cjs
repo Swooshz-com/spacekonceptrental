@@ -29,6 +29,19 @@ class FakeChild extends EventEmitter {
     this.killHandler = killHandler;
     this.killCalls = [];
     this.unrefCalled = false;
+    this.unrefCalls = 0;
+    this.stdoutDestroyCalls = 0;
+    this.stderrDestroyCalls = 0;
+    const destroyStdout = this.stdout.destroy.bind(this.stdout);
+    const destroyStderr = this.stderr.destroy.bind(this.stderr);
+    this.stdout.destroy = (...arguments_) => {
+      this.stdoutDestroyCalls += 1;
+      return destroyStdout(...arguments_);
+    };
+    this.stderr.destroy = (...arguments_) => {
+      this.stderrDestroyCalls += 1;
+      return destroyStderr(...arguments_);
+    };
   }
 
   kill(signal) {
@@ -38,6 +51,7 @@ class FakeChild extends EventEmitter {
 
   unref() {
     this.unrefCalled = true;
+    this.unrefCalls += 1;
   }
 }
 
@@ -45,6 +59,7 @@ class ManualClock {
   constructor() {
     this.nextId = 1;
     this.tasks = [];
+    this.clearCalls = 0;
   }
 
   setTimeout(callback) {
@@ -55,6 +70,7 @@ class ManualClock {
   }
 
   clearTimeout(id) {
+    this.clearCalls += 1;
     const task = this.tasks.find((candidate) => candidate.id === id);
     if (task) {
       task.active = false;
@@ -117,6 +133,8 @@ test("a stalled child is terminated gracefully before failure settles", async ()
   );
   assert.deepEqual(child.killCalls, ["SIGTERM"]);
   assert.equal(clock.pendingCount, 0);
+  assert.equal(child.listenerCount("error"), 0);
+  assert.equal(child.listenerCount("close"), 0);
 });
 
 test("a child that ignores graceful termination is forcibly terminated", async () => {
@@ -136,6 +154,8 @@ test("a child that ignores graceful termination is forcibly terminated", async (
   );
   assert.deepEqual(child.killCalls, ["SIGTERM", "SIGKILL"]);
   assert.equal(clock.pendingCount, 0);
+  assert.equal(child.listenerCount("error"), 0);
+  assert.equal(child.listenerCount("close"), 0);
 });
 
 test("inconclusive termination fails closed and cannot keep the parent alive", async () => {
@@ -156,6 +176,12 @@ test("inconclusive termination fails closed and cannot keep the parent alive", a
   assert.equal(child.stdout.destroyed, true);
   assert.equal(child.stderr.destroyed, true);
   assert.equal(clock.pendingCount, 0);
+  assert.equal(child.listenerCount("error"), 1);
+  assert.equal(child.listenerCount("close"), 1);
+  assert.doesNotThrow(() => child.emit("error", new Error("late error")));
+  child.emit("close", null, "SIGKILL");
+  assert.equal(child.listenerCount("error"), 0);
+  assert.equal(child.listenerCount("close"), 0);
 });
 
 test("initial spawn failure rejects promptly and releases deterministic resources", async () => {
@@ -199,9 +225,11 @@ test("failed SIGTERM delivery cannot cancel forced termination", async () => {
   );
   assert.deepEqual(child.killCalls, ["SIGTERM", "SIGKILL"]);
   assert.equal(clock.pendingCount, 0);
+  assert.equal(child.listenerCount("error"), 0);
+  assert.equal(child.listenerCount("close"), 0);
 });
 
-test("failed SIGKILL delivery continues to inconclusive cleanup", async () => {
+test("inconclusive cleanup defends late errors until close without resettling", async () => {
   const clock = new ManualClock();
   const child = new FakeChild((signal, target) => {
     if (signal === "SIGKILL") {
@@ -219,20 +247,42 @@ test("failed SIGKILL delivery continues to inconclusive cleanup", async () => {
   clock.runNext();
   assert.equal(clock.pendingCount, 1);
   clock.runNext();
-  child.emit("close", null, "SIGKILL");
   await assert.rejects(
     result,
     (error) =>
       error.termination === "inconclusive" &&
       error.signalDeliveryFailures === 1,
   );
+  const clearCallsAfterSettlement = clock.clearCalls;
   assert.equal(settlements, 1);
   assert.equal(child.stdout.destroyed, true);
   assert.equal(child.stderr.destroyed, true);
   assert.equal(child.unrefCalled, true);
+  assert.equal(child.stdoutDestroyCalls, 1);
+  assert.equal(child.stderrDestroyCalls, 1);
+  assert.equal(child.unrefCalls, 1);
+  assert.equal(clock.pendingCount, 0);
+  assert.equal(child.listenerCount("error"), 1);
+  assert.equal(child.listenerCount("close"), 1);
+  assert.equal(
+    child.emit("error", new Error("first late worker error")),
+    true,
+  );
+  assert.equal(
+    child.emit("error", new Error("second late worker error")),
+    true,
+  );
+  assert.equal(settlements, 1);
+  assert.equal(clock.clearCalls, clearCallsAfterSettlement);
+  child.emit("close", null, "SIGKILL");
+  child.emit("close", null, "SIGKILL");
+  assert.equal(settlements, 1);
+  assert.equal(child.stdoutDestroyCalls, 1);
+  assert.equal(child.stderrDestroyCalls, 1);
+  assert.equal(child.unrefCalls, 1);
+  assert.equal(clock.clearCalls, clearCallsAfterSettlement);
   assert.equal(child.listenerCount("error"), 0);
   assert.equal(child.listenerCount("close"), 0);
-  assert.equal(clock.pendingCount, 0);
 });
 
 test("both failed signal paths remain fail-closed through final detachment", async () => {
@@ -256,6 +306,12 @@ test("both failed signal paths remain fail-closed through final detachment", asy
   assert.equal(child.stderr.destroyed, true);
   assert.equal(child.unrefCalled, true);
   assert.equal(clock.pendingCount, 0);
+  assert.equal(child.listenerCount("error"), 1);
+  assert.equal(child.listenerCount("close"), 1);
+  assert.doesNotThrow(() => child.emit("error", new Error("late error")));
+  child.emit("close", null, "SIGKILL");
+  assert.equal(child.listenerCount("error"), 0);
+  assert.equal(child.listenerCount("close"), 0);
 });
 
 test("oversized worker stdout triggers bounded termination", async () => {
@@ -303,6 +359,8 @@ test("duplicate child close events settle only once", async () => {
   emitSuccess(child);
   child.emit("close", 9, null);
   assert.deepEqual(await result, VALID_RECEIPT);
+  assert.equal(child.listenerCount("error"), 0);
+  assert.equal(child.listenerCount("close"), 0);
 });
 
 test("PASS formatting is unavailable until confirmed success is returned", async () => {
