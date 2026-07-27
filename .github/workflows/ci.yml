@@ -32,6 +32,10 @@ jobs:
       - name: Test post-304 delayed review boundaries
         run: npm run test:post-304-delayed-review
 
+      - name: Test post-merge review remediation workflow contract
+        working-directory: website
+        run: npm run test:remediation-workflow-contract
+
       - name: Validate Stage A OAuth readiness
         run: npm run validate:stage-a-oauth-readiness
 
@@ -62,15 +66,16 @@ jobs:
       - name: Test n8n validation rules
         run: npm run test:n8n-validation
 
-  website-validation:
-    name: Website validation
+  exact-head-production-audit:
+    name: Exact-head production audit
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -87,14 +92,61 @@ jobs:
         working-directory: website
         run: npm run validate:production-audit-self-test
 
+      - name: Test production audit ordering, digest and evidence sealing
+        working-directory: website
+        run: npm run test:production-audit-remediation
+
+      - name: Create private audit evidence directory
+        id: audit-path
+        shell: bash
+        run: |
+          set -euo pipefail
+          audit_dir="$(mktemp -d "${RUNNER_TEMP}/production-dependency-audit.XXXXXXXXXX")"
+          chmod 700 "$audit_dir"
+          evidence_path="${audit_dir}/production-dependency-audit-evidence.json"
+          echo "evidence=${evidence_path}" >> "$GITHUB_OUTPUT"
+
       - name: Enforce zero production dependency vulnerabilities
         working-directory: website
         env:
-          EXPECTED_AUDIT_REVISION: ${{ github.event.pull_request.head.sha || github.sha }}
+          EXPECTED_AUDIT_REVISION: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
         run: >-
           node scripts/validate-production-audit.cjs
           --baseline security/production-dependency-audit-baseline.json
-          --evidence-output "${RUNNER_TEMP}/production-dependency-audit-evidence.json"
+          --evidence-output "${{ steps.audit-path.outputs.evidence }}"
+
+      - name: Upload production dependency audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-dependency-audit-${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          path: ${{ steps.audit-path.outputs.evidence }}
+          if-no-files-found: error
+          retention-days: 30
+
+  website-validation:
+    name: Website validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+
+      - name: Install website dependencies
+        working-directory: website
+        run: npm ci
+
+      - name: Test sharp parent and worker lifecycle
+        working-directory: website
+        run: npm run test:sharp-native-lifecycle
 
       - name: Validate Linux sharp native image operation
         working-directory: website
@@ -111,15 +163,6 @@ jobs:
       - name: Build website
         working-directory: website
         run: npm run build
-
-      - name: Upload production dependency audit evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: production-dependency-audit-${{ github.event.pull_request.head.sha || github.sha }}
-          path: ${{ runner.temp }}/production-dependency-audit-evidence.json
-          if-no-files-found: error
-          retention-days: 30
 
   tracked-file-safety:
     name: Tracked file safety

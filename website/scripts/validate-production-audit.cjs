@@ -14,6 +14,10 @@ const EXPECTED_VERSIONS = Object.freeze({
   postcss: "8.5.23",
   sharp: "0.35.3",
 });
+const EXPECTED_BASE_REVISION =
+  "522ed73c81640fb2c5a626fd48bd40f317749421";
+const EXPECTED_BASE_RAW_JSON_SHA256 =
+  "68811200574e49daf1f4a7c7c6e286e87b84d6d012bb60595f5b1712b4b3ee5f";
 const EXPECTED_BASE_VULNERABILITY_TOTALS = Object.freeze({
   info: 0,
   low: 0,
@@ -47,8 +51,11 @@ const DEFAULT_BASELINE = path.join(
   "security",
   "production-dependency-audit-baseline.json",
 );
+const EVIDENCE_FILENAME = "production-dependency-audit-evidence.json";
 const MAX_AUDIT_BYTES = 10 * 1024 * 1024;
+const MAX_EVIDENCE_BYTES = 64 * 1024;
 const AUDIT_TIMEOUT_MS = 120_000;
+const NO_FOLLOW = fs.constants.O_NOFOLLOW ?? 0;
 
 class AuditValidationError extends Error {}
 
@@ -58,11 +65,11 @@ function invariant(condition, message) {
   }
 }
 
-function parseArguments(argv) {
+function parseArguments(argv, environment = process.env) {
   const options = {
     baseline: DEFAULT_BASELINE,
     evidenceOutput: undefined,
-    expectedRevision: process.env.EXPECTED_AUDIT_REVISION,
+    expectedRevision: environment.EXPECTED_AUDIT_REVISION,
     selfTest: false,
   };
 
@@ -216,27 +223,15 @@ function classifySecretExposure(rawJson) {
   };
 }
 
-function runProductionAudit() {
-  const executable = process.platform === "win32" ? "cmd.exe" : "npm";
-  const arguments_ =
-    process.platform === "win32"
-      ? ["/d", "/s", "/c", AUDIT_COMMAND]
-      : ["audit", "--omit=dev", "--json"];
-  const result = spawnSync(
-    executable,
-    arguments_,
-    {
-      cwd: WEBSITE_ROOT,
-      encoding: "utf8",
-      maxBuffer: MAX_AUDIT_BYTES,
-      timeout: AUDIT_TIMEOUT_MS,
-      windowsHide: true,
-    },
-  );
-
+function validateAuditCommandResult(result) {
   invariant(!result.error, "npm audit could not execute safely");
   invariant(!result.signal, "npm audit exceeded its bounded execution");
   invariant(Number.isInteger(result.status), "npm audit returned no exit code");
+  invariant(
+    typeof result.stdout === "string" &&
+      Buffer.byteLength(result.stdout, "utf8") <= MAX_AUDIT_BYTES,
+    "npm audit output exceeded its public-safe bound",
+  );
 
   const parsed = parseAuditDocument(result.stdout);
   validateAuditExitCode(result.status, parsed.counts);
@@ -256,6 +251,22 @@ function runProductionAudit() {
       .digest("hex"),
     safety,
   };
+}
+
+function runProductionAudit(execute = spawnSync) {
+  const executable = process.platform === "win32" ? "cmd.exe" : "npm";
+  const arguments_ =
+    process.platform === "win32"
+      ? ["/d", "/s", "/c", AUDIT_COMMAND]
+      : ["audit", "--omit=dev", "--json"];
+  const result = execute(executable, arguments_, {
+    cwd: WEBSITE_ROOT,
+    encoding: "utf8",
+    maxBuffer: MAX_AUDIT_BYTES,
+    timeout: AUDIT_TIMEOUT_MS,
+    windowsHide: true,
+  });
+  return validateAuditCommandResult(result);
 }
 
 function readJson(filePath, description) {
@@ -281,18 +292,18 @@ function validateBaseline(baseline) {
   );
   const before = baseline.before;
   invariant(
-    before?.baseRevision ===
-      "522ed73c81640fb2c5a626fd48bd40f317749421",
+    before?.baseRevision === EXPECTED_BASE_REVISION,
     "The audit baseline is not bound to the required base revision",
   );
   invariant(before.command === AUDIT_COMMAND, "The audit baseline command differs");
   invariant(before.exitCode === 1, "The audit baseline exit code differs");
   invariant(
-    /^[0-9a-f]{64}$/.test(before.rawJsonSha256),
-    "The audit baseline digest is invalid",
+    before.rawJsonSha256 === EXPECTED_BASE_RAW_JSON_SHA256,
+    "The audit baseline digest differs from the accepted source result",
   );
   invariant(
-    before?.safety?.secretExposureClassification === "none" &&
+    before?.safety?.rawJsonCommitted === false &&
+      before.safety.secretExposureClassification === "none" &&
       before.safety.containsPrivateLocalPath === false,
     "The audit baseline is not public-safe",
   );
@@ -387,12 +398,8 @@ function readHeadRevision(expectedRevision) {
   return revision;
 }
 
-function writeEvidence(filePath, baseline, revision, audit, resolvedVersions) {
-  if (!filePath) {
-    return;
-  }
-
-  const evidence = {
+function buildEvidence(baseline, revision, audit, resolvedVersions) {
+  return {
     schemaVersion: 1,
     scope: "production-dependencies-only",
     before: baseline,
@@ -417,9 +424,295 @@ function writeEvidence(filePath, baseline, revision, audit, resolvedVersions) {
         "Development-only findings are explicitly outside this production-only gate and are not represented as production results.",
     },
   };
+}
 
-  fs.mkdirSync(path.dirname(filePath), { recursive: true });
-  fs.writeFileSync(filePath, `${JSON.stringify(evidence, null, 2)}\n`, "utf8");
+function validateEvidenceDocument(
+  evidence,
+  baseline,
+  revision,
+  audit,
+  resolvedVersions,
+) {
+  const expected = buildEvidence(
+    baseline,
+    revision,
+    audit,
+    resolvedVersions,
+  );
+  assert.deepEqual(
+    evidence,
+    expected,
+    "The production audit evidence differs from the validated result",
+  );
+  invariant(
+    evidence.before.rawJsonSha256 === EXPECTED_BASE_RAW_JSON_SHA256,
+    "The production audit evidence contains the wrong baseline digest",
+  );
+  invariant(
+    /^[0-9a-f]{64}$/.test(evidence.after.rawJsonSha256),
+    "The production audit evidence contains an invalid after-audit digest",
+  );
+  invariant(
+    evidence.after.revision === revision &&
+      /^[0-9a-f]{40}$/.test(evidence.after.revision),
+    "The production audit evidence contains the wrong exact revision",
+  );
+  invariant(
+    evidence.after.command === AUDIT_COMMAND &&
+      (evidence.after.exitCode === 0 || evidence.after.exitCode === 1),
+    "The production audit evidence contains an invalid command result",
+  );
+  validateAuditExitCode(
+    evidence.after.exitCode,
+    evidence.after.vulnerabilityTotals,
+  );
+  invariant(
+    evidence.after.safety.rawJsonCommitted === false &&
+      evidence.after.safety.secretExposureClassification === "none" &&
+      evidence.after.safety.containsPrivateLocalPath === false,
+    "The production audit evidence is not public-safe",
+  );
+  assert.deepEqual(
+    evidence.after.resolvedVersions,
+    EXPECTED_VERSIONS,
+    "The production audit evidence contains the wrong resolved versions",
+  );
+  return evidence;
+}
+
+function sameFileIdentity(left, right) {
+  return (
+    left.isFile() &&
+    right.isFile() &&
+    left.dev === right.dev &&
+    left.ino === right.ino &&
+    left.nlink === 1 &&
+    right.nlink === 1
+  );
+}
+
+function validateEvidencePath(filePath, io = fs) {
+  invariant(
+    path.basename(filePath) === EVIDENCE_FILENAME,
+    "The production audit evidence filename is not controlled",
+  );
+  const parentPath = path.dirname(filePath);
+  let parent;
+  try {
+    parent = io.lstatSync(parentPath);
+  } catch {
+    throw new AuditValidationError(
+      "The production audit evidence directory could not be inspected",
+    );
+  }
+  invariant(
+    parent.isDirectory() && !parent.isSymbolicLink(),
+    "The production audit evidence directory is not a real directory",
+  );
+  const realParent =
+    typeof io.realpathSync.native === "function"
+      ? io.realpathSync.native(parentPath)
+      : io.realpathSync(parentPath);
+  invariant(
+    path.resolve(realParent) === path.resolve(parentPath),
+    "The production audit evidence directory resolves through an alternate path",
+  );
+  if (process.platform !== "win32") {
+    invariant(
+      (parent.mode & 0o077) === 0,
+      "The production audit evidence directory permissions are too broad",
+    );
+  }
+  return parentPath;
+}
+
+function readAndValidateEvidenceFile(
+  filePath,
+  baseline,
+  revision,
+  audit,
+  resolvedVersions,
+  io = fs,
+) {
+  validateEvidencePath(filePath, io);
+
+  let before;
+  let descriptor;
+  try {
+    before = io.lstatSync(filePath);
+    invariant(
+      before.isFile() && !before.isSymbolicLink() && before.nlink === 1,
+      "The production audit evidence path is not a single regular file",
+    );
+    if (process.platform !== "win32") {
+      invariant(
+        (before.mode & 0o077) === 0,
+        "The production audit evidence file permissions are too broad",
+      );
+    }
+    descriptor = io.openSync(filePath, fs.constants.O_RDONLY | NO_FOLLOW);
+    const opened = io.fstatSync(descriptor);
+    invariant(
+      sameFileIdentity(before, opened),
+      "The production audit evidence was replaced before validation",
+    );
+    invariant(
+      opened.size > 0 && opened.size <= MAX_EVIDENCE_BYTES,
+      "The production audit evidence size is invalid",
+    );
+    const raw = io.readFileSync(descriptor, "utf8");
+    invariant(
+      Buffer.byteLength(raw, "utf8") === opened.size,
+      "The production audit evidence was not read completely",
+    );
+    let evidence;
+    try {
+      evidence = JSON.parse(raw);
+    } catch {
+      throw new AuditValidationError(
+        "The production audit evidence is malformed JSON",
+      );
+    }
+    validateEvidenceDocument(
+      evidence,
+      baseline,
+      revision,
+      audit,
+      resolvedVersions,
+    );
+  } finally {
+    if (descriptor !== undefined) {
+      io.closeSync(descriptor);
+    }
+  }
+
+  const after = io.lstatSync(filePath);
+  invariant(
+    sameFileIdentity(before, after) && before.size === after.size,
+    "The production audit evidence was replaced during validation",
+  );
+  return after;
+}
+
+function writeAndSealEvidence(
+  filePath,
+  baseline,
+  revision,
+  audit,
+  resolvedVersions,
+  io = fs,
+) {
+  if (!filePath) {
+    return;
+  }
+
+  const parentPath = validateEvidencePath(filePath, io);
+  let descriptor;
+  try {
+    descriptor = io.openSync(
+      filePath,
+      fs.constants.O_WRONLY |
+        fs.constants.O_CREAT |
+        fs.constants.O_EXCL |
+        NO_FOLLOW,
+      0o600,
+    );
+    const serialized = `${JSON.stringify(
+      buildEvidence(baseline, revision, audit, resolvedVersions),
+      null,
+      2,
+    )}\n`;
+    invariant(
+      Buffer.byteLength(serialized, "utf8") <= MAX_EVIDENCE_BYTES,
+      "The production audit evidence exceeded its public-safe bound",
+    );
+    io.writeFileSync(descriptor, serialized, "utf8");
+    io.fsyncSync(descriptor);
+  } catch (error) {
+    if (error instanceof AuditValidationError) {
+      throw error;
+    }
+    throw new AuditValidationError(
+      "The production audit evidence could not be created exclusively",
+    );
+  } finally {
+    if (descriptor !== undefined) {
+      io.closeSync(descriptor);
+    }
+  }
+
+  readAndValidateEvidenceFile(
+    filePath,
+    baseline,
+    revision,
+    audit,
+    resolvedVersions,
+    io,
+  );
+  io.chmodSync(filePath, 0o400);
+  if (process.platform !== "win32") {
+    io.chmodSync(parentPath, 0o500);
+  }
+}
+
+function formatPassReceipt(revision, audit, resolvedVersions) {
+  return (
+    [
+      "Production dependency audit: PASS",
+      `Revision: ${revision}`,
+      `Command: ${AUDIT_COMMAND}`,
+      `Exit code: ${audit.exitCode}`,
+      `Counts: ${SEVERITIES.map(
+        (severity) => `${severity}=${audit.counts[severity]}`,
+      ).join(", ")}, total=${audit.counts.total}`,
+      `Raw JSON SHA-256: ${audit.rawJsonSha256}`,
+      `Resolved: next=${resolvedVersions.next}, postcss=${resolvedVersions.postcss}, sharp=${resolvedVersions.sharp}`,
+      "Scope: production dependencies only; development-only audit results are outside this gate.",
+    ].join("\n") + "\n"
+  );
+}
+
+function runValidation(options, dependencies = {}) {
+  const readBaseline =
+    dependencies.readBaseline ??
+    (() =>
+      validateBaseline(
+        readJson(options.baseline, "production audit baseline"),
+      ));
+  const establishRevision =
+    dependencies.readRevision ?? (() => readHeadRevision(options.expectedRevision));
+  const establishVersions =
+    dependencies.readVersions ?? (() => readResolvedVersions());
+  const executeAudit = dependencies.runAudit ?? (() => runProductionAudit());
+  const persistEvidence =
+    dependencies.writeEvidence ??
+    ((...arguments_) => writeAndSealEvidence(...arguments_));
+  const writeStdout =
+    dependencies.stdout ?? ((message) => process.stdout.write(message));
+
+  const baseline = readBaseline();
+  const revision = establishRevision();
+  const resolvedVersions = establishVersions();
+  const audit = executeAudit();
+  persistEvidence(
+    options.evidenceOutput,
+    baseline,
+    revision,
+    audit,
+    resolvedVersions,
+  );
+
+  invariant(
+    audit.counts.total === 0,
+    "Production dependency vulnerabilities remain",
+  );
+  invariant(
+    audit.exitCode === 0,
+    "The production dependency audit did not return accepted success",
+  );
+
+  writeStdout(formatPassReceipt(revision, audit, resolvedVersions));
+  return { baseline, revision, resolvedVersions, audit };
 }
 
 function runSelfTest() {
@@ -469,60 +762,59 @@ function runSelfTest() {
   assert.equal(classifySecretExposure(zeroDocument).classification, "none");
   const syntheticToken = ["ghp", "_", "1".repeat(20)].join("");
   assert.equal(
-    classifySecretExposure(JSON.stringify({ token: syntheticToken })).classification,
+    classifySecretExposure(JSON.stringify({ token: syntheticToken }))
+      .classification,
     "possible",
   );
-
-  process.stdout.write("Production dependency audit self-test: PASS\n");
+  process.stdout.write("Production dependency audit self-test: PASS (10 checks)\n");
 }
 
-function main() {
-  const options = parseArguments(process.argv.slice(2));
-  if (options.selfTest) {
-    runSelfTest();
-    return;
-  }
-
-  const baseline = validateBaseline(
-    readJson(options.baseline, "production audit baseline"),
-  );
-  const revision = readHeadRevision(options.expectedRevision);
-  const resolvedVersions = readResolvedVersions();
-  const audit = runProductionAudit();
-  writeEvidence(
-    options.evidenceOutput,
-    baseline,
-    revision,
-    audit,
-    resolvedVersions,
-  );
-
-  process.stdout.write(
-    [
-      "Production dependency audit: PASS",
-      `Revision: ${revision}`,
-      `Command: ${AUDIT_COMMAND}`,
-      `Exit code: ${audit.exitCode}`,
-      `Counts: ${SEVERITIES.map((severity) => `${severity}=${audit.counts[severity]}`).join(", ")}, total=${audit.counts.total}`,
-      `Raw JSON SHA-256: ${audit.rawJsonSha256}`,
-      `Resolved: next=${resolvedVersions.next}, postcss=${resolvedVersions.postcss}, sharp=${resolvedVersions.sharp}`,
-      "Scope: production dependencies only; development-only audit results are outside this gate.",
-    ].join("\n") + "\n",
-  );
-
-  invariant(
-    audit.counts.total === 0,
-    "Production dependency vulnerabilities remain",
-  );
-}
-
-try {
-  main();
-} catch (error) {
+function reportFailure(error, writeStderr = (message) => process.stderr.write(message)) {
   const message =
     error instanceof AuditValidationError || error instanceof assert.AssertionError
       ? error.message
       : "Unexpected validator failure";
-  process.stderr.write(`Production dependency audit: FAIL\n${message}\n`);
-  process.exitCode = 1;
+  writeStderr(`Production dependency audit: FAIL\n${message}\n`);
+}
+
+function cli() {
+  try {
+    const options = parseArguments(process.argv.slice(2));
+    if (options.selfTest) {
+      runSelfTest();
+      return;
+    }
+    runValidation(options);
+  } catch (error) {
+    reportFailure(error);
+    process.exitCode = 1;
+  }
+}
+
+module.exports = {
+  AUDIT_COMMAND,
+  AuditValidationError,
+  EVIDENCE_FILENAME,
+  EXPECTED_BASE_RAW_JSON_SHA256,
+  EXPECTED_VERSIONS,
+  buildEvidence,
+  classifySecretExposure,
+  formatPassReceipt,
+  parseArguments,
+  parseAuditDocument,
+  readAndValidateEvidenceFile,
+  reportFailure,
+  runProductionAudit,
+  runSelfTest,
+  runValidation,
+  validateAuditCommandResult,
+  validateAuditExitCode,
+  validateBaseline,
+  validateEvidenceDocument,
+  validateEvidencePath,
+  writeAndSealEvidence,
+};
+
+if (require.main === module) {
+  cli();
 }
