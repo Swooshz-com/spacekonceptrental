@@ -52,8 +52,13 @@ const DEFAULT_BASELINE = path.join(
   "production-dependency-audit-baseline.json",
 );
 const EVIDENCE_FILENAME = "production-dependency-audit-evidence.json";
+const ADMISSION_FILENAME =
+  "production-dependency-audit-upload-admission.json";
+const ADMISSION_PURPOSE =
+  "production-dependency-audit-upload-admission";
 const MAX_AUDIT_BYTES = 10 * 1024 * 1024;
 const MAX_EVIDENCE_BYTES = 64 * 1024;
+const MAX_ADMISSION_BYTES = 4 * 1024;
 const AUDIT_TIMEOUT_MS = 120_000;
 const NO_FOLLOW = fs.constants.O_NOFOLLOW ?? 0;
 
@@ -69,14 +74,21 @@ function parseArguments(argv, environment = process.env) {
   const options = {
     baseline: DEFAULT_BASELINE,
     evidenceOutput: undefined,
+    admissionOutput: undefined,
+    admissionChallenge: undefined,
     expectedRevision: environment.EXPECTED_AUDIT_REVISION,
     selfTest: false,
+    verifyUploadAdmission: false,
   };
 
   for (let index = 0; index < argv.length; index += 1) {
     const argument = argv[index];
     if (argument === "--self-test") {
       options.selfTest = true;
+      continue;
+    }
+    if (argument === "--verify-upload-admission") {
+      options.verifyUploadAdmission = true;
       continue;
     }
 
@@ -86,6 +98,10 @@ function parseArguments(argv, environment = process.env) {
       options.baseline = path.resolve(WEBSITE_ROOT, value);
     } else if (argument === "--evidence-output") {
       options.evidenceOutput = path.resolve(WEBSITE_ROOT, value);
+    } else if (argument === "--admission-output") {
+      options.admissionOutput = path.resolve(WEBSITE_ROOT, value);
+    } else if (argument === "--admission-challenge") {
+      options.admissionChallenge = value;
     } else if (argument === "--expected-revision") {
       options.expectedRevision = value;
     } else {
@@ -526,6 +542,73 @@ function validateEvidencePath(filePath, io = fs) {
   return parentPath;
 }
 
+function validateAdmissionPath(filePath, evidencePath, io = fs) {
+  invariant(
+    path.basename(filePath) === ADMISSION_FILENAME,
+    "The production audit admission filename is not controlled",
+  );
+  const parentPath = validateEvidencePath(evidencePath, io);
+  invariant(
+    path.resolve(path.dirname(filePath)) === path.resolve(parentPath),
+    "The production audit admission is not colocated with its evidence",
+  );
+  return parentPath;
+}
+
+function readBoundedRegularFile(
+  filePath,
+  maximumBytes,
+  description,
+  io = fs,
+) {
+  let before;
+  let descriptor;
+  let raw;
+  try {
+    before = io.lstatSync(filePath);
+    invariant(
+      before.isFile() && !before.isSymbolicLink() && before.nlink === 1,
+      `${description} is not a single regular file`,
+    );
+    if (process.platform !== "win32") {
+      invariant(
+        (before.mode & 0o077) === 0,
+        `${description} permissions are too broad`,
+      );
+    }
+    descriptor = io.openSync(filePath, fs.constants.O_RDONLY | NO_FOLLOW);
+    const opened = io.fstatSync(descriptor);
+    invariant(
+      sameFileIdentity(before, opened),
+      `${description} was replaced before validation`,
+    );
+    invariant(
+      opened.size > 0 && opened.size <= maximumBytes,
+      `${description} size is invalid`,
+    );
+    raw = io.readFileSync(descriptor, "utf8");
+    invariant(
+      Buffer.byteLength(raw, "utf8") === opened.size,
+      `${description} was not read completely`,
+    );
+  } catch (error) {
+    if (error instanceof AuditValidationError) {
+      throw error;
+    }
+    throw new AuditValidationError(`${description} could not be read safely`);
+  } finally {
+    if (descriptor !== undefined) {
+      io.closeSync(descriptor);
+    }
+  }
+  const after = io.lstatSync(filePath);
+  invariant(
+    sameFileIdentity(before, after) && before.size === after.size,
+    `${description} was replaced during validation`,
+  );
+  return { raw, stat: after };
+}
+
 function readAndValidateEvidenceFile(
   filePath,
   baseline,
@@ -535,63 +618,28 @@ function readAndValidateEvidenceFile(
   io = fs,
 ) {
   validateEvidencePath(filePath, io);
-
-  let before;
-  let descriptor;
-  try {
-    before = io.lstatSync(filePath);
-    invariant(
-      before.isFile() && !before.isSymbolicLink() && before.nlink === 1,
-      "The production audit evidence path is not a single regular file",
-    );
-    if (process.platform !== "win32") {
-      invariant(
-        (before.mode & 0o077) === 0,
-        "The production audit evidence file permissions are too broad",
-      );
-    }
-    descriptor = io.openSync(filePath, fs.constants.O_RDONLY | NO_FOLLOW);
-    const opened = io.fstatSync(descriptor);
-    invariant(
-      sameFileIdentity(before, opened),
-      "The production audit evidence was replaced before validation",
-    );
-    invariant(
-      opened.size > 0 && opened.size <= MAX_EVIDENCE_BYTES,
-      "The production audit evidence size is invalid",
-    );
-    const raw = io.readFileSync(descriptor, "utf8");
-    invariant(
-      Buffer.byteLength(raw, "utf8") === opened.size,
-      "The production audit evidence was not read completely",
-    );
-    let evidence;
-    try {
-      evidence = JSON.parse(raw);
-    } catch {
-      throw new AuditValidationError(
-        "The production audit evidence is malformed JSON",
-      );
-    }
-    validateEvidenceDocument(
-      evidence,
-      baseline,
-      revision,
-      audit,
-      resolvedVersions,
-    );
-  } finally {
-    if (descriptor !== undefined) {
-      io.closeSync(descriptor);
-    }
-  }
-
-  const after = io.lstatSync(filePath);
-  invariant(
-    sameFileIdentity(before, after) && before.size === after.size,
-    "The production audit evidence was replaced during validation",
+  const { raw, stat } = readBoundedRegularFile(
+    filePath,
+    MAX_EVIDENCE_BYTES,
+    "The production audit evidence",
+    io,
   );
-  return after;
+  let evidence;
+  try {
+    evidence = JSON.parse(raw);
+  } catch {
+    throw new AuditValidationError(
+      "The production audit evidence is malformed JSON",
+    );
+  }
+  validateEvidenceDocument(
+    evidence,
+    baseline,
+    revision,
+    audit,
+    resolvedVersions,
+  );
+  return { evidence, raw, stat };
 }
 
 function writeAndSealEvidence(
@@ -606,7 +654,7 @@ function writeAndSealEvidence(
     return;
   }
 
-  const parentPath = validateEvidencePath(filePath, io);
+  validateEvidencePath(filePath, io);
   let descriptor;
   try {
     descriptor = io.openSync(
@@ -641,7 +689,7 @@ function writeAndSealEvidence(
     }
   }
 
-  readAndValidateEvidenceFile(
+  const validated = readAndValidateEvidenceFile(
     filePath,
     baseline,
     revision,
@@ -650,9 +698,353 @@ function writeAndSealEvidence(
     io,
   );
   io.chmodSync(filePath, 0o400);
+  return crypto
+    .createHash("sha256")
+    .update(validated.raw, "utf8")
+    .digest("hex");
+}
+
+function challengeDigest(challenge) {
+  invariant(
+    typeof challenge === "string" && /^[0-9a-f]{64}$/.test(challenge),
+    "The production audit admission challenge is invalid",
+  );
+  return crypto.createHash("sha256").update(challenge, "utf8").digest("hex");
+}
+
+function buildUploadAdmission(
+  evidenceDigest,
+  challenge,
+  revision,
+  audit,
+) {
+  invariant(
+    typeof evidenceDigest === "string" &&
+      /^[0-9a-f]{64}$/.test(evidenceDigest),
+    "The production audit evidence seal digest is invalid",
+  );
+  return {
+    schemaVersion: 1,
+    purpose: ADMISSION_PURPOSE,
+    evidenceFileName: EVIDENCE_FILENAME,
+    evidenceSha256: evidenceDigest,
+    challengeSha256: challengeDigest(challenge),
+    revision,
+    auditExitCode: audit.exitCode,
+    vulnerabilityTotal: audit.counts.total,
+  };
+}
+
+function writeAndSealUploadAdmission(
+  admissionPath,
+  evidencePath,
+  evidenceDigest,
+  challenge,
+  revision,
+  audit,
+  io = fs,
+) {
+  const parentPath = validateAdmissionPath(admissionPath, evidencePath, io);
+  const admission = buildUploadAdmission(
+    evidenceDigest,
+    challenge,
+    revision,
+    audit,
+  );
+  const serialized = `${JSON.stringify(admission, null, 2)}\n`;
+  invariant(
+    Buffer.byteLength(serialized, "utf8") <= MAX_ADMISSION_BYTES,
+    "The production audit admission exceeded its bound",
+  );
+  let descriptor;
+  try {
+    descriptor = io.openSync(
+      admissionPath,
+      fs.constants.O_WRONLY |
+        fs.constants.O_CREAT |
+        fs.constants.O_EXCL |
+        NO_FOLLOW,
+      0o600,
+    );
+    io.writeFileSync(descriptor, serialized, "utf8");
+    io.fsyncSync(descriptor);
+  } catch (error) {
+    if (error instanceof AuditValidationError) {
+      throw error;
+    }
+    throw new AuditValidationError(
+      "The production audit admission could not be created exclusively",
+    );
+  } finally {
+    if (descriptor !== undefined) {
+      io.closeSync(descriptor);
+    }
+  }
+
+  const validated = readBoundedRegularFile(
+    admissionPath,
+    MAX_ADMISSION_BYTES,
+    "The production audit admission",
+    io,
+  );
+  let readBack;
+  try {
+    readBack = JSON.parse(validated.raw);
+  } catch {
+    throw new AuditValidationError(
+      "The production audit admission is malformed JSON",
+    );
+  }
+  assert.deepEqual(
+    readBack,
+    admission,
+    "The production audit admission read-back differs",
+  );
+  io.chmodSync(admissionPath, 0o400);
   if (process.platform !== "win32") {
     io.chmodSync(parentPath, 0o500);
   }
+  return admission;
+}
+
+function validateEvidenceForUpload(evidence, expectedRevision) {
+  invariant(
+    evidence?.schemaVersion === 1 &&
+      evidence.scope === "production-dependencies-only",
+    "The upload evidence has an unsupported schema",
+  );
+  assert.deepEqual(
+    Object.keys(evidence).sort(),
+    [
+      "after",
+      "before",
+      "developmentDependencyAudit",
+      "schemaVersion",
+      "scope",
+    ],
+    "The upload evidence contains unexpected fields",
+  );
+  assert.deepEqual(
+    Object.keys(evidence.before ?? {}).sort(),
+    [
+      "advisoryIdentifiers",
+      "baseRevision",
+      "command",
+      "exitCode",
+      "rawJsonSha256",
+      "safety",
+      "vulnerabilityTotals",
+      "vulnerablePackageNodes",
+    ],
+    "The upload evidence baseline contains unexpected fields",
+  );
+  assert.deepEqual(
+    Object.keys(evidence.before?.safety ?? {}).sort(),
+    [
+      "containsPrivateLocalPath",
+      "rawJsonCommitted",
+      "secretExposureClassification",
+    ],
+    "The upload evidence baseline safety fields differ",
+  );
+  validateBaseline({
+    schemaVersion: evidence.schemaVersion,
+    scope: evidence.scope,
+    before: evidence.before,
+  });
+  const after = evidence.after;
+  assert.deepEqual(
+    Object.keys(after ?? {}).sort(),
+    [
+      "advisoryIdentifiers",
+      "command",
+      "exitCode",
+      "rawJsonSha256",
+      "resolvedVersions",
+      "revision",
+      "safety",
+      "vulnerabilityTotals",
+      "vulnerablePackageNodes",
+    ],
+    "The upload evidence result contains unexpected fields",
+  );
+  invariant(
+    after?.revision === expectedRevision &&
+      /^[0-9a-f]{40}$/.test(expectedRevision),
+    "The upload evidence is bound to the wrong exact revision",
+  );
+  invariant(
+    after.command === AUDIT_COMMAND,
+    "The upload evidence contains the wrong audit command",
+  );
+  const counts = after.vulnerabilityTotals;
+  invariant(
+    counts && typeof counts === "object" && !Array.isArray(counts),
+    "The upload evidence contains invalid vulnerability totals",
+  );
+  assert.deepEqual(
+    Object.keys(counts).sort(),
+    [...SEVERITIES, "total"].sort(),
+    "The upload evidence vulnerability total fields differ",
+  );
+  const severityTotal = SEVERITIES.reduce((total, severity) => {
+    invariant(
+      Number.isSafeInteger(counts[severity]) && counts[severity] >= 0,
+      "The upload evidence contains invalid vulnerability totals",
+    );
+    return total + counts[severity];
+  }, 0);
+  invariant(
+    Number.isSafeInteger(counts.total) &&
+      counts.total >= 0 &&
+      counts.total === severityTotal,
+    "The upload evidence contains inconsistent vulnerability totals",
+  );
+  validateAuditExitCode(after.exitCode, counts);
+  invariant(
+    Array.isArray(after.vulnerablePackageNodes) &&
+      Array.isArray(after.advisoryIdentifiers) &&
+      (counts.total > 0
+        ? after.vulnerablePackageNodes.length > 0
+        : after.vulnerablePackageNodes.length === 0),
+    "The upload evidence contains invalid finding identifiers",
+  );
+  invariant(
+    after.vulnerablePackageNodes.every(
+      (name) =>
+        typeof name === "string" &&
+        /^(?:@[A-Za-z0-9._-]+\/)?[A-Za-z0-9._-]+$/.test(name),
+    ) &&
+      after.advisoryIdentifiers.every(
+        (identifier) =>
+          typeof identifier === "string" &&
+          /^GHSA-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}$/.test(
+            identifier,
+          ),
+      ) &&
+      new Set(after.vulnerablePackageNodes).size ===
+        after.vulnerablePackageNodes.length &&
+      new Set(after.advisoryIdentifiers).size ===
+        after.advisoryIdentifiers.length &&
+      JSON.stringify([...after.vulnerablePackageNodes].sort()) ===
+        JSON.stringify(after.vulnerablePackageNodes) &&
+      JSON.stringify([...after.advisoryIdentifiers].sort()) ===
+        JSON.stringify(after.advisoryIdentifiers),
+    "The upload evidence finding identifiers are malformed",
+  );
+  invariant(
+    /^[0-9a-f]{64}$/.test(after.rawJsonSha256),
+    "The upload evidence contains an invalid audit digest",
+  );
+  assert.deepEqual(
+    after.resolvedVersions,
+    EXPECTED_VERSIONS,
+    "The upload evidence contains the wrong resolved versions",
+  );
+  invariant(
+    Object.keys(after.safety ?? {}).sort().join(",") ===
+      [
+        "containsPrivateLocalPath",
+        "rawJsonCommitted",
+        "secretExposureClassification",
+      ]
+        .sort()
+        .join(",") &&
+    after.safety?.rawJsonCommitted === false &&
+      after.safety.secretExposureClassification === "none" &&
+      after.safety.containsPrivateLocalPath === false,
+    "The upload evidence is not public-safe",
+  );
+  assert.deepEqual(
+    evidence.developmentDependencyAudit,
+    {
+      includedInGate: false,
+      reason:
+        "Development-only findings are explicitly outside this production-only gate and are not represented as production results.",
+    },
+    "The upload evidence scope statement differs",
+  );
+  return evidence;
+}
+
+function verifyUploadAdmission(
+  evidencePath,
+  admissionPath,
+  challenge,
+  expectedRevision,
+  io = fs,
+) {
+  const parentPath = validateAdmissionPath(admissionPath, evidencePath, io);
+  if (process.platform !== "win32") {
+    invariant(
+      (io.lstatSync(parentPath).mode & 0o777) === 0o500,
+      "The production audit evidence directory is not sealed",
+    );
+  }
+  const evidenceFile = readBoundedRegularFile(
+    evidencePath,
+    MAX_EVIDENCE_BYTES,
+    "The production audit evidence",
+    io,
+  );
+  if (process.platform !== "win32") {
+    invariant(
+      (evidenceFile.stat.mode & 0o777) === 0o400,
+      "The production audit evidence file is not sealed",
+    );
+  }
+  let evidence;
+  try {
+    evidence = JSON.parse(evidenceFile.raw);
+  } catch {
+    throw new AuditValidationError(
+      "The production audit evidence is malformed JSON",
+    );
+  }
+  validateEvidenceForUpload(evidence, expectedRevision);
+  const evidenceDigest = crypto
+    .createHash("sha256")
+    .update(evidenceFile.raw, "utf8")
+    .digest("hex");
+
+  const admissionFile = readBoundedRegularFile(
+    admissionPath,
+    MAX_ADMISSION_BYTES,
+    "The production audit admission",
+    io,
+  );
+  if (process.platform !== "win32") {
+    invariant(
+      (admissionFile.stat.mode & 0o777) === 0o400,
+      "The production audit admission file is not sealed",
+    );
+  }
+  let admission;
+  try {
+    admission = JSON.parse(admissionFile.raw);
+  } catch {
+    throw new AuditValidationError(
+      "The production audit admission is malformed JSON",
+    );
+  }
+  assert.deepEqual(
+    admission,
+    buildUploadAdmission(
+      evidenceDigest,
+      challenge,
+      expectedRevision,
+      {
+        exitCode: evidence.after.exitCode,
+        counts: evidence.after.vulnerabilityTotals,
+      },
+    ),
+    "The production audit admission does not match the sealed evidence",
+  );
+  return {
+    evidenceDigest,
+    auditExitCode: evidence.after.exitCode,
+    vulnerabilityTotal: evidence.after.vulnerabilityTotals.total,
+  };
 }
 
 function formatPassReceipt(revision, audit, resolvedVersions) {
@@ -687,6 +1079,9 @@ function runValidation(options, dependencies = {}) {
   const persistEvidence =
     dependencies.writeEvidence ??
     ((...arguments_) => writeAndSealEvidence(...arguments_));
+  const persistAdmission =
+    dependencies.writeAdmission ??
+    ((...arguments_) => writeAndSealUploadAdmission(...arguments_));
   const writeStdout =
     dependencies.stdout ?? ((message) => process.stdout.write(message));
 
@@ -694,13 +1089,27 @@ function runValidation(options, dependencies = {}) {
   const revision = establishRevision();
   const resolvedVersions = establishVersions();
   const audit = executeAudit();
-  persistEvidence(
+  const evidenceDigest = persistEvidence(
     options.evidenceOutput,
     baseline,
     revision,
     audit,
     resolvedVersions,
   );
+  if (options.admissionOutput) {
+    invariant(
+      options.evidenceOutput,
+      "Upload admission requires a controlled evidence output",
+    );
+    persistAdmission(
+      options.admissionOutput,
+      options.evidenceOutput,
+      evidenceDigest,
+      options.admissionChallenge,
+      revision,
+      audit,
+    );
+  }
 
   invariant(
     audit.counts.total === 0,
@@ -784,6 +1193,16 @@ function cli() {
       runSelfTest();
       return;
     }
+    if (options.verifyUploadAdmission) {
+      verifyUploadAdmission(
+        options.evidenceOutput,
+        options.admissionOutput,
+        options.admissionChallenge,
+        options.expectedRevision,
+      );
+      process.stdout.write("Production audit upload admission: PASS\n");
+      return;
+    }
     runValidation(options);
   } catch (error) {
     reportFailure(error);
@@ -792,12 +1211,14 @@ function cli() {
 }
 
 module.exports = {
+  ADMISSION_FILENAME,
   AUDIT_COMMAND,
   AuditValidationError,
   EVIDENCE_FILENAME,
   EXPECTED_BASE_RAW_JSON_SHA256,
   EXPECTED_VERSIONS,
   buildEvidence,
+  buildUploadAdmission,
   classifySecretExposure,
   formatPassReceipt,
   parseArguments,
@@ -812,7 +1233,10 @@ module.exports = {
   validateBaseline,
   validateEvidenceDocument,
   validateEvidencePath,
+  validateEvidenceForUpload,
+  verifyUploadAdmission,
   writeAndSealEvidence,
+  writeAndSealUploadAdmission,
 };
 
 if (require.main === module) {
