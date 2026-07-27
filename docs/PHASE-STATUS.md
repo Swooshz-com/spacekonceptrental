@@ -1,3 +1,24 @@
+## Structured Quote UX Review Boundary
+
+References: `docs/architecture/STRUCTURED-QUOTE-UX.md`,
+`website/lib/quote/selection-model.ts`,
+`website/lib/quote/submission-capability.ts`,
+`website/components/QuoteSelectionControls.tsx`,
+`website/components/QuoteRequestForm.tsx`, and
+`website/app/api/quote/route.ts`.
+
+The public quote surface now prepares a versioned, per-tab structured draft
+with bounded catalogue and manual rows, integer quantities, explicit
+empty/unavailable/stale recovery, conditional contact requirements and
+accessible errors. Catalogue display identity is resolved from current
+server-owned public data rather than browser claims.
+
+Quote submission remains compile-time disabled. The client performs no quote
+request and direct POST returns generic HTTP 503 before body parsing or any
+persistence or delivery dependency. This is review-only implementation; it is
+not runtime submission completion, migration approval, provider approval,
+deployment approval or production acceptance.
+
 ## Protected Admin Hero Media Upload Foundation
 
 References: `supabase/migrations/20260703100000_homepage_hero_content_foundation.sql`, `supabase/migrations/20260707130000_hero_media_storage_foundation.sql`, `website/lib/hero/homepage-hero-content.ts`, `website/lib/hero/public-homepage-hero-repository.ts`, `website/lib/hero/admin-homepage-hero-read.ts`, `website/lib/hero/admin-homepage-hero-write.ts`, `website/lib/hero/admin-homepage-hero-write-route.ts`, `website/app/api/admin/hero/route.ts`, `website/components/admin/hero-content-management-panel.tsx`, `website/app/admin/hero/page.tsx`, and `website/components/PublicStitch.tsx`.

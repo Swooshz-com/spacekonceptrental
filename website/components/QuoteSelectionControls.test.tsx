@@ -1,665 +1,218 @@
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { QUOTE_SELECTION_STORAGE_KEY } from "../lib/quote/selection-model";
 import {
-  formatQuoteSelectionItems,
   QuoteSelectionBadge,
   QuoteSelectionButton,
   QuoteSelectionDataBoundary,
   QuoteSelectionIndicator,
-  QuoteSelectionSummary
+  QuoteSelectionSummary,
+  formatQuoteSelectionItems
 } from "./QuoteSelectionControls";
 
+const chair = {
+  slug: "lounge-chair",
+  name: "Lounge Chair",
+  category: "Seating",
+  quantity: 1
+};
+
+function storedRows() {
+  return JSON.parse(
+    window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY) ?? "{}"
+  ) as {
+    version: number;
+    rows: Array<{
+      kind: string;
+      reference: string;
+      quantity: number;
+      source: string;
+      order: number;
+    }>;
+  };
+}
+
 describe("QuoteSelectionControls", () => {
+  beforeEach(() => {
+    window.sessionStorage.clear();
+  });
+
   afterEach(() => {
     cleanup();
-    window.localStorage.clear();
   });
 
-  it("adds quote selections without navigating and updates the request quote count", () => {
+  it("persists catalogue references in v2 session storage and updates same-tab consumers", () => {
     render(
       <>
-        <QuoteSelectionIndicator />
-        <QuoteSelectionButton
-          item={{
-            slug: "aura-lounge-chair",
-            name: "Aura Lounge Chair",
-            category: "Seating",
-            imageSrc: "/images/aura-lounge-chair.jpg",
-            quantity: 1
-          }}
-        />
-      </>
-    );
-
-    expect(screen.getByLabelText("0 selected")).toBeInTheDocument();
-    const increaseButton = screen.getByRole("button", {
-      name: /increase aura lounge chair quantity/i
-    });
-    const decreaseButton = screen.getByRole("button", {
-      name: /decrease aura lounge chair quantity/i
-    });
-    const quantityValue = screen.getByLabelText(/aura lounge chair quantity selected/i);
-
-    expect(quantityValue).toHaveTextContent("Qty 0");
-    expect(decreaseButton).toBeDisabled();
-
-    fireEvent.click(increaseButton);
-
-    expect(quantityValue).toHaveTextContent("Qty 1");
-    expect(screen.getByLabelText("1 selected")).toBeInTheDocument();
-
-    fireEvent.click(increaseButton);
-
-    expect(quantityValue).toHaveTextContent("Qty 2");
-    expect(screen.getByLabelText("1 selected")).toBeInTheDocument();
-    expect(window.localStorage.getItem("skr.quoteSelection.v1")).toContain(
-      "aura-lounge-chair"
-    );
-    expect(window.localStorage.getItem("skr.quoteSelection.v1")).toContain(
-      "/images/aura-lounge-chair.jpg"
-    );
-
-    fireEvent.click(decreaseButton);
-
-    expect(quantityValue).toHaveTextContent("Qty 1");
-    expect(screen.getByLabelText("1 selected")).toBeInTheDocument();
-
-    fireEvent.click(decreaseButton);
-
-    expect(quantityValue).toHaveTextContent("Qty 0");
-    expect(decreaseButton).toBeDisabled();
-    expect(screen.getByLabelText("0 selected")).toBeInTheDocument();
-    expect(window.localStorage.getItem("skr.quoteSelection.v1")).toBe("[]");
-  });
-
-  it("keeps the request quote indicator sane for stale inflated local storage", async () => {
-    window.localStorage.setItem(
-      "skr.quoteSelection.v1",
-      JSON.stringify([
-        {
-          slug: "aura-lounge-chair",
-          name: "Aura Lounge Chair",
-          category: "Seating",
-          kind: "rental",
-          quantity: 597
-        }
-      ])
-    );
-
-    render(<QuoteSelectionIndicator />);
-
-    expect(screen.getByLabelText("1 selected")).toBeInTheDocument();
-    expect(
-      screen.queryByLabelText(/597 selected/i)
-    ).not.toBeInTheDocument();
-
-    await waitFor(() =>
-      expect(window.localStorage.getItem("skr.quoteSelection.v1")).toContain(
-        "\"quantity\":99"
-      )
-    );
-  });
-
-  it("clears stale selected records when no current public records are available", async () => {
-    window.localStorage.setItem(
-      "skr.quoteSelection.v1",
-      JSON.stringify([
-        {
-          slug: "stale-lounge-chair",
-          name: "Stale Lounge Chair",
-          category: "Seating",
-          kind: "rental",
-          quantity: 4
-        },
-        {
-          slug: "legacy-setup",
-          name: "Legacy Setup",
-          category: "Setups",
-          kind: "setup",
-          quantity: 1
-        },
-        {
-          slug: "stale-included-chair",
-          name: "Stale Included Chair",
-          category: "Seating",
-          kind: "setup-included",
-          quantity: 120,
-          setupName: "Legacy Setup",
-          setupSlug: "legacy-setup"
-        }
-      ])
-    );
-
-    render(
-      <>
-        <QuoteSelectionDataBoundary validItems={[]} />
-        <QuoteSelectionIndicator />
-        <QuoteSelectionSummary />
-      </>
-    );
-
-    await waitFor(() =>
-      expect(window.localStorage.getItem("skr.quoteSelection.v1")).toBe("[]")
-    );
-
-    expect(screen.getByLabelText("0 selected")).toBeInTheDocument();
-    expect(screen.queryByText("Stale Lounge Chair")).not.toBeInTheDocument();
-    expect(screen.queryByText("Legacy Setup")).not.toBeInTheDocument();
-    expect(screen.queryByText("Stale Included Chair")).not.toBeInTheDocument();
-  });
-
-  it("clears malformed non-array quote storage payloads", async () => {
-    window.localStorage.setItem(
-      "skr.quoteSelection.v1",
-      JSON.stringify({
-        slug: "stale-lounge-chair",
-        name: "Stale Lounge Chair",
-        quantity: 597
-      })
-    );
-
-    render(
-      <>
-        <QuoteSelectionDataBoundary validItems={[]} />
+        <QuoteSelectionButton item={chair} />
+        <QuoteSelectionBadge item={chair} />
         <QuoteSelectionIndicator />
       </>
     );
 
-    await waitFor(() =>
-      expect(window.localStorage.getItem("skr.quoteSelection.v1")).toBe("[]")
-    );
+    fireEvent.click(screen.getByRole("button", { name: /increase lounge chair/i }));
 
-    expect(screen.getByLabelText("0 selected")).toBeInTheDocument();
-  });
-
-  it("keeps valid current records counted after data-backed cleanup", async () => {
-    window.localStorage.setItem(
-      "skr.quoteSelection.v1",
-      JSON.stringify([
+    expect(storedRows()).toEqual({
+      version: 2,
+      rows: [
         {
-          slug: "modular-lounge-set",
-          name: "Modular Lounge Set",
-          category: "Lounge Seating",
-          kind: "rental",
-          quantity: 2
-        },
-        {
-          slug: "legacy-lamp",
-          name: "Legacy Lamp",
-          category: "Lighting",
-          kind: "rental",
-          quantity: 1
-        }
-      ])
-    );
-
-    render(
-      <>
-        <QuoteSelectionDataBoundary
-          validItems={[{ kind: "rental", slug: "modular-lounge-set" }]}
-        />
-        <QuoteSelectionIndicator />
-        <QuoteSelectionSummary />
-      </>
-    );
-
-    await waitFor(() =>
-      expect(window.localStorage.getItem("skr.quoteSelection.v1")).toContain(
-        "modular-lounge-set"
-      )
-    );
-
-    expect(screen.getByLabelText("1 selected")).toBeInTheDocument();
-    expect(screen.getByText("Modular Lounge Set")).toBeInTheDocument();
-    expect(screen.queryByText("Legacy Lamp")).not.toBeInTheDocument();
-    expect(window.localStorage.getItem("skr.quoteSelection.v1")).not.toContain(
-      "legacy-lamp"
-    );
-  });
-
-  it("removes setup-included orphan rows when their setup is not a current record", async () => {
-    window.localStorage.setItem(
-      "skr.quoteSelection.v1",
-      JSON.stringify([
-        {
-          slug: "legacy-setup",
-          name: "Legacy Setup",
-          category: "Setups",
-          kind: "setup",
-          quantity: 1
-        },
-        {
-          slug: "legacy-chair",
-          name: "Legacy Chair",
-          category: "Seating",
-          kind: "setup-included",
-          quantity: 120,
-          setupName: "Legacy Setup",
-          setupSlug: "legacy-setup"
-        }
-      ])
-    );
-
-    render(
-      <>
-        <QuoteSelectionDataBoundary
-          validItems={[{ kind: "setup", slug: "current-setup" }]}
-        />
-        <QuoteSelectionIndicator />
-        <QuoteSelectionSummary />
-      </>
-    );
-
-    await waitFor(() =>
-      expect(window.localStorage.getItem("skr.quoteSelection.v1")).toBe("[]")
-    );
-
-    expect(screen.getByLabelText("0 selected")).toBeInTheDocument();
-    expect(screen.queryByText("Legacy Setup")).not.toBeInTheDocument();
-    expect(screen.queryByText("Legacy Chair")).not.toBeInTheDocument();
-  });
-
-  it("does not count setup-included rental quantities in the request quote indicator", () => {
-    window.localStorage.setItem(
-      "skr.quoteSelection.v1",
-      JSON.stringify([
-        {
-          slug: "botanical-wedding",
-          name: "Botanical Wedding",
-          category: "Setups",
-          kind: "setup",
-          quantity: 1
-        },
-        {
-          slug: "aura-lounge-chair",
-          name: "Aura Lounge Chair",
-          category: "Seating",
-          kind: "setup-included",
-          quantity: 120,
-          setupName: "Botanical Wedding",
-          setupSlug: "botanical-wedding"
-        }
-      ])
-    );
-
-    render(<QuoteSelectionIndicator />);
-
-    expect(screen.getByLabelText("1 selected")).toBeInTheDocument();
-    expect(
-      screen.queryByLabelText(/121 selected/i)
-    ).not.toBeInTheDocument();
-  });
-
-  it("removes stale setup-included items when the parent setup is no longer selected", async () => {
-    window.localStorage.setItem(
-      "skr.quoteSelection.v1",
-      JSON.stringify([
-        {
-          slug: "aura-lounge-chair",
-          name: "Aura Lounge Chair",
-          category: "Seating",
-          kind: "setup-included",
-          quantity: 120,
-          setupName: "Legacy Setup",
-          setupSlug: "legacy-setup"
-        },
-        {
-          slug: "modular-lounge-set",
-          name: "Modular Lounge Set",
-          category: "Lounge Seating",
-          kind: "rental",
-          quantity: 3
-        }
-      ])
-    );
-
-    render(<QuoteSelectionSummary />);
-
-    expect(screen.queryByText("Legacy Setup")).not.toBeInTheDocument();
-    expect(screen.queryByText("Aura Lounge Chair")).not.toBeInTheDocument();
-    expect(screen.getByText("Modular Lounge Set")).toBeInTheDocument();
-
-    await waitFor(() =>
-      expect(window.localStorage.getItem("skr.quoteSelection.v1")).not.toContain(
-        "legacy-setup"
-      )
-    );
-  });
-
-  it("renders stored selections in the quote page selection summary", () => {
-    window.localStorage.setItem(
-      "skr.quoteSelection.v1",
-      JSON.stringify([
-        {
-          slug: "aura-lounge-chair",
-          name: "Aura Lounge Chair",
-          category: "Seating",
-          imageSrc: "/images/aura-lounge-chair.jpg",
-          quantity: 2
-        }
-      ])
-    );
-
-    const { container } = render(<QuoteSelectionSummary />);
-
-    expect(screen.getByText("Selected Rental Items")).toBeInTheDocument();
-    expect(screen.getByText("Aura Lounge Chair")).toBeInTheDocument();
-    expect(screen.getByText("Qty: 2")).toBeInTheDocument();
-    expect(screen.getByText("Seating")).toBeInTheDocument();
-    expect(screen.getByAltText("Aura Lounge Chair thumbnail")).toHaveAttribute(
-      "src",
-      "/images/aura-lounge-chair.jpg"
-    );
-    expect(screen.getByRole("link", { name: /details/i })).toHaveAttribute(
-      "href",
-      "/catalogue/aura-lounge-chair"
-    );
-    expect(screen.getByRole("link", { name: /details/i })).toHaveClass(
-      "stitch-selection-row__detail"
-    );
-    expect(container.querySelector(".stitch-selection-row__body")).toBeInTheDocument();
-    expect(container.querySelector(".stitch-selection-row__main")).toBeInTheDocument();
-    expect(container.querySelector(".stitch-selection-row__actions")).toBeInTheDocument();
-    expect(container.querySelector(".stitch-selection-row__meta")).toBeInTheDocument();
-  });
-
-  it("lets each quote page selection row clear only that item", () => {
-    window.localStorage.setItem(
-      "skr.quoteSelection.v1",
-      JSON.stringify([
-        {
-          slug: "monumental-oak-table",
-          name: "Monumental Oak Table",
-          category: "Tables",
-          imageSrc: "/images/monumental-oak-table.jpg",
-          quantity: 2
-        },
-        {
-          slug: "asymmetric-velvet-chair",
-          name: "Asymmetric Velvet Chair",
-          category: "Seating",
-          imageSrc: "/images/asymmetric-velvet-chair.jpg",
-          quantity: 1
-        }
-      ])
-    );
-
-    render(<QuoteSelectionSummary />);
-
-    fireEvent.click(
-      screen.getByRole("button", {
-        name: /remove monumental oak table from selection/i
-      })
-    );
-
-    expect(screen.queryByText("Monumental Oak Table")).not.toBeInTheDocument();
-    expect(screen.getByText("Asymmetric Velvet Chair")).toBeInTheDocument();
-    expect(window.localStorage.getItem("skr.quoteSelection.v1")).not.toContain(
-      "monumental-oak-table"
-    );
-    expect(window.localStorage.getItem("skr.quoteSelection.v1")).toContain(
-      "asymmetric-velvet-chair"
-    );
-  });
-
-  it("wraps setup included rental pieces under the selected setup direction", () => {
-    window.localStorage.setItem(
-      "skr.quoteSelection.v1",
-      JSON.stringify([
-        {
-          slug: "botanical-wedding",
-          name: "Botanical Wedding",
-          category: "Setups",
-          kind: "setup",
-          imageSrc: "/images/botanical-wedding.jpg",
-          quantity: 1
-        },
-        {
-          slug: "aura-lounge-chair",
-          name: "Aura Lounge Chair",
-          category: "Seating",
-          kind: "setup-included",
-          imageSrc: "/images/aura-lounge-chair.jpg",
-          quantity: 120,
-          setupBaseQuantity: 120,
-          setupName: "Botanical Wedding",
-          setupSlug: "botanical-wedding"
-        }
-      ])
-    );
-
-    render(<QuoteSelectionSummary />);
-
-    expect(screen.queryByText("Selected Rental Items")).not.toBeInTheDocument();
-    expect(screen.getByText("Selected Setup Directions")).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /show included pieces \(1\)/i })
-    ).toHaveAttribute("aria-expanded", "false");
-    expect(screen.queryByText("Included rental pieces")).not.toBeInTheDocument();
-    expect(screen.queryByText("Aura Lounge Chair")).not.toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: /show included pieces \(1\)/i }));
-
-    expect(screen.getByText("Included rental pieces")).toBeInTheDocument();
-    expect(screen.getByText("Aura Lounge Chair")).toBeInTheDocument();
-    expect(screen.getByText("Qty: 120")).toBeInTheDocument();
-    expect(screen.getAllByText("Botanical Wedding").length).toBeGreaterThan(0);
-    expect(screen.getAllByRole("link", { name: /details/i })[0]).toHaveAttribute(
-      "href",
-      "/listings/botanical-wedding"
-    );
-    expect(screen.getAllByRole("link", { name: /details/i })[1]).toHaveAttribute(
-      "href",
-      "/catalogue/aura-lounge-chair"
-    );
-    expect(
-      screen.queryByRole("button", {
-        name: /remove aura lounge chair from selection/i
-      })
-    ).not.toBeInTheDocument();
-  });
-
-  it("lets quote page selection rows adjust item quantities", () => {
-    window.localStorage.setItem(
-      "skr.quoteSelection.v1",
-      JSON.stringify([
-        {
-          slug: "slender-arch-floor-lamp",
-          name: "Slender Arch Floor Lamp",
-          category: "Lighting",
-          kind: "rental",
-          quantity: 3
-        }
-      ])
-    );
-
-    render(<QuoteSelectionSummary />);
-
-    fireEvent.click(
-      screen.getByRole("button", {
-        name: /decrease slender arch floor lamp quantity/i
-      })
-    );
-
-    expect(screen.getByText("Qty: 2")).toBeInTheDocument();
-
-    fireEvent.click(
-      screen.getByRole("button", {
-        name: /increase slender arch floor lamp quantity/i
-      })
-    );
-
-    expect(screen.getByText("Qty: 3")).toBeInTheDocument();
-  });
-
-  it("renders setup included rental pieces as read-only context rows", () => {
-    window.localStorage.setItem(
-      "skr.quoteSelection.v1",
-      JSON.stringify([
-        {
-          slug: "botanical-wedding",
-          name: "Botanical Wedding",
-          category: "Setups",
-          kind: "setup",
-          quantity: 1
-        },
-        {
-          slug: "aura-lounge-chair",
-          name: "Aura Lounge Chair",
-          category: "Seating",
-          kind: "setup-included",
-          quantity: 120,
-          setupBaseQuantity: 120,
-          setupName: "Botanical Wedding",
-          setupSlug: "botanical-wedding"
-        }
-      ])
-    );
-
-    render(<QuoteSelectionSummary />);
-
-    expect(screen.queryByText("Aura Lounge Chair")).not.toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: /show included pieces \(1\)/i }));
-
-    expect(screen.getByText("Aura Lounge Chair")).toBeInTheDocument();
-    expect(screen.getByText("Qty: 120")).toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", {
-        name: /decrease aura lounge chair quantity/i
-      })
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", {
-        name: /increase aura lounge chair quantity/i
-      })
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", {
-        name: /remove aura lounge chair from selection/i
-      })
-    ).not.toBeInTheDocument();
-  });
-
-  it("adjusts setup children by their original quantities when setup quantity changes", () => {
-    window.localStorage.setItem(
-      "skr.quoteSelection.v1",
-      JSON.stringify([
-        {
-          slug: "botanical-wedding",
-          name: "Botanical Wedding",
-          category: "Setups",
-          kind: "setup",
-          quantity: 2
-        },
-        {
-          slug: "aura-lounge-chair",
-          name: "Aura Lounge Chair",
-          category: "Seating",
-          kind: "setup-included",
-          quantity: 100,
-          setupBaseQuantity: 120,
-          setupName: "Botanical Wedding",
-          setupSlug: "botanical-wedding"
-        }
-      ])
-    );
-
-    render(<QuoteSelectionSummary />);
-
-    fireEvent.click(
-      screen.getByRole("button", {
-        name: /decrease botanical wedding quantity/i
-      })
-    );
-
-    expect(screen.getByText("Qty: 1")).toBeInTheDocument();
-    expect(window.localStorage.getItem("skr.quoteSelection.v1")).toContain(
-      "\"quantity\":0"
-    );
-
-    fireEvent.click(
-      screen.getByRole("button", {
-        name: /increase botanical wedding quantity/i
-      })
-    );
-
-    expect(screen.getByText("Qty: 2")).toBeInTheDocument();
-    expect(window.localStorage.getItem("skr.quoteSelection.v1")).toContain(
-      "\"quantity\":120"
-    );
-  });
-
-  it("restores removed setup included pieces when the setup quantity increases", () => {
-    window.localStorage.setItem(
-      "skr.quoteSelection.v1",
-      JSON.stringify([
-        {
-          slug: "botanical-wedding",
-          name: "Botanical Wedding",
-          category: "Setups",
-          kind: "setup",
+          kind: "catalogue",
+          reference: "lounge-chair",
           quantity: 1,
-          includedItems: [
-            {
-              slug: "aura-lounge-chair",
-              name: "Aura Lounge Chair",
-              category: "Seating",
-              kind: "setup-included",
-              quantity: 120,
-              setupBaseQuantity: 120,
-              setupName: "Botanical Wedding",
-              setupSlug: "botanical-wedding"
-            },
-            {
-              slug: "slender-arch-floor-lamp",
-              name: "Slender Arch Floor Lamp",
-              category: "Lighting",
-              kind: "setup-included",
-              quantity: 6,
-              setupBaseQuantity: 6,
-              setupName: "Botanical Wedding",
-              setupSlug: "botanical-wedding"
-            }
-          ]
-        },
-        {
-          slug: "slender-arch-floor-lamp",
-          name: "Slender Arch Floor Lamp",
-          category: "Lighting",
-          kind: "setup-included",
-          quantity: 6,
-          setupBaseQuantity: 6,
-          setupName: "Botanical Wedding",
-          setupSlug: "botanical-wedding"
+          source: "catalogue",
+          order: 0
         }
-      ])
+      ]
+    });
+    expect(screen.getByLabelText(/lounge chair: 1 selected/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /request quote with 1 selected item/i })
+    ).toBeInTheDocument();
+  });
+
+  it("updates quantity through 1..99 and treats zero as remove", () => {
+    window.sessionStorage.setItem(
+      QUOTE_SELECTION_STORAGE_KEY,
+      JSON.stringify({
+        version: 2,
+        rows: [
+          {
+            kind: "catalogue",
+            reference: "lounge-chair",
+            quantity: 98,
+            source: "catalogue",
+            order: 0
+          }
+        ]
+      })
     );
+    render(<QuoteSelectionButton item={chair} />);
 
-    render(<QuoteSelectionSummary />);
+    const increase = screen.getByRole("button", { name: /increase lounge chair/i });
+    fireEvent.click(increase);
 
-    expect(screen.queryByText("Aura Lounge Chair")).not.toBeInTheDocument();
+    expect(storedRows().rows[0]?.quantity).toBe(99);
+    expect(increase).toBeDisabled();
 
-    fireEvent.click(
-      screen.getByRole("button", {
-        name: /increase botanical wedding quantity/i
+    for (let index = 0; index < 99; index += 1) {
+      fireEvent.click(
+        screen.getByRole("button", { name: /decrease lounge chair/i })
+      );
+    }
+
+    expect(storedRows().rows).toEqual([]);
+  });
+
+  it("retains stale references and renders unavailable recovery without substitution", () => {
+    window.sessionStorage.setItem(
+      QUOTE_SELECTION_STORAGE_KEY,
+      JSON.stringify({
+        version: 2,
+        rows: [
+          {
+            kind: "catalogue",
+            reference: "retired-chair",
+            quantity: 2,
+            source: "catalogue",
+            order: 0
+          }
+        ]
       })
     );
 
-    expect(screen.queryByText("Aura Lounge Chair")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /show included pieces \(2\)/i }));
-    expect(screen.getByText("Aura Lounge Chair")).toBeInTheDocument();
-    expect(screen.getByText("Qty: 240")).toBeInTheDocument();
-    expect(screen.getByText("Qty: 12")).toBeInTheDocument();
-    expect(window.localStorage.getItem("skr.quoteSelection.v1")).toContain(
-      "\"quantity\":240"
+    render(
+      <>
+        <QuoteSelectionDataBoundary validItems={[]} />
+        <QuoteSelectionSummary catalogueAvailable={false} validItems={[]} />
+      </>
     );
-    expect(window.localStorage.getItem("skr.quoteSelection.v1")).toContain(
-      "\"quantity\":12"
-    );
+
+    expect(screen.getByText("Catalogue unavailable right now")).toBeInTheDocument();
+    expect(screen.getByText("Unavailable selection")).toBeInTheDocument();
+    expect(screen.getByText(/remove this item or browse/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: /remove unavailable selection from selection/i
+      })
+    ).toBeInTheDocument();
+    expect(storedRows().rows[0]?.reference).toBe("retired-chair");
   });
 
-  it("formats setup selections separately from direct rental selections", () => {
+  it("resolves display labels only from the current canonical catalogue", () => {
+    window.sessionStorage.setItem(
+      QUOTE_SELECTION_STORAGE_KEY,
+      JSON.stringify({
+        version: 2,
+        rows: [
+          {
+            kind: "catalogue",
+            reference: "lounge-chair",
+            quantity: 2,
+            source: "catalogue",
+            order: 0
+          }
+        ]
+      })
+    );
+
+    render(
+      <QuoteSelectionSummary
+        catalogueAvailable
+        validItems={[
+          {
+            kind: "rental",
+            slug: "lounge-chair",
+            name: "Canonical Lounge Chair",
+            category: "Canonical Seating"
+          }
+        ]}
+      />
+    );
+
+    expect(screen.getByText("Canonical Lounge Chair")).toBeInTheDocument();
+    expect(screen.getByText("Canonical Seating")).toBeInTheDocument();
+  });
+
+  it("distinguishes genuine empty and catalogue-unavailable states", () => {
+    const { rerender } = render(
+      <QuoteSelectionSummary catalogueAvailable validItems={[]} />
+    );
+
+    expect(screen.getByText("No items selected yet")).toBeInTheDocument();
+
+    rerender(<QuoteSelectionSummary catalogueAvailable={false} validItems={[]} />);
+
+    expect(screen.getByText("Catalogue unavailable right now")).toBeInTheDocument();
+  });
+
+  it("seeds only one validated URL fallback row in the current tab", () => {
+    render(
+      <QuoteSelectionSummary
+        catalogueAvailable
+        fallbackItems={[{ ...chair, quantity: 3 }]}
+        requestedSlug="lounge-chair"
+        validItems={[
+          {
+            kind: "rental",
+            slug: "lounge-chair",
+            name: "Lounge Chair"
+          }
+        ]}
+      />
+    );
+
+    expect(storedRows().rows).toEqual([
+      {
+        kind: "catalogue",
+        reference: "lounge-chair",
+        quantity: 3,
+        source: "url",
+        order: 0
+      }
+    ]);
+  });
+
+  it("preserves direct/setup formatting as derived canonical display context", () => {
     expect(
       formatQuoteSelectionItems([
         {
@@ -698,75 +251,5 @@ describe("QuoteSelectionControls", () => {
         "Botanical Wedding"
       ].join("\n")
     );
-  });
-
-  it("shows a selected quantity badge for selected listing cards", () => {
-    window.localStorage.setItem(
-      "skr.quoteSelection.v1",
-      JSON.stringify([
-        {
-          slug: "kinetic-dining-table",
-          name: "Kinetic Dining Table",
-          category: "Tables",
-          quantity: 5
-        }
-      ])
-    );
-
-    render(
-      <QuoteSelectionBadge
-        item={{
-          slug: "kinetic-dining-table",
-          name: "Kinetic Dining Table",
-          category: "Tables",
-          quantity: 1
-        }}
-      />
-    );
-
-    expect(screen.getByLabelText("Kinetic Dining Table: 5 selected")).toHaveTextContent(
-      "Qty 5"
-    );
-  });
-
-  it("refreshes stored selection thumbnails from listing cards", async () => {
-    window.localStorage.setItem(
-      "skr.quoteSelection.v1",
-      JSON.stringify([
-        {
-          slug: "kinetic-dining-table",
-          name: "Kinetic Dining Table",
-          category: "Tables",
-          quantity: 5
-        }
-      ])
-    );
-
-    render(
-      <QuoteSelectionBadge
-        item={{
-          slug: "kinetic-dining-table",
-          name: "Kinetic Dining Table",
-          category: "Tables",
-          imageSrc: "/images/kinetic-dining-table.jpg",
-          quantity: 1
-        }}
-      />
-    );
-
-    await waitFor(() =>
-      expect(window.localStorage.getItem("skr.quoteSelection.v1")).toContain(
-        "/images/kinetic-dining-table.jpg"
-      )
-    );
-
-    cleanup();
-    render(<QuoteSelectionSummary />);
-
-    expect(await screen.findByAltText("Kinetic Dining Table thumbnail")).toHaveAttribute(
-      "src",
-      "/images/kinetic-dining-table.jpg"
-    );
-    expect(screen.getByText("Qty: 5")).toBeInTheDocument();
   });
 });

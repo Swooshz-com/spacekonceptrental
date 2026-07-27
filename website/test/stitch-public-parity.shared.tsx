@@ -111,7 +111,7 @@ export function runStitchPublicParitySuite(label: string) {
       render(await QuotePage());
       expect(screen.getByRole("heading", { name: /request a rental quote/i })).toBeInTheDocument();
       expect(screen.getByRole("heading", { name: /enquiry details/i })).toBeInTheDocument();
-      expect(visibleText()).toMatch(/does not confirm final rental details/i);
+      expect(visibleText()).toMatch(/submission remains unavailable during the current review/i);
       expect(visibleText()).not.toMatch(forbiddenPublicTerms);
     });
 
@@ -124,8 +124,8 @@ export function runStitchPublicParitySuite(label: string) {
       cleanup();
 
       render(<QuoteRequestForm initialItemsText="Modular Lounge Set" />);
-      expect(screen.getByText(/rental fit is reviewed directly by the team/i)).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: /review and send an enquiry/i })).toBeInTheDocument();
+      expect(screen.getByText(/structured request for review/i)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /submission unavailable during review/i })).toBeInTheDocument();
       expect(visibleText()).not.toMatch(/track|status page|guaranteed|response time/i);
       expect(visibleText()).not.toMatch(forbiddenPublicTerms);
     });

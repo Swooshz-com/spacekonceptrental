@@ -17,6 +17,16 @@ export function normalizePublicListingSlug(value: unknown) {
   return publicListingSlugPattern.test(slug) ? slug : undefined;
 }
 
+export function normalizePublicQuoteQuantity(value: unknown) {
+  if (typeof value !== "string" || !/^(?:[1-9]|[1-9]\d)$/.test(value)) {
+    return undefined;
+  }
+
+  const quantity = Number(value);
+
+  return quantity >= 1 && quantity <= 99 ? quantity : undefined;
+}
+
 export function normalizePublicDiscoveryContext(value: unknown) {
   if (typeof value !== "string") {
     return undefined;
@@ -45,7 +55,7 @@ export function getQuoteHrefForListing(slug: string) {
   const listingSlug = normalizePublicListingSlug(slug);
 
   return listingSlug
-    ? `/quote?listing=${encodeURIComponent(listingSlug)}`
+    ? `/quote?listing=${encodeURIComponent(listingSlug)}&qty=1`
     : "/quote";
 }
 

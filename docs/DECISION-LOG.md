@@ -3758,3 +3758,16 @@ customer login remains unimplemented. Customer dashboard remains unimplemented.
 Custom CRM remains rejected/deferred. Google Workspace/domain email remains
 human/admin email first. Resend remains optional future transactional email
 only.
+## 2026-07-27: Structured Quote Draft With Compile-Time Submission Hold
+
+Decision: use the versioned per-tab `skr.quoteSelection.v2` model described in
+`docs/architecture/STRUCTURED-QUOTE-UX.md`. Catalogue references and manual
+requirements stay distinct, quantities are integers `1..99`, duplicate
+catalogue references aggregate without overflow mutation, and browser claims
+never establish catalogue identity.
+
+Public quote submission is compile-time fixed to disabled. The client has no
+quote request path and direct POST fails with generic HTTP 503 before request
+parsing, persistence or delivery access. Enabling submission requires a later
+separately reviewed database and runtime lane. No migration, atomic RPC,
+provider, deployment or live operation is part of this decision.

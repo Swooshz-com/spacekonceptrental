@@ -30,8 +30,18 @@ export function quoteSelectionValidItemsForCatalogue(
   catalogue: PublicCatalogue
 ): QuoteSelectionValidItem[] {
   return catalogue.products.flatMap((product) => [
-    { kind: "rental" as const, slug: product.slug },
-    { kind: "setup" as const, slug: product.slug }
+    {
+      category: productCategory(product),
+      kind: "rental" as const,
+      name: product.name,
+      slug: product.slug
+    },
+    {
+      category: productCategory(product),
+      kind: "setup" as const,
+      name: product.name,
+      slug: product.slug
+    }
   ]);
 }
 

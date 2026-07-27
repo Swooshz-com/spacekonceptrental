@@ -234,7 +234,7 @@ describe("public page shells", () => {
     expect(screen.getByLabelText(/your name/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();
     expect(screen.queryByLabelText(/requested listings or items/i)).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /review and send an enquiry/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /submission unavailable during review/i })).toBeInTheDocument();
     expect(document.body.textContent).not.toMatch(/confirmed order|online ordering|checkout|payment/i);
     expect(JSON.stringify(rootMetadata)).toMatch(/SpaceKonceptRental/);
     expect(JSON.stringify(rootMetadata)).not.toMatch(/Space Koncept Rentals|shell|mvp|checkout|payment|online ordering/i);

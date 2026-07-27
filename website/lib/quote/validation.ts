@@ -36,7 +36,7 @@ const MAX_CRM_SYNC_ERROR_LENGTH = 500;
 const MAX_ITEM_NAME_LENGTH = 180;
 const MAX_ITEM_NOTES_LENGTH = 500;
 const MAX_ITEMS = 20;
-const MAX_QUANTITY = 10_000;
+const MAX_QUANTITY = 99;
 const listingSlugPattern = /^[a-z0-9][a-z0-9-]*$/;
 const requestIdPattern = /^[A-Za-z0-9._:-]+$/;
 

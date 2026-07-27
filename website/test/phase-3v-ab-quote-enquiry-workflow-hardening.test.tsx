@@ -233,16 +233,13 @@ describe("Phase 3V-A/B quote enquiry workflow hardening", () => {
     expect(screen.getByRole("heading", { name: /request a rental quote/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/event date/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/venue or location/i)).toBeInTheDocument();
-    expect(container.querySelector<HTMLInputElement>('input[name="items"]')).toHaveValue(
-      "Listing reference: missing-listing"
-    );
+    expect(container.querySelector<HTMLInputElement>('input[name="items"]')).toBeNull();
     expect(screen.queryByLabelText(/requested listings or items/i)).not.toBeInTheDocument();
-    expect(screen.getAllByText(/quantities/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/alternates/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/setup, access, and timing notes/i).length).toBeGreaterThan(0);
+    expect(screen.getByLabelText(/manual item quantity/i)).toBeInTheDocument();
+    expect(screen.getByText(/no substitute is selected/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/preferred contact method/i)).toBeInTheDocument();
-    expect(readRepoFile("website/components/QuoteRequestForm.tsx")).toContain("Enquiry Received");
-    expect(screen.getAllByText(/share more details/i).length).toBeGreaterThan(0);
+    expect(readRepoFile("website/components/QuoteRequestForm.tsx")).not.toContain("fetch(");
+    expect(screen.getByText(/structured request for review/i)).toBeInTheDocument();
     expect(screen.getByText(/the listing link may be old or unavailable/i)).toBeInTheDocument();
 
     const quotePageSource = readRepoFile("website/app/quote/page.tsx");

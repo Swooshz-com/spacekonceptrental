@@ -1,7 +1,12 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { handleQuotePost, POST, resetQuoteRouteStateForTests } from "./route";
+import {
+  handleQuotePost as handleDisabledQuotePost,
+  handleQuotePostEnabledForTests as handleQuotePost,
+  POST,
+  resetQuoteRouteStateForTests
+} from "./route";
 
 const envKeys = [
   "SUPABASE_URL",
@@ -776,7 +781,7 @@ describe("POST /api/quote", () => {
     process.env.QUOTE_WORKSPACE_ID =
       "11111111-1111-4111-8111-111111111111";
 
-    const response = await POST(postJson(validPayload));
+    const response = await handleQuotePost(postJson(validPayload));
     const body = await response.json();
     const serialized = JSON.stringify(body);
 
@@ -794,10 +799,41 @@ describe("POST /api/quote", () => {
       "utf8"
     );
 
-    expect(formSource).toContain('fetch("/api/quote"');
+    expect(formSource).not.toContain("fetch(");
     expect(formSource).not.toContain("N8N_ENQUIRY_HANDOFF_WEBHOOK_URL");
     expect(formSource).not.toContain("N8N_ENQUIRY_HANDOFF_SHARED_SECRET");
     expect(formSource).not.toContain("N8N_CHAT_WEBHOOK_URL");
     expect(formSource).not.toMatch(/webhook/i);
   });
 });
+  it("returns a generic 503 before reading the body or calling any dependency", async () => {
+    const request = new Request("http://localhost/api/quote", {
+      method: "POST",
+      body: "{malformed"
+    });
+    const bodyRead = vi.spyOn(request.body!, "getReader");
+    const repository = vi.fn();
+    const emailHandoff = vi.fn();
+    const handoffFinalizer = vi.fn();
+
+    const response = await handleDisabledQuotePost(
+      request,
+      repository,
+      emailHandoff,
+      handoffFinalizer
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(503);
+    expect(body).toEqual({
+      error: {
+        code: "QUOTE_SUBMISSION_DISABLED",
+        message:
+          "Quote submission is unavailable while this service is under review."
+      }
+    });
+    expect(bodyRead).not.toHaveBeenCalled();
+    expect(repository).not.toHaveBeenCalled();
+    expect(emailHandoff).not.toHaveBeenCalled();
+    expect(handoffFinalizer).not.toHaveBeenCalled();
+  });
