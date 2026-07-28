@@ -771,4 +771,189 @@ describe("QuoteRequestForm", () => {
       });
     });
   });
+
+  describe("Run-12 — phone digit validation", () => {
+    function submitWithPhone(phone: string) {
+      render(<QuoteRequestForm />);
+      fireEvent.change(screen.getByLabelText(/your name/i), {
+        target: { value: "Maya Tan" }
+      });
+      fireEvent.change(screen.getByLabelText(/preferred contact method/i), {
+        target: { value: "phone" }
+      });
+      fireEvent.change(screen.getByLabelText(/phone number/i), {
+        target: { value: phone }
+      });
+      fireEvent.click(
+        screen.getByRole("button", {
+          name: /submission unavailable during review/i
+        })
+      );
+    }
+
+    it("accepts a valid international-style phone number", () => {
+      submitWithPhone("+44 20 7946 0958");
+      expect(screen.queryByText(/phone number must contain at least one digit/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/phone number is required/i)).not.toBeInTheDocument();
+    });
+
+    it("accepts a phone number with spaces and punctuation", () => {
+      submitWithPhone("(020) 7946-0958");
+      expect(screen.queryByText(/phone number must contain at least one digit/i)).not.toBeInTheDocument();
+    });
+
+    it("rejects punctuation-only phone value ++++++", () => {
+      submitWithPhone("++++++");
+      expect(screen.getAllByText(/phone number must contain at least one digit/i).length).toBeGreaterThan(0);
+    });
+
+    it("rejects punctuation-only phone value ((((((", () => {
+      submitWithPhone("(((((( ");
+      expect(screen.getAllByText(/phone number must contain at least one digit/i).length).toBeGreaterThan(0);
+    });
+
+    it("rejects punctuation-only phone value +.....", () => {
+      submitWithPhone("+.....");
+      expect(screen.getAllByText(/phone number must contain at least one digit/i).length).toBeGreaterThan(0);
+    });
+
+    it("rejects letters in phone number", () => {
+      submitWithPhone("abc123def");
+      expect(screen.getAllByText(/enter a valid phone number/i).length).toBeGreaterThan(0);
+    });
+
+    it("rejects empty required phone value", () => {
+      render(<QuoteRequestForm />);
+      fireEvent.change(screen.getByLabelText(/your name/i), {
+        target: { value: "Maya Tan" }
+      });
+      fireEvent.change(screen.getByLabelText(/preferred contact method/i), {
+        target: { value: "phone" }
+      });
+      fireEvent.click(
+        screen.getByRole("button", {
+          name: /submission unavailable during review/i
+        })
+      );
+      expect(screen.getAllByText(/phone number is required for phone follow-up/i).length).toBeGreaterThan(0);
+    });
+  });
+
+  describe("Run-12 — form storage read failure handling", () => {
+    function createThrowingStorage() {
+      const real = window.sessionStorage;
+      const faulty: Storage = {
+        get length(): number { throw new Error("storage blocked"); },
+        key: (): string | null => { throw new Error("storage blocked"); },
+        getItem: (): string | null => { throw new Error("storage blocked"); },
+        setItem: (): void => { throw new Error("storage blocked"); },
+        removeItem: (): void => { throw new Error("storage blocked"); },
+        clear: (): void => { throw new Error("storage blocked"); }
+      };
+      Object.defineProperty(window, "sessionStorage", {
+        value: faulty,
+        writable: true,
+        configurable: true
+      });
+      return {
+        restore: () => {
+          Object.defineProperty(window, "sessionStorage", {
+            value: real,
+            writable: true,
+            configurable: true
+          });
+        }
+      };
+    }
+
+    it("does not crash on mount when sessionStorage.getItem throws", () => {
+      const faulty = createThrowingStorage();
+      try {
+        expect(() => render(<QuoteRequestForm />)).not.toThrow();
+        expect(screen.getByText(/selection storage is unavailable/i)).toBeInTheDocument();
+      } finally {
+        faulty.restore();
+      }
+    });
+
+    it("shows bounded storage error and does not emit success event when storage throws", () => {
+      const faulty = createThrowingStorage();
+      const dispatchSpy = vi.spyOn(window, "dispatchEvent");
+      try {
+        render(<QuoteRequestForm />);
+        expect(screen.getByText(/selection storage is unavailable/i)).toBeInTheDocument();
+        expect(dispatchSpy).not.toHaveBeenCalledWith(
+          expect.objectContaining({ type: "skr:quote-selection-change" })
+        );
+      } finally {
+        dispatchSpy.mockRestore();
+        faulty.restore();
+      }
+    });
+
+    it("manual add resynchronisation does not crash when reads throw", () => {
+      render(<QuoteRequestForm />);
+      const faulty = createThrowingStorage();
+      try {
+        fireEvent.change(screen.getByLabelText(/manual item description/i), {
+          target: { value: "Custom counter" }
+        });
+        fireEvent.click(
+          screen.getByRole("button", { name: /add manual requirement/i })
+        );
+        expect(screen.getAllByText(/storage could not be updated|could not be added/i).length).toBeGreaterThan(0);
+      } finally {
+        faulty.restore();
+      }
+    });
+  });
+
+  describe("Run-12 — contact error preservation after manual add", () => {
+    it("preserves contact errors when a valid manual requirement is added", () => {
+      render(<QuoteRequestForm />);
+
+      fireEvent.click(
+        screen.getByRole("button", {
+          name: /submission unavailable during review/i
+        })
+      );
+
+      expect(screen.getByRole("alert")).toHaveTextContent(/name is required/i);
+      expect(screen.getByRole("alert")).toHaveTextContent(/select a published catalogue listing/i);
+
+      fireEvent.change(screen.getByLabelText(/manual item description/i), {
+        target: { value: "Custom counter" }
+      });
+      fireEvent.click(
+        screen.getByRole("button", { name: /add manual requirement/i })
+      );
+
+      expect(screen.getByRole("alert")).toHaveTextContent(/name is required/i);
+      expect(screen.queryByText(/select a published catalogue listing/i)).not.toBeInTheDocument();
+    });
+
+    it("preserves email error when preferred contact is email and manual row is added", () => {
+      render(<QuoteRequestForm />);
+
+      fireEvent.change(screen.getByLabelText(/your name/i), {
+        target: { value: "Maya Tan" }
+      });
+      fireEvent.click(
+        screen.getByRole("button", {
+          name: /submission unavailable during review/i
+        })
+      );
+
+      expect(screen.getByRole("alert")).toHaveTextContent(/email address is required/i);
+
+      fireEvent.change(screen.getByLabelText(/manual item description/i), {
+        target: { value: "Custom counter" }
+      });
+      fireEvent.click(
+        screen.getByRole("button", { name: /add manual requirement/i })
+      );
+
+      expect(screen.getByRole("alert")).toHaveTextContent(/email address is required/i);
+    });
+  });
 });

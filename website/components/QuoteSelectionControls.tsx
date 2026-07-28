@@ -22,7 +22,7 @@ export type QuoteSelectionItem = {
   category?: string;
   imageSrc?: string;
   includedItems?: QuoteSelectionItem[];
-  kind?: "rental" | "setup" | "setup-included";
+  kind?: "rental" | "setup" | "setup-included" | "manual";
   name: string;
   quantity: number;
   setupBaseQuantity?: number;
@@ -31,6 +31,7 @@ export type QuoteSelectionItem = {
   slug: string;
   unavailable?: boolean;
   selectionSource?: "catalogue" | "url";
+  manualKey?: string;
 };
 
 type QuoteSelectionSummaryItem = QuoteSelectionItem;
@@ -208,17 +209,66 @@ function readQuoteSelection(): QuoteSelectionItem[] {
     );
 
     return rows
-      .filter((row) => row.kind === "catalogue")
-      .map((row) => ({
+      .map((row) => {
+        if (row.kind === "catalogue") {
+          return {
+            slug: row.reference,
+            name: row.reference,
+            kind: row.subkind,
+            quantity: row.quantity,
+            selectionSource: row.source
+          };
+        }
+        return {
+          slug: `manual-${row.key}`,
+          name: "Manual requirement",
+          kind: "manual" as const,
+          quantity: row.quantity,
+          manualKey: row.key
+        };
+      });
+  } catch {
+    return [];
+  }
+}
+
+type ReadSelectionGuardedResult =
+  | { ok: true; items: QuoteSelectionItem[]; serialized: string | null }
+  | { ok: false; code: "storage-unavailable" };
+
+function readQuoteSelectionGuarded(): ReadSelectionGuardedResult {
+  if (typeof window === "undefined") {
+    return { ok: true, items: [], serialized: null };
+  }
+
+  let serialized: string | null;
+  try {
+    serialized = window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY);
+  } catch {
+    return { ok: false, code: "storage-unavailable" };
+  }
+
+  const rows = allRowsFromSelection(serialized);
+  const items = rows.map((row) => {
+    if (row.kind === "catalogue") {
+      return {
         slug: row.reference,
         name: row.reference,
         kind: row.subkind,
         quantity: row.quantity,
         selectionSource: row.source
-      }));
-  } catch {
-    return [];
-  }
+      };
+    }
+    return {
+      slug: `manual-${row.key}`,
+      name: "Manual requirement",
+      kind: "manual" as const,
+      quantity: row.quantity,
+      manualKey: row.key
+    };
+  });
+
+  return { ok: true, items, serialized };
 }
 
 function buildBrowserStorage(): QuoteSelectionStorageAdapter {
@@ -233,15 +283,20 @@ function buildBrowserStorage(): QuoteSelectionStorageAdapter {
   };
 }
 
-function writeUrlFallback(item: QuoteSelectionItem) {
+function writeUrlFallback(item: QuoteSelectionItem): boolean {
   if (typeof window === "undefined") {
-    return;
+    return false;
   }
 
-  const serialized = window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY);
+  let serialized: string | null;
+  try {
+    serialized = window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY);
+  } catch {
+    return false;
+  }
 
   if (!shouldSeedUrlFallback(serialized)) {
-    return;
+    return false;
   }
 
   const normalized = createCatalogueSelection([
@@ -254,10 +309,10 @@ function writeUrlFallback(item: QuoteSelectionItem) {
   ]);
 
   if (!normalized.ok) {
-    return;
+    return false;
   }
 
-  commitQuoteSelectionChange(buildBrowserStorage(), {
+  const result = commitQuoteSelectionChange(buildBrowserStorage(), {
     kind: "replace",
     selection: {
       version: 2,
@@ -267,6 +322,8 @@ function writeUrlFallback(item: QuoteSelectionItem) {
       }))
     }
   });
+
+  return result.ok;
 }
 
 function mergeQuoteItemMetadata(
@@ -624,6 +681,39 @@ function SetupSelectionGroup({
   );
 }
 
+function ManualSelectionGroup({ items }: { items: QuoteSelectionSummaryItem[] }) {
+  if (!items.length) {
+    return null;
+  }
+
+  const label = items.length === 1 ? "1 manual requirement" : `${items.length} manual requirements`;
+
+  return (
+    <div className="stitch-selection-group stitch-selection-group--manual">
+      <h3>{label}</h3>
+      {items.map((item) => (
+        <article
+          className="stitch-selection-row"
+          data-kind="manual"
+          key={item.manualKey ?? item.slug}
+        >
+          <span className="stitch-selection-row__icon" aria-hidden="true">
+            SK
+          </span>
+          <div className="stitch-selection-row__body">
+            <div className="stitch-selection-row__main">
+              <strong>Manual requirement</strong>
+              <small className="stitch-selection-row__quantity">
+                Qty: {item.quantity}
+              </small>
+            </div>
+          </div>
+        </article>
+      ))}
+    </div>
+  );
+}
+
 export function QuoteSelectionSummary({
   catalogueAvailable = true,
   category,
@@ -643,7 +733,13 @@ export function QuoteSelectionSummary({
 }) {
   const [items, setItems] = useState<QuoteSelectionItem[]>([]);
   const [hasCompleteSelection, setHasCompleteSelection] = useState(false);
+  const [fallbackConsumed, setFallbackConsumed] = useState(false);
+  const [storageUnavailable, setStorageUnavailable] = useState(false);
   const resolvedItems = items.map((item) => {
+    if (item.kind === "manual") {
+      return item;
+    }
+
     const canonical = validItems.find(
       (candidate) => candidate.slug === item.slug && candidate.kind === item.kind
     );
@@ -663,20 +759,28 @@ export function QuoteSelectionSummary({
         };
   });
 
-  const visibleItems: QuoteSelectionSummaryItem[] = resolvedItems.length
+  const manualItems = resolvedItems.filter((item) => item.kind === "manual");
+  const catalogueItems = resolvedItems.filter((item) => item.kind !== "manual");
+  const hasAnyItems = resolvedItems.length > 0;
+
+  const visibleItems: QuoteSelectionSummaryItem[] = catalogueItems.length
     ? resolvedItems
     : hasCompleteSelection
-      ? []
+      ? manualItems.length ? manualItems : []
       : fallbackItems;
   const hasDiscoveryContext = Boolean(requestedSlug || category || event || search);
   const groupedItems = getGroupedSelectionItems(visibleItems);
 
   useEffect(() => {
     function syncSelection() {
-      setItems(readQuoteSelection());
-      if (typeof window !== "undefined") {
-        const serialized = window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY);
-        setHasCompleteSelection(!shouldSeedUrlFallback(serialized));
+      const result = readQuoteSelectionGuarded();
+
+      if (result.ok) {
+        setItems(result.items);
+        setStorageUnavailable(false);
+        setHasCompleteSelection(!shouldSeedUrlFallback(result.serialized));
+      } else {
+        setStorageUnavailable(true);
       }
     }
 
@@ -691,27 +795,60 @@ export function QuoteSelectionSummary({
   }, []);
 
   useEffect(() => {
+    if (fallbackConsumed) {
+      return;
+    }
+
+    if (!catalogueAvailable) {
+      return;
+    }
+
     const fallbackItem = fallbackItems[0];
 
-    if (
-      requestedSlug &&
-      fallbackItem?.slug === requestedSlug &&
-      shouldSeedUrlFallback(
-        typeof window === "undefined"
-          ? null
-          : window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY)
-      )
-    ) {
-      writeUrlFallback(fallbackItem);
+    if (!requestedSlug || fallbackItem?.slug !== requestedSlug) {
+      return;
+    }
+
+    if (storageUnavailable) {
+      return;
+    }
+
+    let serialized: string | null;
+    try {
+      serialized = window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY);
+    } catch {
+      setStorageUnavailable(true);
+      return;
+    }
+
+    if (!shouldSeedUrlFallback(serialized)) {
+      return;
+    }
+
+    const seeded = writeUrlFallback(fallbackItem);
+
+    if (seeded) {
+      setFallbackConsumed(true);
       setItems(readQuoteSelection());
     }
-  }, [fallbackItems, requestedSlug]);
+  }, [fallbackItems, requestedSlug, catalogueAvailable, fallbackConsumed, storageUnavailable]);
+
+  const manualCount = manualItems.length;
 
   return (
     <section className="stitch-quote-card stitch-quote-selection">
       <p className="stitch-eyebrow">Your Selection</p>
       <h2>Your Selection</h2>
-      {!catalogueAvailable ? (
+      {storageUnavailable ? (
+        <div className="stitch-selection-state" role="status">
+          <strong>Selection storage unavailable</strong>
+          <p>
+            Selection storage is unavailable in this browser context. Existing
+            references are kept where possible. Add a bounded manual requirement
+            or browse again later.
+          </p>
+        </div>
+      ) : !catalogueAvailable ? (
         <>
           <div className="stitch-selection-state" role="status">
             <strong>Catalogue unavailable right now</strong>
@@ -727,33 +864,43 @@ export function QuoteSelectionSummary({
               </p>
             ) : null}
           </div>
-          {resolvedItems.length ? (
+          {catalogueItems.length ? (
             <SelectionGroup
               detailBasePath="/catalogue"
-              items={resolvedItems}
+              items={catalogueItems}
               title="Unavailable selections"
             />
           ) : null}
+          {manualCount ? (
+            <ManualSelectionGroup items={manualItems} />
+          ) : null}
         </>
-      ) : visibleItems.length ? (
+      ) : hasAnyItems ? (
         <>
-          <SelectionGroup
-            detailBasePath="/catalogue"
-            items={groupedItems.rentalItems}
-            title="Selected Rental Items"
-          />
-          {groupedItems.setupGroups.length ? (
-            <div className="stitch-selection-group stitch-selection-group--setups">
-              <h3>Selected Setup Directions</h3>
-              {groupedItems.setupGroups.map((group) => (
-                <SetupSelectionGroup
-                  includedItems={group.includedItems}
-                  key={group.setupItem?.slug ?? group.setupName}
-                  setupItem={group.setupItem}
-                  setupName={group.setupName}
-                />
-              ))}
-            </div>
+          {catalogueItems.length ? (
+            <>
+              <SelectionGroup
+                detailBasePath="/catalogue"
+                items={groupedItems.rentalItems}
+                title="Selected Rental Items"
+              />
+              {groupedItems.setupGroups.length ? (
+                <div className="stitch-selection-group stitch-selection-group--setups">
+                  <h3>Selected Setup Directions</h3>
+                  {groupedItems.setupGroups.map((group) => (
+                    <SetupSelectionGroup
+                      includedItems={group.includedItems}
+                      key={group.setupItem?.slug ?? group.setupName}
+                      setupItem={group.setupItem}
+                      setupName={group.setupName}
+                    />
+                  ))}
+                </div>
+              ) : null}
+            </>
+          ) : null}
+          {manualCount ? (
+            <ManualSelectionGroup items={manualItems} />
           ) : null}
         </>
       ) : (
@@ -783,6 +930,7 @@ export function QuoteSelectionSummary({
 
 export function QuoteSelectionButton({ item }: { item: QuoteSelectionItem }) {
   const [items, setItems] = useState<QuoteSelectionItem[]>([]);
+  const [storageError, setStorageError] = useState<string | null>(null);
   const normalizedButtonItem = normalizeQuoteItem(item);
   const selectedItem = normalizedButtonItem
     ? items.find(
@@ -835,9 +983,16 @@ export function QuoteSelectionButton({ item }: { item: QuoteSelectionItem }) {
     });
 
     if (!result.ok) {
+      setItems(readQuoteSelection());
+      setStorageError(
+        result.code === "storage-exception" || result.code === "read-back-mismatch" || result.code === "restore-failed"
+          ? "Selection storage could not be updated. The current selection has been reloaded."
+          : "This selection could not be updated. Check the limits and try again."
+      );
       return;
     }
 
+    setStorageError(null);
     setItems(readQuoteSelection());
   }
 
@@ -857,7 +1012,15 @@ export function QuoteSelectionButton({ item }: { item: QuoteSelectionItem }) {
     const subkind: CatalogueSelectionSubkind =
       normalizedItem.kind === "setup" ? "setup" : "rental";
 
-    const serialized = window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY);
+    let serialized: string | null;
+    try {
+      serialized = window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY);
+    } catch {
+      setItems(readQuoteSelection());
+      setStorageError("Selection storage could not be read. The current selection has been reloaded.");
+      return;
+    }
+
     const current = parseStoredQuoteSelection(serialized);
 
     if (!current.ok) {
@@ -886,9 +1049,16 @@ export function QuoteSelectionButton({ item }: { item: QuoteSelectionItem }) {
     });
 
     if (!result.ok) {
+      setItems(readQuoteSelection());
+      setStorageError(
+        result.code === "storage-exception" || result.code === "read-back-mismatch" || result.code === "restore-failed"
+          ? "Selection storage could not be updated. The current selection has been reloaded."
+          : "This selection could not be updated. Check the limits and try again."
+      );
       return;
     }
 
+    setStorageError(null);
     setItems(readQuoteSelection());
   }
 
@@ -924,6 +1094,11 @@ export function QuoteSelectionButton({ item }: { item: QuoteSelectionItem }) {
       >
         +
       </button>
+      {storageError ? (
+        <small className="stitch-quote-storage-error" role="alert">
+          {storageError}
+        </small>
+      ) : null}
     </span>
   );
 }

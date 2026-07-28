@@ -21,6 +21,7 @@ import {
 const quoteSelectionChangeEvent = "skr:quote-selection-change";
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const phonePattern = /^[+()\d][+()\d\s.-]{5,39}$/;
+const phoneDigitPattern = /\d/;
 
 type FieldErrors = Partial<
   Record<
@@ -29,21 +30,33 @@ type FieldErrors = Partial<
     | "customerPhone"
     | "selection"
     | "manualDescription"
-    | "manualQuantity",
+    | "manualQuantity"
+    | "storage",
     string
   >
 >;
 
-function readSelection() {
+type ReadSelectionResult =
+  | { ok: true; value: import("../lib/quote/selection-model").QuoteSelection }
+  | { ok: false; code: "storage-unavailable" };
+
+function readSelection(): ReadSelectionResult {
   if (typeof window === "undefined") {
-    return emptyQuoteSelection();
+    return { ok: true, value: emptyQuoteSelection() };
   }
 
-  const parsed = parseStoredQuoteSelection(
-    window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY)
-  );
+  let raw: string | null;
+  try {
+    raw = window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY);
+  } catch {
+    return { ok: false, code: "storage-unavailable" };
+  }
 
-  return parsed.ok ? parsed.value : emptyQuoteSelection();
+  const parsed = parseStoredQuoteSelection(raw);
+
+  return parsed.ok
+    ? { ok: true, value: parsed.value }
+    : { ok: true, value: emptyQuoteSelection() };
 }
 
 function buildBrowserStorage(): QuoteSelectionStorageAdapter {
@@ -93,6 +106,7 @@ export default function QuoteRequestForm({
   const [selection, setSelection] = useState<QuoteSelection>(
     emptyQuoteSelection
   );
+  const [storageUnavailable, setStorageUnavailable] = useState(false);
   const [preferredContactMethod, setPreferredContactMethod] = useState<
     "email" | "phone"
   >("email");
@@ -103,7 +117,14 @@ export default function QuoteRequestForm({
 
   useEffect(() => {
     function syncSelection() {
-      setSelection(readSelection());
+      const result = readSelection();
+
+      if (result.ok) {
+        setSelection(result.value);
+        setStorageUnavailable(false);
+      } else {
+        setStorageUnavailable(true);
+      }
     }
 
     syncSelection();
@@ -160,13 +181,15 @@ export default function QuoteRequestForm({
     });
 
     if (!result.ok) {
-      setSelection(readSelection());
-      setFieldErrors({
+      const resync = readSelection();
+      setSelection(resync.ok ? resync.value : selection);
+      setFieldErrors((prev) => ({
+        ...prev,
         manualDescription:
           result.code === "restore-failed" || result.code === "read-back-mismatch" || result.code === "storage-exception"
             ? "Storage could not be updated. The current selection has been reloaded from this tab."
             : "This manual requirement could not be added. Check the limits and try again."
-      });
+      }));
       return;
     }
 
@@ -174,7 +197,10 @@ export default function QuoteRequestForm({
     setManualDescription("");
     setManualQuantity("1");
     setManualNotes("");
-    setFieldErrors({});
+    setFieldErrors((prev) => {
+      const { selection: _selection, manualDescription: _manualDescription, manualQuantity: _manualQuantity, ...rest } = prev;
+      return rest;
+    });
   }
 
   function removeManualRequirement(key: string) {
@@ -194,7 +220,8 @@ export default function QuoteRequestForm({
         return rest;
       });
     } else {
-      setSelection(readSelection());
+      const resync = readSelection();
+      setSelection(resync.ok ? resync.value : selection);
       setFieldErrors((prev) => ({
         ...prev,
         selection:
@@ -226,6 +253,8 @@ export default function QuoteRequestForm({
 
     if (phone && !phonePattern.test(phone)) {
       errors.customerPhone = "Enter a valid phone number.";
+    } else if (phone && !phoneDigitPattern.test(phone)) {
+      errors.customerPhone = "Phone number must contain at least one digit.";
     }
 
     if (preferredContactMethod === "email" && !email) {
@@ -234,12 +263,23 @@ export default function QuoteRequestForm({
 
     if (preferredContactMethod === "phone" && !phone) {
       errors.customerPhone = "Phone number is required for phone follow-up.";
+    } else if (preferredContactMethod === "phone" && phone && !phoneDigitPattern.test(phone)) {
+      errors.customerPhone = "Phone number must contain at least one digit.";
     }
 
-    const storedSerialized =
-      typeof window === "undefined"
-        ? null
-        : window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY);
+    if (storageUnavailable) {
+      errors.storage = "Selection storage is unavailable in this browser context.";
+    }
+
+    let storedSerialized: string | null = null;
+
+    if (!storageUnavailable && typeof window !== "undefined") {
+      try {
+        storedSerialized = window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY);
+      } catch {
+        errors.storage = "Selection storage is unavailable in this browser context.";
+      }
+    }
 
     const hasAcceptedSelection = selectionSatisfiesRequiredSelection(
       storedSerialized,
@@ -272,6 +312,15 @@ export default function QuoteRequestForm({
         follow-up. Exact rental details and alternatives are confirmed only by
         the team.
       </p>
+
+      {storageUnavailable ? (
+        <section
+          className="quote-form__status quote-form__status--error"
+          role="alert"
+        >
+          <p>Selection storage is unavailable in this browser context. Existing catalogue selections cannot be read or updated.</p>
+        </section>
+      ) : null}
 
       {errorEntries.length ? (
         <section

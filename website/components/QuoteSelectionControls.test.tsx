@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { QUOTE_SELECTION_STORAGE_KEY } from "../lib/quote/selection-model";
 import {
   QuoteSelectionBadge,
@@ -530,5 +530,460 @@ describe("QuoteSelectionControls", () => {
     expect("clearStoredQuoteSelection" in mod).toBe(false);
     expect("getStoredQuoteSelection" in mod).toBe(false);
     expect("writeQuoteSelection" in mod).toBe(false);
+  });
+
+  describe("Run-12 — catalogue transaction failure handling", () => {
+    function createFaultyStorage(overrides: {
+      writeMismatch?: boolean;
+      removeThrows?: boolean;
+      seedValue?: string | null;
+    }) {
+      const real = window.sessionStorage;
+      let inner: string | null = overrides.seedValue ?? null;
+      let writeCount = 0;
+      const faulty: Storage = {
+        get length() { return inner === null ? 0 : 1; },
+        key: (index: number) => index === 0 && inner !== null ? QUOTE_SELECTION_STORAGE_KEY : null,
+        getItem: (key: string) => key === QUOTE_SELECTION_STORAGE_KEY ? inner : real.getItem(key),
+        setItem: (key: string, value: string) => {
+          if (key === QUOTE_SELECTION_STORAGE_KEY) {
+            writeCount += 1;
+            if (overrides.writeMismatch && writeCount === 1) {
+              inner = '{"tampered":true}';
+              return;
+            }
+            inner = value;
+            return;
+          }
+          real.setItem(key, value);
+        },
+        removeItem: (key: string) => {
+          if (key === QUOTE_SELECTION_STORAGE_KEY) {
+            if (overrides.removeThrows) {
+              throw new Error("quota");
+            }
+            inner = null;
+            return;
+          }
+          real.removeItem(key);
+        },
+        clear: () => {
+          inner = null;
+          real.clear();
+        }
+      };
+      Object.defineProperty(window, "sessionStorage", {
+        value: faulty,
+        writable: true,
+        configurable: true
+      });
+      return {
+        getInner: () => inner,
+        restore: () => {
+          Object.defineProperty(window, "sessionStorage", {
+            value: real,
+            writable: true,
+            configurable: true
+          });
+        }
+      };
+    }
+
+    afterEach(() => {
+      Object.defineProperty(window, "sessionStorage", {
+        value: new (class implements Storage {
+          private store = new Map<string, string>();
+          get length() { return this.store.size; }
+          key(i: number) { return Array.from(this.store.keys())[i] ?? null; }
+          getItem(k: string) { return this.store.get(k) ?? null; }
+          setItem(k: string, v: string) { this.store.set(k, String(v)); }
+          removeItem(k: string) { this.store.delete(k); }
+          clear() { this.store.clear(); }
+        })(),
+        writable: true,
+        configurable: true
+      });
+    });
+
+    it("catalogue increment with write failure shows bounded error and resyncs UI", () => {
+      const faulty = createFaultyStorage({ writeMismatch: true });
+      try {
+        render(<QuoteSelectionButton item={chair} />);
+        fireEvent.click(screen.getByRole("button", { name: /increase lounge chair/i }));
+
+        expect(screen.getByText(/selection storage could not be updated|could not be updated/i)).toBeInTheDocument();
+        expect(faulty.getInner()).toBeNull();
+      } finally {
+        faulty.restore();
+      }
+    });
+
+    it("catalogue decrement with write failure shows bounded error and resyncs UI", () => {
+      window.sessionStorage.setItem(
+        QUOTE_SELECTION_STORAGE_KEY,
+        JSON.stringify({
+          version: 2,
+          rows: [
+            {
+              kind: "catalogue",
+              reference: "lounge-chair",
+              quantity: 3,
+              source: "catalogue",
+              order: 0,
+              subkind: "rental"
+            }
+          ]
+        })
+      );
+
+      const faulty = createFaultyStorage({ writeMismatch: true, seedValue: window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY) });
+      try {
+        render(<QuoteSelectionButton item={chair} />);
+        fireEvent.click(screen.getByRole("button", { name: /decrease lounge chair/i }));
+        expect(screen.getByText(/selection storage could not be updated|could not be updated/i)).toBeInTheDocument();
+      } finally {
+        faulty.restore();
+      }
+    });
+
+    it("successful retry after failure works correctly", () => {
+      const faulty = createFaultyStorage({ writeMismatch: true });
+      try {
+        const { unmount } = render(<QuoteSelectionButton item={chair} />);
+        fireEvent.click(screen.getByRole("button", { name: /increase lounge chair/i }));
+        expect(screen.getByText(/could not be updated/i)).toBeInTheDocument();
+        unmount();
+        cleanup();
+      } finally {
+        faulty.restore();
+      }
+
+      window.sessionStorage.clear();
+      render(<QuoteSelectionButton item={chair} />);
+      fireEvent.click(screen.getByRole("button", { name: /increase lounge chair/i }));
+      expect(storedRows().rows).toHaveLength(1);
+      expect(storedRows().rows[0]?.quantity).toBe(1);
+    });
+  });
+
+  describe("Run-12 — catalogue-unavailable URL fallback gating", () => {
+    it("does not seed URL fallback row when catalogue is unavailable", () => {
+      render(
+        <QuoteSelectionSummary
+          catalogueAvailable={false}
+          fallbackItems={[{ ...chair, quantity: 3 }]}
+          requestedSlug="lounge-chair"
+          validItems={[]}
+        />
+      );
+
+      expect(window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY)).toBeNull();
+      expect(screen.getByText("Catalogue unavailable right now")).toBeInTheDocument();
+    });
+
+    it("shows discovery context for requested slug when catalogue is unavailable", () => {
+      render(
+        <QuoteSelectionSummary
+          catalogueAvailable={false}
+          fallbackItems={[{ ...chair, quantity: 3 }]}
+          requestedSlug="lounge-chair"
+          validItems={[]}
+        />
+      );
+
+      expect(screen.getByText(/lounge-chair/)).toBeInTheDocument();
+      expect(screen.getByText(/has not been added or replaced/i)).toBeInTheDocument();
+    });
+  });
+
+  describe("Run-12 — fallback consumption and dismissal lifecycle", () => {
+    it("does not reappear after successful seed and removal", () => {
+      render(
+        <QuoteSelectionSummary
+          catalogueAvailable
+          fallbackItems={[{ ...chair, quantity: 3 }]}
+          requestedSlug="lounge-chair"
+          validItems={[{ kind: "rental", slug: "lounge-chair", name: "Lounge Chair" }]}
+        />
+      );
+
+      expect(storedRows().rows).toHaveLength(1);
+      expect(storedRows().rows[0]?.reference).toBe("lounge-chair");
+
+      const removeButtons = screen.getAllByRole("button", { name: /remove lounge chair from selection/i });
+      fireEvent.click(removeButtons[0]!);
+
+      expect(storedRows().rows).toEqual([]);
+      expect(screen.queryByText("Lounge Chair")).not.toBeInTheDocument();
+    });
+
+    it("rerender after removal does not resurrect fallback", () => {
+      const { rerender } = render(
+        <QuoteSelectionSummary
+          catalogueAvailable
+          fallbackItems={[{ ...chair, quantity: 3 }]}
+          requestedSlug="lounge-chair"
+          validItems={[{ kind: "rental", slug: "lounge-chair", name: "Lounge Chair" }]}
+        />
+      );
+
+      const removeButtons = screen.getAllByRole("button", { name: /remove lounge chair from selection/i });
+      fireEvent.click(removeButtons[0]!);
+
+      rerender(
+        <QuoteSelectionSummary
+          catalogueAvailable
+          fallbackItems={[{ ...chair, quantity: 3 }]}
+          requestedSlug="lounge-chair"
+          validItems={[{ kind: "rental", slug: "lounge-chair", name: "Lounge Chair" }]}
+        />
+      );
+
+      expect(storedRows().rows).toEqual([]);
+      expect(screen.queryByText("Lounge Chair")).not.toBeInTheDocument();
+    });
+
+    it("storage event after removal does not resurrect fallback", () => {
+      render(
+        <QuoteSelectionSummary
+          catalogueAvailable
+          fallbackItems={[{ ...chair, quantity: 3 }]}
+          requestedSlug="lounge-chair"
+          validItems={[{ kind: "rental", slug: "lounge-chair", name: "Lounge Chair" }]}
+        />
+      );
+
+      const removeButtons = screen.getAllByRole("button", { name: /remove lounge chair from selection/i });
+      fireEvent.click(removeButtons[0]!);
+
+      window.dispatchEvent(new Event("storage"));
+
+      expect(storedRows().rows).toEqual([]);
+      expect(screen.queryByText("Lounge Chair")).not.toBeInTheDocument();
+    });
+  });
+
+  describe("Run-12 — summary storage-read failure handling", () => {
+    function createThrowingStorage() {
+      const real = window.sessionStorage;
+      const faulty: Storage = {
+        get length(): number { throw new Error("storage blocked"); },
+        key: (): string | null => { throw new Error("storage blocked"); },
+        getItem: (): string | null => { throw new Error("storage blocked"); },
+        setItem: (): void => { throw new Error("storage blocked"); },
+        removeItem: (): void => { throw new Error("storage blocked"); },
+        clear: (): void => { throw new Error("storage blocked"); }
+      };
+      Object.defineProperty(window, "sessionStorage", {
+        value: faulty,
+        writable: true,
+        configurable: true
+      });
+      return {
+        restore: () => {
+          Object.defineProperty(window, "sessionStorage", {
+            value: real,
+            writable: true,
+            configurable: true
+          });
+        }
+      };
+    }
+
+    afterEach(() => {
+      Object.defineProperty(window, "sessionStorage", {
+        value: new (class implements Storage {
+          private store = new Map<string, string>();
+          get length() { return this.store.size; }
+          key(i: number) { return Array.from(this.store.keys())[i] ?? null; }
+          getItem(k: string) { return this.store.get(k) ?? null; }
+          setItem(k: string, v: string) { this.store.set(k, String(v)); }
+          removeItem(k: string) { this.store.delete(k); }
+          clear() { this.store.clear(); }
+        })(),
+        writable: true,
+        configurable: true
+      });
+    });
+
+    it("does not crash on mount when sessionStorage throws", () => {
+      const faulty = createThrowingStorage();
+      try {
+        expect(() => render(
+          <QuoteSelectionSummary catalogueAvailable validItems={[]} />
+        )).not.toThrow();
+        expect(screen.getByText(/selection storage unavailable/i)).toBeInTheDocument();
+      } finally {
+        faulty.restore();
+      }
+    });
+
+    it("storage event does not crash when storage throws", () => {
+      const faulty = createThrowingStorage();
+      try {
+        render(<QuoteSelectionSummary catalogueAvailable validItems={[]} />);
+        expect(() => window.dispatchEvent(new Event("storage"))).not.toThrow();
+        expect(screen.getByText(/selection storage unavailable/i)).toBeInTheDocument();
+      } finally {
+        faulty.restore();
+      }
+    });
+
+    it("does not seed fallback when storage is unavailable", () => {
+      const faulty = createThrowingStorage();
+      try {
+        render(
+          <QuoteSelectionSummary
+            catalogueAvailable
+            fallbackItems={[{ ...chair, quantity: 3 }]}
+            requestedSlug="lounge-chair"
+            validItems={[{ kind: "rental", slug: "lounge-chair", name: "Lounge Chair" }]}
+          />
+        );
+        expect(screen.getByText(/selection storage unavailable/i)).toBeInTheDocument();
+      } finally {
+        faulty.restore();
+      }
+    });
+  });
+
+  describe("Run-12 — manual rows in selection status and count", () => {
+    it("manual-only draft does not show 'No items selected yet'", () => {
+      window.sessionStorage.setItem(
+        QUOTE_SELECTION_STORAGE_KEY,
+        JSON.stringify({
+          version: 2,
+          rows: [
+            {
+              kind: "manual",
+              key: "manual-a",
+              description: "Custom counter",
+              quantity: 1,
+              source: "manual",
+              order: 0
+            }
+          ]
+        })
+      );
+
+      render(
+        <QuoteSelectionSummary catalogueAvailable validItems={[]} />
+      );
+
+      expect(screen.queryByText("No items selected yet")).not.toBeInTheDocument();
+      expect(screen.getByText("Manual requirement")).toBeInTheDocument();
+    });
+
+    it("header indicator includes manual rows in count", () => {
+      window.sessionStorage.setItem(
+        QUOTE_SELECTION_STORAGE_KEY,
+        JSON.stringify({
+          version: 2,
+          rows: [
+            {
+              kind: "manual",
+              key: "manual-a",
+              description: "Custom counter",
+              quantity: 2,
+              source: "manual",
+              order: 0
+            }
+          ]
+        })
+      );
+
+      render(<QuoteSelectionIndicator />);
+
+      expect(screen.getByRole("link", { name: /request quote with 1 selected item/i })).toBeInTheDocument();
+    });
+
+    it("mixed catalogue and manual draft counts correctly in indicator", () => {
+      window.sessionStorage.setItem(
+        QUOTE_SELECTION_STORAGE_KEY,
+        JSON.stringify({
+          version: 2,
+          rows: [
+            {
+              kind: "catalogue",
+              reference: "lounge-chair",
+              quantity: 2,
+              source: "catalogue",
+              order: 0,
+              subkind: "rental"
+            },
+            {
+              kind: "manual",
+              key: "manual-a",
+              description: "Custom counter",
+              quantity: 1,
+              source: "manual",
+              order: 1
+            }
+          ]
+        })
+      );
+
+      render(<QuoteSelectionIndicator />);
+
+      expect(screen.getByRole("link", { name: /request quote with 2 selected items/i })).toBeInTheDocument();
+    });
+
+    it("summary shows manual requirement label for manual rows", () => {
+      window.sessionStorage.setItem(
+        QUOTE_SELECTION_STORAGE_KEY,
+        JSON.stringify({
+          version: 2,
+          rows: [
+            {
+              kind: "manual",
+              key: "manual-a",
+              description: "Custom counter",
+              quantity: 3,
+              source: "manual",
+              order: 0
+            },
+            {
+              kind: "manual",
+              key: "manual-b",
+              description: "Another item",
+              quantity: 1,
+              source: "manual",
+              order: 1
+            }
+          ]
+        })
+      );
+
+      render(
+        <QuoteSelectionSummary catalogueAvailable validItems={[]} />
+      );
+
+      expect(screen.getByText("2 manual requirements")).toBeInTheDocument();
+    });
+
+    it("single manual row shows singular label", () => {
+      window.sessionStorage.setItem(
+        QUOTE_SELECTION_STORAGE_KEY,
+        JSON.stringify({
+          version: 2,
+          rows: [
+            {
+              kind: "manual",
+              key: "manual-a",
+              description: "Custom counter",
+              quantity: 1,
+              source: "manual",
+              order: 0
+            }
+          ]
+        })
+      );
+
+      render(
+        <QuoteSelectionSummary catalogueAvailable validItems={[]} />
+      );
+
+      expect(screen.getByText("1 manual requirement")).toBeInTheDocument();
+    });
   });
 });
