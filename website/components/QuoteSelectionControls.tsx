@@ -14,6 +14,7 @@ import {
   parseStoredQuoteSelection,
   shouldSeedUrlFallback,
   type CatalogueSelectionSubkind,
+  type QuoteSelectionCommitResult,
   type QuoteSelectionRow,
   type QuoteSelectionStorageAdapter
 } from "../lib/quote/selection-model";
@@ -378,21 +379,21 @@ export function QuoteSelectionDataBoundary({
   return null;
 }
 
-function removeStoredQuoteSelectionItem(item: QuoteSelectionItem) {
+function removeStoredQuoteSelectionItem(item: QuoteSelectionItem): QuoteSelectionCommitResult | undefined {
   const normalizedItem = normalizeQuoteItem(item);
 
   if (!normalizedItem) {
-    return;
+    return undefined;
   }
 
   if (typeof window === "undefined") {
-    return;
+    return undefined;
   }
 
   const subkind: CatalogueSelectionSubkind =
     normalizedItem.kind === "setup" ? "setup" : "rental";
 
-  commitQuoteSelectionChange(buildBrowserStorage(), {
+  return commitQuoteSelectionChange(buildBrowserStorage(), {
     kind: "catalogue",
     reference: normalizedItem.slug,
     subkind,
@@ -474,19 +475,25 @@ function getGroupedSelectionItems(items: QuoteSelectionSummaryItem[]) {
 function SelectionRow({
   detailBasePath,
   item,
+  onRemoveItem,
   quantityItem,
   showQuantityMeta = true,
   showQuantityControls = true
 }: {
   detailBasePath: "/catalogue" | "/listings";
   item: QuoteSelectionSummaryItem;
+  onRemoveItem?: (item: QuoteSelectionSummaryItem) => QuoteSelectionCommitResult | undefined;
   quantityItem?: QuoteSelectionSummaryItem;
   showQuantityMeta?: boolean;
   showQuantityControls?: boolean;
 }) {
   function handleClearSelection(event: MouseEvent<HTMLButtonElement>) {
     event.preventDefault();
-    removeStoredQuoteSelectionItem(item);
+    if (onRemoveItem) {
+      onRemoveItem(item);
+    } else {
+      removeStoredQuoteSelectionItem(item);
+    }
   }
 
   return (
@@ -563,10 +570,12 @@ function SelectionRow({
 function SelectionGroup({
   detailBasePath,
   items,
+  onRemoveItem,
   title
 }: {
   detailBasePath: "/catalogue" | "/listings";
   items: QuoteSelectionSummaryItem[];
+  onRemoveItem?: (item: QuoteSelectionSummaryItem) => QuoteSelectionCommitResult | undefined;
   title: string;
 }) {
   if (!items.length) {
@@ -581,6 +590,7 @@ function SelectionGroup({
           detailBasePath={detailBasePath}
           item={item}
           key={quoteSelectionItemKey(item)}
+          onRemoveItem={onRemoveItem}
         />
       ))}
     </div>
@@ -589,10 +599,12 @@ function SelectionGroup({
 
 function SetupSelectionGroup({
   includedItems,
+  onRemoveItem,
   setupItem,
   setupName
 }: {
   includedItems: QuoteSelectionSummaryItem[];
+  onRemoveItem?: (item: QuoteSelectionSummaryItem) => QuoteSelectionCommitResult | undefined;
   setupItem?: QuoteSelectionSummaryItem;
   setupName?: string;
 }) {
@@ -646,6 +658,7 @@ function SetupSelectionGroup({
           <SelectionRow
             detailBasePath="/listings"
             item={setupItem}
+            onRemoveItem={onRemoveItem}
             quantityItem={setupQuantityItem}
           />
         ) : (
@@ -735,6 +748,35 @@ export function QuoteSelectionSummary({
   const [hasCompleteSelection, setHasCompleteSelection] = useState(false);
   const [fallbackConsumed, setFallbackConsumed] = useState(false);
   const [storageUnavailable, setStorageUnavailable] = useState(false);
+  const [removalError, setRemovalError] = useState<string | null>(null);
+
+  function handleRemoveItem(summaryItem: QuoteSelectionSummaryItem): QuoteSelectionCommitResult | undefined {
+    if (typeof window === "undefined") {
+      return undefined;
+    }
+
+    const result = removeStoredQuoteSelectionItem(summaryItem);
+
+    if (!result) {
+      return undefined;
+    }
+
+    if (result.ok) {
+      setRemovalError(null);
+      setItems(readQuoteSelection());
+    } else {
+      setItems(readQuoteSelection());
+      setRemovalError(
+        result.code === "restore-failed" ||
+        result.code === "read-back-mismatch" ||
+        result.code === "storage-exception"
+          ? "Selection storage could not be updated. The current selection has been reloaded."
+          : "This item could not be removed. Check the limits and try again."
+      );
+    }
+
+    return result;
+  }
   const resolvedItems = items.map((item) => {
     if (item.kind === "manual") {
       return item;
@@ -839,6 +881,11 @@ export function QuoteSelectionSummary({
     <section className="stitch-quote-card stitch-quote-selection">
       <p className="stitch-eyebrow">Your Selection</p>
       <h2>Your Selection</h2>
+      {removalError ? (
+        <div className="stitch-selection-state stitch-selection-state--error" role="alert">
+          {removalError}
+        </div>
+      ) : null}
       {storageUnavailable ? (
         <div className="stitch-selection-state" role="status">
           <strong>Selection storage unavailable</strong>
@@ -868,6 +915,7 @@ export function QuoteSelectionSummary({
             <SelectionGroup
               detailBasePath="/catalogue"
               items={catalogueItems}
+              onRemoveItem={handleRemoveItem}
               title="Unavailable selections"
             />
           ) : null}
@@ -882,6 +930,7 @@ export function QuoteSelectionSummary({
               <SelectionGroup
                 detailBasePath="/catalogue"
                 items={groupedItems.rentalItems}
+                onRemoveItem={handleRemoveItem}
                 title="Selected Rental Items"
               />
               {groupedItems.setupGroups.length ? (
@@ -891,6 +940,7 @@ export function QuoteSelectionSummary({
                     <SetupSelectionGroup
                       includedItems={group.includedItems}
                       key={group.setupItem?.slug ?? group.setupName}
+                      onRemoveItem={handleRemoveItem}
                       setupItem={group.setupItem}
                       setupName={group.setupName}
                     />

@@ -986,4 +986,304 @@ describe("QuoteSelectionControls", () => {
       expect(screen.getByText("1 manual requirement")).toBeInTheDocument();
     });
   });
+
+  describe("Run-13 — summary-removal failure closure", () => {
+    const existingCatalogueRow = () => ({
+      version: 2 as const,
+      rows: [
+        {
+          kind: "catalogue" as const,
+          reference: "lounge-chair",
+          quantity: 1,
+          source: "catalogue" as const,
+          order: 0,
+          subkind: "rental" as const
+        }
+      ]
+    });
+
+    const existingCatalogueRowJson = () => JSON.stringify(existingCatalogueRow());
+
+    function createFaultyStorage(overrides: {
+      writeMismatch?: boolean;
+      restoreThrows?: boolean;
+      restoreNoop?: boolean;
+      seedValue?: string | null;
+    }) {
+      const real = window.sessionStorage;
+      let inner: string | null = overrides.seedValue ?? null;
+      let writeCount = 0;
+      const faulty: Storage = {
+        get length() { return inner === null ? 0 : 1; },
+        key: (index: number) => index === 0 && inner !== null ? QUOTE_SELECTION_STORAGE_KEY : null,
+        getItem: (key: string) => key === QUOTE_SELECTION_STORAGE_KEY ? inner : real.getItem(key),
+        setItem: (key: string, value: string) => {
+          if (key === QUOTE_SELECTION_STORAGE_KEY) {
+            writeCount += 1;
+            if (overrides.writeMismatch && writeCount === 1) {
+              inner = '{"tampered":true}';
+              return;
+            }
+            if (overrides.restoreThrows && writeCount >= 2) {
+              throw new Error("quota");
+            }
+            if (overrides.restoreNoop && writeCount >= 2) {
+              inner = '{"stale":true}';
+              return;
+            }
+            inner = value;
+            return;
+          }
+          real.setItem(key, value);
+        },
+        removeItem: (key: string) => {
+          if (key === QUOTE_SELECTION_STORAGE_KEY) {
+            if (overrides.restoreThrows) {
+              throw new Error("quota");
+            }
+            inner = null;
+            return;
+          }
+          real.removeItem(key);
+        },
+        clear: () => {
+          inner = null;
+          real.clear();
+        }
+      };
+      Object.defineProperty(window, "sessionStorage", {
+        value: faulty,
+        writable: true,
+        configurable: true
+      });
+      return {
+        getInner: () => inner,
+        restore: () => {
+          Object.defineProperty(window, "sessionStorage", {
+            value: real,
+            writable: true,
+            configurable: true
+          });
+        }
+      };
+    }
+
+    function renderSummaryWithRow(validItemsOverride?: { kind: "rental"; slug: string; name: string; category?: string }[]) {
+      window.sessionStorage.setItem(QUOTE_SELECTION_STORAGE_KEY, existingCatalogueRowJson());
+      return render(
+        <QuoteSelectionSummary
+          catalogueAvailable
+          validItems={validItemsOverride ?? [{ kind: "rental", slug: "lounge-chair", name: "Lounge Chair", category: "Seating" }]}
+        />
+      );
+    }
+
+    function clickRemoveLoungeChair() {
+      const removeButton = screen.getByRole("button", { name: /remove.*lounge.*from selection/i });
+      fireEvent.click(removeButton);
+    }
+
+    afterEach(() => {
+      Object.defineProperty(window, "sessionStorage", {
+        value: new (class implements Storage {
+          private store = new Map<string, string>();
+          get length() { return this.store.size; }
+          key(i: number) { return Array.from(this.store.keys())[i] ?? null; }
+          getItem(k: string) { return this.store.get(k) ?? null; }
+          setItem(k: string, v: string) { this.store.set(k, String(v)); }
+          removeItem(k: string) { this.store.delete(k); }
+          clear() { this.store.clear(); }
+        })(),
+        writable: true,
+        configurable: true
+      });
+    });
+
+    it("write/read-back mismatch: row remains visible, bounded error shown, no success event emitted", () => {
+      const faulty = createFaultyStorage({ writeMismatch: true, seedValue: existingCatalogueRowJson() });
+      const dispatchSpy = vi.spyOn(window, "dispatchEvent");
+      try {
+        render(
+          <QuoteSelectionSummary
+            catalogueAvailable
+            validItems={[{ kind: "rental", slug: "lounge-chair", name: "Lounge Chair" }]}
+          />
+        );
+        expect(screen.getByText("Lounge Chair")).toBeInTheDocument();
+
+        clickRemoveLoungeChair();
+
+        expect(faulty.getInner()).toBe(existingCatalogueRowJson());
+        expect(screen.getByText("Lounge Chair")).toBeInTheDocument();
+        expect(screen.getAllByText(/could not be removed|storage could not be updated/i).length).toBeGreaterThan(0);
+        expect(dispatchSpy).not.toHaveBeenCalledWith(
+          expect.objectContaining({ type: "skr:quote-selection-change" })
+        );
+      } finally {
+        vi.restoreAllMocks();
+        faulty.restore();
+      }
+    });
+
+    it("dispatch failure: row remains visible, bounded error shown, storage resynced", () => {
+      window.sessionStorage.setItem(QUOTE_SELECTION_STORAGE_KEY, existingCatalogueRowJson());
+      const dispatchSpy = vi.spyOn(window, "dispatchEvent").mockImplementation(() => {
+        throw new Error("dispatch blocked");
+      });
+      try {
+        renderSummaryWithRow();
+        expect(screen.getByText("Lounge Chair")).toBeInTheDocument();
+
+        clickRemoveLoungeChair();
+
+        expect(screen.getByText("Lounge Chair")).toBeInTheDocument();
+        expect(screen.getAllByText(/could not be removed|storage could not be updated/i).length).toBeGreaterThan(0);
+        const stored = window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY);
+        expect(stored).toBe(existingCatalogueRowJson());
+      } finally {
+        dispatchSpy.mockRestore();
+      }
+    });
+
+    it("restoration failure: bounded error shown, UI reflects actual storage", () => {
+      const faulty = createFaultyStorage({ writeMismatch: true, restoreThrows: true, seedValue: existingCatalogueRowJson() });
+      try {
+        render(
+          <QuoteSelectionSummary
+            catalogueAvailable
+            validItems={[{ kind: "rental", slug: "lounge-chair", name: "Lounge Chair" }]}
+          />
+        );
+        expect(screen.getByText("Lounge Chair")).toBeInTheDocument();
+
+        clickRemoveLoungeChair();
+
+        expect(screen.getAllByText(/could not be removed|storage could not be updated/i).length).toBeGreaterThan(0);
+        expect(screen.queryByText("quota")).not.toBeInTheDocument();
+      } finally {
+        faulty.restore();
+      }
+    });
+
+    it("restore-noop restoration: bounded failure, no raw exception text visible", () => {
+      const faulty = createFaultyStorage({ writeMismatch: true, restoreNoop: true, seedValue: existingCatalogueRowJson() });
+      try {
+        render(
+          <QuoteSelectionSummary
+            catalogueAvailable
+            validItems={[{ kind: "rental", slug: "lounge-chair", name: "Lounge Chair" }]}
+          />
+        );
+        expect(screen.getByText("Lounge Chair")).toBeInTheDocument();
+
+        clickRemoveLoungeChair();
+
+        expect(screen.getAllByText(/could not be removed|storage could not be updated/i).length).toBeGreaterThan(0);
+        expect(screen.queryByText(/exception|quota|blocked/i)).not.toBeInTheDocument();
+      } finally {
+        faulty.restore();
+      }
+    });
+
+    it("successful removal: row disappears, manual rows survive, no error remains", () => {
+      window.sessionStorage.setItem(
+        QUOTE_SELECTION_STORAGE_KEY,
+        JSON.stringify({
+          version: 2,
+          rows: [
+            existingCatalogueRow().rows[0],
+            {
+              kind: "manual" as const,
+              key: "manual-a",
+              description: "Custom counter",
+              quantity: 1,
+              source: "manual" as const,
+              order: 1
+            }
+          ]
+        })
+      );
+
+      render(
+        <QuoteSelectionSummary
+          catalogueAvailable
+          validItems={[{ kind: "rental", slug: "lounge-chair", name: "Lounge Chair", category: "Seating" }]}
+        />
+      );
+
+      expect(screen.getByText("Lounge Chair")).toBeInTheDocument();
+      expect(screen.getByText("Manual requirement")).toBeInTheDocument();
+
+      clickRemoveLoungeChair();
+
+      expect(screen.queryByText("Lounge Chair")).not.toBeInTheDocument();
+      expect(screen.getByText("Manual requirement")).toBeInTheDocument();
+      expect(screen.queryByText(/could not be removed|storage could not be updated/i)).not.toBeInTheDocument();
+
+      const stored = JSON.parse(window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY) ?? "{}") as { rows: unknown[] };
+      expect(stored.rows).toHaveLength(1);
+      expect((stored.rows[0] as Record<string, unknown>).kind).toBe("manual");
+    });
+
+    it("seeded URL fallback removal: row removed, rerender does not resurrect", () => {
+      window.sessionStorage.setItem(QUOTE_SELECTION_STORAGE_KEY, existingCatalogueRowJson());
+
+      const { rerender } = render(
+        <QuoteSelectionSummary
+          catalogueAvailable
+          validItems={[{ kind: "rental", slug: "lounge-chair", name: "Lounge Chair" }]}
+        />
+      );
+
+      expect(screen.getByText("Lounge Chair")).toBeInTheDocument();
+      clickRemoveLoungeChair();
+
+      rerender(
+        <QuoteSelectionSummary
+          catalogueAvailable
+          validItems={[{ kind: "rental", slug: "lounge-chair", name: "Lounge Chair" }]}
+        />
+      );
+
+      expect(screen.queryByText("Lounge Chair")).not.toBeInTheDocument();
+      expect(window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY)).toBeDefined();
+      const stored = JSON.parse(window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY) ?? "{}") as { rows: unknown[] };
+      expect(stored.rows).toEqual([]);
+    });
+
+    it("seeded URL fallback removal: storage event does not resurrect", () => {
+      window.sessionStorage.setItem(QUOTE_SELECTION_STORAGE_KEY, existingCatalogueRowJson());
+
+      render(
+        <QuoteSelectionSummary
+          catalogueAvailable
+          validItems={[{ kind: "rental", slug: "lounge-chair", name: "Lounge Chair" }]}
+        />
+      );
+
+      expect(screen.getByText("Lounge Chair")).toBeInTheDocument();
+      clickRemoveLoungeChair();
+
+      window.dispatchEvent(new Event("storage"));
+
+      expect(screen.queryByText("Lounge Chair")).not.toBeInTheDocument();
+    });
+
+    it("unavailable stored catalogue reference: Remove item follows same failure handling", () => {
+      const faulty = createFaultyStorage({ writeMismatch: true, seedValue: existingCatalogueRowJson() });
+      try {
+        render(
+          <QuoteSelectionSummary catalogueAvailable={false} validItems={[]} />
+        );
+        expect(screen.getByText("Catalogue unavailable right now")).toBeInTheDocument();
+
+        clickRemoveLoungeChair();
+
+        expect(screen.getAllByText(/unavailable selection/i).length).toBeGreaterThan(0);
+        expect(screen.getAllByText(/could not be removed|storage could not be updated/i).length).toBeGreaterThan(0);
+      } finally {
+        faulty.restore();
+      }
+    });
+  });
 });
