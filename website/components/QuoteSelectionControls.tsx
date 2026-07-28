@@ -763,14 +763,30 @@ export function QuoteSelectionSummary({
 
     if (result.ok) {
       setRemovalError(null);
-      setItems(readQuoteSelection());
+      const resync = readQuoteSelectionGuarded();
+      if (resync.ok) {
+        setItems(resync.items);
+        setStorageUnavailable(false);
+        setHasCompleteSelection(!shouldSeedUrlFallback(resync.serialized));
+      } else {
+        setStorageUnavailable(true);
+      }
     } else {
-      setItems(readQuoteSelection());
+      const resync = readQuoteSelectionGuarded();
+      if (resync.ok) {
+        setItems(resync.items);
+        setStorageUnavailable(false);
+        setHasCompleteSelection(!shouldSeedUrlFallback(resync.serialized));
+      } else {
+        setStorageUnavailable(true);
+      }
       setRemovalError(
         result.code === "restore-failed" ||
         result.code === "read-back-mismatch" ||
         result.code === "storage-exception"
-          ? "Selection storage could not be updated. The current selection has been reloaded."
+          ? resync.ok
+            ? "Selection storage could not be updated. The current selection has been reloaded."
+            : "Selection storage is unavailable. The current selection has been preserved."
           : "This item could not be removed. Check the limits and try again."
       );
     }
@@ -821,6 +837,19 @@ export function QuoteSelectionSummary({
         setItems(result.items);
         setStorageUnavailable(false);
         setHasCompleteSelection(!shouldSeedUrlFallback(result.serialized));
+
+        if (!fallbackConsumed && requestedSlug) {
+          const rows = allRowsFromSelection(result.serialized);
+          const hasMatchingUrlRow = rows.some(
+            (row) =>
+              row.kind === "catalogue" &&
+              row.source === "url" &&
+              row.reference === requestedSlug
+          );
+          if (hasMatchingUrlRow) {
+            setFallbackConsumed(true);
+          }
+        }
       } else {
         setStorageUnavailable(true);
       }
@@ -895,6 +924,23 @@ export function QuoteSelectionSummary({
             or browse again later.
           </p>
         </div>
+      ) : null}
+      {storageUnavailable ? (
+        catalogueItems.length ? (
+          <>
+            <SelectionGroup
+              detailBasePath="/catalogue"
+              items={catalogueItems}
+              onRemoveItem={handleRemoveItem}
+              title="Selected items"
+            />
+            {manualCount ? (
+              <ManualSelectionGroup items={manualItems} />
+            ) : null}
+          </>
+        ) : manualCount ? (
+          <ManualSelectionGroup items={manualItems} />
+        ) : null
       ) : !catalogueAvailable ? (
         <>
           <div className="stitch-selection-state" role="status">

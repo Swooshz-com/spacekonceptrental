@@ -1286,4 +1286,283 @@ describe("QuoteSelectionControls", () => {
       }
     });
   });
+
+  describe("Run-14 — URL-source dismissal after reload and failed-resync preservation", () => {
+    const urlSourceRowJson = () => JSON.stringify({
+      version: 2,
+      rows: [
+        {
+          kind: "catalogue",
+          reference: "lounge-chair",
+          quantity: 2,
+          source: "url",
+          order: 0,
+          subkind: "rental"
+        }
+      ]
+    });
+
+    const rentalValidItem = { kind: "rental" as const, slug: "lounge-chair", name: "Lounge Chair" };
+
+    const fallbackItem = { slug: "lounge-chair", name: "Lounge Chair", quantity: 2 };
+
+    function seedUrlSourceSelection() {
+      window.sessionStorage.setItem(QUOTE_SELECTION_STORAGE_KEY, urlSourceRowJson());
+    }
+
+    function renderSummaryWithUrlFallback() {
+      return render(
+        <QuoteSelectionSummary
+          catalogueAvailable
+          fallbackItems={[fallbackItem]}
+          requestedSlug="lounge-chair"
+          validItems={[rentalValidItem]}
+        />
+      );
+    }
+
+    beforeEach(() => {
+      window.sessionStorage.clear();
+    });
+
+    afterEach(() => {
+      cleanup();
+    });
+
+    describe("Defect A — URL-source row present before mount", () => {
+      it("stored URL-source row is visible on mount", () => {
+        seedUrlSourceSelection();
+        renderSummaryWithUrlFallback();
+        expect(screen.getByText("Lounge Chair")).toBeInTheDocument();
+      });
+
+      it("removing the URL-source row does not re-seed the same fallback", () => {
+        seedUrlSourceSelection();
+        renderSummaryWithUrlFallback();
+        expect(screen.getByText("Lounge Chair")).toBeInTheDocument();
+
+        const removeButton = screen.getByRole("button", { name: /remove.*lounge.*from selection/i });
+        fireEvent.click(removeButton);
+
+        expect(screen.queryByText("Lounge Chair")).not.toBeInTheDocument();
+        const stored = JSON.parse(
+          window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY) ?? "{}"
+        ) as { rows: unknown[] };
+        expect(stored.rows).toEqual([]);
+      });
+
+      it("rerender after URL-source row removal does not resurrect the fallback", () => {
+        seedUrlSourceSelection();
+        const { rerender } = renderSummaryWithUrlFallback();
+
+        const removeButton = screen.getByRole("button", { name: /remove.*lounge.*from selection/i });
+        fireEvent.click(removeButton);
+
+        rerender(
+          <QuoteSelectionSummary
+            catalogueAvailable
+            fallbackItems={[fallbackItem]}
+            requestedSlug="lounge-chair"
+            validItems={[rentalValidItem]}
+          />
+        );
+
+        expect(screen.queryByText("Lounge Chair")).not.toBeInTheDocument();
+      });
+
+      it("storage event after URL-source row removal does not resurrect the fallback", () => {
+        seedUrlSourceSelection();
+        renderSummaryWithUrlFallback();
+
+        const removeButton = screen.getByRole("button", { name: /remove.*lounge.*from selection/i });
+        fireEvent.click(removeButton);
+
+        window.dispatchEvent(new Event("storage"));
+
+        expect(screen.queryByText("Lounge Chair")).not.toBeInTheDocument();
+      });
+
+      it("does not claim the current selection was reloaded after failed read", () => {
+        seedUrlSourceSelection();
+        renderSummaryWithUrlFallback();
+
+        expect(screen.queryByText(/selection has been reloaded/i)).not.toBeInTheDocument();
+      });
+    });
+
+    describe("Defect B — storage becomes unreadable during removal", () => {
+      function createThrowingStorageAfterRead() {
+        const real = window.sessionStorage;
+        let callCount = 0;
+        const inner = real.getItem(QUOTE_SELECTION_STORAGE_KEY);
+        const faulty: Storage = {
+          get length() { return inner === null ? 0 : 1; },
+          key: () => real.key(0),
+          getItem: (key: string) => {
+            if (key === QUOTE_SELECTION_STORAGE_KEY) {
+              callCount++;
+              if (callCount <= 2) {
+                return real.getItem(key);
+              }
+              throw new Error("storage blocked");
+            }
+            return real.getItem(key);
+          },
+          setItem: (key: string, value: string) => { real.setItem(key, value); },
+          removeItem: (key: string) => { real.removeItem(key); },
+          clear: () => { real.clear(); }
+        };
+        Object.defineProperty(window, "sessionStorage", {
+          value: faulty,
+          writable: true,
+          configurable: true
+        });
+        return {
+          restore: () => {
+            Object.defineProperty(window, "sessionStorage", {
+              value: real,
+              writable: true,
+              configurable: true
+            });
+          }
+        };
+      }
+
+      afterEach(() => {
+        cleanup();
+      });
+
+      it("preserves last-known visible row when storage becomes unreadable during removal", () => {
+        window.sessionStorage.setItem(QUOTE_SELECTION_STORAGE_KEY, JSON.stringify({
+          version: 2,
+          rows: [
+            {
+              kind: "catalogue",
+              reference: "lounge-chair",
+              quantity: 1,
+              source: "catalogue",
+              order: 0,
+              subkind: "rental"
+            }
+          ]
+        }));
+        render(
+          <QuoteSelectionSummary
+            catalogueAvailable
+            validItems={[rentalValidItem]}
+          />
+        );
+        expect(screen.getByText("Lounge Chair")).toBeInTheDocument();
+
+        const faulty = createThrowingStorageAfterRead();
+        try {
+          const removeButton = screen.getByRole("button", { name: /remove.*lounge.*from selection/i });
+          fireEvent.click(removeButton);
+
+          expect(screen.getByText("Lounge Chair")).toBeInTheDocument();
+          expect(screen.queryByText("No items selected yet")).not.toBeInTheDocument();
+          expect(screen.getByText(/selection storage unavailable/i)).toBeInTheDocument();
+        } finally {
+          faulty.restore();
+        }
+      });
+
+      it("shows bounded accessible removal error without raw exception text", () => {
+        window.sessionStorage.setItem(QUOTE_SELECTION_STORAGE_KEY, JSON.stringify({
+          version: 2,
+          rows: [
+            {
+              kind: "catalogue",
+              reference: "lounge-chair",
+              quantity: 1,
+              source: "catalogue",
+              order: 0,
+              subkind: "rental"
+            }
+          ]
+        }));
+        render(
+          <QuoteSelectionSummary
+            catalogueAvailable
+            validItems={[rentalValidItem]}
+          />
+        );
+
+        const faulty = createThrowingStorageAfterRead();
+        try {
+          const removeButton = screen.getByRole("button", { name: /remove.*lounge.*from selection/i });
+          fireEvent.click(removeButton);
+
+          expect(screen.queryByText(/exception|quota|blocked/i)).not.toBeInTheDocument();
+          expect(screen.getAllByText(/could not be removed|storage is unavailable/i).length).toBeGreaterThan(0);
+        } finally {
+          faulty.restore();
+        }
+      });
+
+      it("does not emit false success event when storage becomes unreadable during removal", () => {
+        window.sessionStorage.setItem(QUOTE_SELECTION_STORAGE_KEY, JSON.stringify({
+          version: 2,
+          rows: [
+            {
+              kind: "catalogue",
+              reference: "lounge-chair",
+              quantity: 1,
+              source: "catalogue",
+              order: 0,
+              subkind: "rental"
+            }
+          ]
+        }));
+        render(
+          <QuoteSelectionSummary
+            catalogueAvailable
+            validItems={[rentalValidItem]}
+          />
+        );
+
+        const faulty = createThrowingStorageAfterRead();
+        try {
+          const removeButton = screen.getByRole("button", { name: /remove.*lounge.*from selection/i });
+          fireEvent.click(removeButton);
+
+          expect(screen.getByText(/selection storage unavailable/i)).toBeInTheDocument();
+        } finally {
+          faulty.restore();
+        }
+      });
+
+      it("does not claim the current selection was reloaded after storage becomes unreadable", () => {
+        window.sessionStorage.setItem(QUOTE_SELECTION_STORAGE_KEY, JSON.stringify({
+          version: 2,
+          rows: [
+            {
+              kind: "catalogue",
+              reference: "lounge-chair",
+              quantity: 1,
+              source: "catalogue",
+              order: 0,
+              subkind: "rental"
+            }
+          ]
+        }));
+        render(
+          <QuoteSelectionSummary
+            catalogueAvailable
+            validItems={[rentalValidItem]}
+          />
+        );
+
+        const faulty = createThrowingStorageAfterRead();
+        try {
+          const removeButton = screen.getByRole("button", { name: /remove.*lounge.*from selection/i });
+          fireEvent.click(removeButton);
+
+          expect(screen.queryByText(/selection has been reloaded/i)).not.toBeInTheDocument();
+        } finally {
+          faulty.restore();
+        }
+      });
+    });
+  });
 });
