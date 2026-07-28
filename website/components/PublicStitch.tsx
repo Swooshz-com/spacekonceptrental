@@ -41,7 +41,7 @@ export function quoteSelectionValidItemsForCatalogue(
   }));
 }
 
-function isSetupCatalogueProduct(product: PublicCatalogueProduct): boolean {
+export function isSetupCatalogueProduct(product: PublicCatalogueProduct): boolean {
   return productCategory(product).toLowerCase() === "setups";
 }
 
@@ -238,7 +238,7 @@ export function StitchCatalogueShell({ catalogue, detailBasePath = "/catalogue",
 }
 
 export function StitchSetupsPage({ catalogue, activeSetupSlug }: { catalogue: PublicCatalogue; activeSetupSlug?: string }) {
-  const realSetups = catalogue.products.slice(0, 5).map((product, index) => ({ slug: product.slug, title: product.name, image: fallbackProductImage(product), summary: productSummary(product), featured: index === 0 }));
+  const realSetups = catalogue.products.filter(isSetupCatalogueProduct).map((product, index) => ({ slug: product.slug, title: product.name, image: fallbackProductImage(product), summary: productSummary(product), featured: index === 0 }));
   const setupCards = realSetups;
   const featuredSetup = setupCards[0];
   const setupFilters = [
@@ -291,14 +291,15 @@ export function StitchDetail({
   setup?: boolean;
   related?: PublicCatalogueProduct[];
 }) {
+  const canonicalSetup = isSetupCatalogueProduct(product);
   const image = product.primaryImage;
   const alt = textOrUndefined(image?.altText) ?? `${product.name} furniture rental setup`;
-  const imgSrc = image?.publicUrl ?? stitchImageSrc(setup ? galaImage : fallbackProductImage(product));
+  const imgSrc = image?.publicUrl ?? stitchImageSrc(canonicalSetup ? galaImage : fallbackProductImage(product));
   const setupCarouselPieces: PublicCatalogueProduct[] = [];
   const quoteItem = quoteSelectionItem(
     product,
     imgSrc,
-    setup ? "setup" : "rental"
+    canonicalSetup ? "setup" : "rental"
   );
   const catalogueImageMap = new Map<string, { alt: string; src: string }>();
   catalogueImageMap.set(imgSrc, { alt, src: imgSrc });
@@ -314,7 +315,7 @@ export function StitchDetail({
     }
   }
   const catalogueCarouselImages = Array.from(catalogueImageMap.values());
-  const setupCarouselImages = setup
+  const setupCarouselImages = canonicalSetup
     ? [
         { alt, src: imgSrc },
         ...setupCarouselPieces.map((item) => ({
@@ -327,7 +328,7 @@ export function StitchDetail({
     ? backLabel
     : `Back to ${backLabel}`;
 
-  if (setup) {
+  if (canonicalSetup) {
     return (
       <section className="stitch-detail-page stitch-detail-page--setup">
         <div className="stitch-container">

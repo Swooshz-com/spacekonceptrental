@@ -174,4 +174,40 @@ describe("StitchDetail setup deferral", () => {
       screen.queryByRole("heading", { name: /^Included rental pieces$/ })
     ).not.toBeInTheDocument();
   });
+
+  it("derives setup kind from canonical product category, not from the caller boolean", () => {
+    const rentalProduct: PublicCatalogueProduct = {
+      id: "rental-1",
+      slug: "lounge-chair",
+      name: "Lounge Chair",
+      shortDescription: "A rental piece",
+      rentalUnit: "per event",
+      sortOrder: 0,
+      categoryId: "cat-seating",
+      categoryName: "Lounge Seating",
+      source: "fallback",
+      primaryImage: {
+        id: "img-r",
+        storageBucket: "listing-media",
+        storagePath: "chair.jpg",
+        publicUrl: "/chair.jpg",
+        sortOrder: 0,
+        isPrimary: true
+      }
+    };
+
+    render(
+      <StitchDetail
+        product={rentalProduct}
+        backHref="/listings"
+        backLabel="Back to listings"
+        setup
+        related={[]}
+      />
+    );
+
+    const detailSection = document.querySelector(".stitch-detail-page--catalogue-item");
+    expect(detailSection).toBeInTheDocument();
+    expect(screen.queryByText("Styled setup")).not.toBeInTheDocument();
+  });
 });

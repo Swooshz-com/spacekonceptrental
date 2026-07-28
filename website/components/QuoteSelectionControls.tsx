@@ -642,6 +642,7 @@ export function QuoteSelectionSummary({
   validItems?: QuoteSelectionValidItem[];
 }) {
   const [items, setItems] = useState<QuoteSelectionItem[]>([]);
+  const [hasCompleteSelection, setHasCompleteSelection] = useState(false);
   const resolvedItems = items.map((item) => {
     const canonical = validItems.find(
       (candidate) => candidate.slug === item.slug && candidate.kind === item.kind
@@ -664,13 +665,19 @@ export function QuoteSelectionSummary({
 
   const visibleItems: QuoteSelectionSummaryItem[] = resolvedItems.length
     ? resolvedItems
-    : fallbackItems;
+    : hasCompleteSelection
+      ? []
+      : fallbackItems;
   const hasDiscoveryContext = Boolean(requestedSlug || category || event || search);
   const groupedItems = getGroupedSelectionItems(visibleItems);
 
   useEffect(() => {
     function syncSelection() {
       setItems(readQuoteSelection());
+      if (typeof window !== "undefined") {
+        const serialized = window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY);
+        setHasCompleteSelection(!shouldSeedUrlFallback(serialized));
+      }
     }
 
     syncSelection();
@@ -689,7 +696,11 @@ export function QuoteSelectionSummary({
     if (
       requestedSlug &&
       fallbackItem?.slug === requestedSlug &&
-      readQuoteSelection().length === 0
+      shouldSeedUrlFallback(
+        typeof window === "undefined"
+          ? null
+          : window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY)
+      )
     ) {
       writeUrlFallback(fallbackItem);
       setItems(readQuoteSelection());

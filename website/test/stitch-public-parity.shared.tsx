@@ -23,6 +23,12 @@ const sampleCatalogue = {
       slug: "lounge",
       name: "Lounge",
       description: "Lounge grouping for rental planning."
+    },
+    {
+      id: "cat-setups",
+      slug: "setups",
+      name: "Setups",
+      description: "Setup directions for rental planning."
     }
   ],
   products: [
@@ -36,6 +42,18 @@ const sampleCatalogue = {
       categoryName: "Lounge",
       rentalUnit: "set",
       imageAlt: "Modular Lounge Set furniture rental setup",
+      imageUrl: "/assets/images/product_sofa.png"
+    },
+    {
+      id: "prod-setup",
+      slug: "curated-lounge-setup",
+      name: "Curated Lounge Setup",
+      description: "Styled lounge direction for events.",
+      summary: "Styled lounge direction for events.",
+      categoryId: "cat-setups",
+      categoryName: "Setups",
+      rentalUnit: "set",
+      imageAlt: "Curated Lounge Setup furniture rental setup",
       imageUrl: "/assets/images/product_sofa.png"
     }
   ]
@@ -72,7 +90,7 @@ export function runStitchPublicParitySuite(label: string) {
 
       render(<StitchSetupsPage catalogue={sampleCatalogue} />);
       expect(screen.getByRole("heading", { name: /curated scapes/i })).toBeInTheDocument();
-      expect(screen.getByRole("link", { name: /explore collection/i })).toHaveAttribute("href", "/listings/modular-lounge-set");
+      expect(screen.getByRole("link", { name: /explore collection/i })).toHaveAttribute("href", "/listings/curated-lounge-setup");
       expect(visibleText()).not.toMatch(forbiddenPublicTerms);
     });
 

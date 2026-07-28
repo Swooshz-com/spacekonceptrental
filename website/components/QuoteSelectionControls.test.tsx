@@ -449,6 +449,43 @@ describe("QuoteSelectionControls", () => {
     expect(rows[0]?.kind).toBe("manual");
   });
 
+  it("does not render a phantom fallback catalogue row over a manual-only draft", () => {
+    window.sessionStorage.setItem(
+      QUOTE_SELECTION_STORAGE_KEY,
+      JSON.stringify({
+        version: 2,
+        rows: [
+          {
+            kind: "manual",
+            key: "manual-a",
+            description: "Custom counter",
+            quantity: 1,
+            source: "manual",
+            order: 0
+          }
+        ]
+      })
+    );
+
+    render(
+      <QuoteSelectionSummary
+        catalogueAvailable
+        fallbackItems={[{ ...chair, quantity: 3 }]}
+        requestedSlug="lounge-chair"
+        validItems={[
+          {
+            kind: "rental",
+            slug: "lounge-chair",
+            name: "Lounge Chair"
+          }
+        ]}
+      />
+    );
+
+    expect(screen.queryByText("Lounge Chair")).not.toBeInTheDocument();
+    expect(screen.queryByText(/qty.*3/i)).not.toBeInTheDocument();
+  });
+
   it("does not seed URL fallback when selection has existing catalogue rows", () => {
     window.sessionStorage.setItem(
       QUOTE_SELECTION_STORAGE_KEY,

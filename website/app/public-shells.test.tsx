@@ -569,7 +569,8 @@ describe("public page shells", () => {
       slug: "the-metropolitan-gala",
       name: "The Metropolitan Gala",
       shortDescription:
-        "Tonal layering, sculptural surfaces, and lounge pieces for elevated evening event settings."
+        "Tonal layering, sculptural surfaces, and lounge pieces for elevated evening event settings.",
+      categoryName: "Setups"
     };
     const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
     const setupDetailBlock = styles.slice(
