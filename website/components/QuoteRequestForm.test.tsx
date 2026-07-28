@@ -461,16 +461,29 @@ describe("QuoteRequestForm", () => {
   });
 
   describe("Design Lock B — manual-path failure coverage through the production form adapter", () => {
+    const existingManualRow = {
+      version: 2 as const,
+      rows: [
+        {
+          kind: "manual" as const,
+          key: "manual-a",
+          description: "Existing item",
+          quantity: 1,
+          source: "manual" as const,
+          order: 0
+        }
+      ]
+    };
+
     function createFaultyStorage(overrides: {
       writeMismatch?: boolean;
-      dispatchFailure?: boolean;
       removeThrows?: boolean;
       removeNoop?: boolean;
+      seedValue?: string | null;
     }) {
       const real = window.sessionStorage;
-      let inner: string | null = null;
+      let inner: string | null = overrides.seedValue ?? null;
       let writeCount = 0;
-      let dispatchCount = 0;
       const faulty: Storage = {
         get length() { return inner === null ? 0 : 1; },
         key: (index: number) => index === 0 && inner !== null ? QUOTE_SELECTION_STORAGE_KEY : null,
@@ -513,7 +526,6 @@ describe("QuoteRequestForm", () => {
       });
       return {
         getWriteCount: () => writeCount,
-        getDispatchCount: () => dispatchCount,
         getInner: () => inner,
         restore: () => {
           Object.defineProperty(window, "sessionStorage", {
@@ -523,6 +535,13 @@ describe("QuoteRequestForm", () => {
           });
         }
       };
+    }
+
+    function seedExistingManualRow() {
+      window.sessionStorage.setItem(
+        QUOTE_SELECTION_STORAGE_KEY,
+        JSON.stringify(existingManualRow)
+      );
     }
 
     afterEach(() => {
@@ -596,24 +615,8 @@ describe("QuoteRequestForm", () => {
       }
     });
 
-    it("manual remove with existing row resyncs UI when commit fails", () => {
-      window.sessionStorage.setItem(
-        QUOTE_SELECTION_STORAGE_KEY,
-        JSON.stringify({
-          version: 2,
-          rows: [
-            {
-              kind: "manual",
-              key: "manual-a",
-              description: "Existing item",
-              quantity: 1,
-              source: "manual",
-              order: 0
-            }
-          ]
-        })
-      );
-
+    it("successful manual removal: row disappears and storage is committed", () => {
+      seedExistingManualRow();
       render(<QuoteRequestForm />);
       expect(screen.getByText(/existing item - qty 1/i)).toBeInTheDocument();
 
@@ -623,6 +626,10 @@ describe("QuoteRequestForm", () => {
       fireEvent.click(removeButton);
 
       expect(screen.queryByText(/existing item - qty 1/i)).not.toBeInTheDocument();
+      const stored = JSON.parse(
+        window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY) ?? "{}"
+      ) as { rows: unknown[] };
+      expect(stored.rows).toEqual([]);
     });
 
     it("successful manual add and remove through the production adapter remain unchanged", () => {
@@ -649,6 +656,119 @@ describe("QuoteRequestForm", () => {
         window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY) ?? "{}"
       ) as { rows: unknown[] };
       expect(afterRemove.rows).toEqual([]);
+    });
+
+    describe("manual-removal failure paths", () => {
+      const existingManualRowJson = JSON.stringify(existingManualRow);
+
+      it("read-back mismatch: original bytes restored, row remains visible, bounded error shown, no success event", () => {
+        const faulty = createFaultyStorage({ writeMismatch: true, seedValue: existingManualRowJson });
+        try {
+          const dispatchSpy = vi.spyOn(window, "dispatchEvent");
+
+          render(<QuoteRequestForm />);
+          expect(screen.getByText(/existing item - qty 1/i)).toBeInTheDocument();
+
+          const removeButton = screen.getByRole("button", {
+            name: /remove manual requirement existing item/i
+          });
+          fireEvent.click(removeButton);
+
+          expect(faulty.getInner()).toBe(existingManualRowJson);
+          expect(screen.getByText(/existing item - qty 1/i)).toBeInTheDocument();
+          expect(screen.getAllByText(/storage could not be updated/i).length).toBeGreaterThan(0);
+          expect(dispatchSpy).not.toHaveBeenCalledWith(
+            expect.objectContaining({ type: "skr:quote-selection-change" })
+          );
+        } finally {
+          vi.restoreAllMocks();
+          faulty.restore();
+        }
+      });
+
+      it("dispatch failure: original bytes restored, row remains visible, bounded error shown", () => {
+        window.sessionStorage.setItem(
+          QUOTE_SELECTION_STORAGE_KEY,
+          existingManualRowJson
+        );
+        const originalBytes = window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY);
+
+        const dispatchSpy = vi.spyOn(window, "dispatchEvent").mockImplementation(() => {
+          throw new Error("dispatch blocked");
+        });
+
+        try {
+          render(<QuoteRequestForm />);
+          expect(screen.getByText(/existing item - qty 1/i)).toBeInTheDocument();
+
+          const removeButton = screen.getByRole("button", {
+            name: /remove manual requirement existing item/i
+          });
+          fireEvent.click(removeButton);
+
+          const afterStorage = window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY);
+          expect(afterStorage).toBe(originalBytes);
+          expect(screen.getByText(/existing item - qty 1/i)).toBeInTheDocument();
+          expect(screen.getAllByText(/storage could not be updated/i).length).toBeGreaterThan(0);
+        } finally {
+          dispatchSpy.mockRestore();
+        }
+      });
+
+      it("restoration failure: fail-closed, UI resyncs from actual storage, bounded error shown", () => {
+        const faulty = createFaultyStorage({ writeMismatch: true, removeThrows: true, seedValue: existingManualRowJson });
+        try {
+          render(<QuoteRequestForm />);
+          expect(screen.getByText(/existing item - qty 1/i)).toBeInTheDocument();
+
+          const removeButton = screen.getByRole("button", {
+            name: /remove manual requirement existing item/i
+          });
+          fireEvent.click(removeButton);
+
+          expect(screen.getByText(/existing item - qty 1/i)).toBeInTheDocument();
+          expect(screen.getAllByText(/storage could not be updated/i).length).toBeGreaterThan(0);
+        } finally {
+          faulty.restore();
+        }
+      });
+
+      it("successful removal clears any prior storage error", () => {
+        window.sessionStorage.setItem(
+          QUOTE_SELECTION_STORAGE_KEY,
+          existingManualRowJson
+        );
+
+        const dispatchSpy = vi.spyOn(window, "dispatchEvent").mockImplementationOnce(() => {
+          throw new Error("dispatch blocked");
+        });
+
+        try {
+          render(<QuoteRequestForm />);
+          expect(screen.getByText(/existing item - qty 1/i)).toBeInTheDocument();
+
+          const removeButton = screen.getByRole("button", {
+            name: /remove manual requirement existing item/i
+          });
+
+          fireEvent.click(removeButton);
+          expect(screen.getAllByText(/storage could not be updated/i).length).toBeGreaterThan(0);
+
+          dispatchSpy.mockRestore();
+
+          window.sessionStorage.setItem(
+            QUOTE_SELECTION_STORAGE_KEY,
+            existingManualRowJson
+          );
+          fireEvent.click(
+            screen.getByRole("button", { name: /add manual requirement/i })
+          );
+
+          expect(screen.queryByText(/storage could not be updated/i)).not.toBeInTheDocument();
+        } finally {
+          dispatchSpy.mockRestore();
+        }
+      });
     });
   });
 });

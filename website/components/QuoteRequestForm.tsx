@@ -189,8 +189,21 @@ export default function QuoteRequestForm({
 
     if (result.ok) {
       setSelection(result.value);
+      setFieldErrors((prev) => {
+        const { selection: _selection, ...rest } = prev;
+        return rest;
+      });
     } else {
       setSelection(readSelection());
+      setFieldErrors((prev) => ({
+        ...prev,
+        selection:
+          result.code === "restore-failed" ||
+          result.code === "read-back-mismatch" ||
+          result.code === "storage-exception"
+            ? "Storage could not be updated. The current selection has been reloaded from this tab."
+            : "This manual requirement could not be removed. Check the limits and try again."
+      }));
     }
   }
 
