@@ -18,7 +18,6 @@ import {
 } from "../lib/page-media/public-page-media-content";
 import {
   deriveCanonicalIdentitiesFromCatalogue,
-  resolveSetupRecipe,
   resolveSetupRecipesForCatalogue,
   type CanonicalCatalogueIdentity,
   type SetupRecipeAuthoritativePiece
@@ -197,24 +196,6 @@ function setupQuoteSelectionItem(setup: {
   };
 }
 
-function setupIncludedQuoteItem(
-  product: PublicCatalogueProduct,
-  setup: PublicCatalogueProduct,
-  quantity: number
-): QuoteSelectionItem {
-  return {
-    slug: product.slug,
-    name: product.name,
-    category: productCategory(product),
-    kind: "setup-included",
-    imageSrc: stitchImageSrc(fallbackProductImage(product)),
-    quantity,
-    setupBaseQuantity: quantity,
-    setupName: setup.name,
-    setupSlug: setup.slug
-  };
-}
-
 export function StitchButton({ href, children, variant = "primary" }: { href: string; children: React.ReactNode; variant?: "primary" | "secondary" }) {
   return <Link className={`stitch-button stitch-button--${variant}`} href={href}>{children}</Link>;
 }
@@ -363,44 +344,11 @@ export function StitchDetail({
   const image = product.primaryImage;
   const alt = textOrUndefined(image?.altText) ?? `${product.name} furniture rental setup`;
   const imgSrc = image?.publicUrl ?? stitchImageSrc(setup ? galaImage : fallbackProductImage(product));
-  const recipePieces = setup && setupCatalogue
-    ? resolveSetupRecipe(
-        product as PublicCatalogueProduct & {
-          setupPieces?: ReadonlyArray<SetupRecipeAuthoritativePiece>;
-        },
-        setupCatalogue as ReadonlyArray<
-          PublicCatalogueProduct & {
-            setupPieces?: ReadonlyArray<SetupRecipeAuthoritativePiece>;
-          }
-        >
-      )
-    : [];
-  const recipeProducts: PublicCatalogueProduct[] = setup
-    ? recipePieces
-        .map((piece: SetupRecipeAuthoritativePiece) =>
-          setupCatalogue?.find(
-            (candidate: PublicCatalogueProduct) => candidate.slug === piece.slug
-          )
-        )
-        .filter((candidate): candidate is PublicCatalogueProduct =>
-          Boolean(candidate)
-        )
-    : [];
-  const setupIncludedItems = setup
-    ? recipeProducts.map((item, index) => {
-        const piece = recipePieces[index];
-        const baseQuantity = piece?.baseQuantity ?? 1;
-        return setupIncludedQuoteItem(item, product, baseQuantity);
-      })
-    : [];
-  const setupCarouselPieces = setup
-    ? recipeProducts
-    : related;
+  const setupCarouselPieces: PublicCatalogueProduct[] = [];
   const quoteItem = quoteSelectionItem(
     product,
     imgSrc,
-    setup ? "setup" : "rental",
-    setupIncludedItems
+    setup ? "setup" : "rental"
   );
   const catalogueImageMap = new Map<string, { alt: string; src: string }>();
   catalogueImageMap.set(imgSrc, { alt, src: imgSrc });
@@ -455,7 +403,7 @@ export function StitchDetail({
                   </div>
                   <div>
                     <dt>Included rental pieces</dt>
-                    <dd>{recipeProducts.length} pieces</dd>
+                    <dd>Included rental pieces will be confirmed during manual review.</dd>
                   </div>
                 </dl>
               </div>
@@ -470,31 +418,6 @@ export function StitchDetail({
               </div>
             </div>
           </div>
-          {recipeProducts.length ? (
-            <section className="stitch-included-open">
-              <div className="stitch-included-open__header">
-                <h3>Included rental pieces</h3>
-              </div>
-              <div className="stitch-included-open__grid">
-                {recipeProducts.map((item, index) => {
-                  const piece = recipePieces[index];
-                  const baseQuantity = piece?.baseQuantity ?? 1;
-                  return (
-                    <article key={item.id}>
-                      <img
-                        alt={`${item.name} rental piece`}
-                        src={stitchImageSrc(fallbackProductImage(item))}
-                      />
-                      <div>
-                        <strong>{item.name}</strong>
-                        <small>Qty: {baseQuantity}</small>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-            </section>
-          ) : null}
         </div>
       </section>
     );

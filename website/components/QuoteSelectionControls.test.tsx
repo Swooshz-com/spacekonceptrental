@@ -487,4 +487,11 @@ describe("QuoteSelectionControls", () => {
     expect(rows).toHaveLength(1);
     expect(rows[0]?.reference).toBe("table");
   });
+
+  it("does not export uncontrolled direct storage writers", async () => {
+    const mod = await import("./QuoteSelectionControls");
+    expect("clearStoredQuoteSelection" in mod).toBe(false);
+    expect("getStoredQuoteSelection" in mod).toBe(false);
+    expect("writeQuoteSelection" in mod).toBe(false);
+  });
 });

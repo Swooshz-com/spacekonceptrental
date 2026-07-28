@@ -1461,4 +1461,140 @@ describe("Design Lock C — single complete-selection storage transaction", () =
       setupWithCatalogueRow("chair", "rental", 1)
     );
   });
+
+  it("removes the key and verifies null read-back when original state was absent and write mismatch triggers restore", () => {
+    let stored: string | null = null;
+    let writeCount = 0;
+    const storage: QuoteSelectionStorageAdapter = {
+      read: () => stored,
+      write: (next: string) => {
+        writeCount += 1;
+        if (writeCount === 1) {
+          stored = '{"tampered":true}';
+          return;
+        }
+        stored = next;
+      },
+      remove: () => {
+        stored = null;
+      }
+    };
+    const result = commitQuoteSelectionChange(storage, {
+      kind: "catalogue",
+      reference: "chair",
+      subkind: "rental",
+      source: "catalogue"
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.code).toBe("read-back-mismatch");
+    expect(result.originalBytes).toBe(null);
+    expect(stored).toBe(null);
+  });
+
+  it("returns restore-failed when null-state removal throws during mismatch recovery", () => {
+    let stored: string | null = null;
+    let writeCount = 0;
+    const throwingStorage: QuoteSelectionStorageAdapter = {
+      read: () => stored,
+      write: (next: string) => {
+        writeCount += 1;
+        if (writeCount === 1) {
+          stored = '{"tampered":true}';
+          return;
+        }
+        stored = next;
+      },
+      remove: () => {
+        throw new Error("quota");
+      }
+    };
+    const result = commitQuoteSelectionChange(throwingStorage, {
+      kind: "catalogue",
+      reference: "chair",
+      subkind: "rental",
+      source: "catalogue"
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.code).toBe("restore-failed");
+    expect(result.originalBytes).toBe(null);
+  });
+
+  it("returns restore-failed when null-state removal succeeds but key remains", () => {
+    let stored: string | null = null;
+    let writeCount = 0;
+    const noOpRemoveStorage: QuoteSelectionStorageAdapter = {
+      read: () => stored,
+      write: (next: string) => {
+        writeCount += 1;
+        if (writeCount === 1) {
+          stored = '{"tampered":true}';
+          return;
+        }
+        stored = next;
+      },
+      remove: () => {
+        stored = '{"stale":true}';
+      }
+    };
+    const result = commitQuoteSelectionChange(noOpRemoveStorage, {
+      kind: "catalogue",
+      reference: "chair",
+      subkind: "rental",
+      source: "catalogue"
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.code).toBe("restore-failed");
+    expect(result.originalBytes).toBe(null);
+  });
+
+  it("returns restore-failed when adapter has no remove method and original state was null", () => {
+    let stored: string | null = null;
+    let writeCount = 0;
+    const noRemoveStorage: QuoteSelectionStorageAdapter = {
+      read: () => stored,
+      write: (next: string) => {
+        writeCount += 1;
+        if (writeCount === 1) {
+          stored = '{"tampered":true}';
+          return;
+        }
+        stored = next;
+      }
+    };
+    const result = commitQuoteSelectionChange(noRemoveStorage, {
+      kind: "catalogue",
+      reference: "chair",
+      subkind: "rental",
+      source: "catalogue"
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.code).toBe("restore-failed");
+    expect(result.originalBytes).toBe(null);
+  });
+
+  it("dispatches no success event when null-state restoration fails", () => {
+    let dispatchCount = 0;
+    const storage: QuoteSelectionStorageAdapter = {
+      read: () => null,
+      write: () => {},
+      remove: () => {
+        throw new Error("quota");
+      },
+      dispatchSuccess: () => {
+        dispatchCount += 1;
+      }
+    };
+    const result = commitQuoteSelectionChange(storage, {
+      kind: "catalogue",
+      reference: "chair",
+      subkind: "rental",
+      source: "catalogue"
+    });
+    expect(result.ok).toBe(false);
+    expect(dispatchCount).toBe(0);
+  });
 });

@@ -71,6 +71,7 @@ export type SetupRecipeResolution = {
 export type QuoteSelectionStorageAdapter = {
   read: () => string | null;
   write: (serialized: string) => void;
+  remove?: () => void;
   dispatchSuccess?: () => void;
 };
 
@@ -930,9 +931,29 @@ function tryRestoreOriginalBytes(
   storage: QuoteSelectionStorageAdapter,
   originalBytes: string | null
 ): QuoteSelectionCommitFailureCode | null {
-  const target = originalBytes ?? "";
+  if (originalBytes === null) {
+    if (storage.remove) {
+      try {
+        storage.remove();
+      } catch {
+        return "restore-failed";
+      }
+    } else {
+      return "restore-failed";
+    }
+    let verified: string | null;
+    try {
+      verified = storage.read();
+    } catch {
+      return "restore-failed";
+    }
+    if (verified !== null) {
+      return "restore-failed";
+    }
+    return null;
+  }
   try {
-    storage.write(target);
+    storage.write(originalBytes);
   } catch {
     return "restore-failed";
   }
@@ -942,7 +963,7 @@ function tryRestoreOriginalBytes(
   } catch {
     return "restore-failed";
   }
-  if (verified !== target) {
+  if (verified !== originalBytes) {
     return "restore-failed";
   }
   return null;

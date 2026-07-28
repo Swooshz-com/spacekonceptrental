@@ -22,6 +22,15 @@ preservation, conditional contact requirements, and accessible errors.
 Catalogue display identity is resolved from current server-owned public data
 rather than browser claims.
 
+The storage adapter supports exact browser-storage absence restoration with an
+optional `remove` operation. All production storage mutations route through
+`commitQuoteSelectionChange`. Obsolete direct storage writers have been
+removed.
+
+Setup recipe composition is deferred to issue #319. No production-facing code
+derives included pieces from catalogue data. The setup detail page shows
+explicit manual review copy. Setup selection remains visible and removable.
+
 The existing Supabase persistence foundation remains in place but public
 browser submission is currently compile-time disabled. Direct public POST
 is held at the review boundary and returns generic HTTP 503 before body

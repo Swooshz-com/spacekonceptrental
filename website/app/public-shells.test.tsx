@@ -597,9 +597,7 @@ describe("public page shells", () => {
     expect(screen.getByRole("link", { name: /back to setups/i })).toBeInTheDocument();
     expect(screen.getByText("Setups / Direction")).toBeInTheDocument();
     expect(screen.getByText("Styled setup")).toBeInTheDocument();
-    expect(screen.getByText("0 pieces")).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { level: 3, name: /included rental pieces/i })).not.toBeInTheDocument();
-    expect(document.querySelector(".stitch-included-open__grid")).toBeNull();
+    expect(screen.getByText("Included rental pieces will be confirmed during manual review.")).toBeInTheDocument();
     expect(screen.queryByText(/our team will prepare a custom proposal/i)).not.toBeInTheDocument();
     expect(document.querySelector(".stitch-detail-context")).toBeNull();
     expect(document.querySelector(".stitch-detail-actions--setup")).not.toBeNull();
@@ -627,7 +625,7 @@ describe("public page shells", () => {
     expect(styles).toMatch(/\.stitch-included-open__header\s*\{[\s\S]*?display:\s*flex\s*!important;[\s\S]*?justify-content:\s*flex-start\s*!important;/);
   });
 
-  it("renders only authoritative setup pieces when a setup has explicit setupPieces and a setupCatalogue is provided", () => {
+  it("defers setup recipe display to manual review even when setupPieces data is supplied", () => {
     const setupProduct: PublicCatalogueProduct = {
       ...modularLounge,
       id: "setup-metropolitan-gala",
@@ -668,15 +666,13 @@ describe("public page shells", () => {
       />
     );
 
-    expect(screen.getByRole("heading", { level: 3, name: /included rental pieces/i })).toBeInTheDocument();
-    expect(screen.getByText("2 pieces")).toBeInTheDocument();
-    expect(screen.getByText("Authoritative Piece A")).toBeInTheDocument();
-    expect(screen.getByText("Authoritative Piece B")).toBeInTheDocument();
-    expect(screen.getByText("Qty: 12")).toBeInTheDocument();
-    expect(screen.getByText("Qty: 4")).toBeInTheDocument();
+    expect(screen.getByText("Included rental pieces will be confirmed during manual review.")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { level: 3, name: /included rental pieces/i })).not.toBeInTheDocument();
+    expect(screen.queryByText("Authoritative Piece A")).not.toBeInTheDocument();
+    expect(screen.queryByText("Authoritative Piece B")).not.toBeInTheDocument();
   });
 
-  it("fails closed when setupPieces references a product that is not in setupCatalogue", () => {
+  it("defers setup recipe display when setupPieces references products not in setupCatalogue", () => {
     const setupProduct: PublicCatalogueProduct = {
       ...modularLounge,
       id: "setup-orphan",
@@ -710,8 +706,8 @@ describe("public page shells", () => {
       />
     );
 
+    expect(screen.getByText("Included rental pieces will be confirmed during manual review.")).toBeInTheDocument();
     expect(screen.queryByRole("heading", { level: 3, name: /included rental pieces/i })).not.toBeInTheDocument();
-    expect(screen.getByText("0 pieces")).toBeInTheDocument();
   });
 
   it("keeps public listing source free from shell, ecommerce-only copy, and browser Supabase", () => {

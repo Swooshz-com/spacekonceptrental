@@ -81,3 +81,24 @@ While disabled:
   from the public route.
 
 No database migration or atomic quote RPC change is part of this boundary.
+
+## Storage adapter removal contract
+
+`QuoteSelectionStorageAdapter` supports an optional `remove` operation. When
+the original storage state was `null` (key absent) and a commit fails after
+writing, the transaction removes the key and verifies that `read()` returns
+`null`. If the adapter has no `remove` method, if `remove` throws, or if the
+read-back after removal is not `null`, the result is `restore-failed`. No
+success event is dispatched on any failed commit or restoration. No UI update
+is applied on failure. The empty string `""` is never substituted for absence.
+
+## Setup recipe composition deferral
+
+Setup recipe composition is deferred to issue #319. No production-facing code
+currently derives setup included pieces from catalogue order, category
+similarity, slugs, names, browser storage, or fixture-only fields. The
+`setupPieces` field referenced by the resolver types does not exist on any
+real server-side product record. Where a recipe context would otherwise
+appear, the visible UI shows: `Included rental pieces will be confirmed during
+manual review.` Setup selection remains visible, grouped, and removable in the
+quote summary. `0 pieces` is never shown as an authoritative recipe count.

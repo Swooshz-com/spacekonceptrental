@@ -240,54 +240,11 @@ function buildBrowserStorage(): QuoteSelectionStorageAdapter {
     read: () => window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY),
     write: (serialized) =>
       window.sessionStorage.setItem(QUOTE_SELECTION_STORAGE_KEY, serialized),
+    remove: () =>
+      window.sessionStorage.removeItem(QUOTE_SELECTION_STORAGE_KEY),
     dispatchSuccess: () =>
       window.dispatchEvent(new Event(quoteSelectionChangeEvent))
   };
-}
-
-function writeQuoteSelection(items: QuoteSelectionItem[]) {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  const serialized = window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY);
-  const current = parseStoredQuoteSelection(serialized);
-  const manualRows = current.ok
-    ? current.value.rows.filter((row) => row.kind === "manual")
-    : [];
-
-  const catalogueItems = items.filter(
-    (item) => item.kind === "rental" || item.kind === "setup"
-  );
-
-  const catalogueResult = createCatalogueSelection(
-    catalogueItems.map((item) => ({
-      reference: item.slug,
-      quantity: item.quantity,
-      source: item.selectionSource ?? "catalogue",
-      subkind: (item.kind === "setup" ? "setup" : "rental") as CatalogueSelectionSubkind
-    }))
-  );
-
-  if (!catalogueResult.ok) {
-    return;
-  }
-
-  const nextSelection = {
-    version: 2 as const,
-    rows: [
-      ...manualRows.map((row, index) => ({ ...row, order: index })),
-      ...catalogueResult.value.rows.map((row, index) => ({
-        ...row,
-        order: manualRows.length + index
-      }))
-    ]
-  };
-
-  commitQuoteSelectionChange(buildBrowserStorage(), {
-    kind: "replace",
-    selection: nextSelection
-  });
 }
 
 function writeUrlFallback(item: QuoteSelectionItem) {
@@ -366,14 +323,6 @@ function refreshStoredQuoteItem(
   });
 
   setItems(nextItems);
-}
-
-export function getStoredQuoteSelection() {
-  return readQuoteSelection();
-}
-
-export function clearStoredQuoteSelection() {
-  writeQuoteSelection([]);
 }
 
 export function QuoteSelectionDataBoundary({

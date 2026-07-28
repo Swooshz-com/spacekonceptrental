@@ -13,6 +13,22 @@ empty/unavailable/stale recovery, conditional contact requirements and
 accessible errors. Catalogue display identity is resolved from current
 server-owned public data rather than browser claims.
 
+The storage adapter supports an optional `remove` operation for exact
+browser-storage absence restoration. When the original storage state was null
+and a commit fails after writing, the transaction removes the key and verifies
+`null` read-back. No empty-string substitution is performed.
+
+The obsolete direct storage writers (`writeQuoteSelection`,
+`getStoredQuoteSelection`, `clearStoredQuoteSelection`) have been removed.
+All production storage mutations route through `commitQuoteSelectionChange`.
+A repository-owned structural test proves no uncontrolled direct writer is
+exported from the controls module.
+
+Setup recipe composition is deferred to issue #319. No production-facing code
+derives included pieces from catalogue data. The setup detail page shows:
+`Included rental pieces will be confirmed during manual review.` Setup
+selection remains visible and removable.
+
 Quote submission remains compile-time disabled. The client performs no quote
 request and direct POST returns generic HTTP 503 before body parsing or any
 persistence or delivery dependency. This is review-only implementation; it is
