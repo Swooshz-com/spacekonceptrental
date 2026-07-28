@@ -4,7 +4,6 @@ export const QUOTE_SELECTION_MAX_ROWS = 20;
 export const QUOTE_SELECTION_MAX_BYTES = 8_192;
 export const QUOTE_SELECTION_MIN_QUANTITY = 1;
 export const QUOTE_SELECTION_MAX_QUANTITY = 99;
-export const QUOTE_SELECTION_MAX_RECIPE_BASE_QUANTITY = 999;
 export const QUOTE_MANUAL_DESCRIPTION_MAX_LENGTH = 180;
 export const QUOTE_MANUAL_NOTES_MAX_LENGTH = 500;
 
@@ -51,21 +50,6 @@ export type QuoteSelectionResult =
 export type CanonicalCatalogueIdentity = {
   reference: string;
   kind: "rental" | "setup";
-};
-
-export type SetupRecipeAuthoritativePiece = {
-  slug: string;
-  baseQuantity: number;
-};
-
-export type SetupRecipeAuthoritativeProduct = {
-  slug: string;
-  setupPieces?: ReadonlyArray<SetupRecipeAuthoritativePiece>;
-};
-
-export type SetupRecipeResolution = {
-  slug: string;
-  pieces: SetupRecipeAuthoritativePiece[];
 };
 
 export type QuoteSelectionStorageAdapter = {
@@ -720,79 +704,6 @@ export function deriveCanonicalIdentitiesFromCatalogue<
   }
 
   return identities;
-}
-
-// ----------------------------------------------------------------------------
-// Design Lock B — actual setup-specific recipe (fail-closed resolver)
-// ----------------------------------------------------------------------------
-
-function isValidRecipePiece(
-  piece: unknown
-): piece is SetupRecipeAuthoritativePiece {
-  if (!isRecord(piece)) {
-    return false;
-  }
-  if (typeof piece.slug !== "string") {
-    return false;
-  }
-  if (!publicReferencePattern.test(piece.slug)) {
-    return false;
-  }
-  if (
-    typeof piece.baseQuantity !== "number" ||
-    !Number.isInteger(piece.baseQuantity) ||
-    piece.baseQuantity < 1 ||
-    piece.baseQuantity > QUOTE_SELECTION_MAX_RECIPE_BASE_QUANTITY
-  ) {
-    return false;
-  }
-  return true;
-}
-
-export function resolveSetupRecipe<P extends SetupRecipeAuthoritativeProduct>(
-  setup: P,
-  catalogue: ReadonlyArray<P>
-): SetupRecipeAuthoritativePiece[] {
-  if (!setup.setupPieces || setup.setupPieces.length === 0) {
-    return [];
-  }
-
-  const catalogueSlugs = new Set(catalogue.map((product) => product.slug));
-  const seen = new Set<string>();
-  const resolved: SetupRecipeAuthoritativePiece[] = [];
-
-  for (const rawPiece of setup.setupPieces) {
-    if (!isValidRecipePiece(rawPiece)) {
-      continue;
-    }
-    if (seen.has(rawPiece.slug)) {
-      continue;
-    }
-    if (!catalogueSlugs.has(rawPiece.slug)) {
-      continue;
-    }
-    seen.add(rawPiece.slug);
-    resolved.push({
-      slug: rawPiece.slug,
-      baseQuantity: rawPiece.baseQuantity
-    });
-  }
-
-  return resolved;
-}
-
-export function resolveSetupRecipesForCatalogue<
-  P extends SetupRecipeAuthoritativeProduct
->(
-  catalogue: ReadonlyArray<P>,
-  isSetupProduct: (product: P) => boolean
-): SetupRecipeResolution[] {
-  return catalogue
-    .filter(isSetupProduct)
-    .map((setup) => ({
-      slug: setup.slug,
-      pieces: resolveSetupRecipe(setup, catalogue)
-    }));
 }
 
 // ----------------------------------------------------------------------------

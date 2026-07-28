@@ -16,9 +16,12 @@ platform.
 - [x] Public submission is compile-time disabled and returns generic 503 at
       the review boundary.
 - [x] Storage adapter supports exact absence restoration via optional remove.
+- [x] Both production adapters (controls and form) support remove.
 - [x] Obsolete direct storage writers removed; all mutations through
       commitQuoteSelectionChange.
 - [x] Setup recipe composition deferred to issue #319; no fabricated pieces.
+- [x] Production recipe runtime path removed (quoteSetupRecipes,
+      resolveSetupRecipesForCatalogue, setupPieces cast).
 - [ ] No live submission, persistence enablement, or deployment is completed
       by this structured quote UX PR.
 - [ ] Start from a clean branch or explicitly separate unrelated local changes.

@@ -45,20 +45,6 @@ export type QuoteSelectionValidItem = {
   slug: string;
 };
 
-export type SetupRecipe = {
-  slug: string;
-  publicName: string;
-  includedPieces: SetupIncludedPiece[];
-};
-
-export type SetupIncludedPiece = {
-  slug: string;
-  publicName: string;
-  baseQuantity: number;
-  imageSrc?: string;
-  detailPath: string;
-};
-
 const quoteSelectionChangeEvent = "skr:quote-selection-change";
 const maxStoredQuoteItems = QUOTE_SELECTION_MAX_ROWS;
 const maxSelectedQuoteItemQuantity = QUOTE_SELECTION_MAX_QUANTITY;
@@ -645,7 +631,6 @@ export function QuoteSelectionSummary({
   fallbackItems = [],
   requestedSlug,
   search,
-  setupRecipes,
   validItems = []
 }: {
   catalogueAvailable?: boolean;
@@ -654,7 +639,6 @@ export function QuoteSelectionSummary({
   fallbackItems?: QuoteSelectionSummaryItem[];
   requestedSlug?: string;
   search?: string;
-  setupRecipes?: SetupRecipe[];
   validItems?: QuoteSelectionValidItem[];
 }) {
   const [items, setItems] = useState<QuoteSelectionItem[]>([]);
@@ -678,34 +662,8 @@ export function QuoteSelectionSummary({
         };
   });
 
-  const recipeEnhancedItems = resolvedItems.map((item) => {
-    if (item.kind !== "setup" || item.unavailable) {
-      return item;
-    }
-
-    const recipe = setupRecipes?.find((r) => r.slug === item.slug);
-
-    if (!recipe) {
-      return item;
-    }
-
-    const includedItems: QuoteSelectionItem[] = recipe.includedPieces.map(
-      (piece) => ({
-        slug: piece.slug,
-        name: piece.publicName,
-        kind: "setup-included" as const,
-        quantity: Math.min(999, piece.baseQuantity * item.quantity),
-        setupBaseQuantity: piece.baseQuantity,
-        setupName: recipe.publicName,
-        setupSlug: recipe.slug,
-        imageSrc: piece.imageSrc
-      })
-    );
-
-    return { ...item, includedItems };
-  });
-  const visibleItems: QuoteSelectionSummaryItem[] = recipeEnhancedItems.length
-    ? recipeEnhancedItems
+  const visibleItems: QuoteSelectionSummaryItem[] = resolvedItems.length
+    ? resolvedItems
     : fallbackItems;
   const hasDiscoveryContext = Boolean(requestedSlug || category || event || search);
   const groupedItems = getGroupedSelectionItems(visibleItems);

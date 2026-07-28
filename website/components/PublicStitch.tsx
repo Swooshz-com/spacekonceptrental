@@ -18,17 +18,13 @@ import {
 } from "../lib/page-media/public-page-media-content";
 import {
   deriveCanonicalIdentitiesFromCatalogue,
-  resolveSetupRecipesForCatalogue,
-  type CanonicalCatalogueIdentity,
-  type SetupRecipeAuthoritativePiece
+  type CanonicalCatalogueIdentity
 } from "../lib/quote/selection-model";
 import {
   QuoteSelectionBadge,
   QuoteSelectionButton,
   type QuoteSelectionItem,
-  type QuoteSelectionValidItem,
-  type SetupRecipe,
-  type SetupIncludedPiece
+  type QuoteSelectionValidItem
 } from "./QuoteSelectionControls";
 import { SetupImageCarousel } from "./SetupImageCarousel";
 
@@ -47,50 +43,6 @@ export function quoteSelectionValidItemsForCatalogue(
 
 function isSetupCatalogueProduct(product: PublicCatalogueProduct): boolean {
   return productCategory(product).toLowerCase() === "setups";
-}
-
-export function quoteSetupRecipes(
-  catalogue: PublicCatalogue
-): SetupRecipe[] {
-  const resolutions = resolveSetupRecipesForCatalogue(
-    catalogue.products as ReadonlyArray<
-      PublicCatalogueProduct & {
-        setupPieces?: ReadonlyArray<SetupRecipeAuthoritativePiece>;
-      }
-    >,
-    isSetupCatalogueProduct
-  );
-
-  return resolutions.map((resolution) => {
-    const setup = catalogue.products.find(
-      (product) => product.slug === resolution.slug
-    );
-    const includedPieces: SetupIncludedPiece[] = resolution.pieces
-      .map((piece): SetupIncludedPiece | undefined => {
-        const product = catalogue.products.find(
-          (candidate) => candidate.slug === piece.slug
-        );
-        if (!product) {
-          return undefined;
-        }
-        return {
-          slug: piece.slug,
-          publicName: product.name,
-          baseQuantity: piece.baseQuantity,
-          imageSrc:
-            product.images?.[0]?.publicUrl ??
-            stitchImageSrc(fallbackProductImage(product)),
-          detailPath: `/catalogue/${piece.slug}`
-        };
-      })
-      .filter((piece): piece is SetupIncludedPiece => Boolean(piece));
-
-    return {
-      slug: resolution.slug,
-      publicName: setup?.name ?? resolution.slug,
-      includedPieces
-    };
-  });
 }
 
 export function quoteCanonicalIdentities(
@@ -331,15 +283,13 @@ export function StitchDetail({
   backHref,
   backLabel,
   setup = false,
-  related = [],
-  setupCatalogue
+  related = []
 }: {
   product: PublicCatalogueProduct;
   backHref: string;
   backLabel: string;
   setup?: boolean;
   related?: PublicCatalogueProduct[];
-  setupCatalogue?: ReadonlyArray<PublicCatalogueProduct>;
 }) {
   const image = product.primaryImage;
   const alt = textOrUndefined(image?.altText) ?? `${product.name} furniture rental setup`;

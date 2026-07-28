@@ -51,6 +51,8 @@ function buildBrowserStorage(): QuoteSelectionStorageAdapter {
     read: () => window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY),
     write: (serialized) =>
       window.sessionStorage.setItem(QUOTE_SELECTION_STORAGE_KEY, serialized),
+    remove: () =>
+      window.sessionStorage.removeItem(QUOTE_SELECTION_STORAGE_KEY),
     dispatchSuccess: () =>
       window.dispatchEvent(new Event(quoteSelectionChangeEvent))
   };
@@ -158,9 +160,12 @@ export default function QuoteRequestForm({
     });
 
     if (!result.ok) {
+      setSelection(readSelection());
       setFieldErrors({
         manualDescription:
-          "This manual requirement could not be added. Check the limits and try again."
+          result.code === "restore-failed" || result.code === "read-back-mismatch" || result.code === "storage-exception"
+            ? "Storage could not be updated. The current selection has been reloaded from this tab."
+            : "This manual requirement could not be added. Check the limits and try again."
       });
       return;
     }
@@ -184,6 +189,8 @@ export default function QuoteRequestForm({
 
     if (result.ok) {
       setSelection(result.value);
+    } else {
+      setSelection(readSelection());
     }
   }
 

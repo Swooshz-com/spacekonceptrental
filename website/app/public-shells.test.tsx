@@ -625,7 +625,7 @@ describe("public page shells", () => {
     expect(styles).toMatch(/\.stitch-included-open__header\s*\{[\s\S]*?display:\s*flex\s*!important;[\s\S]*?justify-content:\s*flex-start\s*!important;/);
   });
 
-  it("defers setup recipe display to manual review even when setupPieces data is supplied", () => {
+  it("shows deferral copy for any setup product without fabricating recipe data", () => {
     const setupProduct: PublicCatalogueProduct = {
       ...modularLounge,
       id: "setup-metropolitan-gala",
@@ -634,45 +634,22 @@ describe("public page shells", () => {
       rentalUnit: "setup",
       categoryName: "Setups"
     };
-    const pieceA: PublicCatalogueProduct = {
-      ...modularLounge,
-      id: "piece-a",
-      slug: "piece-a",
-      name: "Authoritative Piece A"
-    };
-    const pieceB: PublicCatalogueProduct = {
-      ...modularLounge,
-      id: "piece-b",
-      slug: "piece-b",
-      name: "Authoritative Piece B"
-    };
-    const catalogue: ReadonlyArray<PublicCatalogueProduct> = [setupProduct, pieceA, pieceB];
-    const setupWithPieces = {
-      ...setupProduct,
-      setupPieces: [
-        { slug: "piece-a", baseQuantity: 12 },
-        { slug: "piece-b", baseQuantity: 4 }
-      ]
-    } as PublicCatalogueProduct;
 
     render(
       <StitchDetail
         backHref="/listings#setup-listings"
         backLabel="Setups"
-        product={setupWithPieces}
+        product={setupProduct}
         related={[]}
         setup
-        setupCatalogue={catalogue}
       />
     );
 
     expect(screen.getByText("Included rental pieces will be confirmed during manual review.")).toBeInTheDocument();
     expect(screen.queryByRole("heading", { level: 3, name: /included rental pieces/i })).not.toBeInTheDocument();
-    expect(screen.queryByText("Authoritative Piece A")).not.toBeInTheDocument();
-    expect(screen.queryByText("Authoritative Piece B")).not.toBeInTheDocument();
   });
 
-  it("defers setup recipe display when setupPieces references products not in setupCatalogue", () => {
+  it("shows deferral copy for a setup product regardless of related items", () => {
     const setupProduct: PublicCatalogueProduct = {
       ...modularLounge,
       id: "setup-orphan",
@@ -681,28 +658,14 @@ describe("public page shells", () => {
       rentalUnit: "setup",
       categoryName: "Setups"
     };
-    const realPiece: PublicCatalogueProduct = {
-      ...modularLounge,
-      id: "real-piece",
-      slug: "real-piece",
-      name: "Real Piece"
-    };
-    const catalogue: ReadonlyArray<PublicCatalogueProduct> = [realPiece];
-    const setupWithPhantom = {
-      ...setupProduct,
-      setupPieces: [
-        { slug: "phantom-piece", baseQuantity: 5 }
-      ]
-    } as PublicCatalogueProduct;
 
     render(
       <StitchDetail
         backHref="/listings#setup-listings"
         backLabel="Setups"
-        product={setupWithPhantom}
+        product={setupProduct}
         related={[]}
         setup
-        setupCatalogue={catalogue}
       />
     );
 

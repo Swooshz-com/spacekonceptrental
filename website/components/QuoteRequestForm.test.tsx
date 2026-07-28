@@ -459,4 +459,196 @@ describe("QuoteRequestForm", () => {
     };
     expect(afterRemoveParsed.rows).toEqual([]);
   });
+
+  describe("Design Lock B — manual-path failure coverage through the production form adapter", () => {
+    function createFaultyStorage(overrides: {
+      writeMismatch?: boolean;
+      dispatchFailure?: boolean;
+      removeThrows?: boolean;
+      removeNoop?: boolean;
+    }) {
+      const real = window.sessionStorage;
+      let inner: string | null = null;
+      let writeCount = 0;
+      let dispatchCount = 0;
+      const faulty: Storage = {
+        get length() { return inner === null ? 0 : 1; },
+        key: (index: number) => index === 0 && inner !== null ? QUOTE_SELECTION_STORAGE_KEY : null,
+        getItem: (key: string) => key === QUOTE_SELECTION_STORAGE_KEY ? inner : real.getItem(key),
+        setItem: (key: string, value: string) => {
+          if (key === QUOTE_SELECTION_STORAGE_KEY) {
+            writeCount += 1;
+            if (overrides.writeMismatch && writeCount === 1) {
+              inner = '{"tampered":true}';
+              return;
+            }
+            inner = value;
+            return;
+          }
+          real.setItem(key, value);
+        },
+        removeItem: (key: string) => {
+          if (key === QUOTE_SELECTION_STORAGE_KEY) {
+            if (overrides.removeThrows) {
+              throw new Error("quota");
+            }
+            if (overrides.removeNoop) {
+              inner = '{"stale":true}';
+              return;
+            }
+            inner = null;
+            return;
+          }
+          real.removeItem(key);
+        },
+        clear: () => {
+          inner = null;
+          real.clear();
+        }
+      };
+      Object.defineProperty(window, "sessionStorage", {
+        value: faulty,
+        writable: true,
+        configurable: true
+      });
+      return {
+        getWriteCount: () => writeCount,
+        getDispatchCount: () => dispatchCount,
+        getInner: () => inner,
+        restore: () => {
+          Object.defineProperty(window, "sessionStorage", {
+            value: real,
+            writable: true,
+            configurable: true
+          });
+        }
+      };
+    }
+
+    afterEach(() => {
+      Object.defineProperty(window, "sessionStorage", {
+        value: new (class implements Storage {
+          private store = new Map<string, string>();
+          get length() { return this.store.size; }
+          key(i: number) { return Array.from(this.store.keys())[i] ?? null; }
+          getItem(k: string) { return this.store.get(k) ?? null; }
+          setItem(k: string, v: string) { this.store.set(k, String(v)); }
+          removeItem(k: string) { this.store.delete(k); }
+          clear() { this.store.clear(); }
+        })(),
+        writable: true,
+        configurable: true
+      });
+    });
+
+    it("manual add from absent key with write/read-back mismatch triggers remove and UI resync", () => {
+      const faulty = createFaultyStorage({ writeMismatch: true });
+      try {
+        render(<QuoteRequestForm />);
+        fireEvent.change(screen.getByLabelText(/manual item description/i), {
+          target: { value: "Custom counter" }
+        });
+        fireEvent.click(
+          screen.getByRole("button", { name: /add manual requirement/i })
+        );
+
+        expect(faulty.getInner()).toBeNull();
+        expect(screen.queryByText(/custom counter - qty 1/i)).not.toBeInTheDocument();
+        expect(screen.getAllByText(/could not be added|storage could not be updated/i).length).toBeGreaterThan(0);
+      } finally {
+        faulty.restore();
+      }
+    });
+
+    it("removal throws during manual add recovery returns restore-failed and resyncs UI", () => {
+      const faulty = createFaultyStorage({ writeMismatch: true, removeThrows: true });
+      try {
+        render(<QuoteRequestForm />);
+        fireEvent.change(screen.getByLabelText(/manual item description/i), {
+          target: { value: "Custom counter" }
+        });
+        fireEvent.click(
+          screen.getByRole("button", { name: /add manual requirement/i })
+        );
+
+        expect(screen.queryByText(/custom counter - qty 1/i)).not.toBeInTheDocument();
+        expect(screen.getAllByText(/storage could not be updated/i).length).toBeGreaterThan(0);
+      } finally {
+        faulty.restore();
+      }
+    });
+
+    it("removal succeeds but key remains returns restore-failed and resyncs UI", () => {
+      const faulty = createFaultyStorage({ writeMismatch: true, removeNoop: true });
+      try {
+        render(<QuoteRequestForm />);
+        fireEvent.change(screen.getByLabelText(/manual item description/i), {
+          target: { value: "Custom counter" }
+        });
+        fireEvent.click(
+          screen.getByRole("button", { name: /add manual requirement/i })
+        );
+
+        expect(screen.queryByText(/custom counter - qty 1/i)).not.toBeInTheDocument();
+        expect(screen.getAllByText(/storage could not be updated/i).length).toBeGreaterThan(0);
+      } finally {
+        faulty.restore();
+      }
+    });
+
+    it("manual remove with existing row resyncs UI when commit fails", () => {
+      window.sessionStorage.setItem(
+        QUOTE_SELECTION_STORAGE_KEY,
+        JSON.stringify({
+          version: 2,
+          rows: [
+            {
+              kind: "manual",
+              key: "manual-a",
+              description: "Existing item",
+              quantity: 1,
+              source: "manual",
+              order: 0
+            }
+          ]
+        })
+      );
+
+      render(<QuoteRequestForm />);
+      expect(screen.getByText(/existing item - qty 1/i)).toBeInTheDocument();
+
+      const removeButton = screen.getByRole("button", {
+        name: /remove manual requirement existing item/i
+      });
+      fireEvent.click(removeButton);
+
+      expect(screen.queryByText(/existing item - qty 1/i)).not.toBeInTheDocument();
+    });
+
+    it("successful manual add and remove through the production adapter remain unchanged", () => {
+      render(<QuoteRequestForm />);
+
+      fireEvent.change(screen.getByLabelText(/manual item description/i), {
+        target: { value: "Custom counter" }
+      });
+      fireEvent.click(
+        screen.getByRole("button", { name: /add manual requirement/i })
+      );
+
+      expect(screen.getByText(/custom counter - qty 1/i)).toBeInTheDocument();
+      expect(
+        JSON.parse(window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY) ?? "{}")
+      ).toHaveProperty("rows");
+
+      fireEvent.click(
+        screen.getByRole("button", { name: /remove manual requirement custom counter/i })
+      );
+
+      expect(screen.queryByText(/custom counter - qty 1/i)).not.toBeInTheDocument();
+      const afterRemove = JSON.parse(
+        window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY) ?? "{}"
+      ) as { rows: unknown[] };
+      expect(afterRemove.rows).toEqual([]);
+    });
+  });
 });
