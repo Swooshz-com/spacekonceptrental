@@ -8,12 +8,14 @@ import {
   QUOTE_MANUAL_NOTES_MAX_LENGTH,
   QUOTE_SELECTION_MAX_QUANTITY,
   QUOTE_SELECTION_STORAGE_KEY,
+  commitQuoteSelectionChange,
   createManualSelectionRow,
   emptyQuoteSelection,
-  normalizeQuoteSelection,
   parseStoredQuoteSelection,
-  serializeQuoteSelection,
-  type QuoteSelection
+  selectionSatisfiesRequiredSelection,
+  type CanonicalCatalogueIdentity,
+  type QuoteSelection,
+  type QuoteSelectionStorageAdapter
 } from "../lib/quote/selection-model";
 
 const quoteSelectionChangeEvent = "skr:quote-selection-change";
@@ -44,16 +46,14 @@ function readSelection() {
   return parsed.ok ? parsed.value : emptyQuoteSelection();
 }
 
-function writeSelection(selection: QuoteSelection) {
-  const serialized = serializeQuoteSelection(selection);
-
-  if (!serialized) {
-    return false;
-  }
-
-  window.sessionStorage.setItem(QUOTE_SELECTION_STORAGE_KEY, serialized);
-  window.dispatchEvent(new Event(quoteSelectionChangeEvent));
-  return true;
+function buildBrowserStorage(): QuoteSelectionStorageAdapter {
+  return {
+    read: () => window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY),
+    write: (serialized) =>
+      window.sessionStorage.setItem(QUOTE_SELECTION_STORAGE_KEY, serialized),
+    dispatchSuccess: () =>
+      window.dispatchEvent(new Event(quoteSelectionChangeEvent))
+  };
 }
 
 function focusFirstError(form: HTMLFormElement, errors: FieldErrors) {
@@ -81,11 +81,11 @@ function focusFirstError(form: HTMLFormElement, errors: FieldErrors) {
 export default function QuoteRequestForm({
   initialItemsText: _initialItemsText = "",
   initialListingSlug,
-  validCatalogueReferences = []
+  validCanonicalIdentities = []
 }: {
   initialItemsText?: string;
   initialListingSlug?: string;
-  validCatalogueReferences?: string[];
+  validCanonicalIdentities?: CanonicalCatalogueIdentity[];
 }) {
   const errorSummaryId = useId();
   const [selection, setSelection] = useState<QuoteSelection>(
@@ -139,14 +139,8 @@ export default function QuoteRequestForm({
       ...(manualNotes.trim() ? { notes: manualNotes } : {}),
       position: selection.rows.length
     });
-    const next = row
-      ? normalizeQuoteSelection({
-          version: 2,
-          rows: [...selection.rows, row]
-        })
-      : { ok: false as const, code: "invalid-selection" as const };
 
-    if (!next.ok || !writeSelection(next.value)) {
+    if (!row) {
       setFieldErrors({
         manualDescription:
           "This manual requirement could not be added. Check the limits and try again."
@@ -154,7 +148,24 @@ export default function QuoteRequestForm({
       return;
     }
 
-    setSelection(next.value);
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const result = commitQuoteSelectionChange(buildBrowserStorage(), {
+      kind: "manual-add",
+      row
+    });
+
+    if (!result.ok) {
+      setFieldErrors({
+        manualDescription:
+          "This manual requirement could not be added. Check the limits and try again."
+      });
+      return;
+    }
+
+    setSelection(result.value);
     setManualDescription("");
     setManualQuantity("1");
     setManualNotes("");
@@ -162,15 +173,17 @@ export default function QuoteRequestForm({
   }
 
   function removeManualRequirement(key: string) {
-    const next = normalizeQuoteSelection({
-      version: 2,
-      rows: selection.rows.filter(
-        (row) => row.kind !== "manual" || row.key !== key
-      )
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const result = commitQuoteSelectionChange(buildBrowserStorage(), {
+      kind: "manual-remove",
+      key
     });
 
-    if (next.ok && writeSelection(next.value)) {
-      setSelection(next.value);
+    if (result.ok) {
+      setSelection(result.value);
     }
   }
 
@@ -203,10 +216,14 @@ export default function QuoteRequestForm({
       errors.customerPhone = "Phone number is required for phone follow-up.";
     }
 
-    const hasAcceptedSelection = selection.rows.some(
-      (row) =>
-        row.kind === "manual" ||
-        validCatalogueReferences.includes(row.reference)
+    const storedSerialized =
+      typeof window === "undefined"
+        ? null
+        : window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY);
+
+    const hasAcceptedSelection = selectionSatisfiesRequiredSelection(
+      storedSerialized,
+      validCanonicalIdentities
     );
 
     if (!hasAcceptedSelection) {

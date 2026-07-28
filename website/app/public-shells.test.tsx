@@ -562,7 +562,7 @@ describe("public page shells", () => {
     expect(document.querySelector(".stitch-back")).toBeNull();
   });
 
-  it("keeps setup detail pages on a carousel-led h2/h3 hierarchy", () => {
+  it("keeps setup detail pages on a carousel-led h2/h3 hierarchy with no fabricated included pieces", () => {
     const setupProduct: PublicCatalogueProduct = {
       ...modularLounge,
       id: "setup-metropolitan-gala",
@@ -594,11 +594,12 @@ describe("public page shells", () => {
 
     expect(screen.queryByRole("heading", { level: 1, name: /the metropolitan gala/i })).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 2, name: /the metropolitan gala/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { level: 3, name: /included rental pieces/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /back to setups/i })).toBeInTheDocument();
     expect(screen.getByText("Setups / Direction")).toBeInTheDocument();
     expect(screen.getByText("Styled setup")).toBeInTheDocument();
-    expect(screen.getByText("1 pieces")).toBeInTheDocument();
+    expect(screen.getByText("0 pieces")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { level: 3, name: /included rental pieces/i })).not.toBeInTheDocument();
+    expect(document.querySelector(".stitch-included-open__grid")).toBeNull();
     expect(screen.queryByText(/our team will prepare a custom proposal/i)).not.toBeInTheDocument();
     expect(document.querySelector(".stitch-detail-context")).toBeNull();
     expect(document.querySelector(".stitch-detail-actions--setup")).not.toBeNull();
@@ -609,9 +610,8 @@ describe("public page shells", () => {
     expect(document.querySelector(".stitch-detail-open-copy.stitch-setup-summary")).not.toBeNull();
     expect(document.querySelector(".stitch-included-open__header > .stitch-back")).toBeNull();
     expect(document.querySelector(".stitch-detail-actions--setup .stitch-detail-button--back")).not.toBeNull();
-    expect(document.querySelector(".stitch-included-open__grid")).not.toBeNull();
-    expect(screen.getByRole("button", { name: /previous setup image/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /next setup image/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /previous setup image/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /next setup image/i })).not.toBeInTheDocument();
     expect(setupDetailBlock).toContain("stitch-detail-carousel");
     expect(styles).toMatch(/\.stitch-detail-carousel__control\s*\{[\s\S]*?height:\s*100%\s*!important;[\s\S]*?width:\s*clamp\(2\.35rem,\s*4\.4vw,\s*3\.7rem\)\s*!important;/);
     expect(styles).toMatch(/\.stitch-detail-carousel__control:hover,[\s\S]*?\.stitch-detail-carousel__control:focus-visible\s*\{[\s\S]*?background:\s*var\(--stitch-surface\)\s*!important;/);
@@ -625,6 +625,93 @@ describe("public page shells", () => {
     expect(styles).toMatch(/\.stitch-detail-actions--setup \.stitch-detail-button--back\s*\{[\s\S]*?border-color:\s*var\(--stitch-ink\)\s*!important;/);
     expect(styles).toMatch(/\.stitch-detail-actions--setup \.stitch-detail-button--request\s*\{[\s\S]*?border-color:\s*transparent\s*!important;/);
     expect(styles).toMatch(/\.stitch-included-open__header\s*\{[\s\S]*?display:\s*flex\s*!important;[\s\S]*?justify-content:\s*flex-start\s*!important;/);
+  });
+
+  it("renders only authoritative setup pieces when a setup has explicit setupPieces and a setupCatalogue is provided", () => {
+    const setupProduct: PublicCatalogueProduct = {
+      ...modularLounge,
+      id: "setup-metropolitan-gala",
+      slug: "the-metropolitan-gala",
+      name: "The Metropolitan Gala",
+      rentalUnit: "setup",
+      categoryName: "Setups"
+    };
+    const pieceA: PublicCatalogueProduct = {
+      ...modularLounge,
+      id: "piece-a",
+      slug: "piece-a",
+      name: "Authoritative Piece A"
+    };
+    const pieceB: PublicCatalogueProduct = {
+      ...modularLounge,
+      id: "piece-b",
+      slug: "piece-b",
+      name: "Authoritative Piece B"
+    };
+    const catalogue: ReadonlyArray<PublicCatalogueProduct> = [setupProduct, pieceA, pieceB];
+    const setupWithPieces = {
+      ...setupProduct,
+      setupPieces: [
+        { slug: "piece-a", baseQuantity: 12 },
+        { slug: "piece-b", baseQuantity: 4 }
+      ]
+    } as PublicCatalogueProduct;
+
+    render(
+      <StitchDetail
+        backHref="/listings#setup-listings"
+        backLabel="Setups"
+        product={setupWithPieces}
+        related={[]}
+        setup
+        setupCatalogue={catalogue}
+      />
+    );
+
+    expect(screen.getByRole("heading", { level: 3, name: /included rental pieces/i })).toBeInTheDocument();
+    expect(screen.getByText("2 pieces")).toBeInTheDocument();
+    expect(screen.getByText("Authoritative Piece A")).toBeInTheDocument();
+    expect(screen.getByText("Authoritative Piece B")).toBeInTheDocument();
+    expect(screen.getByText("Qty: 12")).toBeInTheDocument();
+    expect(screen.getByText("Qty: 4")).toBeInTheDocument();
+  });
+
+  it("fails closed when setupPieces references a product that is not in setupCatalogue", () => {
+    const setupProduct: PublicCatalogueProduct = {
+      ...modularLounge,
+      id: "setup-orphan",
+      slug: "orphan-setup",
+      name: "Orphan Setup",
+      rentalUnit: "setup",
+      categoryName: "Setups"
+    };
+    const realPiece: PublicCatalogueProduct = {
+      ...modularLounge,
+      id: "real-piece",
+      slug: "real-piece",
+      name: "Real Piece"
+    };
+    const catalogue: ReadonlyArray<PublicCatalogueProduct> = [realPiece];
+    const setupWithPhantom = {
+      ...setupProduct,
+      setupPieces: [
+        { slug: "phantom-piece", baseQuantity: 5 }
+      ]
+    } as PublicCatalogueProduct;
+
+    render(
+      <StitchDetail
+        backHref="/listings#setup-listings"
+        backLabel="Setups"
+        product={setupWithPhantom}
+        related={[]}
+        setup
+        setupCatalogue={catalogue}
+      />
+    );
+
+    expect(screen.queryByRole("heading", { level: 3, name: /included rental pieces/i })).not.toBeInTheDocument();
+    expect(screen.getByText("0 pieces")).toBeInTheDocument();
   });
 
   it("keeps public listing source free from shell, ecommerce-only copy, and browser Supabase", () => {

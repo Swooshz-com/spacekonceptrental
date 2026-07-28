@@ -4,6 +4,7 @@ export const QUOTE_SELECTION_MAX_ROWS = 20;
 export const QUOTE_SELECTION_MAX_BYTES = 8_192;
 export const QUOTE_SELECTION_MIN_QUANTITY = 1;
 export const QUOTE_SELECTION_MAX_QUANTITY = 99;
+export const QUOTE_SELECTION_MAX_RECIPE_BASE_QUANTITY = 999;
 export const QUOTE_MANUAL_DESCRIPTION_MAX_LENGTH = 180;
 export const QUOTE_MANUAL_NOTES_MAX_LENGTH = 500;
 
@@ -46,6 +47,68 @@ export type QuoteSelectionErrorCode =
 export type QuoteSelectionResult =
   | { ok: true; value: QuoteSelection }
   | { ok: false; code: QuoteSelectionErrorCode };
+
+export type CanonicalCatalogueIdentity = {
+  reference: string;
+  kind: "rental" | "setup";
+};
+
+export type SetupRecipeAuthoritativePiece = {
+  slug: string;
+  baseQuantity: number;
+};
+
+export type SetupRecipeAuthoritativeProduct = {
+  slug: string;
+  setupPieces?: ReadonlyArray<SetupRecipeAuthoritativePiece>;
+};
+
+export type SetupRecipeResolution = {
+  slug: string;
+  pieces: SetupRecipeAuthoritativePiece[];
+};
+
+export type QuoteSelectionStorageAdapter = {
+  read: () => string | null;
+  write: (serialized: string) => void;
+  dispatchSuccess?: () => void;
+};
+
+export type QuoteSelectionChange =
+  | {
+      kind: "catalogue";
+      reference: string;
+      subkind: CatalogueSelectionSubkind;
+      quantity?: number;
+      source: CatalogueSelectionSource;
+    }
+  | { kind: "manual-add"; row: ManualSelectionRow }
+  | { kind: "manual-remove"; key: string }
+  | { kind: "replace"; selection: QuoteSelection }
+  | { kind: "clear" };
+
+export type QuoteSelectionCommitFailureCode =
+  | "invalid-selection"
+  | "quantity-overflow"
+  | "row-limit"
+  | "byte-limit"
+  | "storage-exception"
+  | "read-back-mismatch"
+  | "restore-failed";
+
+export type QuoteSelectionCommitResult =
+  | {
+      ok: true;
+      serialized: string;
+      value: QuoteSelection;
+      bytes: number;
+      originalBytes: string | null;
+    }
+  | {
+      ok: false;
+      code: QuoteSelectionCommitFailureCode;
+      originalBytes: string | null;
+    };
 
 const publicReferencePattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const opaqueKeyPattern = /^[A-Za-z0-9_-]{1,80}$/;
@@ -576,4 +639,393 @@ export function allRowsFromSelection(storedSerialized: string | null): QuoteSele
   const current = parseStoredQuoteSelection(storedSerialized);
 
   return current.ok ? current.value.rows : [];
+}
+
+// ----------------------------------------------------------------------------
+// Design Lock A — canonical (reference, kind) identity through form acceptance
+// ----------------------------------------------------------------------------
+
+export function canonicalIdentityMatchesRow(
+  row: CatalogueSelectionRow,
+  identity: CanonicalCatalogueIdentity
+): boolean {
+  return (
+    typeof identity.reference === "string" &&
+    identity.reference === row.reference &&
+    (identity.kind === "rental" || identity.kind === "setup") &&
+    identity.kind === row.subkind
+  );
+}
+
+export function rowSatisfiesCanonicalIdentity(
+  row: CatalogueSelectionRow,
+  identities: ReadonlyArray<CanonicalCatalogueIdentity>
+): boolean {
+  for (const identity of identities) {
+    if (canonicalIdentityMatchesRow(row, identity)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export function selectionSatisfiesRequiredSelection(
+  storedSerialized: string | null,
+  identities: ReadonlyArray<CanonicalCatalogueIdentity>
+): boolean {
+  const current = parseStoredQuoteSelection(storedSerialized);
+
+  if (!current.ok) {
+    return false;
+  }
+
+  for (const row of current.value.rows) {
+    if (row.kind === "manual") {
+      return true;
+    }
+    if (rowSatisfiesCanonicalIdentity(row, identities)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+export function deriveCanonicalIdentitiesFromCatalogue<
+  P extends { slug: string }
+>(
+  catalogue: ReadonlyArray<P>,
+  isSetupProduct: (product: P) => boolean
+): CanonicalCatalogueIdentity[] {
+  const seen = new Set<string>();
+  const identities: CanonicalCatalogueIdentity[] = [];
+
+  for (const product of catalogue) {
+    if (typeof product.slug !== "string") {
+      continue;
+    }
+    if (!publicReferencePattern.test(product.slug)) {
+      continue;
+    }
+    const key = `${product.slug}|${isSetupProduct(product) ? "setup" : "rental"}`;
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    identities.push({
+      reference: product.slug,
+      kind: isSetupProduct(product) ? "setup" : "rental"
+    });
+  }
+
+  return identities;
+}
+
+// ----------------------------------------------------------------------------
+// Design Lock B — actual setup-specific recipe (fail-closed resolver)
+// ----------------------------------------------------------------------------
+
+function isValidRecipePiece(
+  piece: unknown
+): piece is SetupRecipeAuthoritativePiece {
+  if (!isRecord(piece)) {
+    return false;
+  }
+  if (typeof piece.slug !== "string") {
+    return false;
+  }
+  if (!publicReferencePattern.test(piece.slug)) {
+    return false;
+  }
+  if (
+    typeof piece.baseQuantity !== "number" ||
+    !Number.isInteger(piece.baseQuantity) ||
+    piece.baseQuantity < 1 ||
+    piece.baseQuantity > QUOTE_SELECTION_MAX_RECIPE_BASE_QUANTITY
+  ) {
+    return false;
+  }
+  return true;
+}
+
+export function resolveSetupRecipe<P extends SetupRecipeAuthoritativeProduct>(
+  setup: P,
+  catalogue: ReadonlyArray<P>
+): SetupRecipeAuthoritativePiece[] {
+  if (!setup.setupPieces || setup.setupPieces.length === 0) {
+    return [];
+  }
+
+  const catalogueSlugs = new Set(catalogue.map((product) => product.slug));
+  const seen = new Set<string>();
+  const resolved: SetupRecipeAuthoritativePiece[] = [];
+
+  for (const rawPiece of setup.setupPieces) {
+    if (!isValidRecipePiece(rawPiece)) {
+      continue;
+    }
+    if (seen.has(rawPiece.slug)) {
+      continue;
+    }
+    if (!catalogueSlugs.has(rawPiece.slug)) {
+      continue;
+    }
+    seen.add(rawPiece.slug);
+    resolved.push({
+      slug: rawPiece.slug,
+      baseQuantity: rawPiece.baseQuantity
+    });
+  }
+
+  return resolved;
+}
+
+export function resolveSetupRecipesForCatalogue<
+  P extends SetupRecipeAuthoritativeProduct
+>(
+  catalogue: ReadonlyArray<P>,
+  isSetupProduct: (product: P) => boolean
+): SetupRecipeResolution[] {
+  return catalogue
+    .filter(isSetupProduct)
+    .map((setup) => ({
+      slug: setup.slug,
+      pieces: resolveSetupRecipe(setup, catalogue)
+    }));
+}
+
+// ----------------------------------------------------------------------------
+// Design Lock C — single complete-selection storage transaction
+// ----------------------------------------------------------------------------
+
+function applyMutationToSelection(
+  current: QuoteSelection,
+  change: QuoteSelectionChange
+): QuoteSelectionResult {
+  switch (change.kind) {
+    case "catalogue": {
+      return applyCatalogueChangeToSelection(current, {
+        reference: change.reference,
+        subkind: change.subkind,
+        quantity: change.quantity,
+        source: change.source
+      });
+    }
+    case "manual-add": {
+      return normalizeQuoteSelection({
+        version: QUOTE_SELECTION_VERSION,
+        rows: [...current.rows, change.row]
+      });
+    }
+    case "manual-remove": {
+      return normalizeQuoteSelection({
+        version: QUOTE_SELECTION_VERSION,
+        rows: current.rows.filter(
+          (row) => row.kind !== "manual" || row.key !== change.key
+        )
+      });
+    }
+    case "replace": {
+      return normalizeQuoteSelection(change.selection);
+    }
+    case "clear": {
+      return { ok: true, value: emptyQuoteSelection() };
+    }
+  }
+}
+
+function applyCatalogueChangeToSelection(
+  current: QuoteSelection,
+  change: ApplyCatalogueChangeInput
+): QuoteSelectionResult {
+  const { quantity: rawQty } = change;
+
+  if (rawQty !== undefined) {
+    if (
+      typeof rawQty !== "number" ||
+      !Number.isFinite(rawQty) ||
+      !Number.isInteger(rawQty) ||
+      rawQty < 0 ||
+      rawQty > QUOTE_SELECTION_MAX_QUANTITY
+    ) {
+      return { ok: false, code: "quantity-overflow" };
+    }
+  }
+
+  const rows = [...current.rows];
+  const existingIndex = rows.findIndex(
+    (row) =>
+      row.kind === "catalogue" &&
+      row.reference === change.reference &&
+      row.subkind === change.subkind
+  );
+
+  if (rawQty === 0) {
+    if (existingIndex === -1) {
+      return { ok: true, value: current };
+    }
+    rows.splice(existingIndex, 1);
+  } else if (rawQty === undefined) {
+    if (existingIndex === -1) {
+      rows.push({
+        kind: "catalogue",
+        reference: change.reference,
+        quantity: 1,
+        source: change.source,
+        subkind: change.subkind,
+        order: rows.length
+      });
+    } else {
+      const newQty = (rows[existingIndex] as CatalogueSelectionRow).quantity + 1;
+      if (newQty > QUOTE_SELECTION_MAX_QUANTITY) {
+        return { ok: false, code: "quantity-overflow" };
+      }
+      (rows[existingIndex] as CatalogueSelectionRow).quantity = newQty;
+    }
+  } else {
+    if (existingIndex === -1) {
+      rows.push({
+        kind: "catalogue",
+        reference: change.reference,
+        quantity: rawQty,
+        source: change.source,
+        subkind: change.subkind,
+        order: rows.length
+      });
+    } else {
+      (rows[existingIndex] as CatalogueSelectionRow).quantity = rawQty;
+    }
+  }
+
+  if (rows.length > QUOTE_SELECTION_MAX_ROWS) {
+    return { ok: false, code: "raw-row-limit" };
+  }
+
+  const reordered = rows.map((row, index) => ({ ...row, order: index }));
+  const selection: QuoteSelection = {
+    version: QUOTE_SELECTION_VERSION,
+    rows: reordered
+  };
+
+  return { ok: true, value: selection };
+}
+
+function mapSelectionErrorCodeToCommitCode(
+  code: QuoteSelectionErrorCode
+): QuoteSelectionCommitFailureCode {
+  switch (code) {
+    case "raw-row-limit":
+    case "canonical-row-limit":
+      return "row-limit";
+    case "quantity-overflow":
+      return "quantity-overflow";
+    case "byte-limit":
+      return "byte-limit";
+    case "invalid-selection":
+      return "invalid-selection";
+  }
+}
+
+function tryRestoreOriginalBytes(
+  storage: QuoteSelectionStorageAdapter,
+  originalBytes: string | null
+): QuoteSelectionCommitFailureCode | null {
+  const target = originalBytes ?? "";
+  try {
+    storage.write(target);
+  } catch {
+    return "restore-failed";
+  }
+  let verified: string | null;
+  try {
+    verified = storage.read();
+  } catch {
+    return "restore-failed";
+  }
+  if (verified !== target) {
+    return "restore-failed";
+  }
+  return null;
+}
+
+export function commitQuoteSelectionChange(
+  storage: QuoteSelectionStorageAdapter,
+  change: QuoteSelectionChange
+): QuoteSelectionCommitResult {
+  let originalBytes: string | null;
+  try {
+    originalBytes = storage.read();
+  } catch {
+    return { ok: false, code: "storage-exception", originalBytes: null };
+  }
+
+  const current = parseStoredQuoteSelection(originalBytes);
+  if (!current.ok) {
+    return {
+      ok: false,
+      code: mapSelectionErrorCodeToCommitCode(current.code),
+      originalBytes
+    };
+  }
+
+  const nextResult = applyMutationToSelection(current.value, change);
+  if (!nextResult.ok) {
+    return {
+      ok: false,
+      code: mapSelectionErrorCodeToCommitCode(nextResult.code),
+      originalBytes
+    };
+  }
+
+  const serialized = JSON.stringify(nextResult.value);
+  const bytes = byteLength(serialized);
+
+  if (bytes > QUOTE_SELECTION_MAX_BYTES) {
+    return { ok: false, code: "byte-limit", originalBytes };
+  }
+
+  try {
+    storage.write(serialized);
+  } catch {
+    return { ok: false, code: "storage-exception", originalBytes };
+  }
+
+  let readBack: string | null;
+  try {
+    readBack = storage.read();
+  } catch {
+    const restoreError = tryRestoreOriginalBytes(storage, originalBytes);
+    if (restoreError) {
+      return { ok: false, code: restoreError, originalBytes };
+    }
+    return { ok: false, code: "storage-exception", originalBytes };
+  }
+
+  if (readBack !== serialized) {
+    const restoreError = tryRestoreOriginalBytes(storage, originalBytes);
+    if (restoreError) {
+      return { ok: false, code: restoreError, originalBytes };
+    }
+    return { ok: false, code: "read-back-mismatch", originalBytes };
+  }
+
+  if (storage.dispatchSuccess) {
+    try {
+      storage.dispatchSuccess();
+    } catch {
+      const restoreError = tryRestoreOriginalBytes(storage, originalBytes);
+      if (restoreError) {
+        return { ok: false, code: restoreError, originalBytes };
+      }
+      return { ok: false, code: "read-back-mismatch", originalBytes };
+    }
+  }
+
+  return {
+    ok: true,
+    serialized,
+    value: nextResult.value,
+    bytes,
+    originalBytes
+  };
 }

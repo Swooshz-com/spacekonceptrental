@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import QuoteRequestForm from "../../components/QuoteRequestForm";
 import { QuoteSelectionDataBoundary, QuoteSelectionSummary } from "../../components/QuoteSelectionControls";
-import { fallbackProductImage, productCategory, quoteCanonicalIdentityLookup, quoteSelectionValidItemsForCatalogue, quoteSetupRecipes, StitchPageIntro, stitchImageSrc } from "../../components/PublicStitch";
+import { fallbackProductImage, productCategory, quoteCanonicalIdentities, quoteSelectionValidItemsForCatalogue, quoteSetupRecipes, StitchPageIntro, stitchImageSrc } from "../../components/PublicStitch";
 import { getPublicCatalogue, getPublicProductBySlug } from "../../lib/catalogue/catalogue-repository";
 import { normalizePublicListingSlug, normalizePublicQuoteQuantity } from "../../lib/catalogue/quote-handoff";
 import type { PublicCatalogueProduct } from "../../lib/catalogue/types";
+import type { CanonicalCatalogueIdentity } from "../../lib/quote/selection-model";
 
 type QuotePageProps = { searchParams?: Promise<Record<string, string | string[] | undefined>> | Record<string, string | string[] | undefined> };
 
@@ -31,11 +32,6 @@ function NextStepsPanel() {
   return <section className="stitch-quote-card stitch-quote-next"><p className="stitch-eyebrow">What happens next?</p><h2>What happens next?</h2><ol><li>Enquiry</li><li>Selection review</li><li>Tailored proposal</li><li>Direct team follow-up</li></ol></section>;
 }
 
-function buildCanonicalAcceptanceList(catalogue: Awaited<ReturnType<typeof getPublicCatalogue>>) {
-  const lookup = quoteCanonicalIdentityLookup(catalogue);
-  return Array.from(lookup.values());
-}
-
 export default async function QuotePage({ searchParams }: QuotePageProps = {}) {
   const [catalogue, context] = await Promise.all([
     getPublicCatalogue(),
@@ -43,6 +39,6 @@ export default async function QuotePage({ searchParams }: QuotePageProps = {}) {
   ]);
   const validItems = quoteSelectionValidItemsForCatalogue(catalogue);
   const setupRecipes = quoteSetupRecipes(catalogue);
-  const canonicalIdentities = buildCanonicalAcceptanceList(catalogue);
-  return <><QuoteSelectionDataBoundary validItems={validItems} /><section className="stitch-quote-hero"><div className="stitch-container"><StitchPageIntro eyebrow="Request Quote" title="Request a Rental Quote" intro="The form is enquiry intake only. The team will review your details and follow up with a tailored proposal. It does not set aside furniture or finish rental details. Submission remains unavailable during the current review." /></div></section><section className="stitch-section stitch-quote-page"><div className="stitch-container"><div className="stitch-quote-layout"><div className="stitch-quote-left"><SelectionPanel catalogueAvailable={catalogue.source !== "fallback"} product={context.product} quantity={context.quantity} requestedSlug={context.requestedSlug} setupRecipes={setupRecipes} validItems={validItems} /><NextStepsPanel /></div><section className="stitch-quote-form-panel"><h2>Enquiry Details</h2><QuoteRequestForm initialListingSlug={context.requestedSlug} validCatalogueReferences={canonicalIdentities.map((ci) => ci.slug)} /></section></div></div></section></>;
+  const canonicalIdentities: CanonicalCatalogueIdentity[] = quoteCanonicalIdentities(catalogue);
+  return <><QuoteSelectionDataBoundary validItems={validItems} /><section className="stitch-quote-hero"><div className="stitch-container"><StitchPageIntro eyebrow="Request Quote" title="Request a Rental Quote" intro="The form is enquiry intake only. The team will review your details and follow up with a tailored proposal. It does not set aside furniture or finish rental details. Submission remains unavailable during the current review." /></div></section><section className="stitch-section stitch-quote-page"><div className="stitch-container"><div className="stitch-quote-layout"><div className="stitch-quote-left"><SelectionPanel catalogueAvailable={catalogue.source !== "fallback"} product={context.product} quantity={context.quantity} requestedSlug={context.requestedSlug} setupRecipes={setupRecipes} validItems={validItems} /><NextStepsPanel /></div><section className="stitch-quote-form-panel"><h2>Enquiry Details</h2><QuoteRequestForm initialListingSlug={context.requestedSlug} validCanonicalIdentities={canonicalIdentities} /></section></div></div></section></>;
 }

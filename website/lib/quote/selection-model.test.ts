@@ -5,15 +5,24 @@ import {
   addCatalogueSelection,
   allRowsFromSelection,
   applyCatalogueChange,
+  commitQuoteSelectionChange,
   createCatalogueSelection,
   createManualSelectionRow,
+  deriveCanonicalIdentitiesFromCatalogue,
   emptyQuoteSelection,
   normalizeQuoteSelection,
   parseStoredQuoteSelection,
   replaceSelectionQuantity,
+  resolveSetupRecipe,
+  resolveSetupRecipesForCatalogue,
+  rowSatisfiesCanonicalIdentity,
+  selectionSatisfiesRequiredSelection,
   serializeQuoteSelection,
   shouldSeedUrlFallback,
-  type CatalogueSelectionRow
+  type CanonicalCatalogueIdentity,
+  type CatalogueSelectionRow,
+  type ManualSelectionRow,
+  type QuoteSelectionStorageAdapter
 } from "./selection-model";
 
 function catalogue(reference: string, quantity: number, order: number, subkind: "rental" | "setup" = "rental") {
@@ -736,5 +745,720 @@ describe("structured quote selection model", () => {
       expect((result.value.rows[0] as CatalogueSelectionRow).reference).toBe("chair-a");
       expect((result.value.rows[1] as CatalogueSelectionRow).reference).toBe("chair-d");
     });
+  });
+});
+
+describe("Design Lock A — canonical (reference, kind) identity", () => {
+  it("derives canonical identities from server-owned catalogue data and deduplicates by (reference, kind)", () => {
+    const identities = deriveCanonicalIdentitiesFromCatalogue(
+      [
+        { slug: "chair-a" },
+        { slug: "chair-a" },
+        { slug: "lounge-table" },
+        { slug: "metropolitan-gala" }
+      ],
+      (product) => product.slug === "metropolitan-gala"
+    );
+
+    expect(identities).toEqual([
+      { reference: "chair-a", kind: "rental" },
+      { reference: "lounge-table", kind: "rental" },
+      { reference: "metropolitan-gala", kind: "setup" }
+    ]);
+  });
+
+  it("rejects catalogue entries with unsafe slugs when deriving canonical identities", () => {
+    const identities = deriveCanonicalIdentitiesFromCatalogue(
+      [
+        { slug: "Not_Safe" },
+        { slug: "lounge chair" },
+        { slug: "../escape" }
+      ],
+      () => false
+    );
+
+    expect(identities).toEqual([]);
+  });
+
+  it("rowSatisfiesCanonicalIdentity accepts rental row when (reference, kind) match a rental identity", () => {
+    const row: CatalogueSelectionRow = {
+      kind: "catalogue",
+      reference: "chair-a",
+      quantity: 1,
+      source: "catalogue",
+      order: 0,
+      subkind: "rental"
+    };
+    const identities: CanonicalCatalogueIdentity[] = [
+      { reference: "chair-a", kind: "rental" }
+    ];
+    expect(rowSatisfiesCanonicalIdentity(row, identities)).toBe(true);
+  });
+
+  it("rowSatisfiesCanonicalIdentity accepts setup row when (reference, kind) match a setup identity", () => {
+    const row: CatalogueSelectionRow = {
+      kind: "catalogue",
+      reference: "metropolitan-gala",
+      quantity: 1,
+      source: "catalogue",
+      order: 0,
+      subkind: "setup"
+    };
+    const identities: CanonicalCatalogueIdentity[] = [
+      { reference: "metropolitan-gala", kind: "setup" }
+    ];
+    expect(rowSatisfiesCanonicalIdentity(row, identities)).toBe(true);
+  });
+
+  it("rowSatisfiesCanonicalIdentity rejects rental row stored as setup when only a rental identity exists", () => {
+    const row: CatalogueSelectionRow = {
+      kind: "catalogue",
+      reference: "chair-a",
+      quantity: 1,
+      source: "catalogue",
+      order: 0,
+      subkind: "setup"
+    };
+    const identities: CanonicalCatalogueIdentity[] = [
+      { reference: "chair-a", kind: "rental" }
+    ];
+    expect(rowSatisfiesCanonicalIdentity(row, identities)).toBe(false);
+  });
+
+  it("rowSatisfiesCanonicalIdentity rejects setup row stored as rental when only a setup identity exists", () => {
+    const row: CatalogueSelectionRow = {
+      kind: "catalogue",
+      reference: "metropolitan-gala",
+      quantity: 1,
+      source: "catalogue",
+      order: 0,
+      subkind: "rental"
+    };
+    const identities: CanonicalCatalogueIdentity[] = [
+      { reference: "metropolitan-gala", kind: "setup" }
+    ];
+    expect(rowSatisfiesCanonicalIdentity(row, identities)).toBe(false);
+  });
+
+  it("rowSatisfiesCanonicalIdentity rejects unknown explicit kinds", () => {
+    const row: CatalogueSelectionRow = {
+      kind: "catalogue",
+      reference: "chair-a",
+      quantity: 1,
+      source: "catalogue",
+      order: 0,
+      // simulate forged kind that survived parse via legacy path
+      subkind: "unknown" as CatalogueSelectionRow["subkind"]
+    };
+    const identities: CanonicalCatalogueIdentity[] = [
+      { reference: "chair-a", kind: "rental" }
+    ];
+    expect(rowSatisfiesCanonicalIdentity(row, identities)).toBe(false);
+  });
+
+  it("rowSatisfiesCanonicalIdentity treats same-reference/different-kind rows as distinct", () => {
+    const rentalRow: CatalogueSelectionRow = {
+      kind: "catalogue",
+      reference: "shared-slug",
+      quantity: 1,
+      source: "catalogue",
+      order: 0,
+      subkind: "rental"
+    };
+    const setupRow: CatalogueSelectionRow = {
+      kind: "catalogue",
+      reference: "shared-slug",
+      quantity: 1,
+      source: "catalogue",
+      order: 1,
+      subkind: "setup"
+    };
+    const identities: CanonicalCatalogueIdentity[] = [
+      { reference: "shared-slug", kind: "rental" },
+      { reference: "shared-slug", kind: "setup" }
+    ];
+    expect(rowSatisfiesCanonicalIdentity(rentalRow, identities)).toBe(true);
+    expect(rowSatisfiesCanonicalIdentity(setupRow, identities)).toBe(true);
+  });
+
+  it("selectionSatisfiesRequiredSelection returns true for a manual-only selection", () => {
+    const serialized = JSON.stringify({
+      version: 2,
+      rows: [
+        {
+          kind: "manual",
+          key: "manual-a",
+          description: "Custom counter",
+          quantity: 1,
+          source: "manual",
+          order: 0
+        }
+      ]
+    });
+    expect(selectionSatisfiesRequiredSelection(serialized, [])).toBe(true);
+  });
+
+  it("selectionSatisfiesRequiredSelection returns true only when a catalogue row matches a canonical identity", () => {
+    const serialized = JSON.stringify({
+      version: 2,
+      rows: [
+        {
+          kind: "catalogue",
+          reference: "chair-a",
+          quantity: 1,
+          source: "catalogue",
+          order: 0,
+          subkind: "rental"
+        }
+      ]
+    });
+    expect(
+      selectionSatisfiesRequiredSelection(serialized, [
+        { reference: "chair-a", kind: "rental" }
+      ])
+    ).toBe(true);
+    expect(
+      selectionSatisfiesRequiredSelection(serialized, [
+        { reference: "chair-a", kind: "setup" }
+      ])
+    ).toBe(false);
+    expect(selectionSatisfiesRequiredSelection(serialized, [])).toBe(false);
+  });
+
+  it("selectionSatisfiesRequiredSelection returns false for malformed storage", () => {
+    expect(
+      selectionSatisfiesRequiredSelection('{"version":1,"rows":[]}', [])
+    ).toBe(false);
+    expect(
+      selectionSatisfiesRequiredSelection("not-json", [])
+    ).toBe(false);
+  });
+});
+
+describe("Design Lock B — fail-closed setup-recipe resolver", () => {
+  type ResolverProduct = { slug: string; setupPieces?: { slug: string; baseQuantity: number }[] };
+
+  it("returns empty when the setup has no setupPieces (fail closed, no fabrication)", () => {
+    const catalogue: ResolverProduct[] = [
+      { slug: "metropolitan-gala" },
+      { slug: "chair-a" },
+      { slug: "table-a" }
+    ];
+    expect(
+      resolveSetupRecipe(catalogue[0]!, catalogue as ReadonlyArray<ResolverProduct>)
+    ).toEqual([]);
+  });
+
+  it("returns each setup's own pieces and ignores pieces from other setups", () => {
+    const catalogue: ResolverProduct[] = [
+      {
+        slug: "metropolitan-gala",
+        setupPieces: [
+          { slug: "chair-a", baseQuantity: 6 },
+          { slug: "table-a", baseQuantity: 2 }
+        ]
+      },
+      {
+        slug: "botanical-wedding",
+        setupPieces: [
+          { slug: "chair-b", baseQuantity: 4 },
+          { slug: "candle-c", baseQuantity: 18 }
+        ]
+      },
+      { slug: "chair-a" },
+      { slug: "table-a" },
+      { slug: "chair-b" },
+      { slug: "candle-c" }
+    ];
+    const metro = resolveSetupRecipe(
+      catalogue[0]!,
+      catalogue as ReadonlyArray<ResolverProduct>
+    );
+    const botanical = resolveSetupRecipe(
+      catalogue[1]!,
+      catalogue as ReadonlyArray<ResolverProduct>
+    );
+
+    expect(metro).toEqual([
+      { slug: "chair-a", baseQuantity: 6 },
+      { slug: "table-a", baseQuantity: 2 }
+    ]);
+    expect(botanical).toEqual([
+      { slug: "chair-b", baseQuantity: 4 },
+      { slug: "candle-c", baseQuantity: 18 }
+    ]);
+  });
+
+  it("preserves different base quantities as distinct values", () => {
+    const catalogue: ResolverProduct[] = [
+      {
+        slug: "metropolitan-gala",
+        setupPieces: [{ slug: "chair-a", baseQuantity: 6 }]
+      },
+      {
+        slug: "botanical-wedding",
+        setupPieces: [{ slug: "chair-a", baseQuantity: 120 }]
+      },
+      { slug: "chair-a" }
+    ];
+    const metro = resolveSetupRecipe(
+      catalogue[0]!,
+      catalogue as ReadonlyArray<ResolverProduct>
+    );
+    const botanical = resolveSetupRecipe(
+      catalogue[1]!,
+      catalogue as ReadonlyArray<ResolverProduct>
+    );
+    expect(metro[0]?.baseQuantity).toBe(6);
+    expect(botanical[0]?.baseQuantity).toBe(120);
+  });
+
+  it("drops included pieces that are not in the current server-owned catalogue", () => {
+    const catalogue: ResolverProduct[] = [
+      {
+        slug: "metropolitan-gala",
+        setupPieces: [
+          { slug: "chair-a", baseQuantity: 4 },
+          { slug: "phantom-product", baseQuantity: 10 }
+        ]
+      },
+      { slug: "chair-a" }
+    ];
+    const resolved = resolveSetupRecipe(
+      catalogue[0]!,
+      catalogue as ReadonlyArray<ResolverProduct>
+    );
+    expect(resolved).toEqual([{ slug: "chair-a", baseQuantity: 4 }]);
+  });
+
+  it("rejects invalid piece slugs and out-of-range base quantities", () => {
+    const catalogue: ResolverProduct[] = [
+      {
+        slug: "metropolitan-gala",
+        setupPieces: [
+          { slug: "chair-a", baseQuantity: 4 },
+          { slug: "Not_Safe", baseQuantity: 4 },
+          { slug: "chair-b", baseQuantity: 0 },
+          { slug: "chair-c", baseQuantity: 100 },
+          { slug: "chair-d", baseQuantity: 1.5 },
+          { slug: "chair-e", baseQuantity: Number.NaN }
+        ]
+      },
+      { slug: "chair-a" }
+    ];
+    const resolved = resolveSetupRecipe(
+      catalogue[0]!,
+      catalogue as ReadonlyArray<ResolverProduct>
+    );
+    expect(resolved).toEqual([{ slug: "chair-a", baseQuantity: 4 }]);
+  });
+
+  it("deduplicates repeat slugs within the same recipe", () => {
+    const catalogue: ResolverProduct[] = [
+      {
+        slug: "metropolitan-gala",
+        setupPieces: [
+          { slug: "chair-a", baseQuantity: 4 },
+          { slug: "chair-a", baseQuantity: 8 }
+        ]
+      },
+      { slug: "chair-a" }
+    ];
+    const resolved = resolveSetupRecipe(
+      catalogue[0]!,
+      catalogue as ReadonlyArray<ResolverProduct>
+    );
+    expect(resolved).toEqual([{ slug: "chair-a", baseQuantity: 4 }]);
+  });
+
+  it("resolveSetupRecipesForCatalogue returns only the setups and their own pieces", () => {
+    const catalogue: ResolverProduct[] = [
+      {
+        slug: "metropolitan-gala",
+        setupPieces: [
+          { slug: "chair-a", baseQuantity: 6 },
+          { slug: "table-a", baseQuantity: 2 }
+        ]
+      },
+      {
+        slug: "botanical-wedding",
+        setupPieces: [{ slug: "chair-b", baseQuantity: 12 }]
+      },
+      { slug: "chair-a" },
+      { slug: "table-a" },
+      { slug: "chair-b" }
+    ];
+    const resolutions = resolveSetupRecipesForCatalogue(
+      catalogue as ReadonlyArray<ResolverProduct>,
+      (product) =>
+        product.slug === "metropolitan-gala" ||
+        product.slug === "botanical-wedding"
+    );
+    expect(resolutions).toEqual([
+      {
+        slug: "metropolitan-gala",
+        pieces: [
+          { slug: "chair-a", baseQuantity: 6 },
+          { slug: "table-a", baseQuantity: 2 }
+        ]
+      },
+      {
+        slug: "botanical-wedding",
+        pieces: [{ slug: "chair-b", baseQuantity: 12 }]
+      }
+    ]);
+  });
+
+  it("returns no pieces for an empty catalogue (no fabricated fallback)", () => {
+    const catalogue: ResolverProduct[] = [];
+    const resolutions = resolveSetupRecipesForCatalogue(
+      catalogue,
+      () => true
+    );
+    expect(resolutions).toEqual([]);
+  });
+});
+
+describe("Design Lock C — single complete-selection storage transaction", () => {
+  function makeMemoryStorage() {
+    let bytes: string | null = null;
+    let dispatchCount = 0;
+    return {
+      storage: {
+        read: () => bytes,
+        write: (next: string) => {
+          bytes = next;
+        },
+        dispatchSuccess: () => {
+          dispatchCount += 1;
+        }
+      } as QuoteSelectionStorageAdapter,
+      getBytes: () => bytes,
+      getDispatchCount: () => dispatchCount
+    };
+  }
+
+  function setupWithCatalogueRow(
+    reference: string,
+    subkind: "rental" | "setup",
+    quantity = 1
+  ) {
+    return JSON.stringify({
+      version: 2,
+      rows: [
+        {
+          kind: "catalogue",
+          reference,
+          quantity,
+          source: "catalogue",
+          order: 0,
+          subkind
+        }
+      ]
+    });
+  }
+
+  it("preserves exact original bytes when the change is malformed", () => {
+    const store = makeMemoryStorage();
+    const original = "not-json";
+    store.storage.write(original);
+    const result = commitQuoteSelectionChange(store.storage, {
+      kind: "catalogue",
+      reference: "chair",
+      subkind: "rental",
+      source: "catalogue"
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.originalBytes).toBe(original);
+    expect(result.code).toBe("invalid-selection");
+    expect(store.getBytes()).toBe(original);
+    expect(store.getDispatchCount()).toBe(0);
+  });
+
+  it("preserves exact original bytes when the version is unsupported", () => {
+    const store = makeMemoryStorage();
+    const original = JSON.stringify({ version: 1, rows: [] });
+    store.storage.write(original);
+    const result = commitQuoteSelectionChange(store.storage, {
+      kind: "catalogue",
+      reference: "chair",
+      subkind: "rental",
+      source: "catalogue"
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.originalBytes).toBe(original);
+    expect(store.getBytes()).toBe(original);
+    expect(store.getDispatchCount()).toBe(0);
+  });
+
+  it("preserves exact original bytes when the canonical row count is exceeded", () => {
+    const store = makeMemoryStorage();
+    const rows = Array.from({ length: QUOTE_SELECTION_MAX_ROWS }, (_, i) => ({
+      kind: "catalogue" as const,
+      reference: `item-${i}`,
+      quantity: 1,
+      source: "catalogue" as const,
+      order: i,
+      subkind: "rental" as const
+    }));
+    const original = JSON.stringify({ version: 2, rows });
+    store.storage.write(original);
+    const result = commitQuoteSelectionChange(store.storage, {
+      kind: "catalogue",
+      reference: "new-item",
+      subkind: "rental",
+      source: "catalogue"
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.originalBytes).toBe(original);
+    expect(store.getBytes()).toBe(original);
+    expect(store.getDispatchCount()).toBe(0);
+  });
+
+  it("preserves exact original bytes when quantity overflow is rejected", () => {
+    const store = makeMemoryStorage();
+    const original = setupWithCatalogueRow("chair", "rental", 99);
+    store.storage.write(original);
+    const result = commitQuoteSelectionChange(store.storage, {
+      kind: "catalogue",
+      reference: "chair",
+      subkind: "rental",
+      source: "catalogue"
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.code).toBe("quantity-overflow");
+    expect(result.originalBytes).toBe(original);
+    expect(store.getBytes()).toBe(original);
+    expect(store.getDispatchCount()).toBe(0);
+  });
+
+  it("preserves exact original bytes when the byte limit is exceeded", () => {
+    const store = makeMemoryStorage();
+    const oversized = JSON.stringify({
+      version: 2,
+      rows: Array.from({ length: QUOTE_SELECTION_MAX_ROWS }, (_, i) => ({
+        kind: "manual",
+        key: `manual-${i}`,
+        description: "界".repeat(180),
+        quantity: 1,
+        notes: "界".repeat(500),
+        source: "manual",
+        order: i
+      }))
+    });
+    const original = JSON.stringify({ version: 2, rows: [] });
+    store.storage.write(original);
+    expect(oversized.length).toBeGreaterThan(0);
+    const result = commitQuoteSelectionChange(store.storage, {
+      kind: "replace",
+      selection: JSON.parse(oversized)
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.code).toBe("byte-limit");
+    expect(result.originalBytes).toBe(original);
+    expect(store.getBytes()).toBe(original);
+    expect(store.getDispatchCount()).toBe(0);
+  });
+
+  it("preserves original bytes when storage write throws", () => {
+    const original = setupWithCatalogueRow("chair", "rental", 1);
+    const throwingStorage: QuoteSelectionStorageAdapter = {
+      read: () => original,
+      write: () => {
+        throw new Error("quota");
+      }
+    };
+    const result = commitQuoteSelectionChange(throwingStorage, {
+      kind: "catalogue",
+      reference: "table",
+      subkind: "rental",
+      source: "catalogue"
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.code).toBe("storage-exception");
+    expect(result.originalBytes).toBe(original);
+  });
+
+  it("restores original bytes and reports failure on synthetic read-back mismatch", () => {
+    const originalSerialized = setupWithCatalogueRow("chair", "rental", 1);
+    let stored: string | null = originalSerialized;
+    let writeCount = 0;
+    const tamperedStorage: QuoteSelectionStorageAdapter = {
+      read: () => stored,
+      write: (next: string) => {
+        writeCount += 1;
+        if (writeCount === 1) {
+          // The transaction's intended write appears to succeed but a
+          // concurrent writer replaces it with tampered bytes.
+          stored = '{"tampered":true}';
+          return;
+        }
+        // Restoration writes through to the underlying byte store.
+        stored = next;
+      }
+    };
+    const result = commitQuoteSelectionChange(tamperedStorage, {
+      kind: "catalogue",
+      reference: "chair",
+      subkind: "rental",
+      source: "catalogue"
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.code).toBe("read-back-mismatch");
+    expect(result.originalBytes).toBe(originalSerialized);
+    expect(stored).toBe(originalSerialized);
+  });
+
+  it("restores original bytes and reports restore-failed when restoration also fails", () => {
+    let stored: string | null = setupWithCatalogueRow("chair", "rental", 1);
+    let writes = 0;
+    const tamperedStorage: QuoteSelectionStorageAdapter = {
+      read: () => stored,
+      write: (next: string) => {
+        writes += 1;
+        if (writes === 1) {
+          // First write: simulate concurrent corruption
+          stored = '{"tampered":true}';
+          return;
+        }
+        // Restoration write also throws
+        throw new Error("quota exhausted during restore");
+      }
+    };
+    const result = commitQuoteSelectionChange(tamperedStorage, {
+      kind: "catalogue",
+      reference: "chair",
+      subkind: "rental",
+      source: "catalogue"
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.code).toBe("restore-failed");
+    expect(result.originalBytes).toBe(
+      setupWithCatalogueRow("chair", "rental", 1)
+    );
+  });
+
+  it("commits and dispatches exactly one success event on a valid catalogue add", () => {
+    const store = makeMemoryStorage();
+    const result = commitQuoteSelectionChange(store.storage, {
+      kind: "catalogue",
+      reference: "chair",
+      subkind: "rental",
+      source: "catalogue"
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.rows).toHaveLength(1);
+    expect(result.value.rows[0]?.kind).toBe("catalogue");
+    expect(store.getBytes()).toBe(result.serialized);
+    expect(store.getDispatchCount()).toBe(1);
+  });
+
+  it("supports manual row add and manual row remove through the same transaction", () => {
+    const store = makeMemoryStorage();
+    const manualRow: ManualSelectionRow = {
+      kind: "manual",
+      key: "manual-a",
+      description: "Custom counter",
+      quantity: 1,
+      source: "manual",
+      order: 0
+    };
+    const added = commitQuoteSelectionChange(store.storage, {
+      kind: "manual-add",
+      row: manualRow
+    });
+    expect(added.ok).toBe(true);
+    if (!added.ok) return;
+    expect(added.value.rows[0]?.kind).toBe("manual");
+    expect(store.getDispatchCount()).toBe(1);
+
+    const removed = commitQuoteSelectionChange(store.storage, {
+      kind: "manual-remove",
+      key: "manual-a"
+    });
+    expect(removed.ok).toBe(true);
+    if (!removed.ok) return;
+    expect(removed.value.rows).toEqual([]);
+    expect(store.getDispatchCount()).toBe(2);
+  });
+
+  it("supports clear and replace through the same transaction", () => {
+    const store = makeMemoryStorage();
+    const cleared = commitQuoteSelectionChange(store.storage, { kind: "clear" });
+    expect(cleared.ok).toBe(true);
+    if (!cleared.ok) return;
+    expect(cleared.value.rows).toEqual([]);
+
+    const replaced = commitQuoteSelectionChange(store.storage, {
+      kind: "replace",
+      selection: {
+        version: 2,
+        rows: [
+          {
+            kind: "manual",
+            key: "manual-b",
+            description: "Counter",
+            quantity: 2,
+            source: "manual",
+            order: 0
+          }
+        ]
+      }
+    });
+    expect(replaced.ok).toBe(true);
+    if (!replaced.ok) return;
+    expect(replaced.value.rows).toHaveLength(1);
+  });
+
+  it("serializes once and reads back exact bytes", () => {
+    const store = makeMemoryStorage();
+    const result = commitQuoteSelectionChange(store.storage, {
+      kind: "catalogue",
+      reference: "chair-a",
+      subkind: "rental",
+      source: "catalogue"
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.bytes).toBe(new TextEncoder().encode(result.serialized).byteLength);
+    expect(store.getBytes()).toBe(result.serialized);
+  });
+
+  it("returns the committed parsed selection and never claims byte preservation on restore failure", () => {
+    let stored: string | null = setupWithCatalogueRow("chair", "rental", 1);
+    let writes = 0;
+    const tamperedStorage: QuoteSelectionStorageAdapter = {
+      read: () => stored,
+      write: () => {
+        writes += 1;
+        if (writes === 1) {
+          stored = '{"tampered":true}';
+          return;
+        }
+        throw new Error("cannot restore");
+      }
+    };
+    const result = commitQuoteSelectionChange(tamperedStorage, {
+      kind: "catalogue",
+      reference: "chair",
+      subkind: "rental",
+      quantity: 2,
+      source: "catalogue"
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.code).toBe("restore-failed");
+    expect(result.originalBytes).toBe(
+      setupWithCatalogueRow("chair", "rental", 1)
+    );
   });
 });

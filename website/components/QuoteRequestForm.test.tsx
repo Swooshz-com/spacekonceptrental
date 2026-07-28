@@ -54,7 +54,7 @@ describe("QuoteRequestForm", () => {
         ]
       })
     );
-    render(<QuoteRequestForm validCatalogueReferences={[]} />);
+    render(<QuoteRequestForm validCanonicalIdentities={[]} />);
 
     fireEvent.change(screen.getByLabelText(/your name/i), {
       target: { value: "Maya Tan" }
@@ -262,5 +262,201 @@ describe("QuoteRequestForm", () => {
       "quote-selection-error"
     );
     expect(document.activeElement).toBe(fieldset);
+  });
+
+  it("accepts a stored rental row only when the canonical (reference, kind) matches a valid identity", () => {
+    window.sessionStorage.setItem(
+      QUOTE_SELECTION_STORAGE_KEY,
+      JSON.stringify({
+        version: 2,
+        rows: [
+          {
+            kind: "catalogue",
+            reference: "lounge-chair",
+            quantity: 1,
+            source: "catalogue",
+            order: 0,
+            subkind: "rental"
+          }
+        ]
+      })
+    );
+    render(
+      <QuoteRequestForm
+        validCanonicalIdentities={[
+          { reference: "lounge-chair", kind: "rental" }
+        ]}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText(/your name/i), {
+      target: { value: "Maya Tan" }
+    });
+    fireEvent.change(screen.getByLabelText(/email address/i), {
+      target: { value: "maya@example.test" }
+    });
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: /submission unavailable during review/i
+      })
+    );
+
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("rejects a stored row whose kind mismatches the canonical identity", () => {
+    window.sessionStorage.setItem(
+      QUOTE_SELECTION_STORAGE_KEY,
+      JSON.stringify({
+        version: 2,
+        rows: [
+          {
+            kind: "catalogue",
+            reference: "lounge-chair",
+            quantity: 1,
+            source: "catalogue",
+            order: 0,
+            subkind: "setup"
+          }
+        ]
+      })
+    );
+    render(
+      <QuoteRequestForm
+        validCanonicalIdentities={[
+          { reference: "lounge-chair", kind: "rental" }
+        ]}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText(/your name/i), {
+      target: { value: "Maya Tan" }
+    });
+    fireEvent.change(screen.getByLabelText(/email address/i), {
+      target: { value: "maya@example.test" }
+    });
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: /submission unavailable during review/i
+      })
+    );
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      /select a published catalogue listing or add a valid manual requirement/i
+    );
+  });
+
+  it("accepts a stored setup row only when (reference, kind) match a setup identity", () => {
+    window.sessionStorage.setItem(
+      QUOTE_SELECTION_STORAGE_KEY,
+      JSON.stringify({
+        version: 2,
+        rows: [
+          {
+            kind: "catalogue",
+            reference: "metropolitan-gala",
+            quantity: 1,
+            source: "catalogue",
+            order: 0,
+            subkind: "setup"
+          }
+        ]
+      })
+    );
+    render(
+      <QuoteRequestForm
+        validCanonicalIdentities={[
+          { reference: "metropolitan-gala", kind: "setup" }
+        ]}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText(/your name/i), {
+      target: { value: "Maya Tan" }
+    });
+    fireEvent.change(screen.getByLabelText(/email address/i), {
+      target: { value: "maya@example.test" }
+    });
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: /submission unavailable during review/i
+      })
+    );
+
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("rejects a stored setup row when only a rental identity exists for the same reference", () => {
+    window.sessionStorage.setItem(
+      QUOTE_SELECTION_STORAGE_KEY,
+      JSON.stringify({
+        version: 2,
+        rows: [
+          {
+            kind: "catalogue",
+            reference: "metropolitan-gala",
+            quantity: 1,
+            source: "catalogue",
+            order: 0,
+            subkind: "setup"
+          }
+        ]
+      })
+    );
+    render(
+      <QuoteRequestForm
+        validCanonicalIdentities={[
+          { reference: "metropolitan-gala", kind: "rental" }
+        ]}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText(/your name/i), {
+      target: { value: "Maya Tan" }
+    });
+    fireEvent.change(screen.getByLabelText(/email address/i), {
+      target: { value: "maya@example.test" }
+    });
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: /submission unavailable during review/i
+      })
+    );
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      /select a published catalogue listing or add a valid manual requirement/i
+    );
+  });
+
+  it("uses the same transaction for manual row add and remove, preserving byte-level integrity", () => {
+    render(<QuoteRequestForm />);
+
+    fireEvent.change(screen.getByLabelText(/manual item description/i), {
+      target: { value: "Custom counter" }
+    });
+    fireEvent.click(
+      screen.getByRole("button", { name: /add manual requirement/i })
+    );
+
+    const afterAdd = window.sessionStorage.getItem(
+      QUOTE_SELECTION_STORAGE_KEY
+    );
+    expect(afterAdd).toBeDefined();
+    const afterAddParsed = JSON.parse(afterAdd ?? "{}") as { rows: unknown[] };
+    expect(afterAddParsed.rows).toHaveLength(1);
+
+    const removeButton = screen.getByRole("button", {
+      name: /remove manual requirement custom counter/i
+    });
+    fireEvent.click(removeButton);
+
+    const afterRemove = window.sessionStorage.getItem(
+      QUOTE_SELECTION_STORAGE_KEY
+    );
+    expect(afterRemove).toBeDefined();
+    const afterRemoveParsed = JSON.parse(afterRemove ?? "{}") as {
+      rows: unknown[];
+    };
+    expect(afterRemoveParsed.rows).toEqual([]);
   });
 });
