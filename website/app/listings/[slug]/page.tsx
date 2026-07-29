@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { QuoteSelectionDataBoundary } from "../../../components/QuoteSelectionControls";
-import { productSummary, quoteSelectionValidItemsForCatalogue, StitchEmptyState } from "../../../components/PublicStitch";
+import { isSetupCatalogueProduct, productSummary, quoteSelectionValidItemsForCatalogue, StitchEmptyState } from "../../../components/PublicStitch";
 import { getPublicCatalogue, getPublicProductBySlug } from "../../../lib/catalogue/catalogue-repository";
 import { getRelatedListings, ProductPageContent } from "../../catalogue/[slug]/page";
 
@@ -23,5 +23,5 @@ export default async function ListingPage({ params }: ListingPageProps = {}) {
     return <><QuoteSelectionDataBoundary validItems={validItems} /><section className="stitch-section"><div className="stitch-container"><StitchEmptyState title="Listing unavailable" message="Use the catalogue or listings to keep browsing public rental options. This public setup record is not available to display right now." actionHref="/listings#setup-listings" actionLabel="View Setups" /></div></section></>;
   }
 
-  return <><QuoteSelectionDataBoundary validItems={validItems} /><ProductPageContent product={product} relatedListings={getRelatedListings(product, catalogue.products)} backHref="/listings#setup-listings" backLabel="Back to Setups" setup /></>;
+  return <><QuoteSelectionDataBoundary validItems={validItems} /><ProductPageContent product={product} relatedListings={getRelatedListings(product, catalogue.products)} backHref="/listings#setup-listings" backLabel="Back to Setups" setup={isSetupCatalogueProduct(product)} /></>;
 }

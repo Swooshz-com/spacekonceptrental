@@ -3,18 +3,36 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { MouseEvent } from "react";
+import {
+  QUOTE_SELECTION_MAX_QUANTITY,
+  QUOTE_SELECTION_MAX_ROWS,
+  QUOTE_SELECTION_STORAGE_KEY,
+  allRowsFromSelection,
+  commitQuoteSelectionChange,
+  createCatalogueSelection,
+  emptyQuoteSelection,
+  parseStoredQuoteSelection,
+  shouldSeedUrlFallback,
+  type CatalogueSelectionSubkind,
+  type QuoteSelectionCommitResult,
+  type QuoteSelectionRow,
+  type QuoteSelectionStorageAdapter
+} from "../lib/quote/selection-model";
 
 export type QuoteSelectionItem = {
   category?: string;
   imageSrc?: string;
   includedItems?: QuoteSelectionItem[];
-  kind?: "rental" | "setup" | "setup-included";
+  kind?: "rental" | "setup" | "setup-included" | "manual";
   name: string;
   quantity: number;
   setupBaseQuantity?: number;
   setupName?: string;
   setupSlug?: string;
   slug: string;
+  unavailable?: boolean;
+  selectionSource?: "catalogue" | "url";
+  manualKey?: string;
 };
 
 type QuoteSelectionSummaryItem = QuoteSelectionItem;
@@ -22,18 +40,26 @@ type NormalizedQuoteSelectionItem = QuoteSelectionItem & {
   kind: NonNullable<QuoteSelectionItem["kind"]>;
 };
 export type QuoteSelectionValidItem = {
+  category?: string;
+  imageSrc?: string;
   kind: "rental" | "setup";
+  name?: string;
   slug: string;
 };
 
-const quoteSelectionStorageKey = "skr.quoteSelection.v1";
 const quoteSelectionChangeEvent = "skr:quote-selection-change";
-const maxStoredQuoteItems = 20;
-const maxSelectedQuoteItemQuantity = 99;
+const maxStoredQuoteItems = QUOTE_SELECTION_MAX_ROWS;
+const maxSelectedQuoteItemQuantity = QUOTE_SELECTION_MAX_QUANTITY;
 const maxIncludedQuoteItemQuantity = 999;
 const maxQuoteIndicatorCount = 99;
 const publicSlugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const publicImageSrcPattern = /^(?:https?:\/\/|\/(?!\/))[^\s"'<>]+$/i;
+
+export function normalizePublicSlug(raw: string): string | undefined {
+  const trimmed = raw.trim().toLowerCase();
+  if (!publicSlugPattern.test(trimmed)) return undefined;
+  return trimmed;
+}
 
 function maxQuoteQuantityForKind(kind: NormalizedQuoteSelectionItem["kind"]) {
   return kind === "setup-included"
@@ -111,7 +137,8 @@ function normalizeQuoteItem(
     ...(includedItems.length ? { includedItems } : {}),
     ...(imageSrc && publicImageSrcPattern.test(imageSrc)
       ? { imageSrc: imageSrc.slice(0, 500) }
-      : {})
+      : {}),
+    ...(item.selectionSource ? { selectionSource: item.selectionSource } : {})
   };
 }
 
@@ -154,39 +181,6 @@ function normalizeQuoteSelectionItems(items: QuoteSelectionItem[]) {
   return Array.from(normalizedByKey.values()).slice(0, maxStoredQuoteItems);
 }
 
-function validQuoteSelectionItemKey(item: QuoteSelectionValidItem) {
-  const slug = item.slug.trim().toLowerCase();
-
-  if (!publicSlugPattern.test(slug)) {
-    return undefined;
-  }
-
-  return `${item.kind}:${slug}`;
-}
-
-function pruneQuoteSelectionItemsToValidRecords(
-  items: QuoteSelectionItem[],
-  validItems: QuoteSelectionValidItem[]
-) {
-  const validItemKeys = new Set(
-    validItems
-      .map((item) => validQuoteSelectionItemKey(item))
-      .filter((key): key is string => Boolean(key))
-  );
-
-  if (!validItemKeys.size) {
-    return [];
-  }
-
-  return normalizeQuoteSelectionItems(items).filter((item) => {
-    if (item.kind === "setup-included") {
-      return true;
-    }
-
-    return validItemKeys.has(`${item.kind}:${item.slug}`);
-  });
-}
-
 function normalizeIncludedItems(item: QuoteSelectionItem) {
   return (item.includedItems ?? [])
     .map((includedItem) =>
@@ -211,47 +205,147 @@ function selectionQuantityStep(
     : 1;
 }
 
-function readQuoteSelection() {
+function readQuoteSelection(): QuoteSelectionItem[] {
   if (typeof window === "undefined") {
     return [];
   }
 
   try {
-    const storedSelection =
-      window.localStorage.getItem(quoteSelectionStorageKey) ?? "[]";
-    const parsed = JSON.parse(storedSelection);
-
-    if (!Array.isArray(parsed)) {
-      window.localStorage.setItem(quoteSelectionStorageKey, "[]");
-      return [];
-    }
-
-    const normalizedItems = normalizeQuoteSelectionItems(
-      parsed as QuoteSelectionItem[]
+    const rows = allRowsFromSelection(
+      window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY)
     );
-    const normalizedSelection = JSON.stringify(normalizedItems);
 
-    if (storedSelection !== normalizedSelection) {
-      window.localStorage.setItem(quoteSelectionStorageKey, normalizedSelection);
-    }
-
-    return normalizedItems;
+    return rows
+      .map((row) => {
+        if (row.kind === "catalogue") {
+          return {
+            slug: row.reference,
+            name: row.reference,
+            kind: row.subkind,
+            quantity: row.quantity,
+            selectionSource: row.source
+          };
+        }
+        return {
+          slug: `manual-${row.key}`,
+          name: "Manual requirement",
+          kind: "manual" as const,
+          quantity: row.quantity,
+          manualKey: row.key
+        };
+      });
   } catch {
-    window.localStorage.setItem(quoteSelectionStorageKey, "[]");
     return [];
   }
 }
 
-function writeQuoteSelection(items: QuoteSelectionItem[]) {
+type ReadSelectionGuardedResult =
+  | { ok: true; items: QuoteSelectionItem[]; serialized: string | null }
+  | { ok: false; code: "storage-unavailable" };
+
+function readQuoteSelectionGuarded(): ReadSelectionGuardedResult {
   if (typeof window === "undefined") {
-    return;
+    return { ok: true, items: [], serialized: null };
   }
 
-  window.localStorage.setItem(
-    quoteSelectionStorageKey,
-    JSON.stringify(normalizeQuoteSelectionItems(items))
-  );
-  window.dispatchEvent(new Event(quoteSelectionChangeEvent));
+  let serialized: string | null;
+  try {
+    serialized = window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY);
+  } catch {
+    return { ok: false, code: "storage-unavailable" };
+  }
+
+  const rows = allRowsFromSelection(serialized);
+  const items = rows.map((row) => {
+    if (row.kind === "catalogue") {
+      return {
+        slug: row.reference,
+        name: row.reference,
+        kind: row.subkind,
+        quantity: row.quantity,
+        selectionSource: row.source
+      };
+    }
+    return {
+      slug: `manual-${row.key}`,
+      name: "Manual requirement",
+      kind: "manual" as const,
+      quantity: row.quantity,
+      manualKey: row.key
+    };
+  });
+
+  return { ok: true, items, serialized };
+}
+
+function buildBrowserStorage(): QuoteSelectionStorageAdapter {
+  return {
+    read: () => window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY),
+    write: (serialized) =>
+      window.sessionStorage.setItem(QUOTE_SELECTION_STORAGE_KEY, serialized),
+    remove: () =>
+      window.sessionStorage.removeItem(QUOTE_SELECTION_STORAGE_KEY),
+    dispatchSuccess: () =>
+      window.dispatchEvent(new Event(quoteSelectionChangeEvent))
+  };
+}
+
+export function writeUrlFallback(
+  item: QuoteSelectionItem,
+  canonicalIdentity: { reference: string; kind: CatalogueSelectionSubkind }
+): boolean {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  if (!canonicalIdentity) {
+    return false;
+  }
+
+  const normalizedFallback = normalizeQuoteItem(item);
+  if (
+    !normalizedFallback ||
+    normalizedFallback.slug !== canonicalIdentity.reference
+  ) {
+    return false;
+  }
+
+  let serialized: string | null;
+  try {
+    serialized = window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY);
+  } catch {
+    return false;
+  }
+
+  if (!shouldSeedUrlFallback(serialized)) {
+    return false;
+  }
+
+  const normalized = createCatalogueSelection([
+    {
+      reference: canonicalIdentity.reference,
+      quantity: item.quantity,
+      source: "url",
+      subkind: canonicalIdentity.kind
+    }
+  ]);
+
+  if (!normalized.ok) {
+    return false;
+  }
+
+  const result = commitQuoteSelectionChange(buildBrowserStorage(), {
+    kind: "replace",
+    selection: {
+      version: 2,
+      rows: normalized.value.rows.map((row, index) => ({
+        ...row,
+        order: index
+      }))
+    }
+  });
+
+  return result.ok;
 }
 
 function mergeQuoteItemMetadata(
@@ -285,86 +379,48 @@ function refreshStoredQuoteItem(
     return;
   }
 
-  let changed = false;
   const nextItems = readQuoteSelection().map((selected) => {
     if (quoteSelectionItemKey(selected) !== quoteSelectionItemKey(normalizedItem)) {
       return selected;
     }
 
-    const refreshedItem = mergeQuoteItemMetadata(selected, normalizedItem);
-    changed =
-      changed ||
-      refreshedItem.kind !== selected.kind ||
-      refreshedItem.name !== selected.name ||
-      refreshedItem.category !== selected.category ||
-      refreshedItem.imageSrc !== selected.imageSrc ||
-      refreshedItem.setupName !== selected.setupName ||
-      refreshedItem.setupSlug !== selected.setupSlug;
-
-    return refreshedItem;
+    return mergeQuoteItemMetadata(selected, normalizedItem);
   });
 
-  if (changed) {
-    writeQuoteSelection(nextItems);
-    setItems(nextItems);
-  }
-}
-
-export function getStoredQuoteSelection() {
-  return readQuoteSelection();
-}
-
-export function clearStoredQuoteSelection() {
-  writeQuoteSelection([]);
+  setItems(nextItems);
 }
 
 export function QuoteSelectionDataBoundary({
-  validItems
+  validItems: _validItems
 }: {
   validItems: QuoteSelectionValidItem[];
 }) {
-  const signature = useMemo(
-    () =>
-      validItems
-        .map((item) => validQuoteSelectionItemKey(item))
-        .filter((key): key is string => Boolean(key))
-        .sort()
-        .join("|"),
-    [validItems]
-  );
-
-  useEffect(() => {
-    const currentItems = readQuoteSelection();
-    const prunedItems = normalizeQuoteSelectionItems(
-      pruneQuoteSelectionItemsToValidRecords(currentItems, validItems)
-    );
-
-    if (JSON.stringify(currentItems) !== JSON.stringify(prunedItems)) {
-      writeQuoteSelection(prunedItems);
-    }
-  }, [signature, validItems]);
-
+  // Deliberately retain stale references. The quote page resolves them against
+  // the current server-owned public catalogue and offers explicit recovery.
   return null;
 }
 
-function removeStoredQuoteSelectionItem(item: QuoteSelectionItem) {
+function removeStoredQuoteSelectionItem(item: QuoteSelectionItem): QuoteSelectionCommitResult | undefined {
   const normalizedItem = normalizeQuoteItem(item);
 
   if (!normalizedItem) {
-    return;
+    return undefined;
   }
 
-  writeQuoteSelection(
-    readQuoteSelection().filter(
-      (selected) =>
-        quoteSelectionItemKey(selected) !== quoteSelectionItemKey(normalizedItem) &&
-        !(
-          normalizedItem.kind === "setup" &&
-          selected.kind === "setup-included" &&
-          selected.setupSlug === normalizedItem.slug
-        )
-    )
-  );
+  if (typeof window === "undefined") {
+    return undefined;
+  }
+
+  const subkind: CatalogueSelectionSubkind =
+    normalizedItem.kind === "setup" ? "setup" : "rental";
+
+  return commitQuoteSelectionChange(buildBrowserStorage(), {
+    kind: "catalogue",
+    reference: normalizedItem.slug,
+    subkind,
+    quantity: 0,
+    source: "catalogue"
+  });
 }
 
 export function formatQuoteSelectionItems(items: QuoteSelectionItem[]) {
@@ -440,19 +496,25 @@ function getGroupedSelectionItems(items: QuoteSelectionSummaryItem[]) {
 function SelectionRow({
   detailBasePath,
   item,
+  onRemoveItem,
   quantityItem,
   showQuantityMeta = true,
   showQuantityControls = true
 }: {
   detailBasePath: "/catalogue" | "/listings";
   item: QuoteSelectionSummaryItem;
+  onRemoveItem?: (item: QuoteSelectionSummaryItem) => QuoteSelectionCommitResult | undefined;
   quantityItem?: QuoteSelectionSummaryItem;
   showQuantityMeta?: boolean;
   showQuantityControls?: boolean;
 }) {
   function handleClearSelection(event: MouseEvent<HTMLButtonElement>) {
     event.preventDefault();
-    removeStoredQuoteSelectionItem(item);
+    if (onRemoveItem) {
+      onRemoveItem(item);
+    } else {
+      removeStoredQuoteSelectionItem(item);
+    }
   }
 
   return (
@@ -472,12 +534,18 @@ function SelectionRow({
         <div className="stitch-selection-row__main">
           <strong>{item.name}</strong>
           <div className="stitch-selection-row__actions">
-            <Link
-              className="stitch-selection-row__detail"
-              href={`${detailBasePath}/${item.slug}`}
-            >
-              Details
-            </Link>
+            {item.unavailable ? (
+              <Link className="stitch-selection-row__detail" href="/catalogue">
+                Browse alternatives
+              </Link>
+            ) : (
+              <Link
+                className="stitch-selection-row__detail"
+                href={`${detailBasePath}/${item.slug}`}
+              >
+                Details
+              </Link>
+            )}
             {showQuantityControls ? (
               <button
                 aria-label={`Remove ${item.name} from selection`}
@@ -506,8 +574,13 @@ function SelectionRow({
               Qty: {item.quantity}
             </small>
           ) : null}
+          {item.unavailable ? (
+            <small className="stitch-selection-row__unavailable">
+              Unavailable - remove this item or browse the current catalogue.
+            </small>
+          ) : null}
         </div>
-        {showQuantityControls ? (
+        {showQuantityControls && !item.unavailable ? (
           <QuoteSelectionButton item={quantityItem ?? item} />
         ) : null}
       </div>
@@ -518,10 +591,12 @@ function SelectionRow({
 function SelectionGroup({
   detailBasePath,
   items,
+  onRemoveItem,
   title
 }: {
   detailBasePath: "/catalogue" | "/listings";
   items: QuoteSelectionSummaryItem[];
+  onRemoveItem?: (item: QuoteSelectionSummaryItem) => QuoteSelectionCommitResult | undefined;
   title: string;
 }) {
   if (!items.length) {
@@ -536,6 +611,7 @@ function SelectionGroup({
           detailBasePath={detailBasePath}
           item={item}
           key={quoteSelectionItemKey(item)}
+          onRemoveItem={onRemoveItem}
         />
       ))}
     </div>
@@ -544,10 +620,12 @@ function SelectionGroup({
 
 function SetupSelectionGroup({
   includedItems,
+  onRemoveItem,
   setupItem,
   setupName
 }: {
   includedItems: QuoteSelectionSummaryItem[];
+  onRemoveItem?: (item: QuoteSelectionSummaryItem) => QuoteSelectionCommitResult | undefined;
   setupItem?: QuoteSelectionSummaryItem;
   setupName?: string;
 }) {
@@ -601,6 +679,7 @@ function SetupSelectionGroup({
           <SelectionRow
             detailBasePath="/listings"
             item={setupItem}
+            onRemoveItem={onRemoveItem}
             quantityItem={setupQuantityItem}
           />
         ) : (
@@ -636,27 +715,192 @@ function SetupSelectionGroup({
   );
 }
 
+function ManualSelectionGroup({ items }: { items: QuoteSelectionSummaryItem[] }) {
+  if (!items.length) {
+    return null;
+  }
+
+  const label = items.length === 1 ? "1 manual requirement" : `${items.length} manual requirements`;
+
+  return (
+    <div className="stitch-selection-group stitch-selection-group--manual">
+      <h3>{label}</h3>
+      {items.map((item) => (
+        <article
+          className="stitch-selection-row"
+          data-kind="manual"
+          key={item.manualKey ?? item.slug}
+        >
+          <span className="stitch-selection-row__icon" aria-hidden="true">
+            SK
+          </span>
+          <div className="stitch-selection-row__body">
+            <div className="stitch-selection-row__main">
+              <strong>Manual requirement</strong>
+              <small className="stitch-selection-row__quantity">
+                Qty: {item.quantity}
+              </small>
+            </div>
+          </div>
+        </article>
+      ))}
+    </div>
+  );
+}
+
 export function QuoteSelectionSummary({
+  catalogueAvailable = true,
   category,
   event,
   fallbackItems = [],
   requestedSlug,
-  search
+  search,
+  validItems = []
 }: {
+  catalogueAvailable?: boolean;
   category?: string;
   event?: string;
   fallbackItems?: QuoteSelectionSummaryItem[];
   requestedSlug?: string;
   search?: string;
+  validItems?: QuoteSelectionValidItem[];
 }) {
   const [items, setItems] = useState<QuoteSelectionItem[]>([]);
-  const visibleItems: QuoteSelectionSummaryItem[] = items.length ? items : fallbackItems;
+  const [hasCompleteSelection, setHasCompleteSelection] = useState(false);
+  const [fallbackConsumed, setFallbackConsumed] = useState(false);
+  const [storageUnavailable, setStorageUnavailable] = useState(false);
+  const [removalError, setRemovalError] = useState<string | null>(null);
+
+  function handleRemoveItem(summaryItem: QuoteSelectionSummaryItem): QuoteSelectionCommitResult | undefined {
+    if (typeof window === "undefined") {
+      return undefined;
+    }
+
+    const result = removeStoredQuoteSelectionItem(summaryItem);
+
+    if (!result) {
+      return undefined;
+    }
+
+    if (result.ok) {
+      setRemovalError(null);
+      const resync = readQuoteSelectionGuarded();
+      if (resync.ok) {
+        setItems(resync.items);
+        setStorageUnavailable(false);
+        setHasCompleteSelection(!shouldSeedUrlFallback(resync.serialized));
+      } else {
+        setStorageUnavailable(true);
+      }
+    } else {
+      const resync = readQuoteSelectionGuarded();
+      if (resync.ok) {
+        setItems(resync.items);
+        setStorageUnavailable(false);
+        setHasCompleteSelection(!shouldSeedUrlFallback(resync.serialized));
+      } else {
+        setStorageUnavailable(true);
+      }
+      setRemovalError(
+        result.code === "restore-failed" ||
+        result.code === "read-back-mismatch" ||
+        result.code === "storage-exception"
+          ? resync.ok
+            ? "Selection storage could not be updated. The current selection has been reloaded."
+            : "Selection storage is unavailable. The current selection has been preserved."
+          : "This item could not be removed. Check the limits and try again."
+      );
+    }
+
+    return result;
+  }
+  const resolvedItems = items.map((item) => {
+    if (item.kind === "manual") {
+      return item;
+    }
+
+    const canonical = validItems.find(
+      (candidate) => candidate.slug === item.slug && candidate.kind === item.kind
+    );
+
+    return canonical
+      ? {
+          ...item,
+          category: canonical.category,
+          imageSrc: canonical.imageSrc,
+          kind: canonical.kind,
+          name: canonical.name ?? canonical.slug
+        }
+      : {
+          ...item,
+          name: `Unavailable selection: ${item.slug}`,
+          unavailable: true
+        };
+  });
+
+  const manualItems = resolvedItems.filter((item) => item.kind === "manual");
+  const catalogueItems = resolvedItems.filter((item) => item.kind !== "manual");
+  const hasAnyItems = resolvedItems.length > 0;
+
+  const visibleItems: QuoteSelectionSummaryItem[] = catalogueItems.length
+    ? resolvedItems
+    : hasCompleteSelection
+      ? manualItems.length ? manualItems : []
+      : fallbackItems;
   const hasDiscoveryContext = Boolean(requestedSlug || category || event || search);
   const groupedItems = getGroupedSelectionItems(visibleItems);
 
+  const canonicalFallbackIdentity = useMemo(() => {
+    if (!requestedSlug) return undefined;
+    const normalizedRequestedSlug = normalizePublicSlug(requestedSlug);
+    if (!normalizedRequestedSlug) return undefined;
+    const fallbackItem = fallbackItems[0];
+    if (
+      !fallbackItem ||
+      normalizePublicSlug(fallbackItem.slug) !== normalizedRequestedSlug
+    )
+      return undefined;
+    const normalizedFallback = normalizeQuoteItem(fallbackItem);
+    if (
+      !normalizedFallback ||
+      (normalizedFallback.kind !== "rental" &&
+        normalizedFallback.kind !== "setup")
+    )
+      return undefined;
+    const exactMatches = validItems.filter(
+      (candidate) =>
+        normalizePublicSlug(candidate.slug) === normalizedRequestedSlug &&
+        candidate.kind === normalizedFallback.kind
+    );
+    if (exactMatches.length !== 1) return undefined;
+    return { reference: normalizedRequestedSlug, kind: exactMatches[0].kind };
+  }, [requestedSlug, fallbackItems, validItems]);
+
   useEffect(() => {
     function syncSelection() {
-      setItems(readQuoteSelection());
+      const result = readQuoteSelectionGuarded();
+
+      if (result.ok) {
+        setItems(result.items);
+        setStorageUnavailable(false);
+        setHasCompleteSelection(!shouldSeedUrlFallback(result.serialized));
+
+        if (!fallbackConsumed && canonicalFallbackIdentity) {
+          const rows = allRowsFromSelection(result.serialized);
+          const hasMatchingUrlRow = rows.some(
+            (row) =>
+              row.kind === "catalogue" &&
+              row.source === "url" &&
+              row.reference === canonicalFallbackIdentity.reference &&
+              row.subkind === canonicalFallbackIdentity.kind
+          );
+          if (hasMatchingUrlRow) {
+            setFallbackConsumed(true);
+          }
+        }
+      } else {
+        setStorageUnavailable(true);
+      }
     }
 
     syncSelection();
@@ -669,37 +913,147 @@ export function QuoteSelectionSummary({
     };
   }, []);
 
+  useEffect(() => {
+    if (fallbackConsumed) {
+      return;
+    }
+
+    if (!catalogueAvailable) {
+      return;
+    }
+
+    const fallbackItem = fallbackItems[0];
+
+    if (!canonicalFallbackIdentity) {
+      return;
+    }
+
+    if (storageUnavailable) {
+      return;
+    }
+
+    let serialized: string | null;
+    try {
+      serialized = window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY);
+    } catch {
+      setStorageUnavailable(true);
+      return;
+    }
+
+    if (!shouldSeedUrlFallback(serialized)) {
+      return;
+    }
+
+    const seeded = writeUrlFallback(fallbackItem, canonicalFallbackIdentity);
+
+    if (seeded) {
+      setFallbackConsumed(true);
+      setItems(readQuoteSelection());
+    }
+  }, [fallbackItems, requestedSlug, catalogueAvailable, fallbackConsumed, storageUnavailable, hasCompleteSelection, canonicalFallbackIdentity]);
+
+  const manualCount = manualItems.length;
+
   return (
     <section className="stitch-quote-card stitch-quote-selection">
       <p className="stitch-eyebrow">Your Selection</p>
       <h2>Your Selection</h2>
-      {visibleItems.length ? (
+      {removalError ? (
+        <div className="stitch-selection-state stitch-selection-state--error" role="alert">
+          {removalError}
+        </div>
+      ) : null}
+      {storageUnavailable ? (
+        <div className="stitch-selection-state" role="status">
+          <strong>Selection storage unavailable</strong>
+          <p>
+            Selection storage is unavailable in this browser context. Existing
+            references are kept where possible. Add a bounded manual requirement
+            or browse again later.
+          </p>
+        </div>
+      ) : null}
+      {storageUnavailable ? (
+        catalogueItems.length ? (
+          <>
+            <SelectionGroup
+              detailBasePath="/catalogue"
+              items={catalogueItems}
+              onRemoveItem={handleRemoveItem}
+              title="Selected items"
+            />
+            {manualCount ? (
+              <ManualSelectionGroup items={manualItems} />
+            ) : null}
+          </>
+        ) : manualCount ? (
+          <ManualSelectionGroup items={manualItems} />
+        ) : null
+      ) : !catalogueAvailable ? (
         <>
-          <SelectionGroup
-            detailBasePath="/catalogue"
-            items={groupedItems.rentalItems}
-            title="Selected Rental Items"
-          />
-          {groupedItems.setupGroups.length ? (
-            <div className="stitch-selection-group stitch-selection-group--setups">
-              <h3>Selected Setup Directions</h3>
-              {groupedItems.setupGroups.map((group) => (
-                <SetupSelectionGroup
-                  includedItems={group.includedItems}
-                  key={group.setupItem?.slug ?? group.setupName}
-                  setupItem={group.setupItem}
-                  setupName={group.setupName}
-                />
-              ))}
-            </div>
+          <div className="stitch-selection-state" role="status">
+            <strong>Catalogue unavailable right now</strong>
+            <p>
+              Existing references are kept in this tab. Add a bounded manual
+              requirement or browse again later; no substitute is selected.
+            </p>
+            {requestedSlug ? (
+              <p>
+                Listing context is a starting point only. The listing link may
+                be old or unavailable: <strong>{requestedSlug}</strong>. It has
+                not been added or replaced.
+              </p>
+            ) : null}
+          </div>
+          {catalogueItems.length ? (
+            <SelectionGroup
+              detailBasePath="/catalogue"
+              items={catalogueItems}
+              onRemoveItem={handleRemoveItem}
+              title="Unavailable selections"
+            />
+          ) : null}
+          {manualCount ? (
+            <ManualSelectionGroup items={manualItems} />
+          ) : null}
+        </>
+      ) : hasAnyItems ? (
+        <>
+          {catalogueItems.length ? (
+            <>
+              <SelectionGroup
+                detailBasePath="/catalogue"
+                items={groupedItems.rentalItems}
+                onRemoveItem={handleRemoveItem}
+                title="Selected Rental Items"
+              />
+              {groupedItems.setupGroups.length ? (
+                <div className="stitch-selection-group stitch-selection-group--setups">
+                  <h3>Selected Setup Directions</h3>
+                  {groupedItems.setupGroups.map((group) => (
+                    <SetupSelectionGroup
+                      includedItems={group.includedItems}
+                      key={group.setupItem?.slug ?? group.setupName}
+                      onRemoveItem={handleRemoveItem}
+                      setupItem={group.setupItem}
+                      setupName={group.setupName}
+                    />
+                  ))}
+                </div>
+              ) : null}
+            </>
+          ) : null}
+          {manualCount ? (
+            <ManualSelectionGroup items={manualItems} />
           ) : null}
         </>
       ) : (
         <>
+          <strong>No items selected yet</strong>
           <p>
             {requestedSlug
-              ? "The listing link may be old or unavailable. Keep this reference as synced request context if it still describes what you need."
-              : "Share the requested pieces or setup direction you have in mind. The team can review your event context and follow up directly."}
+              ? "This listing is unavailable. It has not been substituted or added to an accepted request."
+              : "Browse the catalogue or add a separate manual requirement below."}
           </p>
           {hasDiscoveryContext ? (
             <>
@@ -720,6 +1074,7 @@ export function QuoteSelectionSummary({
 
 export function QuoteSelectionButton({ item }: { item: QuoteSelectionItem }) {
   const [items, setItems] = useState<QuoteSelectionItem[]>([]);
+  const [storageError, setStorageError] = useState<string | null>(null);
   const normalizedButtonItem = normalizeQuoteItem(item);
   const selectedItem = normalizedButtonItem
     ? items.find(
@@ -757,70 +1112,32 @@ export function QuoteSelectionButton({ item }: { item: QuoteSelectionItem }) {
       return;
     }
 
-    const currentItems = readQuoteSelection();
-    const includedItems = normalizeIncludedItems(item);
-    const itemsToUpsert = [normalizedItem, ...includedItems];
-    const existingItem = currentItems.find(
-      (selected) =>
-        quoteSelectionItemKey(selected) === quoteSelectionItemKey(normalizedItem)
-    );
-    let nextItems = currentItems.map((selected) => {
-      const sourceItem = itemsToUpsert.find(
-        (upsertItem) =>
-          quoteSelectionItemKey(upsertItem) === quoteSelectionItemKey(selected)
-      );
-
-      if (!sourceItem) {
-        return selected;
-      }
-
-      return mergeQuoteItemMetadata(
-        selected,
-        sourceItem,
-        clampQuoteQuantity(
-          sourceItem.kind,
-          selected.quantity + selectionQuantityStep(sourceItem, item)
-        )
-      );
-    });
-
-    if (!existingItem) {
-      nextItems = [...nextItems, normalizedItem];
+    if (typeof window === "undefined") {
+      return;
     }
 
-    const nextSetupQuantity =
-      normalizedItem.kind === "setup"
-        ? (nextItems.find(
-            (selected) =>
-              quoteSelectionItemKey(selected) === quoteSelectionItemKey(normalizedItem)
-          )?.quantity ?? normalizedItem.quantity)
-        : undefined;
+    const subkind: CatalogueSelectionSubkind =
+      normalizedItem.kind === "setup" ? "setup" : "rental";
 
-    includedItems.forEach((includedItem) => {
-      if (
-        !nextItems.some(
-          (selected) =>
-            quoteSelectionItemKey(selected) === quoteSelectionItemKey(includedItem)
-        )
-      ) {
-        nextItems.push({
-          ...includedItem,
-          quantity:
-            nextSetupQuantity !== undefined
-              ? Math.min(
-                  maxIncludedQuoteItemQuantity,
-                  (includedItem.setupBaseQuantity ?? includedItem.quantity) *
-                    nextSetupQuantity
-                )
-              : includedItem.quantity
-        });
-      }
+    const result = commitQuoteSelectionChange(buildBrowserStorage(), {
+      kind: "catalogue",
+      reference: normalizedItem.slug,
+      subkind,
+      source: "catalogue"
     });
 
-    nextItems = nextItems.slice(0, maxStoredQuoteItems);
+    if (!result.ok) {
+      setItems(readQuoteSelection());
+      setStorageError(
+        result.code === "storage-exception" || result.code === "read-back-mismatch" || result.code === "restore-failed"
+          ? "Selection storage could not be updated. The current selection has been reloaded."
+          : "This selection could not be updated. Check the limits and try again."
+      );
+      return;
+    }
 
-    writeQuoteSelection(nextItems);
-    setItems(nextItems);
+    setStorageError(null);
+    setItems(readQuoteSelection());
   }
 
   function handleDecrementQuantity(event: MouseEvent<HTMLButtonElement>) {
@@ -832,45 +1149,61 @@ export function QuoteSelectionButton({ item }: { item: QuoteSelectionItem }) {
       return;
     }
 
-    const includedItems = normalizeIncludedItems(item);
-    const itemsToUpdate = [normalizedItem, ...includedItems];
-    const nextItems = readQuoteSelection()
-      .map((selected) => {
-        const sourceItem = itemsToUpdate.find(
-          (updateItem) =>
-            quoteSelectionItemKey(updateItem) === quoteSelectionItemKey(selected)
-        );
+    if (typeof window === "undefined") {
+      return;
+    }
 
-        if (!sourceItem) {
-          return selected;
-        }
+    const subkind: CatalogueSelectionSubkind =
+      normalizedItem.kind === "setup" ? "setup" : "rental";
 
-        return mergeQuoteItemMetadata(
-          selected,
-          sourceItem,
-          sourceItem.kind === "setup-included"
-            ? Math.max(
-                0,
-                selected.quantity - selectionQuantityStep(sourceItem, item)
-              )
-            : selected.quantity - selectionQuantityStep(sourceItem, item)
-        );
-      })
-      .filter((selected, _index, selectedItems) => {
-        if (selected.kind === "setup-included") {
-          return selectedItems.some(
-            (candidate) =>
-              candidate.kind === "setup" &&
-              candidate.slug === selected.setupSlug &&
-              candidate.quantity > 0
-          );
-        }
+    let serialized: string | null;
+    try {
+      serialized = window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY);
+    } catch {
+      setItems(readQuoteSelection());
+      setStorageError("Selection storage could not be read. The current selection has been reloaded.");
+      return;
+    }
 
-        return selected.quantity > 0;
-      });
+    const current = parseStoredQuoteSelection(serialized);
 
-    writeQuoteSelection(nextItems);
-    setItems(nextItems);
+    if (!current.ok) {
+      return;
+    }
+
+    const existing = current.value.rows.find(
+      (row) =>
+        row.kind === "catalogue" &&
+        row.reference === normalizedItem.slug &&
+        row.subkind === subkind
+    );
+
+    if (!existing) {
+      return;
+    }
+
+    const newQty = existing.quantity - 1;
+
+    const result = commitQuoteSelectionChange(buildBrowserStorage(), {
+      kind: "catalogue",
+      reference: normalizedItem.slug,
+      subkind,
+      quantity: newQty,
+      source: "catalogue"
+    });
+
+    if (!result.ok) {
+      setItems(readQuoteSelection());
+      setStorageError(
+        result.code === "storage-exception" || result.code === "read-back-mismatch" || result.code === "restore-failed"
+          ? "Selection storage could not be updated. The current selection has been reloaded."
+          : "This selection could not be updated. Check the limits and try again."
+      );
+      return;
+    }
+
+    setStorageError(null);
+    setItems(readQuoteSelection());
   }
 
   return (
@@ -896,11 +1229,20 @@ export function QuoteSelectionButton({ item }: { item: QuoteSelectionItem }) {
       <button
         aria-label={`Increase ${item.name} quantity`}
         className="stitch-quote-quantity-button"
+        disabled={
+          Boolean(selectedItem) &&
+          (selectedItem?.quantity ?? 0) >= maxSelectedQuoteItemQuantity
+        }
         onClick={handleIncrementQuantity}
         type="button"
       >
         +
       </button>
+      {storageError ? (
+        <small className="stitch-quote-storage-error" role="alert">
+          {storageError}
+        </small>
+      ) : null}
     </span>
   );
 }

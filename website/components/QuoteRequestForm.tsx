@@ -1,675 +1,604 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import type { ChangeEvent, FormEvent } from "react";
+import Link from "next/link";
+import { useEffect, useId, useState } from "react";
+import type { FormEvent } from "react";
 import {
-  clearStoredQuoteSelection,
-  formatQuoteSelectionItems,
-  getStoredQuoteSelection
-} from "./QuoteSelectionControls";
+  QUOTE_MANUAL_DESCRIPTION_MAX_LENGTH,
+  QUOTE_MANUAL_NOTES_MAX_LENGTH,
+  QUOTE_SELECTION_MAX_QUANTITY,
+  QUOTE_SELECTION_STORAGE_KEY,
+  commitQuoteSelectionChange,
+  createManualSelectionRow,
+  emptyQuoteSelection,
+  parseStoredQuoteSelection,
+  selectionSatisfiesRequiredSelection,
+  type CanonicalCatalogueIdentity,
+  type QuoteSelection,
+  type QuoteSelectionStorageAdapter
+} from "../lib/quote/selection-model";
 
-type QuoteApiResponse = {
-  publicReference?: string;
-  requestId?: string;
-  error?: {
-    message: string;
-    reference?: string;
-  };
-};
-
-type SubmitState =
-  | { status: "idle" }
-  | { status: "submitting" }
-  | { status: "success"; publicReference?: string; requestId?: string }
-  | { status: "error"; message: string };
-
-type FieldErrors = {
-  customerName?: string;
-  customerEmail?: string;
-  customerPhone?: string;
-  submit?: string;
-};
-
-type LogicalQuotePayload = {
-  customerName: string;
-  customerEmail: string;
-  customerPhone: string;
-  customerMessage?: string;
-  eventDate: string;
-  venue: string;
-  sourcePath?: string;
-  listingSlug?: string;
-  items: Array<{
-    productName: string;
-    quantity: number;
-    notes?: string;
-  }>;
-};
-
-type SubmissionAttemptSnapshot = {
-  payloadIdentity: string;
-  requestId: string;
-};
-
-const customerMessageMaxLength = 1200;
-const requestedItemsMaxCount = 20;
-const requestedItemMaxLength = 180;
-const sourcePathMaxLength = 500;
-const requestIdMaxLength = 128;
-const listingSlugPattern = /^[a-z0-9][a-z0-9-]*$/;
-const requestIdPattern = /^[A-Za-z0-9._:-]+$/;
 const quoteSelectionChangeEvent = "skr:quote-selection-change";
-const quoteSelectionGroupHeadingPattern =
-  /^(selected rental items|setup included rental pieces|selected setup directions):$/i;
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const phonePattern = /^[+()\d][+()\d\s.-]{5,39}$/;
+const phoneDigitPattern = /\d/;
 
-function formatPreferredContactMethod(preferredContactMethod: string) {
-  return preferredContactMethod
-    ? `Preferred contact method: ${preferredContactMethod}`
-    : "";
-}
+type FieldErrors = Partial<
+  Record<
+    | "customerName"
+    | "customerEmail"
+    | "customerPhone"
+    | "selection"
+    | "manualDescription"
+    | "manualQuantity"
+    | "storage",
+    string
+  >
+>;
 
-function getCustomerMessageMaxLength(preferredContactMethod: string) {
-  const preferredContactPrefix = formatPreferredContactMethod(
-    preferredContactMethod
-  );
+type ReadSelectionResult =
+  | { ok: true; value: import("../lib/quote/selection-model").QuoteSelection }
+  | { ok: false; code: "storage-unavailable" };
 
-  return preferredContactPrefix
-    ? customerMessageMaxLength - preferredContactPrefix.length - 2
-    : customerMessageMaxLength;
-}
-
-function parseRequestedItems(itemsText: string, itemNotesText: string) {
-  const itemLines = itemsText
-    .split(/\r?\n|\r/)
-    .map((line) => line.trim())
-    .filter((line) => line && !quoteSelectionGroupHeadingPattern.test(line))
-    .slice(0, requestedItemsMaxCount);
-
-  return itemLines.map((productName, index) => ({
-    productName: productName.slice(0, requestedItemMaxLength),
-    quantity: 1,
-    // Item notes are shared form context, so submit them once on the first item.
-    ...(index === 0 && itemNotesText ? { notes: itemNotesText } : {})
-  }));
-}
-
-function combineCustomerMessage(
-  customerMessageText: string,
-  preferredContactMethod: string
-) {
-  const details = [
-    formatPreferredContactMethod(preferredContactMethod),
-    customerMessageText
-  ].filter(Boolean);
-
-  return details.join("\n\n").trim();
-}
-
-function createSubmissionRequestId() {
-  const requestId = globalThis.crypto?.randomUUID?.();
-
-  return typeof requestId === "string" &&
-    requestIdPattern.test(requestId) &&
-    requestId.length <= requestIdMaxLength
-    ? requestId
-    : undefined;
-}
-
-function canonicalizeLogicalQuotePayload(payload: LogicalQuotePayload) {
-  const items = payload.items
-    .map((item) => ({
-      productName: item.productName.trim(),
-      quantity: item.quantity,
-      notes: item.notes?.trim() || null
-    }))
-    .sort((left, right) => JSON.stringify(left).localeCompare(JSON.stringify(right)));
-
-  return JSON.stringify({
-    customerName: payload.customerName.trim(),
-    customerEmail: payload.customerEmail.trim(),
-    customerPhone: payload.customerPhone.trim(),
-    customerMessage: payload.customerMessage?.trim() || null,
-    eventDate: payload.eventDate.trim() || null,
-    venue: payload.venue.trim() || null,
-    sourcePath: payload.sourcePath?.trim() || null,
-    listingSlug: payload.listingSlug?.trim() || null,
-    items
-  });
-}
-
-function getSafeSourcePath() {
+function readSelection(): ReadSelectionResult {
   if (typeof window === "undefined") {
-    return undefined;
+    return { ok: true, value: emptyQuoteSelection() };
   }
 
-  const sourcePath = `${window.location.pathname}${window.location.search}`;
-
-  if (
-    sourcePath.length > sourcePathMaxLength ||
-    !sourcePath.startsWith("/") ||
-    sourcePath.startsWith("//") ||
-    sourcePath.includes("\\") ||
-    /[\u0000-\u001f\u007f]/.test(sourcePath)
-  ) {
-    return undefined;
+  let raw: string | null;
+  try {
+    raw = window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY);
+  } catch {
+    return { ok: false, code: "storage-unavailable" };
   }
 
-  return sourcePath;
+  const parsed = parseStoredQuoteSelection(raw);
+
+  return parsed.ok
+    ? { ok: true, value: parsed.value }
+    : { ok: true, value: emptyQuoteSelection() };
 }
 
-function getSafeListingSlug(listingSlug: string | undefined) {
-  const normalized = listingSlug?.trim().toLowerCase();
-
-  return normalized && listingSlugPattern.test(normalized)
-    ? normalized
-    : undefined;
+function buildBrowserStorage(): QuoteSelectionStorageAdapter {
+  return {
+    read: () => window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY),
+    write: (serialized) =>
+      window.sessionStorage.setItem(QUOTE_SELECTION_STORAGE_KEY, serialized),
+    remove: () =>
+      window.sessionStorage.removeItem(QUOTE_SELECTION_STORAGE_KEY),
+    dispatchSuccess: () =>
+      window.dispatchEvent(new Event(quoteSelectionChangeEvent))
+  };
 }
 
-function formatQuoteSubmitError(reference: string | undefined) {
-  const message =
-    "Your quote request was not sent. Review your details and try again; your entered details should still be here, including any selected listing context.";
+function focusFirstError(form: HTMLFormElement, errors: FieldErrors) {
+  const firstName = Object.keys(errors)[0];
 
-  return reference ? `${message} Support reference: ${reference}.` : message;
-}
+  if (firstName === "selection") {
+    const target = document.getElementById("quote-selection");
 
-function scrollToFormControl(form: HTMLFormElement, fieldName: string) {
-  const control = form.elements.namedItem(fieldName);
+    if (target) {
+      target.focus();
+    }
 
-  if (!(control instanceof HTMLElement)) {
     return;
   }
 
-  const scrollTarget = control.closest("label") ?? control;
+  const target = firstName
+    ? form.elements.namedItem(firstName)
+    : undefined;
 
-  scrollTarget.scrollIntoView?.({ behavior: "smooth", block: "center" });
-  control.focus({ preventScroll: true });
+  if (target instanceof HTMLElement) {
+    target.focus();
+  }
 }
 
 export default function QuoteRequestForm({
-  initialItemsText = "",
-  initialListingSlug
+  initialItemsText: _initialItemsText = "",
+  initialListingSlug,
+  validCanonicalIdentities = []
 }: {
   initialItemsText?: string;
   initialListingSlug?: string;
+  validCanonicalIdentities?: CanonicalCatalogueIdentity[];
 }) {
-  const [submitState, setSubmitState] = useState<SubmitState>({
-    status: "idle"
-  });
-  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
-  const [submissionRequestId, setSubmissionRequestId] = useState(createSubmissionRequestId);
-  const [preferredContactMethod, setPreferredContactMethod] = useState("email");
-  const [customerMessageText, setCustomerMessageText] = useState("");
-  const [itemsText, setItemsText] = useState(initialItemsText);
-  const [showSelectedItemsSummary, setShowSelectedItemsSummary] = useState(Boolean(initialItemsText));
-  const lastSyncedSelectionText = useRef("");
-  const submissionAttemptSnapshot = useRef<SubmissionAttemptSnapshot | null>(null);
-  const submissionInFlight = useRef(false);
-  const customerMessageInputMaxLength = getCustomerMessageMaxLength(
-    preferredContactMethod
+  const errorSummaryId = useId();
+  const [selection, setSelection] = useState<QuoteSelection>(
+    emptyQuoteSelection
   );
-  const safeInitialListingSlug = getSafeListingSlug(initialListingSlug);
-
-  function handlePreferredContactMethodChange(
-    event: ChangeEvent<HTMLSelectElement>
-  ) {
-    const nextPreferredContactMethod = event.target.value;
-    const nextMaxLength = getCustomerMessageMaxLength(
-      nextPreferredContactMethod
-    );
-
-    setPreferredContactMethod(nextPreferredContactMethod);
-    setCustomerMessageText((currentMessage) =>
-      currentMessage.length > nextMaxLength
-        ? currentMessage.slice(0, nextMaxLength)
-        : currentMessage
-    );
-  }
-
-  function handleCustomerMessageChange(
-    event: ChangeEvent<HTMLTextAreaElement>
-  ) {
-    setCustomerMessageText(
-      event.target.value.slice(0, customerMessageInputMaxLength)
-    );
-  }
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    if (submissionInFlight.current || submitState.status === "submitting") {
-      return;
-    }
-
-    const form = event.currentTarget;
-    const formData = new FormData(form);
-    const submittedItemsText = itemsText.trim();
-    const submittedCustomerMessageText = customerMessageText.trim();
-    const submittedPreferredContactMethod = preferredContactMethod.trim();
-    const itemNotesText = String(formData.get("itemNotes") ?? "").trim();
-    const sourcePath = getSafeSourcePath();
-    const listingSlug = safeInitialListingSlug;
-    const combinedCustomerMessage = combineCustomerMessage(
-      submittedCustomerMessageText,
-      submittedPreferredContactMethod
-    );
-    const logicalPayload: LogicalQuotePayload = {
-      customerName: String(formData.get("customerName") ?? "").trim(),
-      customerEmail: String(formData.get("customerEmail") ?? "").trim(),
-      customerPhone: String(formData.get("customerPhone") ?? "").trim(),
-      ...(combinedCustomerMessage
-        ? { customerMessage: combinedCustomerMessage }
-        : {}),
-      eventDate: String(formData.get("eventDate") ?? "").trim(),
-      venue: String(formData.get("venue") ?? "").trim(),
-      ...(sourcePath ? { sourcePath } : {}),
-      ...(listingSlug ? { listingSlug } : {}),
-      items: parseRequestedItems(submittedItemsText, itemNotesText)
-    };
-
-    const nextFieldErrors: FieldErrors = {};
-
-    if (!logicalPayload.customerName) {
-      nextFieldErrors.customerName =
-        "Name is required so the team knows who sent this quote request.";
-    }
-
-    if (submittedPreferredContactMethod === "phone") {
-      if (!logicalPayload.customerPhone) {
-        nextFieldErrors.customerPhone =
-          "Phone number is required so the team can follow up directly about this quote request.";
-      }
-    } else if (!logicalPayload.customerEmail) {
-      nextFieldErrors.customerEmail =
-        "Email address is required so the team can follow up directly about this quote request.";
-    }
-
-    if (
-      nextFieldErrors.customerName ||
-      nextFieldErrors.customerEmail ||
-      nextFieldErrors.customerPhone
-    ) {
-      setFieldErrors(nextFieldErrors);
-      setSubmitState({ status: "idle" });
-      scrollToFormControl(
-        form,
-        nextFieldErrors.customerName
-          ? "customerName"
-          : nextFieldErrors.customerEmail
-            ? "customerEmail"
-            : "customerPhone"
-      );
-      return;
-    }
-
-    if (submittedItemsText && logicalPayload.items.length === 0) {
-      setFieldErrors({
-        submit:
-          "Use short listing or item lines, or leave requested items blank and explain the setup in the notes."
-      });
-      setSubmitState({ status: "idle" });
-      return;
-    }
-
-    const payloadIdentity = canonicalizeLogicalQuotePayload(logicalPayload);
-    const previousAttempt = submissionAttemptSnapshot.current;
-    const requestId =
-      previousAttempt?.payloadIdentity === payloadIdentity
-        ? previousAttempt.requestId
-        : previousAttempt
-          ? createSubmissionRequestId()
-          : submissionRequestId ?? createSubmissionRequestId();
-
-    if (!requestId) {
-      const submitError = formatQuoteSubmitError(undefined);
-
-      setFieldErrors({ submit: submitError });
-      setSubmitState({ status: "error", message: submitError });
-      return;
-    }
-
-    const payload = {
-      ...logicalPayload,
-      requestId
-    };
-
-    submissionAttemptSnapshot.current = { payloadIdentity, requestId };
-    setSubmissionRequestId(requestId);
-    submissionInFlight.current = true;
-
-    setFieldErrors({});
-    setSubmitState({ status: "submitting" });
-
-    let failedSubmitReference: string | undefined;
-
-    try {
-      const response = await fetch("/api/quote", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-      const body = (await response.json()) as QuoteApiResponse;
-
-      if (!response.ok) {
-        failedSubmitReference = body.error?.reference ?? body.requestId;
-        throw new Error(body.error?.message ?? "Quote request failed");
-      }
-
-      setSubmitState({
-        status: "success",
-        publicReference: body.publicReference,
-        requestId: body.requestId
-      });
-      clearStoredQuoteSelection();
-      submissionAttemptSnapshot.current = null;
-      setSubmissionRequestId(createSubmissionRequestId());
-    } catch {
-      const submitError = formatQuoteSubmitError(failedSubmitReference);
-
-      setFieldErrors({ submit: submitError });
-      setSubmitState({ status: "error", message: submitError });
-    } finally {
-      submissionInFlight.current = false;
-    }
-  }
-
-  const receiptReference =
-    submitState.status === "success"
-      ? submitState.publicReference ?? submitState.requestId
-      : undefined;
+  const [storageUnavailable, setStorageUnavailable] = useState(false);
+  const [preferredContactMethod, setPreferredContactMethod] = useState<
+    "email" | "phone"
+  >("email");
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [manualDescription, setManualDescription] = useState("");
+  const [manualQuantity, setManualQuantity] = useState("1");
+  const [manualNotes, setManualNotes] = useState("");
 
   useEffect(() => {
-    if (submitState.status !== "success") {
-      return;
-    }
+    function syncSelection() {
+      const result = readSelection();
 
-    window.scrollTo({ top: 0 });
-  }, [submitState.status]);
-
-  useEffect(() => {
-    function syncStoredItemsText() {
-      const storedItemsText = formatQuoteSelectionItems(getStoredQuoteSelection());
-      const previousSelectionText = lastSyncedSelectionText.current;
-
-      if (!storedItemsText) {
-        if (previousSelectionText) {
-          setItemsText((currentItemsText) =>
-            currentItemsText.replace(previousSelectionText, "").trim()
-          );
-          lastSyncedSelectionText.current = "";
-        }
-        return;
+      if (result.ok) {
+        setSelection(result.value);
+        setStorageUnavailable(false);
+      } else {
+        setStorageUnavailable(true);
       }
-
-      setShowSelectedItemsSummary(true);
-      setItemsText((currentItemsText) => {
-        if (previousSelectionText && currentItemsText.includes(previousSelectionText)) {
-          lastSyncedSelectionText.current = storedItemsText;
-          return currentItemsText.replace(previousSelectionText, storedItemsText).trim();
-        }
-
-        const currentLines = currentItemsText
-          .split(/\r?\n|\r/)
-          .map((line) => line.trim())
-          .filter(Boolean);
-        const storedLines = storedItemsText
-          .split(/\r?\n|\r/)
-          .map((line) => line.trim())
-          .filter(Boolean);
-        const mergedLines = Array.from(new Set([...currentLines, ...storedLines]));
-
-        lastSyncedSelectionText.current = storedItemsText;
-        return mergedLines.join("\n");
-      });
     }
 
-    syncStoredItemsText();
-    window.addEventListener(quoteSelectionChangeEvent, syncStoredItemsText);
-    window.addEventListener("storage", syncStoredItemsText);
+    syncSelection();
+    window.addEventListener(quoteSelectionChangeEvent, syncSelection);
 
     return () => {
-      window.removeEventListener(quoteSelectionChangeEvent, syncStoredItemsText);
-      window.removeEventListener("storage", syncStoredItemsText);
+      window.removeEventListener(quoteSelectionChangeEvent, syncSelection);
     };
   }, []);
 
+  function addManualRequirement() {
+    const quantity = Number(manualQuantity);
+    const errors: FieldErrors = {};
+
+    if (!manualDescription.trim()) {
+      errors.manualDescription = "Describe the manual requirement.";
+    }
+
+    if (
+      !/^(?:[1-9]|[1-9]\d)$/.test(manualQuantity) ||
+      quantity > QUOTE_SELECTION_MAX_QUANTITY
+    ) {
+      errors.manualQuantity = "Quantity must be a whole number from 1 to 99.";
+    }
+
+    if (Object.keys(errors).length) {
+      setFieldErrors(errors);
+      return;
+    }
+
+    const row = createManualSelectionRow({
+      key: `manual-${crypto.randomUUID()}`,
+      description: manualDescription,
+      quantity,
+      ...(manualNotes.trim() ? { notes: manualNotes } : {}),
+      position: selection.rows.length
+    });
+
+    if (!row) {
+      setFieldErrors({
+        manualDescription:
+          "This manual requirement could not be added. Check the limits and try again."
+      });
+      return;
+    }
+
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const result = commitQuoteSelectionChange(buildBrowserStorage(), {
+      kind: "manual-add",
+      row
+    });
+
+    if (!result.ok) {
+      const resync = readSelection();
+      setSelection(resync.ok ? resync.value : selection);
+      setFieldErrors((prev) => ({
+        ...prev,
+        manualDescription:
+          result.code === "restore-failed" || result.code === "read-back-mismatch" || result.code === "storage-exception"
+            ? "Storage could not be updated. The current selection has been reloaded from this tab."
+            : "This manual requirement could not be added. Check the limits and try again."
+      }));
+      return;
+    }
+
+    setSelection(result.value);
+    setManualDescription("");
+    setManualQuantity("1");
+    setManualNotes("");
+    setFieldErrors((prev) => {
+      const { selection: _selection, manualDescription: _manualDescription, manualQuantity: _manualQuantity, ...rest } = prev;
+      return rest;
+    });
+  }
+
+  function removeManualRequirement(key: string) {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const result = commitQuoteSelectionChange(buildBrowserStorage(), {
+      kind: "manual-remove",
+      key
+    });
+
+    if (result.ok) {
+      setSelection(result.value);
+      setFieldErrors((prev) => {
+        const { selection: _selection, ...rest } = prev;
+        return rest;
+      });
+    } else {
+      const resync = readSelection();
+      setSelection(resync.ok ? resync.value : selection);
+      setFieldErrors((prev) => ({
+        ...prev,
+        selection:
+          result.code === "restore-failed" ||
+          result.code === "read-back-mismatch" ||
+          result.code === "storage-exception"
+            ? "Storage could not be updated. The current selection has been reloaded from this tab."
+            : "This manual requirement could not be removed. Check the limits and try again."
+      }));
+    }
+  }
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    const name = String(data.get("customerName") ?? "").trim();
+    const email = String(data.get("customerEmail") ?? "").trim();
+    const phone = String(data.get("customerPhone") ?? "").trim();
+    const errors: FieldErrors = {};
+
+    if (!name) {
+      errors.customerName = "Name is required.";
+    }
+
+    if (email && !emailPattern.test(email)) {
+      errors.customerEmail = "Enter a valid email address.";
+    }
+
+    if (phone && !phonePattern.test(phone)) {
+      errors.customerPhone = "Enter a valid phone number.";
+    } else if (phone && !phoneDigitPattern.test(phone)) {
+      errors.customerPhone = "Phone number must contain at least one digit.";
+    }
+
+    if (preferredContactMethod === "email" && !email) {
+      errors.customerEmail = "Email address is required for email follow-up.";
+    }
+
+    if (preferredContactMethod === "phone" && !phone) {
+      errors.customerPhone = "Phone number is required for phone follow-up.";
+    } else if (preferredContactMethod === "phone" && phone && !phoneDigitPattern.test(phone)) {
+      errors.customerPhone = "Phone number must contain at least one digit.";
+    }
+
+    if (storageUnavailable) {
+      errors.storage = "Selection storage is unavailable in this browser context.";
+    }
+
+    let storedSerialized: string | null = null;
+
+    if (!storageUnavailable && typeof window !== "undefined") {
+      try {
+        storedSerialized = window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY);
+      } catch {
+        errors.storage = "Selection storage is unavailable in this browser context.";
+      }
+    }
+
+    const hasAcceptedSelection = selectionSatisfiesRequiredSelection(
+      storedSerialized,
+      validCanonicalIdentities
+    );
+
+    if (!hasAcceptedSelection) {
+      errors.selection =
+        "Select a published catalogue listing or add a valid manual requirement.";
+    }
+
+    setFieldErrors(errors);
+    focusFirstError(form, errors);
+  }
+
+  const errorEntries = Object.entries(fieldErrors);
+  const manualRows = selection.rows.filter((row) => row.kind === "manual");
+
   return (
     <form
-      aria-busy={submitState.status === "submitting"}
-      className={`quote-form${submitState.status === "success" ? " quote-form--success" : ""}`}
+      aria-describedby={errorEntries.length ? errorSummaryId : undefined}
+      className="quote-form"
       noValidate
       onSubmit={handleSubmit}
     >
       <p className="quote-form__intro">
-        Rental fit is reviewed directly by the team.{" "}
-        Share contact details for direct manual follow-up. The team uses these
-        details to triage the rental enquiry.{" "}
-        Submitting does not confirm final rental details and does not set aside furniture or finish rental details. Complete the required contact point first. Let us know what you need for your event. Share the date, venue, and requested items - our team will review the details and follow up with a tailored proposal.
+        Rental fit is reviewed directly by the team. Build a structured
+        request for review; this is not a rental fit confirmation. Email is the
+        default contact method. Share a phone number if you prefer phone
+        follow-up. Exact rental details and alternatives are confirmed only by
+        the team.
       </p>
-      <input name="items" readOnly type="hidden" value={itemsText} />
-      {showSelectedItemsSummary && itemsText.trim() ? (
-        <aside className="quote-form__selected" aria-label="Selected listings">
-          <strong>Selected listings</strong>
-          <span>
-            Listing context is a starting point only and not a rental fit
-            confirmation. The selected listings and quantities are synced from
-            the selection panel. Add alternates, access, setup, or timing notes
-            below for manual follow-up.
-          </span>
-          <span>
-            You've added <strong>{itemsText}</strong> to your request.
-            This listing context will be included automatically when you submit.
-          </span>
-        </aside>
-      ) : null}
-      <fieldset className="quote-form__field-grid">
-        <legend>Contact details</legend>
-        <label>
-          Name
-          <input
-            aria-describedby={
-              fieldErrors.customerName ? "quote-customer-name-error" : undefined
-            }
-            aria-invalid={fieldErrors.customerName ? "true" : undefined}
-            autoComplete="name"
-            name="customerName"
-            required
-            type="text"
-          />
-          {fieldErrors.customerName ? (
-            <small
-              className="quote-form__field-error"
-              id="quote-customer-name-error"
-            >
-              {fieldErrors.customerName}
-            </small>
-          ) : (
-            <small>Share your name so the team knows who sent the enquiry.</small>
-          )}
-        </label>
-        <label>
-          Email address
-          <input
-            aria-describedby={
-              fieldErrors.customerEmail ? "quote-customer-email-error" : undefined
-            }
-            aria-invalid={fieldErrors.customerEmail ? "true" : undefined}
-            autoComplete="email"
-            name="customerEmail"
-            type="email"
-          />
-          {fieldErrors.customerEmail ? (
-            <small
-              className="quote-form__field-error"
-              id="quote-customer-email-error"
-            >
-              {fieldErrors.customerEmail}
-            </small>
-          ) : (
-            <small>Email is the default contact method for quote follow-up.</small>
-          )}
-        </label>
-        <label>
-          Phone number
-          <input
-            aria-describedby={
-              fieldErrors.customerPhone
-                ? "quote-contact-helper quote-customer-phone-error"
-                : "quote-contact-helper"
-            }
-            aria-invalid={fieldErrors.customerPhone ? "true" : undefined}
-            autoComplete="tel"
-            name="customerPhone"
-            type="tel"
-          />
-          <small id="quote-contact-helper">
-            Share a phone number if you prefer phone follow-up.
-          </small>
-          {fieldErrors.customerPhone ? (
-            <small
-              className="quote-form__field-error"
-              id="quote-customer-phone-error"
-            >
-              {fieldErrors.customerPhone}
-            </small>
-          ) : null}
-        </label>
-        <label>
-          Preferred contact method
-          <select
-            name="preferredContactMethod"
-            onChange={handlePreferredContactMethodChange}
-            value={preferredContactMethod}
-          >
-            <option value="email">Email</option>
-            <option value="phone">Phone</option>
-          </select>
-          <small>
-            Pick the easiest way for the team to ask questions or share more
-            details about the enquiry.
-          </small>
-        </label>
-      </fieldset>
-      <fieldset className="quote-form__field-grid">
-        <legend>Event details</legend>
-        <label>
-          Event date (if known)
-          <input name="eventDate" type="date" />
-          <small>
-            Event date helps the team understand timing and setup context.
-            The team reviews rental fit directly.
-          </small>
-        </label>
-        <label>
-          Venue or location (if known)
-          <input name="venue" placeholder="Venue or event location" type="text" />
-          <small>
-            Venue or event location helps the team plan delivery, access, and
-            layout fit.
-          </small>
-        </label>
-      </fieldset>
-      <fieldset className="quote-form__field-grid">
-        <legend>Setup/access/timing notes</legend>
-        <label className="quote-form__full-width">
-          Event Vision
-          <textarea
-            aria-label="Customer message and event notes for the team"
-            maxLength={customerMessageInputMaxLength}
-            name="customerMessage"
-            onChange={handleCustomerMessageChange}
-            placeholder="Tell us about the atmosphere, theme, or specific requirements for your event..."
-            rows={4}
-            value={customerMessageText}
-          />
-          <small>
-            Share the event style, setup and access timing notes, rental alternates,
-            placement needs, or what the team should help you decide.
-          </small>
-        </label>
-        <label className="quote-form__full-width">
-          Setup, access, and timing notes
-          <textarea
-            aria-label="Item-specific notes / setup, access, or timing notes"
-            maxLength={500}
-            name="itemNotes"
-            placeholder="Example: delivery timing, venue access, placement notes, or alternates for the listed items"
-            rows={4}
-          />
-          <small>
-            Add alternates, dimensions, setup, access, and timing notes for the
-            requested rental listings/items.
-          </small>
-        </label>
-      </fieldset>
-      {submitState.status !== "success" ? (
-        <>
-          {fieldErrors.submit ? (
-            <small
-              className="quote-form__field-error quote-form__submit-error"
-              role="alert"
-            >
-              {fieldErrors.submit}
-            </small>
-          ) : null}
-          <button
-            className="button"
-            disabled={submitState.status === "submitting"}
-            type="submit"
-          >
-            {submitState.status === "submitting"
-              ? "Sending enquiry..."
-              : "Review and Send an Enquiry"}
-          </button>
-          <p className="quote-form__legal">
-            By sending an enquiry, review the{" "}
-            <a href="/privacy">Privacy Policy</a> and{" "}
-            <a href="/terms">Terms of Use</a>. The team uses your details for
-            manual follow-up.
-          </p>
-        </>
-      ) : null}
-      {submitState.status === "success" ? (
+
+      {storageUnavailable ? (
         <section
-          aria-label="Quote enquiry receipt"
-          className="quote-form__status quote-form__status--success quote-form__receipt"
-          role="status"
+          className="quote-form__status quote-form__status--error"
+          role="alert"
         >
-          <h3>Enquiry Received</h3>
-          {receiptReference ? (
-            <p className="quote-form__receipt-reference">
-              {receiptReference}
-            </p>
-          ) : null}
-          <div className="quote-form__receipt-details">
-            <div>
-              <span>Rental enquiry</span>
-              <strong>We received your rental enquiry.</strong>
-            </div>
-            <div>
-              <span>Manual review</span>
-              <strong>Our team will review your selection.</strong>
-            </div>
-            <div>
-              <span>Follow-up</span>
-              <strong>
-                We will follow up with a tailored proposal after review.
-                Submitting does not confirm final rental details.
-              </strong>
-            </div>
-          </div>
-          <div
-            aria-label="After quote request"
-            className="quote-form__receipt-actions"
-          >
-            <a className="button quote-form__receipt-primary" href="/">
-              Return to Home
-            </a>
-            <a className="button button--secondary" href="/listings">
-              Explore More Setups
-            </a>
-          </div>
+          <p>Selection storage is unavailable in this browser context. Existing catalogue selections cannot be read or updated.</p>
         </section>
       ) : null}
+
+      {errorEntries.length ? (
+        <section
+          aria-labelledby={`${errorSummaryId}-title`}
+          className="quote-form__status quote-form__status--error"
+          id={errorSummaryId}
+          role="alert"
+          tabIndex={-1}
+        >
+          <h3 id={`${errorSummaryId}-title`}>Check your request</h3>
+          <ul>
+            {errorEntries.map(([field, message]) => (
+              <li key={field}>
+                <a href={`#quote-${field}`}>{message}</a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      <fieldset>
+        <legend>Contact details</legend>
+        <div className="quote-form__field-grid">
+          <label>
+            Your name <span aria-hidden="true">*</span>
+            <input
+              aria-describedby={
+                fieldErrors.customerName
+                  ? "quote-customerName-error"
+                  : undefined
+              }
+              aria-invalid={fieldErrors.customerName ? "true" : undefined}
+              autoComplete="name"
+              id="quote-customerName"
+              maxLength={120}
+              name="customerName"
+              required
+            />
+            {fieldErrors.customerName ? (
+              <small
+                className="quote-form__field-error"
+                id="quote-customerName-error"
+              >
+                {fieldErrors.customerName}
+              </small>
+            ) : null}
+          </label>
+          <label>
+            Preferred contact method <span aria-hidden="true">*</span>
+            <select
+              name="preferredContactMethod"
+              onChange={(event) =>
+                setPreferredContactMethod(
+                  event.target.value === "phone" ? "phone" : "email"
+                )
+              }
+              required
+              value={preferredContactMethod}
+            >
+              <option value="email">Email</option>
+              <option value="phone">Phone</option>
+            </select>
+          </label>
+          <label>
+            Email address
+            <input
+              aria-describedby={
+                fieldErrors.customerEmail
+                  ? "quote-customerEmail-error"
+                  : undefined
+              }
+              aria-invalid={fieldErrors.customerEmail ? "true" : undefined}
+              autoComplete="email"
+              id="quote-customerEmail"
+              maxLength={254}
+              name="customerEmail"
+              required={preferredContactMethod === "email"}
+              type="email"
+            />
+            {fieldErrors.customerEmail ? (
+              <small
+                className="quote-form__field-error"
+                id="quote-customerEmail-error"
+              >
+                {fieldErrors.customerEmail}
+              </small>
+            ) : null}
+          </label>
+          <label>
+            Phone number
+            <input
+              aria-describedby={
+                fieldErrors.customerPhone
+                  ? "quote-customerPhone-error"
+                  : undefined
+              }
+              aria-invalid={fieldErrors.customerPhone ? "true" : undefined}
+              autoComplete="tel"
+              id="quote-customerPhone"
+              maxLength={40}
+              name="customerPhone"
+              required={preferredContactMethod === "phone"}
+              type="tel"
+            />
+            {fieldErrors.customerPhone ? (
+              <small
+                className="quote-form__field-error"
+                id="quote-customerPhone-error"
+              >
+                {fieldErrors.customerPhone}
+              </small>
+            ) : null}
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Event details</legend>
+        <div className="quote-form__field-grid">
+          <label>
+            Event date
+            <input name="eventDate" type="date" />
+          </label>
+          <label>
+            Venue or location
+            <input maxLength={180} name="venue" />
+          </label>
+          <label className="quote-form__full-width">
+            Event vision
+            <textarea maxLength={1200} name="customerMessage" rows={4} />
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset
+        aria-describedby={
+          fieldErrors.selection ? "quote-selection-error" : undefined
+        }
+        id="quote-selection"
+        tabIndex={-1}
+      >
+        <legend>Manual requirements</legend>
+        {fieldErrors.selection ? (
+          <small
+            className="quote-form__field-error"
+            id="quote-selection-error"
+          >
+            {fieldErrors.selection}
+          </small>
+        ) : null}
+        <p>
+          Use a separate manual row only when the catalogue does not describe
+          the item. It will be reviewed and does not create a catalogue item,
+          rental promise or automatic substitute.
+        </p>
+        {manualRows.length ? (
+          <ul className="quote-form__manual-list">
+            {manualRows.map((row) => (
+              <li key={row.key}>
+                <span>
+                  {row.description} - Qty {row.quantity}
+                  {row.notes ? ` - ${row.notes}` : ""}
+                </span>
+                <button
+                  aria-label={`Remove manual requirement ${row.description}`}
+                  onClick={() => removeManualRequirement(row.key)}
+                  type="button"
+                >
+                  Remove
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        <div className="quote-form__field-grid">
+          <label className="quote-form__full-width">
+            Manual item description
+            <input
+              aria-describedby={
+                fieldErrors.manualDescription
+                  ? "quote-manualDescription-error"
+                  : undefined
+              }
+              aria-invalid={
+                fieldErrors.manualDescription ? "true" : undefined
+              }
+              id="quote-manualDescription"
+              maxLength={QUOTE_MANUAL_DESCRIPTION_MAX_LENGTH}
+              name="manualDescription"
+              onChange={(event) => setManualDescription(event.target.value)}
+              value={manualDescription}
+            />
+            {fieldErrors.manualDescription ? (
+              <small
+                className="quote-form__field-error"
+                id="quote-manualDescription-error"
+              >
+                {fieldErrors.manualDescription}
+              </small>
+            ) : null}
+          </label>
+          <label>
+            Manual item quantity
+            <input
+              aria-describedby={
+                fieldErrors.manualQuantity
+                  ? "quote-manualQuantity-error"
+                  : undefined
+              }
+              aria-invalid={fieldErrors.manualQuantity ? "true" : undefined}
+              id="quote-manualQuantity"
+              inputMode="numeric"
+              max={QUOTE_SELECTION_MAX_QUANTITY}
+              min={1}
+              name="manualQuantity"
+              onChange={(event) => setManualQuantity(event.target.value)}
+              pattern="[1-9]|[1-9][0-9]"
+              step={1}
+              type="number"
+              value={manualQuantity}
+            />
+            {fieldErrors.manualQuantity ? (
+              <small
+                className="quote-form__field-error"
+                id="quote-manualQuantity-error"
+              >
+                {fieldErrors.manualQuantity}
+              </small>
+            ) : null}
+          </label>
+          <label>
+            Manual item notes
+            <textarea
+              maxLength={QUOTE_MANUAL_NOTES_MAX_LENGTH}
+              name="manualNotes"
+              onChange={(event) => setManualNotes(event.target.value)}
+              rows={3}
+              value={manualNotes}
+            />
+          </label>
+        </div>
+        <button className="button button--secondary" onClick={addManualRequirement} type="button">
+          Add manual requirement
+        </button>
+      </fieldset>
+
+      <label className="quote-form__full-width">
+        Item-specific notes
+        <textarea maxLength={500} name="itemNotes" rows={3} />
+      </label>
+
+      <input
+        name="listingSlug"
+        type="hidden"
+        value={initialListingSlug ?? ""}
+      />
+
+      <p className="quote-form__legal">
+        Review our <Link href="/privacy">Privacy Policy</Link> and{" "}
+        <Link href="/terms">Terms of Use</Link>.
+      </p>
+
+      <button
+        aria-describedby="quote-submission-review-note"
+        className="button quote-form__submit"
+        type="submit"
+      >
+        <span className="quote-form__submit-text">
+          Submission unavailable during review
+        </span>
+        <span aria-hidden="true" className="quote-form__submit-icon">
+          →
+        </span>
+      </button>
+      <p className="quote-form__status quote-form__status--info" id="quote-submission-review-note">
+        You can prepare and keep this draft in this browser tab, but it cannot
+        be sent while the submission capability is under review.
+      </p>
     </form>
   );
 }

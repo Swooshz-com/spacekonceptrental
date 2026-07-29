@@ -124,9 +124,6 @@ describe("Phase 3G-A/B quote intake quality, admin triage depth, and enquiry wor
     expect(
       screen.getByText(/email is the default contact method/i)
     ).toBeInTheDocument();
-    expect(
-      screen.getAllByText(/listing context is a starting point only/i).length
-    ).toBeGreaterThan(0);
     expect(screen.getByText(/not a rental fit confirmation/i)).toBeInTheDocument();
     expect(
       screen.getByText(/share a phone number if you prefer phone follow-up/i)
@@ -138,24 +135,20 @@ describe("Phase 3G-A/B quote intake quality, admin triage depth, and enquiry wor
     fireEvent.change(screen.getByLabelText(/your name/i), {
       target: { value: "Maya Tan" }
     });
-    fireEvent.click(screen.getByRole("button", { name: /review and send an enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /submission unavailable during review/i }));
 
-    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
-    expect(screen.getByText(/email address is required/i)).toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent(/email address is required/i);
     expect(fetchMock).not.toHaveBeenCalled();
 
     fireEvent.change(screen.getByLabelText(/email address/i), {
       target: { value: "maya@example.test" }
     });
-    fireEvent.click(screen.getByRole("button", { name: /review and send an enquiry/i }));
+    fireEvent.click(screen.getByRole("button", { name: /submission unavailable during review/i }));
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
-    expect(
-      await screen.findByText(/enquiry received/i)
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole("link", { name: /track|status/i })
-    ).not.toBeInTheDocument();
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      /select a published catalogue listing or add a valid manual requirement/i
+    );
   });
 
   it("keeps selected-listing handoff useful without implying reservations or exposing admin context", async () => {
@@ -171,16 +164,11 @@ describe("Phase 3G-A/B quote intake quality, admin triage depth, and enquiry wor
     expect(
       screen.getAllByText(/listing context is a starting point only/i).length
     ).toBeGreaterThan(0);
-    expect(
-      screen.getAllByText(/does not set aside furniture or finish rental details/i)
-      .length
-    ).toBeGreaterThan(0);
-    expect(container.querySelector<HTMLInputElement>('input[name="items"]')).toHaveValue(
-      "Listing reference: lounge-sofa-package"
-    );
+    expect(screen.getByText(/does not set aside furniture or finish rental details/i)).toBeInTheDocument();
+    expect(container.querySelector<HTMLInputElement>('input[name="items"]')).toBeNull();
     expect(screen.queryByLabelText(/requested listings or items/i)).not.toBeInTheDocument();
     expect(
-      screen.getByText("lounge-sofa-package", { selector: "dd" })
+      screen.getByText("lounge-sofa-package")
     ).toBeInTheDocument();
     expect(
       screen.queryByText(/publication readiness|media readiness|internal note|admin-only/i)
@@ -199,9 +187,7 @@ describe("Phase 3G-A/B quote intake quality, admin triage depth, and enquiry wor
     expect(
       screen.getByText(/the listing link may be old or unavailable/i)
     ).toBeInTheDocument();
-    expect(fallbackRender.container.querySelector<HTMLInputElement>('input[name="items"]')).toHaveValue(
-      "Listing reference: unpublished-draft-listing"
-    );
+    expect(fallbackRender.container.querySelector<HTMLInputElement>('input[name="items"]')).toBeNull();
     expect(screen.queryByLabelText(/requested listings or items/i)).not.toBeInTheDocument();
   });
 

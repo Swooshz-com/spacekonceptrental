@@ -8,59 +8,54 @@ const forbiddenPublicCopy =
 describe("QuotePage", () => {
   afterEach(() => {
     cleanup();
+    window.sessionStorage.clear();
   });
 
-  it("preserves validated public listing context as an enquiry starting point", async () => {
-    const { container } = render(
-      await QuotePage({
-        searchParams: Promise.resolve({ listing: "lounge-sofa-package" })
-      })
-    );
+  it("renders a structured review-only quote draft when the catalogue is unavailable", async () => {
+    render(await QuotePage());
 
-    expect(screen.getByRole("heading", { name: /request a rental quote/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /your selection/i })).toBeInTheDocument();
-    expect(screen.getAllByText(/selected listing reference/i).length).toBeGreaterThan(0);
-    expect(screen.getByText("lounge-sofa-package", { selector: "dd" })).toBeInTheDocument();
-    expect(screen.getByText(/listing context is a starting point only/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/listing reference: lounge-sofa-package/i).length).toBeGreaterThan(0);
-    expect(container.querySelector<HTMLInputElement>('input[name="items"]')).toHaveValue(
-      "Listing reference: lounge-sofa-package"
-    );
-    expect(screen.queryByLabelText(/requested listings or items/i)).not.toBeInTheDocument();
-    expect(screen.getByText(/complete the required contact point first/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /request a rental quote/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Catalogue unavailable right now")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: /submission unavailable during review/i
+      })
+    ).toBeInTheDocument();
     expect(document.body.textContent).not.toMatch(forbiddenPublicCopy);
   });
 
-  it("ignores unsafe or unknown listing context without changing the quote route contract", async () => {
-    const { container } = render(
-      await QuotePage({
-        searchParams: Promise.resolve({ listing: "../draft-admin-listing" })
-      })
-    );
+  it.each([
+    { listing: "../draft-admin-listing", qty: "1" },
+    { listing: "lounge-chair", qty: "0" },
+    { listing: "lounge-chair", qty: "100" },
+    { listing: "lounge-chair", qty: "1.5" },
+    { listing: "lounge-chair", qty: "1e2" },
+    { listing: "lounge-chair" }
+  ])("rejects malformed or forged URL fallback %#", async (searchParams) => {
+    render(await QuotePage({ searchParams: Promise.resolve(searchParams) }));
 
-    expect(screen.queryByRole("heading", { name: /enquiry for/i })).not.toBeInTheDocument();
-    expect(container.querySelector<HTMLInputElement>('input[name="items"]')).toHaveValue("");
-    expect(screen.queryByLabelText(/requested listings or items/i)).not.toBeInTheDocument();
-    expect(document.body.textContent).not.toMatch(forbiddenPublicCopy);
+    expect(window.sessionStorage).toHaveLength(0);
+    expect(
+      screen.getByText("Catalogue unavailable right now")
+    ).toBeInTheDocument();
   });
 
-  it("shows request-only recovery when a safe selected listing is unavailable", async () => {
-    const { container } = render(
+  it("does not turn discovery query parameters into selection rows", async () => {
+    render(
       await QuotePage({
-        searchParams: Promise.resolve({ listing: "missing-listing" })
+        searchParams: Promise.resolve({
+          category: "seating",
+          event: "gala",
+          search: "chair"
+        })
       })
     );
 
-    expect(screen.queryByRole("heading", { name: /enquiry for/i })).not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /your selection/i })).toBeInTheDocument();
-    expect(screen.getByText("missing-listing", { selector: "dd" })).toBeInTheDocument();
-    expect(screen.getByText(/listing context is a starting point only/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/listing reference: missing-listing/i).length).toBeGreaterThan(0);
-    expect(container.querySelector<HTMLInputElement>('input[name="items"]')).toHaveValue(
-      "Listing reference: missing-listing"
-    );
-    expect(screen.queryByLabelText(/requested listings or items/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/rental assistant/i)).not.toBeInTheDocument();
-    expect(document.body.textContent).not.toMatch(forbiddenPublicCopy);
+    expect(window.sessionStorage).toHaveLength(0);
+    expect(screen.queryByText(/category interest|search interest/i)).not.toBeInTheDocument();
   });
 });

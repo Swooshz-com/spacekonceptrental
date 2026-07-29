@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import QuoteRequestForm from "../../components/QuoteRequestForm";
 import { QuoteSelectionDataBoundary, QuoteSelectionSummary } from "../../components/QuoteSelectionControls";
-import { fallbackProductImage, productCategory, quoteSelectionValidItemsForCatalogue, StitchPageIntro, stitchImageSrc } from "../../components/PublicStitch";
+import { fallbackProductImage, productCategory, quoteCanonicalIdentities, quoteSelectionValidItemsForCatalogue, StitchPageIntro, stitchImageSrc } from "../../components/PublicStitch";
 import { getPublicCatalogue, getPublicProductBySlug } from "../../lib/catalogue/catalogue-repository";
-import { normalizePublicDiscoveryContext, normalizePublicListingSlug } from "../../lib/catalogue/quote-handoff";
+import { normalizePublicListingSlug, normalizePublicQuoteQuantity } from "../../lib/catalogue/quote-handoff";
 import type { PublicCatalogueProduct } from "../../lib/catalogue/types";
+import type { CanonicalCatalogueIdentity } from "../../lib/quote/selection-model";
 
 type QuotePageProps = { searchParams?: Promise<Record<string, string | string[] | undefined>> | Record<string, string | string[] | undefined> };
 
@@ -12,18 +13,19 @@ export const metadata: Metadata = { title: "Quote request | SpaceKonceptRental",
 
 function firstSearchParam(value: string | string[] | undefined) { return Array.isArray(value) ? value[0] : value; }
 async function resolveQuoteListingContext(searchParams: QuotePageProps["searchParams"]) {
-  if (!searchParams) return { product:null, requestedSlug:undefined, category:undefined, event:undefined, search:undefined };
+  if (!searchParams) return { product:null, requestedSlug:undefined, quantity:undefined };
   const resolved = await searchParams;
   const slug = normalizePublicListingSlug(firstSearchParam(resolved.listing));
-  const realProduct = slug ? await getPublicProductBySlug(slug) : null;
-  return { product: realProduct, requestedSlug: slug, category: normalizePublicListingSlug(firstSearchParam(resolved.category)), event: normalizePublicListingSlug(firstSearchParam(resolved.event)), search: normalizePublicDiscoveryContext(firstSearchParam(resolved.search)) };
+  const quantity = normalizePublicQuoteQuantity(firstSearchParam(resolved.qty));
+  const hasValidFallback = Boolean(slug && quantity);
+  const realProduct = hasValidFallback && slug ? await getPublicProductBySlug(slug) : null;
+  return { product: realProduct, requestedSlug: slug, quantity: hasValidFallback ? quantity : undefined };
 }
-function buildInitialItemsText({ category, event, product, requestedSlug, search }: { category?: string; event?: string; product: PublicCatalogueProduct | null; requestedSlug?: string; search?: string }) { return [product?.name ?? (requestedSlug ? `Listing reference: ${requestedSlug}` : undefined), category ? `Category interest: ${category}` : undefined, event ? `Event-use interest: ${event}` : undefined, search ? `Search interest: ${search}` : undefined].filter(Boolean).join("\n"); }
 function quoteProductImageSrc(product: PublicCatalogueProduct) { const image = product.images?.[0]?.publicUrl; return image ?? stitchImageSrc(fallbackProductImage(product)); }
 
-function SelectionPanel({ product, requestedSlug, category, event, search }: { product: PublicCatalogueProduct | null; requestedSlug?: string; category?: string; event?: string; search?: string }) {
-  const fallbackItems = product ? [{ slug: product.slug, name: product.name, category: productCategory(product), quantity: 1, imageSrc: quoteProductImageSrc(product) }] : [];
-  return <QuoteSelectionSummary fallbackItems={fallbackItems} requestedSlug={requestedSlug} category={category} event={event} search={search} />;
+function SelectionPanel({ catalogueAvailable, product, quantity, requestedSlug, validItems }: { catalogueAvailable: boolean; product: PublicCatalogueProduct | null; quantity?: number; requestedSlug?: string; validItems: ReturnType<typeof quoteSelectionValidItemsForCatalogue> }) {
+  const fallbackItems = product && quantity ? [{ slug: product.slug, name: product.name, category: productCategory(product), quantity, imageSrc: quoteProductImageSrc(product) }] : [];
+  return <QuoteSelectionSummary catalogueAvailable={catalogueAvailable} fallbackItems={fallbackItems} requestedSlug={requestedSlug} validItems={validItems} />;
 }
 
 function NextStepsPanel() {
@@ -35,6 +37,7 @@ export default async function QuotePage({ searchParams }: QuotePageProps = {}) {
     getPublicCatalogue(),
     resolveQuoteListingContext(searchParams)
   ]);
-  const initialItemsText = buildInitialItemsText({ category: context.category, event: context.event, product: context.product, requestedSlug: context.requestedSlug, search: context.search });
-  return <><QuoteSelectionDataBoundary validItems={quoteSelectionValidItemsForCatalogue(catalogue)} /><section className="stitch-quote-hero"><div className="stitch-container"><StitchPageIntro eyebrow="Request Quote" title="Request a Rental Quote" intro="The form is enquiry intake only. Submit your selection for manual review. The team will review your details and follow up with a tailored proposal." /></div></section><section className="stitch-section stitch-quote-page"><div className="stitch-container"><div className="stitch-quote-layout"><div className="stitch-quote-left"><SelectionPanel product={context.product} requestedSlug={context.requestedSlug} category={context.category} event={context.event} search={context.search} /><NextStepsPanel /></div><section className="stitch-quote-form-panel"><h2>Enquiry Details</h2><QuoteRequestForm initialItemsText={initialItemsText} initialListingSlug={context.requestedSlug} /></section></div></div></section></>;
+  const validItems = quoteSelectionValidItemsForCatalogue(catalogue);
+  const canonicalIdentities: CanonicalCatalogueIdentity[] = quoteCanonicalIdentities(catalogue);
+  return <><QuoteSelectionDataBoundary validItems={validItems} /><section className="stitch-quote-hero"><div className="stitch-container"><StitchPageIntro eyebrow="Request Quote" title="Request a Rental Quote" intro="The form is enquiry intake only. The team will review your details and follow up with a tailored proposal. It does not set aside furniture or finish rental details. Submission remains unavailable during the current review." /></div></section><section className="stitch-section stitch-quote-page"><div className="stitch-container"><div className="stitch-quote-layout"><div className="stitch-quote-left"><SelectionPanel catalogueAvailable={catalogue.source !== "fallback"} product={context.product} quantity={context.quantity} requestedSlug={context.requestedSlug} validItems={validItems} /><NextStepsPanel /></div><section className="stitch-quote-form-panel"><h2>Enquiry Details</h2><QuoteRequestForm initialListingSlug={context.requestedSlug} validCanonicalIdentities={canonicalIdentities} /></section></div></div></section></>;
 }

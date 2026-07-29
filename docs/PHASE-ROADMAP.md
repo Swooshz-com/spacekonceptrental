@@ -14,6 +14,35 @@ rows are bounded and allowlisted, and raw customer data is not exposed in row
 summaries. CSV export remains formula-injection protected, and preflight
 remains bounded and allowlisted.
 
+## Structured Quote UX Review Boundary
+
+Public quote surface implements a versioned per-tab structured draft with
+bounded catalogue and manual rows, integer quantities, catalogue identity
+preservation, conditional contact requirements, and accessible errors.
+Catalogue display identity is resolved from current server-owned public data
+rather than browser claims.
+
+The storage adapter supports exact browser-storage absence restoration with an
+optional `remove` operation. All production storage mutations route through
+`commitQuoteSelectionChange`. Obsolete direct storage writers have been
+removed.
+
+Setup recipe composition is deferred to issue #319. No production-facing code
+derives included pieces from catalogue data. The setup detail page shows
+explicit manual review copy. Setup selection remains visible and removable.
+
+The existing Supabase persistence foundation remains in place but public
+browser submission is currently compile-time disabled. Direct public POST
+is held at the review boundary and returns generic HTTP 503 before body
+parsing, catalogue access, quote repository access, Supabase access, email
+handoff, or n8n handoff. No live quote request can currently reach
+persistence. A later separately reviewed database/runtime enablement lane
+is required for submission activation.
+
+Do not interpret this as persistence migration removal or repository
+foundation removal. The Supabase persistence foundation, quote repository,
+email handoff contracts, and admin quoting surfaces remain intact.
+
 ## Protected Admin CRM Handoff Lifecycle Reconciliation Foundation
 
 Reference: `docs/architecture/PROTECTED-ADMIN-CRM-HANDOFF-LIFECYCLE-RECONCILIATION-FOUNDATION.md`.

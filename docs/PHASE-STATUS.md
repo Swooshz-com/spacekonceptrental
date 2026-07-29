@@ -1,3 +1,45 @@
+## Structured Quote UX Review Boundary
+
+References: `docs/architecture/STRUCTURED-QUOTE-UX.md`,
+`website/lib/quote/selection-model.ts`,
+`website/lib/quote/submission-capability.ts`,
+`website/components/QuoteSelectionControls.tsx`,
+`website/components/QuoteRequestForm.tsx`, and
+`website/app/api/quote/route.ts`.
+
+The public quote surface now prepares a versioned, per-tab structured draft
+with bounded catalogue and manual rows, integer quantities, explicit
+empty/unavailable/stale recovery, conditional contact requirements and
+accessible errors. Catalogue display identity is resolved from current
+server-owned public data rather than browser claims.
+
+The storage adapter supports an optional `remove` operation for exact
+browser-storage absence restoration. Both production adapters
+(`QuoteSelectionControls.tsx` and `QuoteRequestForm.tsx`) support it. When
+the original storage state was null and a commit fails after writing, the
+transaction removes the key and verifies `null` read-back. No empty-string
+substitution is performed. On failure, the form resynchronises from actual
+storage and shows a bounded user-safe error.
+
+The obsolete direct storage writers (`writeQuoteSelection`,
+`getStoredQuoteSelection`, `clearStoredQuoteSelection`) have been removed.
+All production storage mutations route through `commitQuoteSelectionChange`.
+A repository-owned structural test proves no uncontrolled direct writer is
+exported from the controls module.
+
+The production recipe runtime path (`quoteSetupRecipes`,
+`resolveSetupRecipesForCatalogue`, `SetupRecipeAuthoritativePiece`,
+`setupPieces` cast) has been removed. Setup recipe composition is deferred
+to issue #319, which owns the future authoritative server-side relation. The
+setup detail page shows: `Included rental pieces will be confirmed during
+manual review.` Setup selection remains visible and removable.
+
+Quote submission remains compile-time disabled. The client performs no quote
+request and direct POST returns generic HTTP 503 before body parsing or any
+persistence or delivery dependency. This is review-only implementation; it is
+not runtime submission completion, migration approval, provider approval,
+deployment approval or production acceptance.
+
 ## Protected Admin Hero Media Upload Foundation
 
 References: `supabase/migrations/20260703100000_homepage_hero_content_foundation.sql`, `supabase/migrations/20260707130000_hero_media_storage_foundation.sql`, `website/lib/hero/homepage-hero-content.ts`, `website/lib/hero/public-homepage-hero-repository.ts`, `website/lib/hero/admin-homepage-hero-read.ts`, `website/lib/hero/admin-homepage-hero-write.ts`, `website/lib/hero/admin-homepage-hero-write-route.ts`, `website/app/api/admin/hero/route.ts`, `website/components/admin/hero-content-management-panel.tsx`, `website/app/admin/hero/page.tsx`, and `website/components/PublicStitch.tsx`.

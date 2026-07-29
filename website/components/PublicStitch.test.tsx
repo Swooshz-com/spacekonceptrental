@@ -5,9 +5,34 @@ import {
   DEFAULT_PUBLIC_PAGE_MEDIA,
   DEFAULT_HOMEPAGE_HERO_CONTENT,
   StitchAboutPage,
+  StitchDetail,
   StitchHomeHero
 } from "./PublicStitch";
 import { ABOUT_STORY_MEDIA_SLOT } from "../lib/page-media/public-page-media-content";
+import type { PublicCatalogueProduct } from "../lib/catalogue/types";
+
+function mockSetupProduct(): PublicCatalogueProduct {
+  return {
+    id: "setup-1",
+    slug: "botanical-wedding",
+    name: "Botanical Wedding",
+    shortDescription: "Styled setup direction",
+    description: "A curated setup direction for review.",
+    rentalUnit: "per event",
+    sortOrder: 0,
+    categoryId: "cat-setups",
+    categoryName: "Setups",
+    source: "fallback",
+    primaryImage: {
+      id: "img-1",
+      storageBucket: "listing-media",
+      storagePath: "hero.jpg",
+      publicUrl: "/hero.jpg",
+      sortOrder: 0,
+      isPrimary: true
+    }
+  };
+}
 
 afterEach(() => {
   cleanup();
@@ -105,5 +130,84 @@ describe("StitchAboutPage", () => {
         name: "Owner selected About story lounge"
       })
     ).toBeInTheDocument();
+  });
+});
+
+describe("StitchDetail setup deferral", () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  it("shows the manual review deferral instead of a fabricated piece count for setups", () => {
+    const setup = mockSetupProduct();
+    render(
+      <StitchDetail
+        product={setup}
+        backHref="/listings"
+        backLabel="Back to setups"
+        setup
+        related={[]}
+      />
+    );
+
+    expect(
+      screen.getByText("Included rental pieces will be confirmed during manual review.")
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("0 pieces")
+    ).not.toBeInTheDocument();
+  });
+
+  it("does not render an included pieces section for setups", () => {
+    const setup = mockSetupProduct();
+    render(
+      <StitchDetail
+        product={setup}
+        backHref="/listings"
+        backLabel="Back to setups"
+        setup
+        related={[]}
+      />
+    );
+
+    expect(
+      screen.queryByRole("heading", { name: /^Included rental pieces$/ })
+    ).not.toBeInTheDocument();
+  });
+
+  it("derives setup kind from canonical product category, not from the caller boolean", () => {
+    const rentalProduct: PublicCatalogueProduct = {
+      id: "rental-1",
+      slug: "lounge-chair",
+      name: "Lounge Chair",
+      shortDescription: "A rental piece",
+      rentalUnit: "per event",
+      sortOrder: 0,
+      categoryId: "cat-seating",
+      categoryName: "Lounge Seating",
+      source: "fallback",
+      primaryImage: {
+        id: "img-r",
+        storageBucket: "listing-media",
+        storagePath: "chair.jpg",
+        publicUrl: "/chair.jpg",
+        sortOrder: 0,
+        isPrimary: true
+      }
+    };
+
+    render(
+      <StitchDetail
+        product={rentalProduct}
+        backHref="/listings"
+        backLabel="Back to listings"
+        setup
+        related={[]}
+      />
+    );
+
+    const detailSection = document.querySelector(".stitch-detail-page--catalogue-item");
+    expect(detailSection).toBeInTheDocument();
+    expect(screen.queryByText("Styled setup")).not.toBeInTheDocument();
   });
 });

@@ -234,7 +234,7 @@ describe("public page shells", () => {
     expect(screen.getByLabelText(/your name/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();
     expect(screen.queryByLabelText(/requested listings or items/i)).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /review and send an enquiry/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /submission unavailable during review/i })).toBeInTheDocument();
     expect(document.body.textContent).not.toMatch(/confirmed order|online ordering|checkout|payment/i);
     expect(JSON.stringify(rootMetadata)).toMatch(/SpaceKonceptRental/);
     expect(JSON.stringify(rootMetadata)).not.toMatch(/Space Koncept Rentals|shell|mvp|checkout|payment|online ordering/i);
@@ -562,14 +562,15 @@ describe("public page shells", () => {
     expect(document.querySelector(".stitch-back")).toBeNull();
   });
 
-  it("keeps setup detail pages on a carousel-led h2/h3 hierarchy", () => {
+  it("keeps setup detail pages on a carousel-led h2/h3 hierarchy with no fabricated included pieces", () => {
     const setupProduct: PublicCatalogueProduct = {
       ...modularLounge,
       id: "setup-metropolitan-gala",
       slug: "the-metropolitan-gala",
       name: "The Metropolitan Gala",
       shortDescription:
-        "Tonal layering, sculptural surfaces, and lounge pieces for elevated evening event settings."
+        "Tonal layering, sculptural surfaces, and lounge pieces for elevated evening event settings.",
+      categoryName: "Setups"
     };
     const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
     const setupDetailBlock = styles.slice(
@@ -594,11 +595,10 @@ describe("public page shells", () => {
 
     expect(screen.queryByRole("heading", { level: 1, name: /the metropolitan gala/i })).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 2, name: /the metropolitan gala/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { level: 3, name: /included rental pieces/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /back to setups/i })).toBeInTheDocument();
     expect(screen.getByText("Setups / Direction")).toBeInTheDocument();
     expect(screen.getByText("Styled setup")).toBeInTheDocument();
-    expect(screen.getByText("1 pieces")).toBeInTheDocument();
+    expect(screen.getByText("Included rental pieces will be confirmed during manual review.")).toBeInTheDocument();
     expect(screen.queryByText(/our team will prepare a custom proposal/i)).not.toBeInTheDocument();
     expect(document.querySelector(".stitch-detail-context")).toBeNull();
     expect(document.querySelector(".stitch-detail-actions--setup")).not.toBeNull();
@@ -609,9 +609,8 @@ describe("public page shells", () => {
     expect(document.querySelector(".stitch-detail-open-copy.stitch-setup-summary")).not.toBeNull();
     expect(document.querySelector(".stitch-included-open__header > .stitch-back")).toBeNull();
     expect(document.querySelector(".stitch-detail-actions--setup .stitch-detail-button--back")).not.toBeNull();
-    expect(document.querySelector(".stitch-included-open__grid")).not.toBeNull();
-    expect(screen.getByRole("button", { name: /previous setup image/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /next setup image/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /previous setup image/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /next setup image/i })).not.toBeInTheDocument();
     expect(setupDetailBlock).toContain("stitch-detail-carousel");
     expect(styles).toMatch(/\.stitch-detail-carousel__control\s*\{[\s\S]*?height:\s*100%\s*!important;[\s\S]*?width:\s*clamp\(2\.35rem,\s*4\.4vw,\s*3\.7rem\)\s*!important;/);
     expect(styles).toMatch(/\.stitch-detail-carousel__control:hover,[\s\S]*?\.stitch-detail-carousel__control:focus-visible\s*\{[\s\S]*?background:\s*var\(--stitch-surface\)\s*!important;/);
@@ -625,6 +624,54 @@ describe("public page shells", () => {
     expect(styles).toMatch(/\.stitch-detail-actions--setup \.stitch-detail-button--back\s*\{[\s\S]*?border-color:\s*var\(--stitch-ink\)\s*!important;/);
     expect(styles).toMatch(/\.stitch-detail-actions--setup \.stitch-detail-button--request\s*\{[\s\S]*?border-color:\s*transparent\s*!important;/);
     expect(styles).toMatch(/\.stitch-included-open__header\s*\{[\s\S]*?display:\s*flex\s*!important;[\s\S]*?justify-content:\s*flex-start\s*!important;/);
+  });
+
+  it("shows deferral copy for any setup product without fabricating recipe data", () => {
+    const setupProduct: PublicCatalogueProduct = {
+      ...modularLounge,
+      id: "setup-metropolitan-gala",
+      slug: "the-metropolitan-gala",
+      name: "The Metropolitan Gala",
+      rentalUnit: "setup",
+      categoryName: "Setups"
+    };
+
+    render(
+      <StitchDetail
+        backHref="/listings#setup-listings"
+        backLabel="Setups"
+        product={setupProduct}
+        related={[]}
+        setup
+      />
+    );
+
+    expect(screen.getByText("Included rental pieces will be confirmed during manual review.")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { level: 3, name: /included rental pieces/i })).not.toBeInTheDocument();
+  });
+
+  it("shows deferral copy for a setup product regardless of related items", () => {
+    const setupProduct: PublicCatalogueProduct = {
+      ...modularLounge,
+      id: "setup-orphan",
+      slug: "orphan-setup",
+      name: "Orphan Setup",
+      rentalUnit: "setup",
+      categoryName: "Setups"
+    };
+
+    render(
+      <StitchDetail
+        backHref="/listings#setup-listings"
+        backLabel="Setups"
+        product={setupProduct}
+        related={[]}
+        setup
+      />
+    );
+
+    expect(screen.getByText("Included rental pieces will be confirmed during manual review.")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { level: 3, name: /included rental pieces/i })).not.toBeInTheDocument();
   });
 
   it("keeps public listing source free from shell, ecommerce-only copy, and browser Supabase", () => {

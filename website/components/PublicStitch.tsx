@@ -17,6 +17,10 @@ import {
   type PublicPageMediaContent
 } from "../lib/page-media/public-page-media-content";
 import {
+  deriveCanonicalIdentitiesFromCatalogue,
+  type CanonicalCatalogueIdentity
+} from "../lib/quote/selection-model";
+import {
   QuoteSelectionBadge,
   QuoteSelectionButton,
   type QuoteSelectionItem,
@@ -29,10 +33,37 @@ export const stitchImages = { chairImage, sofaImage, corporateImage, galaImage, 
 export function quoteSelectionValidItemsForCatalogue(
   catalogue: PublicCatalogue
 ): QuoteSelectionValidItem[] {
-  return catalogue.products.flatMap((product) => [
-    { kind: "rental" as const, slug: product.slug },
-    { kind: "setup" as const, slug: product.slug }
-  ]);
+  return catalogue.products.map((product) => ({
+    category: productCategory(product),
+    kind: productCategory(product).toLowerCase() === "setups" ? "setup" as const : "rental" as const,
+    name: product.name,
+    slug: product.slug
+  }));
+}
+
+export function isSetupCatalogueProduct(product: PublicCatalogueProduct): boolean {
+  return productCategory(product).toLowerCase() === "setups";
+}
+
+export function quoteCanonicalIdentities(
+  catalogue: PublicCatalogue
+): CanonicalCatalogueIdentity[] {
+  return deriveCanonicalIdentitiesFromCatalogue(
+    catalogue.products,
+    isSetupCatalogueProduct
+  );
+}
+
+export function quoteCanonicalIdentityLookup(
+  catalogue: PublicCatalogue
+): Map<string, { reference: string; kind: "rental" | "setup" }> {
+  const map = new Map<string, { reference: string; kind: "rental" | "setup" }>();
+
+  for (const identity of quoteCanonicalIdentities(catalogue)) {
+    map.set(identity.reference, identity);
+  }
+
+  return map;
 }
 
 const homeCategoryImageUrls = [
@@ -114,24 +145,6 @@ function setupQuoteSelectionItem(setup: {
     kind: "setup",
     imageSrc: stitchImageSrc(setup.image),
     quantity: 1
-  };
-}
-
-function setupIncludedQuoteItem(
-  product: PublicCatalogueProduct,
-  setup: PublicCatalogueProduct,
-  quantity: number
-): QuoteSelectionItem {
-  return {
-    slug: product.slug,
-    name: product.name,
-    category: productCategory(product),
-    kind: "setup-included",
-    imageSrc: stitchImageSrc(fallbackProductImage(product)),
-    quantity,
-    setupBaseQuantity: quantity,
-    setupName: setup.name,
-    setupSlug: setup.slug
   };
 }
 
@@ -225,7 +238,7 @@ export function StitchCatalogueShell({ catalogue, detailBasePath = "/catalogue",
 }
 
 export function StitchSetupsPage({ catalogue, activeSetupSlug }: { catalogue: PublicCatalogue; activeSetupSlug?: string }) {
-  const realSetups = catalogue.products.slice(0, 5).map((product, index) => ({ slug: product.slug, title: product.name, image: fallbackProductImage(product), summary: productSummary(product), featured: index === 0 }));
+  const realSetups = catalogue.products.filter(isSetupCatalogueProduct).map((product, index) => ({ slug: product.slug, title: product.name, image: fallbackProductImage(product), summary: productSummary(product), featured: index === 0 }));
   const setupCards = realSetups;
   const featuredSetup = setupCards[0];
   const setupFilters = [
@@ -265,25 +278,28 @@ export function StitchSetupsPage({ catalogue, activeSetupSlug }: { catalogue: Pu
   return <><section className="stitch-setups-hero"><div className="stitch-container"><StitchPageIntro eyebrow="Setups" title="Curated Scapes" intro="Explore styled environment directions that help describe rental mood, scale, and event context for team review." /></div></section>{featuredSetup ? <section className="stitch-setups-feature-section"><div className="stitch-container stitch-setups-feature-split"><Link className="stitch-setups-feature__image" href={`/listings/${featuredSetup.slug}`}><img src={stitchImageSrc(featuredSetup.image)} alt={`${featuredSetup.title} event furniture setup`} /></Link><div className="stitch-setups-feature__copy"><span>Featured Editorial</span><h2>{featuredSetup.title}</h2><p>{featuredSetup.summary}</p><Link className="stitch-link-button stitch-link-button--quiet" href={`/listings/${featuredSetup.slug}`}>Explore Collection</Link></div></div></section> : null}{setupPillLinks.length ? <section className="stitch-setups-filter-section" id="setup-listings"><div className="stitch-container"><div className="stitch-pill-row">{setupPillLinks.map((item) => <Link aria-current={item.active ? "page" : undefined} href={item.href} key={item.href} scroll={false}>{item.label}</Link>)}</div></div></section> : null}<section className="stitch-setups-grid-section"><div className="stitch-container">{visibleSetups.length ? <div className="stitch-setups-grid">{visibleSetups.map((setup, index) => <Link className={`stitch-setup-tile ${index === visibleSetups.length - 1 ? "stitch-setup-tile--wide" : ""}`} href={`/listings/${setup.slug}`} key={setup.slug}><span className="stitch-setup-tile__image"><img src={stitchImageSrc(setup.image)} alt={`${setup.title} event furniture setup`} /><QuoteSelectionBadge item={setupQuoteSelectionItem(setup)} /></span><span className="stitch-setup-tile__body"><strong>{setup.title}</strong><small>{setup.summary}</small><em>View Setup Details</em></span></Link>)}</div> : <StitchEmptyState title="No public setup records are available right now" message="Published setup directions will appear here once available. You can still send an enquiry with the event mood, furniture pieces, and setup context you have in mind." />}</div></section></>;
 }
 
-export function StitchDetail({ product, backHref, backLabel, setup = false, related = [] }: { product: PublicCatalogueProduct; backHref: string; backLabel: string; setup?: boolean; related?: PublicCatalogueProduct[] }) {
+export function StitchDetail({
+  product,
+  backHref,
+  backLabel,
+  setup = false,
+  related = []
+}: {
+  product: PublicCatalogueProduct;
+  backHref: string;
+  backLabel: string;
+  setup?: boolean;
+  related?: PublicCatalogueProduct[];
+}) {
+  const canonicalSetup = isSetupCatalogueProduct(product);
   const image = product.primaryImage;
   const alt = textOrUndefined(image?.altText) ?? `${product.name} furniture rental setup`;
-  const imgSrc = image?.publicUrl ?? stitchImageSrc(setup ? galaImage : fallbackProductImage(product));
-  const setupRelatedItems = setup ? related : [];
-  const setupIncludedItems = setup
-    ? setupRelatedItems.map((item, index) =>
-        setupIncludedQuoteItem(
-          item,
-          product,
-          index === 0 ? 120 : index === 1 ? 15 : 6
-        )
-      )
-    : [];
+  const imgSrc = image?.publicUrl ?? stitchImageSrc(canonicalSetup ? galaImage : fallbackProductImage(product));
+  const setupCarouselPieces: PublicCatalogueProduct[] = [];
   const quoteItem = quoteSelectionItem(
     product,
     imgSrc,
-    setup ? "setup" : "rental",
-    setupIncludedItems
+    canonicalSetup ? "setup" : "rental"
   );
   const catalogueImageMap = new Map<string, { alt: string; src: string }>();
   catalogueImageMap.set(imgSrc, { alt, src: imgSrc });
@@ -299,10 +315,10 @@ export function StitchDetail({ product, backHref, backLabel, setup = false, rela
     }
   }
   const catalogueCarouselImages = Array.from(catalogueImageMap.values());
-  const setupCarouselImages = setup
+  const setupCarouselImages = canonicalSetup
     ? [
         { alt, src: imgSrc },
-        ...setupRelatedItems.map((item) => ({
+        ...setupCarouselPieces.map((item) => ({
           alt: `${item.name} rental piece`,
           src: stitchImageSrc(fallbackProductImage(item))
         }))
@@ -312,7 +328,7 @@ export function StitchDetail({ product, backHref, backLabel, setup = false, rela
     ? backLabel
     : `Back to ${backLabel}`;
 
-  if (setup) {
+  if (canonicalSetup) {
     return (
       <section className="stitch-detail-page stitch-detail-page--setup">
         <div className="stitch-container">
@@ -338,7 +354,7 @@ export function StitchDetail({ product, backHref, backLabel, setup = false, rela
                   </div>
                   <div>
                     <dt>Included rental pieces</dt>
-                    <dd>{setupRelatedItems.length} pieces</dd>
+                    <dd>Included rental pieces will be confirmed during manual review.</dd>
                   </div>
                 </dl>
               </div>
@@ -353,25 +369,6 @@ export function StitchDetail({ product, backHref, backLabel, setup = false, rela
               </div>
             </div>
           </div>
-          <section className="stitch-included-open">
-            <div className="stitch-included-open__header">
-              <h3>Included rental pieces</h3>
-            </div>
-            <div className="stitch-included-open__grid">
-              {setupRelatedItems.map((item, index) => (
-                <article key={item.id}>
-                  <img
-                    alt={`${item.name} rental piece`}
-                    src={stitchImageSrc(fallbackProductImage(item))}
-                  />
-                  <div>
-                    <strong>{item.name}</strong>
-                    <small>Qty: {index === 0 ? "120" : index === 1 ? "15" : "6"}</small>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </section>
         </div>
       </section>
     );

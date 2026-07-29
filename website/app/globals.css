@@ -344,6 +344,69 @@ select {
   }
 }
 
+/* Structured quote review state */
+.quote-form__submit {
+  align-items: center;
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+  min-height: 48px;
+  white-space: normal;
+}
+
+.quote-form__submit-text {
+  min-width: 0;
+}
+
+.quote-form__submit-icon {
+  flex: 0 0 auto;
+  font-size: 1.25rem;
+}
+
+.quote-form__manual-list {
+  display: grid;
+  gap: 0.75rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.quote-form__manual-list li {
+  align-items: center;
+  border: 1px solid var(--stitch-line);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: space-between;
+  padding: 0.75rem;
+}
+
+.quote-form__manual-list button,
+.stitch-selection-row__actions a,
+.stitch-selection-row__actions button {
+  align-items: center;
+  display: inline-flex;
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.stitch-selection-row__unavailable {
+  color: #93000a;
+  display: block;
+  font-weight: 700;
+}
+
+@media (max-width: 420px) {
+  .quote-form__submit {
+    width: 100%;
+  }
+
+  .quote-form__submit-text {
+    flex: 1 1 14rem;
+  }
+}
+
 /* Stitch parity correction: setup detail mobile story-card order */
 @media (max-width: 639px) {
   body:has(.stitch-detail-page--setup) .chat-widget-launcher,

@@ -12,6 +12,7 @@ import {
   finalizeQuoteHandoff,
   type QuoteHandoffFinalizationInput
 } from "../../../lib/quote/quote-handoff-repository";
+import { QUOTE_SUBMISSION_ENABLED } from "../../../lib/quote/submission-capability";
 import type {
   QuotePersistenceResult,
   QuoteSubmission
@@ -40,6 +41,32 @@ const MAX_CONTACT_RATE_LIMIT_BUCKETS = 1_000;
 const FALLBACK_RATE_LIMIT_BUCKET_KEY = "untrusted-client-ip";
 const FALLBACK_MESSAGE =
   "Quote requests are temporarily unavailable. Please try again later.";
+const SUBMISSION_DISABLED_MESSAGE =
+  "Quote submission is unavailable while this service is under review.";
+
+function submissionDisabledResponse(request: Request) {
+  const reference = createRequestId();
+  const response = Response.json(
+    {
+      error: {
+        code: "QUOTE_SUBMISSION_DISABLED",
+        message: SUBMISSION_DISABLED_MESSAGE
+      },
+      reference
+    },
+    { status: 503 }
+  );
+
+  logApplicationError({
+    category: "QUOTE_SUBMISSION_DISABLED",
+    reference,
+    request,
+    route: "POST /api/quote",
+    statusCode: 503
+  });
+
+  return response;
+}
 
 function createRequestId() {
   return crypto.randomUUID();
@@ -408,6 +435,29 @@ export function resetQuoteRouteStateForTests() {
 }
 
 export async function handleQuotePost(
+  request: Request,
+  repository: QuoteRepository = createQuoteRequest,
+  emailHandoff: QuoteEmailHandoff = sendQuoteEnquiryEmailHandoff,
+  handoffFinalizer: QuoteHandoffFinalizer = finalizeQuoteHandoff
+): Promise<Response> {
+  if (!QUOTE_SUBMISSION_ENABLED) {
+    return submissionDisabledResponse(request);
+  }
+
+  return handleQuotePostEnabledForTests(
+    request,
+    repository,
+    emailHandoff,
+    handoffFinalizer
+  );
+}
+
+/**
+ * Retains regression coverage for the dormant submission pipeline.
+ * The public POST boundary never calls this while the compile-time capability
+ * is disabled.
+ */
+export async function handleQuotePostEnabledForTests(
   request: Request,
   repository: QuoteRepository = createQuoteRequest,
   emailHandoff: QuoteEmailHandoff = sendQuoteEnquiryEmailHandoff,
