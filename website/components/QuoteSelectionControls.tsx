@@ -55,6 +55,12 @@ const maxQuoteIndicatorCount = 99;
 const publicSlugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const publicImageSrcPattern = /^(?:https?:\/\/|\/(?!\/))[^\s"'<>]+$/i;
 
+export function normalizePublicSlug(raw: string): string | undefined {
+  const trimmed = raw.trim().toLowerCase();
+  if (!publicSlugPattern.test(trimmed)) return undefined;
+  return trimmed;
+}
+
 function maxQuoteQuantityForKind(kind: NormalizedQuoteSelectionItem["kind"]) {
   return kind === "setup-included"
     ? maxIncludedQuoteItemQuantity
@@ -846,8 +852,14 @@ export function QuoteSelectionSummary({
 
   const canonicalFallbackIdentity = useMemo(() => {
     if (!requestedSlug) return undefined;
+    const normalizedRequestedSlug = normalizePublicSlug(requestedSlug);
+    if (!normalizedRequestedSlug) return undefined;
     const fallbackItem = fallbackItems[0];
-    if (!fallbackItem || fallbackItem.slug !== requestedSlug) return undefined;
+    if (
+      !fallbackItem ||
+      normalizePublicSlug(fallbackItem.slug) !== normalizedRequestedSlug
+    )
+      return undefined;
     const normalizedFallback = normalizeQuoteItem(fallbackItem);
     if (
       !normalizedFallback ||
@@ -857,11 +869,11 @@ export function QuoteSelectionSummary({
       return undefined;
     const exactMatches = validItems.filter(
       (candidate) =>
-        candidate.slug === requestedSlug &&
+        normalizePublicSlug(candidate.slug) === normalizedRequestedSlug &&
         candidate.kind === normalizedFallback.kind
     );
     if (exactMatches.length !== 1) return undefined;
-    return { reference: exactMatches[0].slug, kind: exactMatches[0].kind };
+    return { reference: normalizedRequestedSlug, kind: exactMatches[0].kind };
   }, [requestedSlug, fallbackItems, validItems]);
 
   useEffect(() => {

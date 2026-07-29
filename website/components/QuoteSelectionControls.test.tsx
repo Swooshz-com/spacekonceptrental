@@ -1567,6 +1567,216 @@ describe("QuoteSelectionControls", () => {
     });
   });
 
+  describe("Run-17 — normalized identity and non-vacuous regression", () => {
+    const rentalFallback = {
+      slug: "lounge-chair",
+      name: "Lounge Chair",
+      kind: "rental" as const,
+      quantity: 2
+    };
+
+    const setupFallback = {
+      slug: "botanical-wedding",
+      name: "Botanical Wedding",
+      category: "Setups",
+      kind: "setup" as const,
+      quantity: 1
+    };
+
+    beforeEach(() => {
+      window.sessionStorage.clear();
+    });
+
+    afterEach(() => {
+      cleanup();
+    });
+
+    describe("case and whitespace duplicate — fail closed", () => {
+      it("two rental identities with different raw slugs that normalize to the same slug: no canonical identity, no seed", () => {
+        render(
+          <QuoteSelectionSummary
+            catalogueAvailable
+            fallbackItems={[rentalFallback]}
+            requestedSlug="lounge-chair"
+            validItems={[
+              { kind: "rental" as const, slug: "Lounge-Chair", name: "Lounge Chair Raw" },
+              { kind: "rental" as const, slug: " lounge-chair ", name: "Lounge Chair Whitespace" }
+            ]}
+          />
+        );
+
+        expect(window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY)).toBeNull();
+        expect(screen.queryByText("Lounge Chair")).not.toBeInTheDocument();
+      });
+
+      it("two setup identities with different raw slugs that normalize to the same slug: no canonical identity, no seed", () => {
+        render(
+          <QuoteSelectionSummary
+            catalogueAvailable
+            fallbackItems={[setupFallback]}
+            requestedSlug="botanical-wedding"
+            validItems={[
+              { kind: "setup" as const, slug: "Botanical-Wedding", name: "Botanical Wedding Raw" },
+              { kind: "setup" as const, slug: " botanical-wedding ", name: "Botanical Wedding Whitespace" }
+            ]}
+          />
+        );
+
+        expect(window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY)).toBeNull();
+        expect(screen.queryByText("Botanical Wedding")).not.toBeInTheDocument();
+      });
+
+      it("case/whitespace duplicate: does not consume a stored URL row", () => {
+        window.sessionStorage.setItem(
+          QUOTE_SELECTION_STORAGE_KEY,
+          JSON.stringify({
+            version: 2,
+            rows: [
+              {
+                kind: "catalogue",
+                reference: "lounge-chair",
+                quantity: 2,
+                source: "catalogue",
+                order: 0,
+                subkind: "rental"
+              }
+            ]
+          })
+        );
+
+        render(
+          <QuoteSelectionSummary
+            catalogueAvailable
+            fallbackItems={[rentalFallback]}
+            requestedSlug="lounge-chair"
+            validItems={[
+              { kind: "rental" as const, slug: "Lounge-Chair", name: "Lounge Chair A" },
+              { kind: "rental" as const, slug: "lounge-chair", name: "Lounge Chair B" }
+            ]}
+          />
+        );
+
+        const stored = storedRows();
+        expect(stored.rows).toHaveLength(1);
+        expect(stored.rows[0]?.source).toBe("catalogue");
+      });
+    });
+
+    describe("one normalized match plus opposite-kind duplicates", () => {
+      it("one normalized rental match with same-normalized setup duplicates: canonical rental identity valid", () => {
+        render(
+          <QuoteSelectionSummary
+            catalogueAvailable
+            fallbackItems={[rentalFallback]}
+            requestedSlug="lounge-chair"
+            validItems={[
+              { kind: "rental" as const, slug: " lounge-chair ", name: "Lounge Chair Rental" },
+              { kind: "setup" as const, slug: "LOUNGE-CHAIR", name: "Lounge Setup A" },
+              { kind: "setup" as const, slug: "Lounge-Chair", name: "Lounge Setup B" }
+            ]}
+          />
+        );
+
+        const stored = storedRows();
+        expect(stored.rows).toEqual([
+          {
+            kind: "catalogue",
+            reference: "lounge-chair",
+            quantity: 2,
+            source: "url",
+            order: 0,
+            subkind: "rental"
+          }
+        ]);
+      });
+
+      it("one normalized setup match with same-normalized rental duplicates: canonical setup identity valid", () => {
+        render(
+          <QuoteSelectionSummary
+            catalogueAvailable
+            fallbackItems={[setupFallback]}
+            requestedSlug="botanical-wedding"
+            validItems={[
+              { kind: "setup" as const, slug: " Botanical-Wedding ", name: "Botanical Wedding Setup" },
+              { kind: "rental" as const, slug: "botanical-wedding", name: "Botanical Rental A" },
+              { kind: "rental" as const, slug: "Botanical-Wedding", name: "Botanical Rental B" }
+            ]}
+          />
+        );
+
+        const stored = storedRows();
+        expect(stored.rows).toEqual([
+          {
+            kind: "catalogue",
+            reference: "botanical-wedding",
+            quantity: 1,
+            source: "url",
+            order: 0,
+            subkind: "setup"
+          }
+        ]);
+      });
+    });
+
+    describe("malformed slug — fail closed", () => {
+      it("malformed candidate slug with spaces and special chars cannot become canonical authority", () => {
+        render(
+          <QuoteSelectionSummary
+            catalogueAvailable
+            fallbackItems={[rentalFallback]}
+            requestedSlug="lounge-chair"
+            validItems={[
+              { kind: "rental" as const, slug: "Lounge Chair!", name: "Malformed Slug" }
+            ]}
+          />
+        );
+
+        expect(window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY)).toBeNull();
+      });
+
+      it("malformed requested slug cannot seed or consume", () => {
+        render(
+          <QuoteSelectionSummary
+            catalogueAvailable
+            fallbackItems={[{ ...rentalFallback, slug: "Lounge Chair!" }]}
+            requestedSlug="Lounge Chair!"
+            validItems={[
+              { kind: "rental" as const, slug: "lounge-chair", name: "Lounge Chair" }
+            ]}
+          />
+        );
+
+        expect(window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY)).toBeNull();
+      });
+
+      it("malformed validItems slug does not seed even when it is the only rental match", () => {
+        render(
+          <QuoteSelectionSummary
+            catalogueAvailable
+            fallbackItems={[rentalFallback]}
+            requestedSlug="lounge-chair"
+            validItems={[
+              { kind: "rental" as const, slug: "Not Valid!", name: "Not Valid Slug" },
+              { kind: "rental" as const, slug: "lounge-chair", name: "Lounge Chair" }
+            ]}
+          />
+        );
+
+        const stored = storedRows();
+        expect(stored.rows).toEqual([
+          {
+            kind: "catalogue",
+            reference: "lounge-chair",
+            quantity: 2,
+            source: "url",
+            order: 0,
+            subkind: "rental"
+          }
+        ]);
+      });
+    });
+  });
+
   describe("Run-16 — canonical identity uniqueness and single authority", () => {
     const rentalFallback = {
       slug: "lounge-chair",
@@ -1943,11 +2153,10 @@ describe("QuoteSelectionControls", () => {
           { reference: "lounge-chair", kind: "setup" }
         );
 
-        if (seeded) {
-          const stored = storedRows();
-          expect(stored.rows[0]?.subkind).toBe("setup");
-          expect(stored.rows[0]?.reference).toBe("lounge-chair");
-        }
+        expect(seeded).toBe(true);
+        const stored = storedRows();
+        expect(stored.rows[0]?.subkind).toBe("setup");
+        expect(stored.rows[0]?.reference).toBe("lounge-chair");
       });
 
       it("writeUrlFallback rejects fallback item whose slug does not match canonical reference", async () => {
