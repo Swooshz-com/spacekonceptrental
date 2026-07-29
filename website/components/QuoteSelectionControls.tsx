@@ -284,7 +284,7 @@ function buildBrowserStorage(): QuoteSelectionStorageAdapter {
   };
 }
 
-function writeUrlFallback(item: QuoteSelectionItem): boolean {
+function writeUrlFallback(item: QuoteSelectionItem, canonicalSubkind?: CatalogueSelectionSubkind): boolean {
   if (typeof window === "undefined") {
     return false;
   }
@@ -305,7 +305,7 @@ function writeUrlFallback(item: QuoteSelectionItem): boolean {
       reference: item.slug,
       quantity: item.quantity,
       source: "url",
-      subkind: (item.kind === "setup" ? "setup" : "rental") as CatalogueSelectionSubkind
+      subkind: canonicalSubkind ?? (item.kind === "setup" ? "setup" : "rental") as CatalogueSelectionSubkind
     }
   ]);
 
@@ -829,6 +829,26 @@ export function QuoteSelectionSummary({
   const hasDiscoveryContext = Boolean(requestedSlug || category || event || search);
   const groupedItems = getGroupedSelectionItems(visibleItems);
 
+  const canonicalFallbackIdentity = useMemo(() => {
+    if (!requestedSlug) return undefined;
+    const fallbackItem = fallbackItems[0];
+    if (!fallbackItem || fallbackItem.slug !== requestedSlug) return undefined;
+    const normalizedFallback = normalizeQuoteItem(fallbackItem);
+    if (
+      !normalizedFallback ||
+      (normalizedFallback.kind !== "rental" &&
+        normalizedFallback.kind !== "setup")
+    )
+      return undefined;
+    const canonical = validItems.find(
+      (candidate) =>
+        candidate.slug === requestedSlug &&
+        candidate.kind === normalizedFallback.kind
+    );
+    if (!canonical) return undefined;
+    return { reference: canonical.slug, kind: canonical.kind };
+  }, [requestedSlug, fallbackItems, validItems]);
+
   useEffect(() => {
     function syncSelection() {
       const result = readQuoteSelectionGuarded();
@@ -838,13 +858,14 @@ export function QuoteSelectionSummary({
         setStorageUnavailable(false);
         setHasCompleteSelection(!shouldSeedUrlFallback(result.serialized));
 
-        if (!fallbackConsumed && requestedSlug) {
+        if (!fallbackConsumed && canonicalFallbackIdentity) {
           const rows = allRowsFromSelection(result.serialized);
           const hasMatchingUrlRow = rows.some(
             (row) =>
               row.kind === "catalogue" &&
               row.source === "url" &&
-              row.reference === requestedSlug
+              row.reference === canonicalFallbackIdentity.reference &&
+              row.subkind === canonicalFallbackIdentity.kind
           );
           if (hasMatchingUrlRow) {
             setFallbackConsumed(true);
@@ -876,7 +897,7 @@ export function QuoteSelectionSummary({
 
     const fallbackItem = fallbackItems[0];
 
-    if (!requestedSlug || fallbackItem?.slug !== requestedSlug) {
+    if (!canonicalFallbackIdentity) {
       return;
     }
 
@@ -896,13 +917,13 @@ export function QuoteSelectionSummary({
       return;
     }
 
-    const seeded = writeUrlFallback(fallbackItem);
+    const seeded = writeUrlFallback(fallbackItem, canonicalFallbackIdentity.kind);
 
     if (seeded) {
       setFallbackConsumed(true);
       setItems(readQuoteSelection());
     }
-  }, [fallbackItems, requestedSlug, catalogueAvailable, fallbackConsumed, storageUnavailable]);
+  }, [fallbackItems, requestedSlug, catalogueAvailable, fallbackConsumed, storageUnavailable, hasCompleteSelection]);
 
   const manualCount = manualItems.length;
 

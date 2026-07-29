@@ -28,6 +28,7 @@ function storedRows() {
       quantity: number;
       source: string;
       order: number;
+      subkind?: string;
     }>;
   };
 }
@@ -1563,6 +1564,314 @@ describe("QuoteSelectionControls", () => {
           faulty.restore();
         }
       });
+    });
+  });
+
+  describe("Run-15 — canonical fallback-identity closure", () => {
+    const setupFallback = {
+      slug: "botanical-wedding",
+      name: "Botanical Wedding",
+      category: "Setups",
+      kind: "setup" as const,
+      quantity: 1
+    };
+
+    const rentalFallback = {
+      slug: "lounge-chair",
+      name: "Lounge Chair",
+      kind: "rental" as const,
+      quantity: 2
+    };
+
+    const setupValidItem = {
+      kind: "setup" as const,
+      slug: "botanical-wedding",
+      name: "Botanical Wedding",
+      category: "Setups"
+    };
+
+    const rentalValidItem = {
+      kind: "rental" as const,
+      slug: "lounge-chair",
+      name: "Lounge Chair"
+    };
+
+    beforeEach(() => {
+      window.sessionStorage.clear();
+    });
+
+    afterEach(() => {
+      cleanup();
+    });
+
+    it("Test A — canonical setup, stored rental: wrong subkind does not consume, removal reseeds correct setup", () => {
+      window.sessionStorage.setItem(
+        QUOTE_SELECTION_STORAGE_KEY,
+        JSON.stringify({
+          version: 2,
+          rows: [
+            {
+              kind: "catalogue",
+              reference: "botanical-wedding",
+              quantity: 1,
+              source: "url",
+              order: 0,
+              subkind: "rental"
+            }
+          ]
+        })
+      );
+
+      const { rerender } = render(
+        <QuoteSelectionSummary
+          catalogueAvailable
+          fallbackItems={[setupFallback]}
+          requestedSlug="botanical-wedding"
+          validItems={[setupValidItem]}
+        />
+      );
+
+      expect(
+        screen.getByText(/unavailable selection: botanical-wedding/i)
+      ).toBeInTheDocument();
+
+      let stored = storedRows();
+      expect(stored.rows).toHaveLength(1);
+      expect(stored.rows[0]?.subkind).toBe("rental");
+
+      const removeButton = screen.getByRole("button", {
+        name: /remove.*botanical.*from selection/i
+      });
+      fireEvent.click(removeButton);
+
+      expect(screen.getByText("Botanical Wedding")).toBeInTheDocument();
+      stored = storedRows();
+      expect(stored.rows).toHaveLength(1);
+      expect(stored.rows[0]?.source).toBe("url");
+      expect(stored.rows[0]?.subkind).toBe("setup");
+
+      const removeSetupButton = screen.getByRole("button", {
+        name: /remove.*botanical.*from selection/i
+      });
+      fireEvent.click(removeSetupButton);
+      expect(screen.queryByText("Botanical Wedding")).not.toBeInTheDocument();
+
+      rerender(
+        <QuoteSelectionSummary
+          catalogueAvailable
+          fallbackItems={[setupFallback]}
+          requestedSlug="botanical-wedding"
+          validItems={[setupValidItem]}
+        />
+      );
+      expect(screen.queryByText("Botanical Wedding")).not.toBeInTheDocument();
+
+      window.dispatchEvent(new Event("storage"));
+      expect(screen.queryByText("Botanical Wedding")).not.toBeInTheDocument();
+    });
+
+    it("Test B — canonical rental, stored setup: symmetric regression", () => {
+      window.sessionStorage.setItem(
+        QUOTE_SELECTION_STORAGE_KEY,
+        JSON.stringify({
+          version: 2,
+          rows: [
+            {
+              kind: "catalogue",
+              reference: "lounge-chair",
+              quantity: 1,
+              source: "url",
+              order: 0,
+              subkind: "setup"
+            }
+          ]
+        })
+      );
+
+      render(
+        <QuoteSelectionSummary
+          catalogueAvailable
+          fallbackItems={[rentalFallback]}
+          requestedSlug="lounge-chair"
+          validItems={[rentalValidItem]}
+        />
+      );
+
+      expect(
+        screen.getByText(/unavailable selection: lounge-chair/i)
+      ).toBeInTheDocument();
+
+      let stored = storedRows();
+      expect(stored.rows).toHaveLength(1);
+      expect(stored.rows[0]?.subkind).toBe("setup");
+
+      const removeButton = screen.getByRole("button", {
+        name: /remove.*lounge.*from selection/i
+      });
+      fireEvent.click(removeButton);
+
+      expect(screen.getByText("Lounge Chair")).toBeInTheDocument();
+      stored = storedRows();
+      expect(stored.rows).toHaveLength(1);
+      expect(stored.rows[0]?.source).toBe("url");
+      expect(stored.rows[0]?.subkind).toBe("rental");
+    });
+
+    it("Test C — correct stored identity: consumed immediately, removal does not re-seed", () => {
+      window.sessionStorage.setItem(
+        QUOTE_SELECTION_STORAGE_KEY,
+        JSON.stringify({
+          version: 2,
+          rows: [
+            {
+              kind: "catalogue",
+              reference: "lounge-chair",
+              quantity: 2,
+              source: "url",
+              order: 0,
+              subkind: "rental"
+            }
+          ]
+        })
+      );
+
+      const { rerender } = render(
+        <QuoteSelectionSummary
+          catalogueAvailable
+          fallbackItems={[rentalFallback]}
+          requestedSlug="lounge-chair"
+          validItems={[rentalValidItem]}
+        />
+      );
+
+      expect(screen.getByText("Lounge Chair")).toBeInTheDocument();
+
+      const stored = storedRows();
+      expect(stored.rows).toHaveLength(1);
+      expect(stored.rows[0]?.subkind).toBe("rental");
+
+      const removeButton = screen.getByRole("button", {
+        name: /remove.*lounge.*from selection/i
+      });
+      fireEvent.click(removeButton);
+
+      expect(screen.queryByText("Lounge Chair")).not.toBeInTheDocument();
+      expect(storedRows().rows).toEqual([]);
+
+      rerender(
+        <QuoteSelectionSummary
+          catalogueAvailable
+          fallbackItems={[rentalFallback]}
+          requestedSlug="lounge-chair"
+          validItems={[rentalValidItem]}
+        />
+      );
+      expect(screen.queryByText("Lounge Chair")).not.toBeInTheDocument();
+
+      window.dispatchEvent(new Event("storage"));
+      expect(screen.queryByText("Lounge Chair")).not.toBeInTheDocument();
+    });
+
+    it("Test D — storage failure preservation: readable at mount, unreadable during removal preserves last-known state with bounded error", () => {
+      window.sessionStorage.setItem(
+        QUOTE_SELECTION_STORAGE_KEY,
+        JSON.stringify({
+          version: 2,
+          rows: [
+            {
+              kind: "catalogue",
+              reference: "lounge-chair",
+              quantity: 1,
+              source: "catalogue",
+              order: 0,
+              subkind: "rental"
+            }
+          ]
+        })
+      );
+
+      render(
+        <QuoteSelectionSummary
+          catalogueAvailable
+          validItems={[rentalValidItem]}
+        />
+      );
+
+      expect(screen.getByText("Lounge Chair")).toBeInTheDocument();
+
+      let callCount = 0;
+      const real = window.sessionStorage;
+      const faulty: Storage = {
+        get length() {
+          return real.getItem(QUOTE_SELECTION_STORAGE_KEY) === null ? 0 : 1;
+        },
+        key: () => real.key(0),
+        getItem: (key: string) => {
+          callCount += 1;
+          if (callCount <= 2) {
+            return real.getItem(key);
+          }
+          throw new Error("storage blocked");
+        },
+        setItem: (key: string, value: string) => {
+          real.setItem(key, value);
+        },
+        removeItem: (key: string) => {
+          real.removeItem(key);
+        },
+        clear: () => {
+          real.clear();
+        }
+      };
+      Object.defineProperty(window, "sessionStorage", {
+        value: faulty,
+        writable: true,
+        configurable: true
+      });
+
+      try {
+        const removeButton = screen.getByRole("button", {
+          name: /remove.*lounge.*from selection/i
+        });
+        fireEvent.click(removeButton);
+
+        expect(screen.getByText("Lounge Chair")).toBeInTheDocument();
+        expect(screen.queryByText("No items selected yet")).not.toBeInTheDocument();
+        expect(
+          screen.getByText(/selection storage unavailable/i)
+        ).toBeInTheDocument();
+        expect(screen.queryByText(/exception|quota|blocked/i)).not.toBeInTheDocument();
+        expect(
+          screen.getAllByText(/could not be removed|storage is unavailable/i)
+            .length
+        ).toBeGreaterThan(0);
+      } finally {
+        Object.defineProperty(window, "sessionStorage", {
+          value: new (class implements Storage {
+            private store = new Map<string, string>();
+            get length() {
+              return this.store.size;
+            }
+            key(i: number) {
+              return Array.from(this.store.keys())[i] ?? null;
+            }
+            getItem(k: string) {
+              return this.store.get(k) ?? null;
+            }
+            setItem(k: string, v: string) {
+              this.store.set(k, String(v));
+            }
+            removeItem(k: string) {
+              this.store.delete(k);
+            }
+            clear() {
+              this.store.clear();
+            }
+          })(),
+          writable: true,
+          configurable: true
+        });
+      }
     });
   });
 });
