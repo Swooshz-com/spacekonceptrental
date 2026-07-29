@@ -1567,6 +1567,415 @@ describe("QuoteSelectionControls", () => {
     });
   });
 
+  describe("Run-16 — canonical identity uniqueness and single authority", () => {
+    const rentalFallback = {
+      slug: "lounge-chair",
+      name: "Lounge Chair",
+      kind: "rental" as const,
+      quantity: 2
+    };
+
+    const setupFallback = {
+      slug: "botanical-wedding",
+      name: "Botanical Wedding",
+      category: "Setups",
+      kind: "setup" as const,
+      quantity: 1
+    };
+
+    const rentalValidItem = {
+      kind: "rental" as const,
+      slug: "lounge-chair",
+      name: "Lounge Chair"
+    };
+
+    const setupValidItem = {
+      kind: "setup" as const,
+      slug: "botanical-wedding",
+      name: "Botanical Wedding",
+      category: "Setups"
+    };
+
+    beforeEach(() => {
+      window.sessionStorage.clear();
+    });
+
+    afterEach(() => {
+      cleanup();
+    });
+
+    describe("duplicate exact identity — fail closed", () => {
+      it("duplicate setup identity: no canonical identity, no seed, no consumption", () => {
+        render(
+          <QuoteSelectionSummary
+            catalogueAvailable
+            fallbackItems={[setupFallback]}
+            requestedSlug="botanical-wedding"
+            validItems={[
+              { ...setupValidItem },
+              { ...setupValidItem, name: "Botanical Wedding Duplicate" }
+            ]}
+          />
+        );
+
+        expect(window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY)).toBeNull();
+        expect(screen.queryByText("Botanical Wedding")).not.toBeInTheDocument();
+      });
+
+      it("duplicate rental identity: no canonical identity, no seed, no consumption", () => {
+        render(
+          <QuoteSelectionSummary
+            catalogueAvailable
+            fallbackItems={[rentalFallback]}
+            requestedSlug="lounge-chair"
+            validItems={[
+              { ...rentalValidItem },
+              { ...rentalValidItem, name: "Lounge Chair Duplicate" }
+            ]}
+          />
+        );
+
+        expect(window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY)).toBeNull();
+        expect(screen.queryByText("Lounge Chair")).not.toBeInTheDocument();
+      });
+
+      it("duplicate identity does not consume a stored already-matched URL row", () => {
+        window.sessionStorage.setItem(
+          QUOTE_SELECTION_STORAGE_KEY,
+          JSON.stringify({
+            version: 2,
+            rows: [
+              {
+                kind: "catalogue",
+                reference: "botanical-wedding",
+                quantity: 1,
+                source: "url",
+                order: 0,
+                subkind: "setup"
+              }
+            ]
+          })
+        );
+
+        render(
+          <QuoteSelectionSummary
+            catalogueAvailable
+            fallbackItems={[setupFallback]}
+            requestedSlug="botanical-wedding"
+            validItems={[
+              { ...setupValidItem },
+              { ...setupValidItem, name: "Botanical Wedding Duplicate" }
+            ]}
+          />
+        );
+
+        const stored = storedRows();
+        expect(stored.rows).toHaveLength(1);
+        expect(stored.rows[0]?.subkind).toBe("setup");
+        expect(screen.getByText("Botanical Wedding")).toBeInTheDocument();
+      });
+    });
+
+    describe("one exact match plus opposite-kind duplicates", () => {
+      it("one rental match with same-slug setup duplicates: canonical rental identity valid, URL row uses rental", () => {
+        render(
+          <QuoteSelectionSummary
+            catalogueAvailable
+            fallbackItems={[rentalFallback]}
+            requestedSlug="lounge-chair"
+            validItems={[
+              { kind: "rental" as const, slug: "lounge-chair", name: "Lounge Chair" },
+              { kind: "setup" as const, slug: "lounge-chair", name: "Lounge Setup" },
+              { kind: "setup" as const, slug: "lounge-chair", name: "Lounge Setup 2" }
+            ]}
+          />
+        );
+
+        expect(storedRows().rows).toEqual([
+          {
+            kind: "catalogue",
+            reference: "lounge-chair",
+            quantity: 2,
+            source: "url",
+            order: 0,
+            subkind: "rental"
+          }
+        ]);
+      });
+
+      it("one setup match with same-slug rental duplicates: canonical setup identity valid, URL row uses setup", () => {
+        render(
+          <QuoteSelectionSummary
+            catalogueAvailable
+            fallbackItems={[setupFallback]}
+            requestedSlug="botanical-wedding"
+            validItems={[
+              { kind: "setup" as const, slug: "botanical-wedding", name: "Botanical Wedding", category: "Setups" },
+              { kind: "rental" as const, slug: "botanical-wedding", name: "Botanical Rental" },
+              { kind: "rental" as const, slug: "botanical-wedding", name: "Botanical Rental 2" }
+            ]}
+          />
+        );
+
+        expect(storedRows().rows).toEqual([
+          {
+            kind: "catalogue",
+            reference: "botanical-wedding",
+            quantity: 1,
+            source: "url",
+            order: 0,
+            subkind: "setup"
+          }
+        ]);
+      });
+    });
+
+    describe("zero match — fail closed", () => {
+      it("no exact server-owned match: does not seed fallback", () => {
+        render(
+          <QuoteSelectionSummary
+            catalogueAvailable
+            fallbackItems={[rentalFallback]}
+            requestedSlug="lounge-chair"
+            validItems={[]}
+          />
+        );
+
+        expect(window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY)).toBeNull();
+        expect(screen.queryByText("Lounge Chair")).not.toBeInTheDocument();
+      });
+
+      it("no exact match: does not consume a stored URL row", () => {
+        window.sessionStorage.setItem(
+          QUOTE_SELECTION_STORAGE_KEY,
+          JSON.stringify({
+            version: 2,
+            rows: [
+              {
+                kind: "catalogue",
+                reference: "lounge-chair",
+                quantity: 2,
+                source: "catalogue",
+                order: 0,
+                subkind: "rental"
+              }
+            ]
+          })
+        );
+
+        render(
+          <QuoteSelectionSummary
+            catalogueAvailable
+            fallbackItems={[rentalFallback]}
+            requestedSlug="lounge-chair"
+            validItems={[]}
+          />
+        );
+
+        const stored = storedRows();
+        expect(stored.rows).toHaveLength(1);
+        expect(stored.rows[0]?.source).toBe("catalogue");
+      });
+
+      it("no exact match: unrelated manual rows preserved", () => {
+        window.sessionStorage.setItem(
+          QUOTE_SELECTION_STORAGE_KEY,
+          JSON.stringify({
+            version: 2,
+            rows: [
+              {
+                kind: "manual",
+                key: "manual-a",
+                description: "Custom counter",
+                quantity: 1,
+                source: "manual",
+                order: 0
+              }
+            ]
+          })
+        );
+
+        render(
+          <QuoteSelectionSummary
+            catalogueAvailable
+            fallbackItems={[rentalFallback]}
+            requestedSlug="lounge-chair"
+            validItems={[]}
+          />
+        );
+
+        const stored = storedRows();
+        expect(stored.rows).toHaveLength(1);
+        expect(stored.rows[0]?.kind).toBe("manual");
+      });
+    });
+
+    describe("exact one-match — success preserved", () => {
+      it("exactly one canonical match: consumes correct stored URL row on mount", () => {
+        window.sessionStorage.setItem(
+          QUOTE_SELECTION_STORAGE_KEY,
+          JSON.stringify({
+            version: 2,
+            rows: [
+              {
+                kind: "catalogue",
+                reference: "lounge-chair",
+                quantity: 2,
+                source: "url",
+                order: 0,
+                subkind: "rental"
+              }
+            ]
+          })
+        );
+
+        const { rerender } = render(
+          <QuoteSelectionSummary
+            catalogueAvailable
+            fallbackItems={[rentalFallback]}
+            requestedSlug="lounge-chair"
+            validItems={[rentalValidItem]}
+          />
+        );
+
+        expect(screen.getByText("Lounge Chair")).toBeInTheDocument();
+
+        const removeButton = screen.getByRole("button", { name: /remove.*lounge.*from selection/i });
+        fireEvent.click(removeButton);
+
+        expect(screen.queryByText("Lounge Chair")).not.toBeInTheDocument();
+
+        rerender(
+          <QuoteSelectionSummary
+            catalogueAvailable
+            fallbackItems={[rentalFallback]}
+            requestedSlug="lounge-chair"
+            validItems={[rentalValidItem]}
+          />
+        );
+        expect(screen.queryByText("Lounge Chair")).not.toBeInTheDocument();
+      });
+
+      it("exactly one canonical match: seeds URL row when genuinely empty, writes exact reference and kind", () => {
+        render(
+          <QuoteSelectionSummary
+            catalogueAvailable
+            fallbackItems={[rentalFallback]}
+            requestedSlug="lounge-chair"
+            validItems={[rentalValidItem]}
+          />
+        );
+
+        const stored = storedRows();
+        expect(stored.rows).toEqual([
+          {
+            kind: "catalogue",
+            reference: "lounge-chair",
+            quantity: 2,
+            source: "url",
+            order: 0,
+            subkind: "rental"
+          }
+        ]);
+      });
+
+      it("exactly one setup match: seeds URL row with correct exact subkind", () => {
+        render(
+          <QuoteSelectionSummary
+            catalogueAvailable
+            fallbackItems={[setupFallback]}
+            requestedSlug="botanical-wedding"
+            validItems={[setupValidItem]}
+          />
+        );
+
+        const stored = storedRows();
+        expect(stored.rows).toEqual([
+          {
+            kind: "catalogue",
+            reference: "botanical-wedding",
+            quantity: 1,
+            source: "url",
+            order: 0,
+            subkind: "setup"
+          }
+        ]);
+      });
+    });
+
+    describe("structural single-authority: writeUrlFallback", () => {
+      it("writeUrlFallback requires canonical identity argument and rejects absent identity", async () => {
+        const mod = await import("./QuoteSelectionControls");
+        const writeUrlFallback = (mod as Record<string, unknown>).writeUrlFallback;
+
+        expect(writeUrlFallback).toBeDefined();
+        expect(typeof writeUrlFallback).toBe("function");
+
+        const fn = writeUrlFallback as (...args: unknown[]) => boolean;
+
+        const result = fn({
+          slug: "lounge-chair",
+          name: "Lounge Chair",
+          kind: "rental",
+          quantity: 1
+        });
+
+        expect(result).toBe(false);
+      });
+
+      it("writeUrlFallback derives stored reference and subkind from canonical identity only", async () => {
+        window.sessionStorage.clear();
+
+        const mod = await import("./QuoteSelectionControls");
+        const writeUrlFallback = (mod as Record<string, unknown>).writeUrlFallback;
+
+        expect(writeUrlFallback).toBeDefined();
+
+        const fn = writeUrlFallback as (...args: unknown[]) => boolean;
+
+        const seeded = fn(
+          {
+            slug: "lounge-chair",
+            name: "Lounge Chair",
+            kind: "rental",
+            quantity: 2
+          },
+          { reference: "lounge-chair", kind: "setup" }
+        );
+
+        if (seeded) {
+          const stored = storedRows();
+          expect(stored.rows[0]?.subkind).toBe("setup");
+          expect(stored.rows[0]?.reference).toBe("lounge-chair");
+        }
+      });
+
+      it("writeUrlFallback rejects fallback item whose slug does not match canonical reference", async () => {
+        window.sessionStorage.clear();
+
+        const mod = await import("./QuoteSelectionControls");
+        const writeUrlFallback = (mod as Record<string, unknown>).writeUrlFallback;
+
+        expect(writeUrlFallback).toBeDefined();
+
+        const fn = writeUrlFallback as (...args: unknown[]) => boolean;
+
+        const seeded = fn(
+          {
+            slug: "different-chair",
+            name: "Different Chair",
+            kind: "rental",
+            quantity: 1
+          },
+          { reference: "lounge-chair", kind: "rental" }
+        );
+
+        expect(seeded).toBe(false);
+        expect(window.sessionStorage.getItem(QUOTE_SELECTION_STORAGE_KEY)).toBeNull();
+      });
+    });
+  });
+
   describe("Run-15 — canonical fallback-identity closure", () => {
     const setupFallback = {
       slug: "botanical-wedding",

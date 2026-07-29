@@ -284,8 +284,23 @@ function buildBrowserStorage(): QuoteSelectionStorageAdapter {
   };
 }
 
-function writeUrlFallback(item: QuoteSelectionItem, canonicalSubkind?: CatalogueSelectionSubkind): boolean {
+export function writeUrlFallback(
+  item: QuoteSelectionItem,
+  canonicalIdentity: { reference: string; kind: CatalogueSelectionSubkind }
+): boolean {
   if (typeof window === "undefined") {
+    return false;
+  }
+
+  if (!canonicalIdentity) {
+    return false;
+  }
+
+  const normalizedFallback = normalizeQuoteItem(item);
+  if (
+    !normalizedFallback ||
+    normalizedFallback.slug !== canonicalIdentity.reference
+  ) {
     return false;
   }
 
@@ -302,10 +317,10 @@ function writeUrlFallback(item: QuoteSelectionItem, canonicalSubkind?: Catalogue
 
   const normalized = createCatalogueSelection([
     {
-      reference: item.slug,
+      reference: canonicalIdentity.reference,
       quantity: item.quantity,
       source: "url",
-      subkind: canonicalSubkind ?? (item.kind === "setup" ? "setup" : "rental") as CatalogueSelectionSubkind
+      subkind: canonicalIdentity.kind
     }
   ]);
 
@@ -840,13 +855,13 @@ export function QuoteSelectionSummary({
         normalizedFallback.kind !== "setup")
     )
       return undefined;
-    const canonical = validItems.find(
+    const exactMatches = validItems.filter(
       (candidate) =>
         candidate.slug === requestedSlug &&
         candidate.kind === normalizedFallback.kind
     );
-    if (!canonical) return undefined;
-    return { reference: canonical.slug, kind: canonical.kind };
+    if (exactMatches.length !== 1) return undefined;
+    return { reference: exactMatches[0].slug, kind: exactMatches[0].kind };
   }, [requestedSlug, fallbackItems, validItems]);
 
   useEffect(() => {
@@ -917,13 +932,13 @@ export function QuoteSelectionSummary({
       return;
     }
 
-    const seeded = writeUrlFallback(fallbackItem, canonicalFallbackIdentity.kind);
+    const seeded = writeUrlFallback(fallbackItem, canonicalFallbackIdentity);
 
     if (seeded) {
       setFallbackConsumed(true);
       setItems(readQuoteSelection());
     }
-  }, [fallbackItems, requestedSlug, catalogueAvailable, fallbackConsumed, storageUnavailable, hasCompleteSelection]);
+  }, [fallbackItems, requestedSlug, catalogueAvailable, fallbackConsumed, storageUnavailable, hasCompleteSelection, canonicalFallbackIdentity]);
 
   const manualCount = manualItems.length;
 
