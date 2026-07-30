@@ -1614,14 +1614,14 @@ check('setup recipe database authority enforces schema, RPC, RLS, publication, a
 
   try {
     assert.equal(
-      psql(`select count(*)::text from pg_catalog.pg_constraint where conrelid = 'public.setup_recipes'::pg_catalog.regclass`),
+      psql(`select count(*)::text from pg_catalog.pg_constraint where conrelid = 'public.setup_recipes'::pg_catalog.regclass and contype in ('p', 'f', 'u', 'c')`),
       '3',
-      'setup_recipes should have primary key, workspace-safe parent FK, and revision check',
+      'setup_recipes should have the three locked schema constraints',
     );
     assert.equal(
-      psql(`select count(*)::text from pg_catalog.pg_constraint where conrelid = 'public.setup_recipe_items'::pg_catalog.regclass`),
+      psql(`select count(*)::text from pg_catalog.pg_constraint where conrelid = 'public.setup_recipe_items'::pg_catalog.regclass and contype in ('p', 'f', 'u', 'c')`),
       '7',
-      'setup_recipe_items should have the locked key, FKs, checks, and position uniqueness',
+      'setup_recipe_items should have the seven locked schema constraints',
     );
     for (const tableName of ['setup_recipes', 'setup_recipe_items']) {
       assert.equal(
