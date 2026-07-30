@@ -37,8 +37,7 @@ Anonymous execution is limited to these exact signatures:
 - `public.get_public_quote_submission_digest(uuid,uuid,text,text,text,text,text,date,text,text,text,text,jsonb,uuid)`
 - `public.submit_public_quote_request(uuid,uuid,text,text,text,text,text,date,text,text,text,text,jsonb,uuid,text,bigint,text)`
 
-Authenticated execution is limited to the ten public RPCs with deliberate
-session-bound website call sites shown below. No public-schema `SECURITY
+Eleven authenticated RPC signatures are allowlisted. Ten currently have website call sites. The setup-recipe RPC is deliberately database-authority-only until the second code PR. No public-schema `SECURITY
 DEFINER` function requires `service_role` execution: current server runtime
 uses either the server-only anon client for public flows or the session-bound
 authenticated client for admin flows. `PUBLIC` receives no execution grant.
@@ -95,6 +94,66 @@ before applying the reviewed allowlists.
 There are no repository-owned public `SECURITY DEFINER` event-trigger
 functions. The two public trigger functions above are ordinary row-trigger
 functions and remain owner-executable through their attached triggers.
+
+## Setup-Recipe SECURITY DEFINER Trigger Inventory
+
+These three repository-owned functions are exact database-trigger entries, not
+browser-callable RPCs. Each is owned by `postgres` (the migration/database
+owner), is `SECURITY DEFINER`, and fixes `search_path` to `pg_catalog`. Their
+objects and helper calls are schema-qualified. Direct `EXECUTE` is denied for
+`PUBLIC`, `anon`, `authenticated`, and `service_role` by the exact migration
+revokes below. PostgreSQL trigger dispatch remains valid because the attached
+trigger invokes the function with its owner privileges; no role `EXECUTE`
+grant is required for table-trigger execution. There is no browser call site
+for any of these functions.
+
+### `public.setup_recipe_item_nesting_guard()`
+
+- Owner: `postgres` (migration/database owner).
+- SECURITY DEFINER: yes.
+- Fixed `search_path`: `pg_catalog`.
+- Trigger dependency: deferred constraint trigger
+  `setup_recipe_items_nesting_guard` on `public.setup_recipe_items`.
+- Internal helper dependency: `public.lock_setup_recipe_authority()`.
+- Direct EXECUTE: denied for `PUBLIC`, `anon`, `authenticated`, and
+  `service_role`.
+- Trigger execution: valid through the attached table trigger and owner
+  privileges; no client grant is needed.
+- Browser call site: none.
+
+### `public.setup_recipe_aggregate_guard()`
+
+- Owner: `postgres` (migration/database owner).
+- SECURITY DEFINER: yes.
+- Fixed `search_path`: `pg_catalog`.
+- Trigger dependency: deferred constraint triggers
+  `setup_recipes_aggregate_guard` and `setup_recipe_items_aggregate_guard` on
+  the two recipe tables.
+- Internal helper dependency: `public.assert_setup_recipe_valid(uuid,uuid)`;
+  that assertion uses `public.lock_setup_recipe_authority()` and the shared
+  `public.is_public_catalogue_product(uuid,uuid)` predicate.
+- Direct EXECUTE: denied for `PUBLIC`, `anon`, `authenticated`, and
+  `service_role`.
+- Trigger execution: valid through the attached table triggers and owner
+  privileges; no client grant is needed.
+- Browser call site: none.
+
+### `public.setup_recipe_product_publication_guard()`
+
+- Owner: `postgres` (migration/database owner).
+- SECURITY DEFINER: yes.
+- Fixed `search_path`: `pg_catalog`.
+- Trigger dependency: deferred constraint trigger
+  `products_setup_recipe_publication_guard` on `public.products` status
+  updates.
+- Internal helper dependency: `public.assert_setup_recipe_valid(uuid,uuid)`;
+  that assertion uses `public.lock_setup_recipe_authority()` and the shared
+  `public.is_public_catalogue_product(uuid,uuid)` predicate.
+- Direct EXECUTE: denied for `PUBLIC`, `anon`, `authenticated`, and
+  `service_role`.
+- Trigger execution: valid through the attached table trigger and owner
+  privileges; no client grant is needed.
+- Browser call site: none.
 
 ## Supabase/Platform-Managed Event-Trigger Contract
 

@@ -304,6 +304,109 @@ test('common destructive SQL statements fail static validation', () => {
   }
 });
 
+test('one explicitly allowlisted DELETE occurrence passes', () => {
+  const root = makeTempRoot();
+  const migrationsDir = writeMigration(
+    root,
+    '20260730100000_setup_recipe_database_authority.sql',
+    'delete from public.setup_recipes;',
+  );
+
+  const result = runValidator(migrationsDir);
+
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+});
+
+test('an allowlisted DELETE followed by an unreviewed DELETE fails', () => {
+  const root = makeTempRoot();
+  const migrationsDir = writeMigration(
+    root,
+    '20260730100000_setup_recipe_database_authority.sql',
+    `
+      delete from public.setup_recipes;
+      delete from public.messages;
+    `,
+  );
+
+  const result = runValidator(migrationsDir);
+
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /DELETE destructive SQL statement/i);
+  assert.match(result.stderr, /:2:/);
+});
+
+test('an unreviewed DELETE followed by an allowlisted DELETE fails', () => {
+  const root = makeTempRoot();
+  const migrationsDir = writeMigration(
+    root,
+    '20260730100000_setup_recipe_database_authority.sql',
+    `
+      delete from public.messages;
+      delete from public.setup_recipes;
+    `,
+  );
+
+  const result = runValidator(migrationsDir);
+
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /DELETE destructive SQL statement/i);
+  assert.match(result.stderr, /:1:/);
+});
+
+test('multiple DELETE occurrences pass only when every occurrence is explicitly allowlisted', () => {
+  const root = makeTempRoot();
+  const migrationsDir = writeMigration(
+    root,
+    '20260730100000_setup_recipe_database_authority.sql',
+    `
+      delete from public.setup_recipes;
+      delete from public.setup_recipe_items;
+    `,
+  );
+
+  const result = runValidator(migrationsDir);
+
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+});
+
+test('mixed destructive statement classes fail when any occurrence is unapproved', () => {
+  const root = makeTempRoot();
+  const migrationsDir = writeMigration(
+    root,
+    '20260730100000_setup_recipe_database_authority.sql',
+    `
+      delete from public.setup_recipes;
+      truncate table public.messages;
+      drop table public.audit_logs;
+    `,
+  );
+
+  const result = runValidator(migrationsDir);
+
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /TRUNCATE destructive SQL statement/i);
+  assert.match(result.stderr, /DROP TABLE destructive SQL statement/i);
+});
+
+test('comments and string literals do not create destructive SQL approvals or violations', () => {
+  const root = makeTempRoot();
+  const migrationsDir = writeMigration(
+    root,
+    '20260730100000_comment_and_string_literals.sql',
+    `
+      -- delete from public.messages;
+      /* truncate table public.audit_logs; */
+      select 'drop table public.products';
+      select $$delete from public.messages$$;
+      create table public.safe_literal_probe (id uuid primary key);
+    `,
+  );
+
+  const result = runValidator(migrationsDir);
+
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+});
+
 test('validator does not require or use a live Supabase connection', () => {
   const root = makeTempRoot();
   const migrationsDir = writeMigration(
@@ -522,10 +625,12 @@ test('setup recipe migration enforces aggregate, non-nesting, and publication in
   assert.match(sql, /setup_recipe_nested_setup/);
   assert.match(sql, /setup_recipe_published_child_protected/);
   assert.match(sql, /setup_recipe_published_child_invalid/);
+  assert.match(sql, /setup_recipe_published_parent_invalid/);
   assert.match(sql, /setup_recipe_positions_not_contiguous/);
   assert.match(sql, /deferrable initially deferred/);
   assert.match(sql, /if tg_op = 'delete'[\s\S]*?setup_recipe_published_parent_remove[\s\S]*?return old;/);
   assert.match(sql, /pg_advisory_xact_lock/);
+  assert.match(sql, /create function public\.is_public_catalogue_product\( target_workspace_id uuid, target_product_id uuid \) returns boolean language sql stable set search_path = pg_catalog/);
 });
 
 test('setup recipe migration exposes only reviewed RLS and RPC privilege contracts', () => {
@@ -550,6 +655,10 @@ test('setup recipe migration exposes only reviewed RLS and RPC privilege contrac
   assert.match(
     sql,
     /revoke all privileges on function public\.assert_setup_recipe_valid\(uuid, uuid\) from public, anon, authenticated, service_role;/,
+  );
+  assert.match(
+    sql,
+    /revoke all privileges on function public\.is_public_catalogue_product\(uuid, uuid\) from public, anon, authenticated, service_role;/,
   );
   for (const functionName of [
     'setup_recipe_item_nesting_guard',
@@ -617,7 +726,9 @@ test('setup recipe catalogue projection is additive and fails closed without inf
   assert.match(sql, /'setup_composition', case/);
   assert.match(sql, /when p\.valid_setup_product_id is null then null/);
   assert.match(sql, /order by item\.position/);
-  assert.match(sql, /child\.status = 'published'/);
+  assert.match(sql, /public\.is_public_catalogue_product\(child\.workspace_id, child\.id\)/);
+  assert.match(sql, /public\.is_public_catalogue_product\(parent\.workspace_id, parent\.id\)/);
+  assert.match(sql, /public\.is_public_catalogue_product\(p\.workspace_id, p\.id\)/);
   assert.match(sql, /and \(r\.setup_product_id is null or vsr\.setup_product_id is not null\)/);
   assert.doesNotMatch(sql, /case[\s\S]{0,250}(category|rental_unit|slug|name)[\s\S]{0,250}product_kind/);
   assert.match(
@@ -628,6 +739,44 @@ test('setup recipe catalogue projection is additive and fails closed without inf
     sql,
     /grant execute on function public\.get_public_catalogue\(uuid, text\) to anon;/,
   );
+});
+
+test('SECURITY DEFINER inventory documents every setup recipe trigger and the split RPC count', () => {
+  const inventory = fs.readFileSync(
+    path.join(repoRoot, 'docs', 'SUPABASE-SECURITY-DEFINER-PRIVILEGE-INVENTORY.md'),
+    'utf8',
+  );
+
+  assert.match(inventory, /Eleven authenticated RPC signatures are allowlisted/);
+  assert.match(inventory, /Ten currently have website call sites/);
+  assert.match(
+    inventory,
+    /The setup-recipe RPC is deliberately database-authority-only until the second code PR\./,
+  );
+
+  for (const functionName of [
+    'public.setup_recipe_item_nesting_guard()',
+    'public.setup_recipe_aggregate_guard()',
+    'public.setup_recipe_product_publication_guard()',
+  ]) {
+    const escapedFunctionName = functionName
+      .replaceAll('.', '\\.')
+      .replaceAll('(', '\\(')
+      .replaceAll(')', '\\)');
+    const entry = new RegExp(
+      '### `' + escapedFunctionName + '`[\\s\\S]*?' +
+        'Owner: `postgres`[\\s\\S]*?' +
+        'SECURITY DEFINER: yes\\.[\\s\\S]*?' +
+        'Fixed `search_path`: `pg_catalog`\\.[\\s\\S]*?' +
+        'Trigger dependency:[\\s\\S]*?' +
+        'Internal helper dependency:[\\s\\S]*?' +
+        'Direct EXECUTE: denied for `PUBLIC`, `anon`, `authenticated`, and[\\s\\S]*?' +
+        '`service_role`\\.[\\s\\S]*?' +
+        'Trigger execution: valid[\\s\\S]*?' +
+        'Browser call site: none\\.',
+    );
+    assert.match(inventory, entry);
+  }
 });
 
 test('real migrations add narrow anonymous website quote insert policies only', () => {

@@ -196,12 +196,14 @@ represented only by `base_quantity`. Both tables are workspace-scoped and use
 composite product foreign keys; nested setups are rejected in both directions.
 
 The additive `get_public_catalogue` projection emits `product_kind` and
-`setup_composition` only for a complete published recipe with published
-children. Invalid setup authority omits the entire parent rather than exposing
-partial composition. Rental products have no recipe header and receive
+`setup_composition` only for a complete published recipe whose parent and
+children satisfy the shared public-product predicate: published products with
+either no category or a published category. Invalid setup authority omits the
+entire parent rather than exposing partial composition or a child from a
+non-public category. Rental products have no recipe header and receive
 `product_kind = "rental"` with `setup_composition = null`; setup identity is
-never inferred from category, rental-unit, slug, name, ordering, or browser
-state.
+never inferred from category names, rental-unit, slug, name, ordering, or
+browser state.
 
 Recipe changes use the transactional
 `execute_admin_setup_recipe_write(...)` RPC with exact optimistic-concurrency

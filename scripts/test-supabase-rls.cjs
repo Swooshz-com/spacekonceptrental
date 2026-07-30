@@ -1579,6 +1579,9 @@ check('setup recipe database authority enforces schema, RPC, RLS, publication, a
   const parentC = '52000000-0000-4000-8000-000000000002';
   const crossChildB = '52000000-0000-4000-8000-000000000001';
   const childImageA = '53000000-0000-4000-8000-000000000001';
+  const visibilityCategory = '40000000-0000-4000-8000-000000000010';
+  const visibilityParent = '51000000-0000-4000-8000-000000000006';
+  const visibilityChild = '51000000-0000-4000-8000-000000000007';
   const itemCountProbeProductIds = Array.from(
     { length: 21 },
     (_, index) => `54000000-0000-4000-8000-${String(index + 1).padStart(12, '0')}`,
@@ -1598,6 +1601,12 @@ check('setup recipe database authority enforces schema, RPC, RLS, publication, a
     statementFails(sql, error, label);
 
   psql(`
+    insert into public.categories (
+      id, workspace_id, slug, name, is_published, sort_order
+    ) values (
+      '${visibilityCategory}', '${ids.workspaceA}', 'hidden-setup-child-category', 'Hidden setup child category', false, 10
+    );
+
     insert into public.products (
       id, workspace_id, category_id, slug, name, short_description, status, sort_order
     ) values
@@ -1606,6 +1615,8 @@ check('setup recipe database authority enforces schema, RPC, RLS, publication, a
       ('${childB}', '${ids.workspaceA}', '${ids.categoryPublishedA}', 'setup-child-b', 'Setup Child B', 'Child B', 'draft', 52),
       ('${parentB}', '${ids.workspaceA}', '${ids.categoryPublishedA}', 'setup-parent-b', 'Setup Parent B', 'Setup B', 'draft', 53),
       ('${draftChildA}', '${ids.workspaceA}', '${ids.categoryPublishedA}', 'setup-draft-child-a', 'Setup Draft Child A', 'Draft child', 'draft', 54),
+      ('${visibilityParent}', '${ids.workspaceA}', '${ids.categoryPublishedA}', 'setup-visibility-parent', 'Setup visibility parent', 'Visibility parent', 'draft', 55),
+      ('${visibilityChild}', '${ids.workspaceA}', '${visibilityCategory}', 'setup-hidden-child', 'Hidden setup child', 'Must not leak', 'published', 56),
       ('${parentC}', '${ids.workspaceB}', '${ids.categoryPublishedB}', 'setup-parent-c', 'Setup Parent C', 'Setup C', 'draft', 50),
       ('${crossChildB}', '${ids.workspaceB}', '${ids.categoryPublishedB}', 'setup-cross-child-b', 'Setup Cross Child B', 'Cross child', 'published', 51);
 
@@ -1926,6 +1937,77 @@ check('setup recipe database authority enforces schema, RPC, RLS, publication, a
     assert.equal(projectedSetup.revision, undefined);
     assert.equal(projectedSetup.cost, undefined);
 
+    queryCommittedAs(
+      'authenticated',
+      ids.authMemberA,
+      recipeCall('replace', ids.workspaceA, visibilityParent, 0, [
+        { included_product_id: visibilityChild, position: 0, base_quantity: 1 },
+      ]),
+    );
+    const hiddenCategoryProjection = JSON.parse(
+      psql(`
+        begin;
+        set local session_replication_role = 'replica';
+        update public.products
+        set status = 'published'
+        where id = '${visibilityParent}'
+          and workspace_id = '${ids.workspaceA}';
+        select public.get_public_catalogue('${ids.workspaceA}', null)::text;
+        rollback;
+      `),
+    );
+    assert.equal(
+      hiddenCategoryProjection.products.some((product) => product.id === visibilityChild),
+      false,
+      'published child in an unpublished category must be absent from top-level catalogue output',
+    );
+    assert.equal(
+      hiddenCategoryProjection.products.some((product) => product.id === visibilityParent),
+      false,
+      'setup with a non-public child must be omitted from public output',
+    );
+    assert.equal(
+      JSON.stringify(hiddenCategoryProjection).includes(visibilityChild),
+      false,
+      'hidden child identity and public fields must not leak through setup_composition',
+    );
+
+    psql(`
+      begin;
+      set local session_replication_role = 'replica';
+      update public.products
+      set status = 'published'
+      where id = '${visibilityParent}'
+        and workspace_id = '${ids.workspaceA}';
+      commit;
+    `);
+    psql(`
+      update public.categories
+      set is_published = true
+      where id = '${visibilityCategory}'
+        and workspace_id = '${ids.workspaceA}';
+    `);
+    const restoredCategoryProjection = JSON.parse(
+      psql(`select public.get_public_catalogue('${ids.workspaceA}', null)::text`),
+    );
+    const restoredVisibilityParent = restoredCategoryProjection.products.find(
+      (product) => product.id === visibilityParent,
+    );
+    assert.equal(
+      restoredVisibilityParent.product_kind,
+      'setup',
+      'restoring category visibility must restore the valid setup projection',
+    );
+    assert.deepEqual(
+      restoredVisibilityParent.setup_composition.map((item) => ({
+        id: item.id,
+        position: item.position,
+        base_quantity: item.base_quantity,
+      })),
+      [{ id: visibilityChild, position: 0, base_quantity: 1 }],
+      'restored setup projection must contain the complete ordered child composition',
+    );
+
     statementFailsAs(
       'authenticated',
       ids.authMemberA,
@@ -2040,12 +2122,14 @@ check('setup recipe database authority enforces schema, RPC, RLS, publication, a
   } finally {
     psql(`
       begin;
-      update public.products set status = 'draft' where id in ('${parentA}', '${parentB}', '${parentC}') and workspace_id in ('${ids.workspaceA}', '${ids.workspaceB}');
-      delete from public.setup_recipes where setup_product_id in ('${parentA}', '${parentB}', '${parentC}');
-      delete from public.search_index_documents where source_id in ('${parentA}', '${parentB}', '${parentC}', '${childA}', '${childB}');
-      delete from public.search_index_jobs where source_id in ('${parentA}', '${parentB}', '${parentC}', '${childA}', '${childB}');
+      set local session_replication_role = 'replica';
+      update public.products set status = 'draft' where id in ('${parentA}', '${parentB}', '${parentC}', '${visibilityParent}') and workspace_id in ('${ids.workspaceA}', '${ids.workspaceB}');
+      delete from public.setup_recipes where setup_product_id in ('${parentA}', '${parentB}', '${parentC}', '${visibilityParent}');
+      delete from public.search_index_documents where source_id in ('${parentA}', '${parentB}', '${parentC}', '${childA}', '${childB}', '${visibilityParent}', '${visibilityChild}');
+      delete from public.search_index_jobs where source_id in ('${parentA}', '${parentB}', '${parentC}', '${childA}', '${childB}', '${visibilityParent}', '${visibilityChild}');
       delete from public.product_images where id = '${childImageA}';
-      delete from public.products where id in ('${parentA}', '${childA}', '${childB}', '${parentB}', '${draftChildA}', '${parentC}', '${crossChildB}');
+      delete from public.products where id in ('${parentA}', '${childA}', '${childB}', '${parentB}', '${draftChildA}', '${visibilityParent}', '${visibilityChild}', '${parentC}', '${crossChildB}');
+      delete from public.categories where id = '${visibilityCategory}' and workspace_id = '${ids.workspaceA}';
       commit;
     `, { check: false });
   }

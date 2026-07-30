@@ -78,6 +78,37 @@ as $$
   select pg_catalog.pg_advisory_xact_lock(70418722991319731::bigint);
 $$;
 
+-- This is the single product-level public-visibility predicate shared by the
+-- catalogue boundary, recipe validation, and setup completeness checks. The
+-- active-workspace check remains a separate catalogue-scope predicate.
+create function public.is_public_catalogue_product(
+  target_workspace_id uuid,
+  target_product_id uuid
+)
+returns boolean
+language sql
+stable
+set search_path = pg_catalog
+as $$
+  select exists (
+    select 1
+    from public.products p
+    where p.workspace_id = target_workspace_id
+      and p.id = target_product_id
+      and p.status = 'published'
+      and (
+        p.category_id is null
+        or exists (
+          select 1
+          from public.categories c
+          where c.workspace_id = p.workspace_id
+            and c.id = p.category_id
+            and c.is_published = true
+        )
+      )
+  );
+$$;
+
 -- This assertion is shared by deferred constraint triggers and the admin RPC.
 -- Aggregate count/order rules belong here because row constraints cannot see
 -- the complete recipe. Publication rules belong here because a published
@@ -118,6 +149,14 @@ begin
 
   if not found then
     raise exception 'setup_recipe_parent_missing';
+  end if;
+
+  if parent_status = 'published'
+    and not public.is_public_catalogue_product(
+      target_workspace_id,
+      target_setup_product_id
+    ) then
+    raise exception 'setup_recipe_published_parent_invalid';
   end if;
 
   select
@@ -183,7 +222,10 @@ begin
       and child.workspace_id = i.workspace_id
     where i.workspace_id = target_workspace_id
       and i.setup_product_id = target_setup_product_id
-      and (child.id is null or child.status <> 'published')
+      and (
+        child.id is null
+        or not public.is_public_catalogue_product(child.workspace_id, child.id)
+      )
   ) then
     raise exception 'setup_recipe_published_child_invalid';
   end if;
@@ -429,6 +471,7 @@ for each row execute function public.setup_recipe_product_publication_guard();
 -- receive no client execution grants; only the reviewed admin RPC below is a
 -- browser-callable mutation surface.
 revoke all privileges on function public.lock_setup_recipe_authority() from public, anon, authenticated, service_role;
+revoke all privileges on function public.is_public_catalogue_product(uuid, uuid) from public, anon, authenticated, service_role;
 revoke all privileges on function public.assert_setup_recipe_valid(uuid, uuid) from public, anon, authenticated, service_role;
 revoke all privileges on function public.setup_recipe_parent_write_guard() from public, anon, authenticated, service_role;
 revoke all privileges on function public.setup_recipe_item_nesting_guard() from public, anon, authenticated, service_role;
@@ -667,12 +710,19 @@ begin
     raise exception 'setup_recipe_nested_setup';
   end if;
 
+  if parent_status = 'published' and not public.is_public_catalogue_product(
+    p_expected_workspace_id,
+    p_setup_product_id
+  ) then
+    raise exception 'setup_recipe_published_parent_invalid';
+  end if;
+
   if parent_status = 'published' and exists (
     select 1
     from public.products p
     where p.workspace_id = p_expected_workspace_id
       and p.id = any(child_ids)
-      and p.status <> 'published'
+      and not public.is_public_catalogue_product(p.workspace_id, p.id)
   ) then
     raise exception 'setup_recipe_published_child_invalid';
   end if;
@@ -839,7 +889,9 @@ as $$
       max(i.position) as max_position,
       count(distinct i.position)::bigint as distinct_positions,
       count(child.id)::bigint as joined_children,
-      count(child.id) filter (where child.status = 'published')::bigint as published_children,
+      count(child.id) filter (
+        where public.is_public_catalogue_product(child.workspace_id, child.id)
+      )::bigint as public_children,
       count(nested.setup_product_id)::bigint as nested_children
     from public.setup_recipes r
     left join public.setup_recipe_items i
@@ -865,9 +917,9 @@ as $$
       and rs.max_position = rs.item_count - 1
       and rs.distinct_positions = rs.item_count
       and rs.joined_children = rs.item_count
-      and rs.published_children = rs.item_count
+      and rs.public_children = rs.item_count
       and rs.nested_children = 0
-      and parent.status = 'published'
+      and public.is_public_catalogue_product(parent.workspace_id, parent.id)
   ),
   public_products as (
     select
@@ -893,8 +945,7 @@ as $$
     left join valid_setup_recipes vsr
       on vsr.workspace_id = r.workspace_id
       and vsr.setup_product_id = r.setup_product_id
-    where p.status = 'published'
-      and (p.category_id is null or pc.id is not null)
+    where public.is_public_catalogue_product(p.workspace_id, p.id)
       and (r.setup_product_id is null or vsr.setup_product_id is not null)
       and (product_slug is null or p.slug = product_slug)
   )
@@ -976,7 +1027,7 @@ as $$
                 join public.products child
                   on child.workspace_id = item.workspace_id
                   and child.id = item.included_product_id
-                  and child.status = 'published'
+                  and public.is_public_catalogue_product(child.workspace_id, child.id)
                 where item.workspace_id = p.workspace_id
                   and item.setup_product_id = p.id
               )
