@@ -1580,7 +1580,7 @@ check('setup recipe database authority enforces schema, RPC, RLS, publication, a
   const crossChildB = '52000000-0000-4000-8000-000000000001';
   const childImageA = '53000000-0000-4000-8000-000000000001';
 
-  const quoteJson = (value) => `${JSON.stringify(value)}::jsonb`;
+  const quoteJson = (value) => `'${JSON.stringify(value).replaceAll("'", "''")}'::jsonb`;
   const recipeCall = (operation, workspaceId, productId, revision, value) => `
     select public.execute_admin_setup_recipe_write(
       '${operation}',
