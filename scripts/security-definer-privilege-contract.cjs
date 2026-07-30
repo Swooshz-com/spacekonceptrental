@@ -47,6 +47,7 @@ const preRecipePublicSecurityDefinerSignatures = Object.freeze(
 );
 
 const setupRecipePublicSecurityDefinerSignatures = Object.freeze([
+  'public.assert_setup_recipe_valid(uuid,uuid)',
   'public.execute_admin_setup_recipe_write(text,uuid,uuid,bigint,jsonb)',
 ]);
 

@@ -89,6 +89,7 @@ create function public.assert_setup_recipe_valid(
 returns void
 language plpgsql
 volatile
+security definer
 set search_path = pg_catalog
 as $$
 declare

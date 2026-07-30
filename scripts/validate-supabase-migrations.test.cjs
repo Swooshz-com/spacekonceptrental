@@ -547,6 +547,11 @@ test('setup recipe migration exposes only reviewed RLS and RPC privilege contrac
   assert.match(sql, /setup_recipes_product_manager_select/);
   assert.match(sql, /setup_recipe_items_product_manager_select/);
   assert.match(sql, /private\.is_workspace_product_manager\(workspace_id\)/);
+  assert.match(sql, /create function public\.assert_setup_recipe_valid\( target_workspace_id uuid, target_setup_product_id uuid \) returns void language plpgsql volatile security definer set search_path = pg_catalog as/);
+  assert.match(
+    sql,
+    /revoke all privileges on function public\.assert_setup_recipe_valid\(uuid, uuid\) from public, anon, authenticated, service_role;/,
+  );
   assert.match(
     sql,
     /revoke all privileges on function public\.execute_admin_setup_recipe_write\(text, uuid, uuid, bigint, jsonb\) from public, anon, authenticated, service_role;/,
