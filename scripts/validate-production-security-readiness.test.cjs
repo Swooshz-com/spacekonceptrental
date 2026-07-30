@@ -21,6 +21,70 @@ const catalogQueryPath = path.join(
   'scripts',
   'production-security-definer-catalog.sql',
 );
+const securityDefinerInventoryPath = path.join(
+  repoRoot,
+  'docs',
+  'SUPABASE-SECURITY-DEFINER-PRIVILEGE-INVENTORY.md',
+);
+
+function listSourceFiles(root) {
+  if (!fs.existsSync(root)) {
+    return [];
+  }
+
+  return fs.readdirSync(root, { withFileTypes: true }).flatMap((entry) => {
+    const entryPath = path.join(root, entry.name);
+    if (entry.isDirectory()) {
+      return listSourceFiles(entryPath);
+    }
+    return /\.(?:js|jsx|ts|tsx)$/.test(entry.name) &&
+      !/\.(?:test|spec)\.(?:js|jsx|ts|tsx)$/.test(entry.name)
+      ? [entryPath]
+      : [];
+  });
+}
+
+function publicFunctionName(signature) {
+  return signature.match(/^public\.([a-z0-9_]+)\(/i)?.[1] ?? null;
+}
+
+function countLabel(count) {
+  return new Map([
+    [0, 'zero'],
+    [1, 'one'],
+    [2, 'two'],
+    [3, 'three'],
+    [4, 'four'],
+    [5, 'five'],
+    [6, 'six'],
+    [7, 'seven'],
+    [8, 'eight'],
+    [9, 'nine'],
+    [10, 'ten'],
+    [11, 'eleven'],
+    [12, 'twelve'],
+  ]).get(count) ?? String(count);
+}
+
+function websiteAuthenticatedRpcCallNames() {
+  const websiteSourceRoots = [
+    path.join(repoRoot, 'website', 'app'),
+    path.join(repoRoot, 'website', 'lib'),
+  ];
+  const names = new Set();
+  const rpcCallPattern = /\.rpc\(\s*["']([a-z0-9_]+)["']/gi;
+
+  for (const filePath of websiteSourceRoots.flatMap(listSourceFiles)) {
+    const source = fs.readFileSync(filePath, 'utf8');
+    for (const match of source.matchAll(rpcCallPattern)) {
+      names.add(match[1]);
+    }
+  }
+
+  return names;
+}
+
+const setupRecipeRpcName = 'execute_admin_setup_recipe_write';
 
 function reviewedPublicSecurityDefinerCatalog() {
   const anonAllowlist = new Set(anonymousPublicSecurityDefinerAllowlist);
@@ -179,7 +243,75 @@ test('launch mode passes with safe placeholder env values', () => {
   assert.match(output, /launch mode/i);
   assert.match(output, /configured/i);
   assert.match(output, /n8n enquiry handoff env is server-only/i);
-  assert.match(output, /6 anon and 10 authenticated/i);
+  assert.match(
+    output,
+    new RegExp(
+      `${anonymousPublicSecurityDefinerAllowlist.length} anon and ${authenticatedPublicSecurityDefinerAllowlist.length} authenticated`,
+      'i',
+    ),
+  );
+});
+
+test('canonical RPC counts and website-consumer boundary remain distinct', () => {
+  assert.equal(
+    anonymousPublicSecurityDefinerAllowlist.length,
+    6,
+    'The anonymous executable contract must retain six signatures.',
+  );
+  assert.equal(
+    authenticatedPublicSecurityDefinerAllowlist.length,
+    11,
+    'The authenticated executable contract must retain eleven signatures.',
+  );
+
+  const canonicalAuthenticatedNames = new Set(
+    authenticatedPublicSecurityDefinerAllowlist
+      .map(publicFunctionName)
+      .filter(Boolean),
+  );
+  const websiteCallNames = websiteAuthenticatedRpcCallNames();
+  const authenticatedWebsiteCallNames = new Set(
+    [...websiteCallNames].filter((name) => canonicalAuthenticatedNames.has(name)),
+  );
+
+  assert.equal(
+    authenticatedWebsiteCallNames.size,
+    authenticatedPublicSecurityDefinerAllowlist.length - 1,
+    'Ten authenticated RPC signatures currently have website call sites; the remaining setup-recipe signature is DB-only.',
+  );
+  assert.equal(
+    authenticatedWebsiteCallNames.has(setupRecipeRpcName),
+    false,
+    'The setup-recipe RPC must not gain an application call site in this PR.',
+  );
+  assert.deepEqual(
+    [...authenticatedWebsiteCallNames].sort(),
+    [...canonicalAuthenticatedNames]
+      .filter((name) => name !== setupRecipeRpcName)
+      .sort(),
+    'Every authenticated allowlisted RPC except setup-recipe must retain exactly one website-consumer boundary.',
+  );
+});
+
+test('security-definer documentation derives its authenticated totals from the canonical contract', () => {
+  const inventory = fs.readFileSync(securityDefinerInventoryPath, 'utf8');
+  const websiteCallCount = authenticatedPublicSecurityDefinerAllowlist.length - 1;
+
+  assert.match(
+    inventory,
+    new RegExp(
+      `${countLabel(authenticatedPublicSecurityDefinerAllowlist.length)} authenticated RPC signatures are allowlisted`,
+      'i',
+    ),
+  );
+  assert.match(
+    inventory,
+    new RegExp(`${countLabel(websiteCallCount)} currently have website call sites`, 'i'),
+  );
+  assert.match(
+    inventory,
+    /The setup-recipe RPC is deliberately database-authority-only until the second code PR\./,
+  );
 });
 
 test('launch mode requires an exact explicit valid admin mutation state', () => {

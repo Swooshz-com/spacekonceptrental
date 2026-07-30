@@ -13,6 +13,10 @@ const {
   privatePolicyHelperGrants,
   serviceRolePublicSecurityDefinerAllowlist,
 } = require('./security-definer-privilege-contract.cjs');
+const {
+  normalizeSqlStatement,
+  validateDestructiveStatements,
+} = require('./validate-supabase-migrations.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const validatorPath = path.join(repoRoot, 'scripts', 'validate-supabase-migrations.cjs');
@@ -38,6 +42,47 @@ const serviceOnlyRlsTables = [
   'usage_events',
   'audit_logs',
 ];
+
+const setupRecipeMigrationFileName =
+  '20260730100000_setup_recipe_database_authority.sql';
+const setupRecipeRemoveDelete = `
+  delete from public.setup_recipes r
+  where r.workspace_id = p_expected_workspace_id
+    and r.setup_product_id = p_setup_product_id;
+`;
+const setupRecipeReplaceItemsDelete = `
+  delete from public.setup_recipe_items i
+  where i.workspace_id = p_expected_workspace_id
+    and i.setup_product_id = p_setup_product_id;
+`;
+
+function customDestructiveAllowlist(fileName, entries) {
+  return entries.map(({ occurrenceId, statementClass = 'DELETE', statement }) => ({
+    occurrenceId,
+    fileName,
+    label: 'destructive SQL statement',
+    statementClass,
+    statement,
+  }));
+}
+
+function destructiveViolations(sql, allowlist = []) {
+  return validateDestructiveStatements(
+    '20260526143000_validator_fixture.sql',
+    sql,
+    allowlist,
+  );
+}
+
+function executableBodySql({
+  declaration = 'create function public.example() returns void language plpgsql',
+  asClause = 'as',
+  delimiter = '$$',
+  body = 'begin delete from public.messages; end;',
+  closingDelimiter = delimiter,
+} = {}) {
+  return `${declaration}\n${asClause} ${delimiter}\n${body}\n${closingDelimiter};`;
+}
 
 function makeTempRoot() {
   const baseDir = os.tmpdir();
@@ -305,25 +350,24 @@ test('common destructive SQL statements fail static validation', () => {
 });
 
 test('one explicitly allowlisted DELETE occurrence passes', () => {
-  const root = makeTempRoot();
-  const migrationsDir = writeMigration(
-    root,
-    '20260730100000_setup_recipe_database_authority.sql',
-    'delete from public.setup_recipes;',
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [{
+      occurrenceId: 'one-bounded-delete',
+      statement: setupRecipeRemoveDelete,
+    }],
   );
 
-  const result = runValidator(migrationsDir);
-
-  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.deepEqual(destructiveViolations(setupRecipeRemoveDelete, allowlist), []);
 });
 
 test('an allowlisted DELETE followed by an unreviewed DELETE fails', () => {
   const root = makeTempRoot();
   const migrationsDir = writeMigration(
     root,
-    '20260730100000_setup_recipe_database_authority.sql',
+    setupRecipeMigrationFileName,
     `
-      delete from public.setup_recipes;
+      ${setupRecipeRemoveDelete}
       delete from public.messages;
     `,
   );
@@ -332,17 +376,17 @@ test('an allowlisted DELETE followed by an unreviewed DELETE fails', () => {
 
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /DELETE destructive SQL statement/i);
-  assert.match(result.stderr, /:2:/);
+  assert.match(result.stderr, /:\d+: DELETE destructive SQL statement/i);
 });
 
 test('an unreviewed DELETE followed by an allowlisted DELETE fails', () => {
   const root = makeTempRoot();
   const migrationsDir = writeMigration(
     root,
-    '20260730100000_setup_recipe_database_authority.sql',
+    setupRecipeMigrationFileName,
     `
       delete from public.messages;
-      delete from public.setup_recipes;
+      ${setupRecipeRemoveDelete}
     `,
   );
 
@@ -357,10 +401,10 @@ test('multiple DELETE occurrences pass only when every occurrence is explicitly 
   const root = makeTempRoot();
   const migrationsDir = writeMigration(
     root,
-    '20260730100000_setup_recipe_database_authority.sql',
+    setupRecipeMigrationFileName,
     `
-      delete from public.setup_recipes;
-      delete from public.setup_recipe_items;
+      ${setupRecipeRemoveDelete}
+      ${setupRecipeReplaceItemsDelete}
     `,
   );
 
@@ -373,9 +417,9 @@ test('mixed destructive statement classes fail when any occurrence is unapproved
   const root = makeTempRoot();
   const migrationsDir = writeMigration(
     root,
-    '20260730100000_setup_recipe_database_authority.sql',
+    setupRecipeMigrationFileName,
     `
-      delete from public.setup_recipes;
+      ${setupRecipeRemoveDelete}
       truncate table public.messages;
       drop table public.audit_logs;
     `,
@@ -386,6 +430,215 @@ test('mixed destructive statement classes fail when any occurrence is unapproved
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /TRUNCATE destructive SQL statement/i);
   assert.match(result.stderr, /DROP TABLE destructive SQL statement/i);
+});
+
+test('bounded DELETE followed by unbounded DELETE on the same table fails the second occurrence', () => {
+  const statement = 'delete from public.setup_recipes r where r.workspace_id = p_workspace_id;';
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [{ occurrenceId: 'bounded-delete', statement }],
+  );
+  const violations = destructiveViolations(
+    `${statement}\ndelete from public.setup_recipes;`,
+    allowlist,
+  );
+
+  assert.equal(
+    violations.filter((violation) => /not exactly allowlisted/.test(violation)).length,
+    1,
+  );
+  assert.match(violations.join('\n'), /:2: DELETE destructive SQL statement/);
+});
+
+test('unbounded DELETE followed by bounded DELETE on the same table fails the first occurrence', () => {
+  const statement = 'delete from public.setup_recipes r where r.workspace_id = p_workspace_id;';
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [{ occurrenceId: 'bounded-delete', statement }],
+  );
+  const violations = destructiveViolations(
+    `delete from public.setup_recipes;\n${statement}`,
+    allowlist,
+  );
+
+  assert.match(violations.join('\n'), /:1: DELETE destructive SQL statement/);
+  assert.doesNotMatch(
+    violations.join('\n'),
+    /bounded-delete was not found/,
+  );
+});
+
+test('two identical DELETE occurrences fail when only one occurrence is allowlisted', () => {
+  const statement = 'delete from public.setup_recipes where workspace_id = p_workspace_id;';
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [{ occurrenceId: 'only-approved-occurrence', statement }],
+  );
+  const violations = destructiveViolations(`${statement}\n${statement}`, allowlist);
+
+  assert.equal(
+    violations.filter((violation) => /not exactly allowlisted/.test(violation)).length,
+    1,
+  );
+});
+
+test('two identical DELETE occurrences pass only with two unique allowlist entries', () => {
+  const statement = 'delete from public.setup_recipes where workspace_id = p_workspace_id;';
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [
+      { occurrenceId: 'first-approved-occurrence', statement },
+      { occurrenceId: 'second-approved-occurrence', statement },
+    ],
+  );
+  const violations = destructiveViolations(`${statement}\n${statement}`, allowlist);
+
+  assert.deepEqual(violations, []);
+});
+
+test('a missing expected allowlist occurrence fails even when another occurrence passes', () => {
+  const first = 'delete from public.setup_recipes where workspace_id = p_workspace_id;';
+  const second = 'delete from public.setup_recipe_items where workspace_id = p_workspace_id;';
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [
+      { occurrenceId: 'first-expected', statement: first },
+      { occurrenceId: 'second-expected', statement: second },
+    ],
+  );
+  const violations = destructiveViolations(first, allowlist);
+
+  assert.match(
+    violations.join('\n'),
+    /second-expected was not found exactly once/,
+  );
+});
+
+test('two different bounded DELETE statements on one table do not share approval', () => {
+  const first = 'delete from public.setup_recipes where workspace_id = p_workspace_id;';
+  const second = 'delete from public.setup_recipes where workspace_id = p_other_workspace_id;';
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [{ occurrenceId: 'first-predicate', statement: first }],
+  );
+  const violations = destructiveViolations(`${first}\n${second}`, allowlist);
+
+  assert.match(violations.join('\n'), /:2: DELETE destructive SQL statement/);
+});
+
+test('approved DELETE plus an unapproved DELETE on another table fails independently', () => {
+  const approved = 'delete from public.setup_recipes where workspace_id = p_workspace_id;';
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [{ occurrenceId: 'setup-delete', statement: approved }],
+  );
+  const violations = destructiveViolations(
+    `${approved}\ndelete from public.messages where workspace_id = p_workspace_id;`,
+    allowlist,
+  );
+
+  assert.match(violations.join('\n'), /:2: DELETE destructive SQL statement/);
+});
+
+test('approved DELETE plus unapproved TRUNCATE, DROP TABLE, or DROP SCHEMA fails each class', () => {
+  const approved = 'delete from public.setup_recipes where workspace_id = p_workspace_id;';
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [{ occurrenceId: 'setup-delete', statement: approved }],
+  );
+
+  for (const [statementClass, statement] of [
+    ['TRUNCATE', 'truncate table public.messages;'],
+    ['DROP TABLE', 'drop table public.messages;'],
+    ['DROP SCHEMA', 'drop schema public cascade;'],
+  ]) {
+    const violations = destructiveViolations(`${approved}\n${statement}`, allowlist);
+    assert.match(
+      violations.join('\n'),
+      new RegExp(`:2: ${statementClass} destructive SQL statement`),
+    );
+  }
+});
+
+test('formatting-only differences normalize to the same destructive statement fingerprint', () => {
+  const canonical = 'delete from public.setup_recipes r where r.workspace_id = p_workspace_id and r.setup_product_id = p_setup_product_id;';
+  const formatted = `
+    DELETE /* formatting comment */
+    FROM public.setup_recipes r
+    WHERE r.workspace_id = p_workspace_id
+      AND r.setup_product_id = p_setup_product_id
+    ;
+  `;
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [{ occurrenceId: 'formatted-delete', statement: canonical }],
+  );
+
+  assert.equal(normalizeSqlStatement(formatted), normalizeSqlStatement(canonical));
+  assert.deepEqual(destructiveViolations(formatted, allowlist), []);
+});
+
+test('predicate differences remain distinct destructive statement fingerprints', () => {
+  const canonical = 'delete from public.setup_recipes where workspace_id = p_workspace_id;';
+  const changedPredicate = 'delete from public.setup_recipes where workspace_id = p_other_workspace_id;';
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [{ occurrenceId: 'predicate-delete', statement: canonical }],
+  );
+
+  assert.notEqual(
+    normalizeSqlStatement(canonical),
+    normalizeSqlStatement(changedPredicate),
+  );
+  assert.match(
+    destructiveViolations(changedPredicate, allowlist).join('\n'),
+    /not exactly allowlisted/,
+  );
+});
+
+test('multiline DELETE statements are captured as complete occurrences', () => {
+  const statement = `
+    delete from public.setup_recipes r
+    where r.workspace_id = p_workspace_id
+      and r.setup_product_id = p_setup_product_id;
+  `;
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [{ occurrenceId: 'multiline-delete', statement }],
+  );
+
+  assert.deepEqual(destructiveViolations(statement, allowlist), []);
+});
+
+test('DELETE statements using a CTE are matched with the complete CTE statement', () => {
+  const statement = `
+    with targets as (
+      select id from public.setup_recipes where workspace_id = p_workspace_id
+    )
+    delete from public.setup_recipes
+    where id in (select id from targets);
+  `;
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [{ occurrenceId: 'cte-delete', statement }],
+  );
+
+  assert.deepEqual(destructiveViolations(statement, allowlist), []);
+});
+
+test('DELETE statements with aliases and USING clauses retain their material scope', () => {
+  const statement = `
+    delete from public.setup_recipes r
+    using public.workspaces w
+    where r.workspace_id = w.id
+      and w.id = p_workspace_id;
+  `;
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [{ occurrenceId: 'using-delete', statement }],
+  );
+
+  assert.deepEqual(destructiveViolations(statement, allowlist), []);
 });
 
 test('comments and string literals do not create destructive SQL approvals or violations', () => {
@@ -405,6 +658,133 @@ test('comments and string literals do not create destructive SQL approvals or vi
   const result = runValidator(migrationsDir);
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
+});
+
+test('untagged executable function bodies remain visible to destructive scanning', () => {
+  const violations = destructiveViolations(executableBodySql());
+
+  assert.match(violations.join('\n'), /DELETE destructive SQL statement/);
+});
+
+test('tagged executable function bodies remain visible to destructive scanning', () => {
+  const violations = destructiveViolations(
+    executableBodySql({ delimiter: '$body$' }),
+  );
+
+  assert.match(violations.join('\n'), /DELETE destructive SQL statement/);
+});
+
+test('a block comment between AS and an executable dollar delimiter is normalized away', () => {
+  const violations = destructiveViolations(
+    executableBodySql({ asClause: 'AS/* comment */' }),
+  );
+
+  assert.match(violations.join('\n'), /DELETE destructive SQL statement/);
+});
+
+test('a line comment between AS and an executable dollar delimiter is normalized away', () => {
+  const violations = destructiveViolations(
+    executableBodySql({ asClause: 'AS -- comment\n' }),
+  );
+
+  assert.match(violations.join('\n'), /DELETE destructive SQL statement/);
+});
+
+test('mixed-case AS and multiline executable dollar spacing are supported', () => {
+  const violations = destructiveViolations(
+    executableBodySql({
+      asClause: 'aS\n/* multiline comment */\n',
+      delimiter: '$body$',
+    }),
+  );
+
+  assert.match(violations.join('\n'), /DELETE destructive SQL statement/);
+});
+
+test('untagged DO blocks remain visible to destructive scanning', () => {
+  const violations = destructiveViolations(
+    executableBodySql({ declaration: 'DO', asClause: '' }),
+  );
+
+  assert.match(violations.join('\n'), /DELETE destructive SQL statement/);
+});
+
+test('tagged DO blocks and comments between DO and the delimiter are supported', () => {
+  const violations = destructiveViolations(
+    executableBodySql({
+      declaration: 'DO',
+      asClause: '/* comment */',
+      delimiter: '$do_body$',
+    }),
+  );
+
+  assert.match(violations.join('\n'), /DELETE destructive SQL statement/);
+});
+
+test('ordinary dollar-quoted strings remain masked', () => {
+  const violations = destructiveViolations(
+    'select $data$ delete from public.messages; $data$;',
+  );
+
+  assert.deepEqual(violations, []);
+});
+
+test('destructive-looking text in line and block comments remains masked', () => {
+  const violations = destructiveViolations(
+    '-- delete from public.messages;\n/* truncate table public.messages; */',
+  );
+
+  assert.deepEqual(violations, []);
+});
+
+test('multiple executable dollar bodies are each scanned', () => {
+  const sql = [
+    executableBodySql({ declaration: 'DO', asClause: '', delimiter: '$one$' }),
+    executableBodySql({ declaration: 'DO', asClause: '', delimiter: '$two$' }),
+  ].join('\n');
+  const violations = destructiveViolations(sql);
+
+  assert.equal(
+    violations.filter((violation) => /DELETE destructive SQL statement/.test(violation)).length,
+    2,
+  );
+});
+
+test('an executable body followed by an ordinary dollar string scans only the executable body', () => {
+  const sql = `${executableBodySql({ declaration: 'DO', asClause: '' })}\nselect $data$ delete from public.messages; $data$;`;
+  const violations = destructiveViolations(sql);
+
+  assert.equal(
+    violations.filter((violation) => /DELETE destructive SQL statement/.test(violation)).length,
+    1,
+  );
+});
+
+test('an ordinary dollar string followed by an executable body still detects the body', () => {
+  const sql = `select $data$ delete from public.messages; $data$;\n${executableBodySql({ declaration: 'DO', asClause: '' })}`;
+  const violations = destructiveViolations(sql);
+
+  assert.equal(
+    violations.filter((violation) => /DELETE destructive SQL statement/.test(violation)).length,
+    1,
+  );
+});
+
+test('mismatched dollar tags fail closed instead of masking the remainder', () => {
+  const violations = destructiveViolations(
+    executableBodySql({ delimiter: '$expected$', closingDelimiter: '$other$' }),
+  );
+
+  assert.match(violations.join('\n'), /unterminated|lexical scan failed closed/);
+});
+
+test('unterminated executable dollar bodies fail closed', () => {
+  const violations = destructiveViolations(
+    'create function public.example() returns void language plpgsql as $$ begin delete from public.messages;',
+  );
+
+  assert.match(violations.join('\n'), /unterminated executable dollar-quoted body/);
+  assert.match(violations.join('\n'), /lexical scan failed closed/);
 });
 
 test('validator does not require or use a live Supabase connection', () => {
