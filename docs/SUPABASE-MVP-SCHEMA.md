@@ -187,6 +187,30 @@ Relationships: belongs to `products`.
 Deferred: upload UI, image transforms, CDN invalidation, private media,
 moderation, and asset lifecycle automation.
 
+### `setup_recipes` and `setup_recipe_items` (#319 database authority)
+
+The presence of one `setup_recipes` row is the canonical declaration that its
+parent product is a setup. `setup_recipe_items` stores one distinct included
+product per row, with contiguous zero-based `position` values and repetition
+represented only by `base_quantity`. Both tables are workspace-scoped and use
+composite product foreign keys; nested setups are rejected in both directions.
+
+The additive `get_public_catalogue` projection emits `product_kind` and
+`setup_composition` only for a complete published recipe with published
+children. Invalid setup authority omits the entire parent rather than exposing
+partial composition. Rental products have no recipe header and receive
+`product_kind = "rental"` with `setup_composition = null`; setup identity is
+never inferred from category, rental-unit, slug, name, ordering, or browser
+state.
+
+Recipe changes use the transactional
+`execute_admin_setup_recipe_write(...)` RPC with exact optimistic-concurrency
+revisions and metadata-only audit results. Direct browser writes are revoked;
+authenticated owner/admin product managers receive workspace-scoped metadata
+reads through RLS. This is the database-authority boundary only: application
+mapping, admin recipe UI, setup detail rendering, quote reconstruction,
+production data, and deployment remain deferred to later lanes.
+
 ### `catalogue_public_workspace_config`
 
 Purpose: database-owned singleton configuration for the active public catalogue

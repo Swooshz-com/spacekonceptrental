@@ -7,7 +7,21 @@ const migrationFileNamePattern = /^(\d{14})_[a-z0-9][a-z0-9_]*\.sql$/;
 
 // Phase 1F-A approves no destructive migration statements. Future allowlist
 // entries must be exact, reviewed, and paired with tests before merge.
-const destructiveStatementAllowlist = [];
+const destructiveStatementAllowlist = [
+  // The setup-recipe admin RPC performs these two bounded transactional row
+  // removals. They are runtime function bodies, not migration-time data
+  // deletion, and are covered by the local RPC atomicity tests.
+  {
+    fileName: '20260730100000_setup_recipe_database_authority.sql',
+    label: 'destructive SQL statement',
+    statement: 'delete from public.setup_recipes',
+  },
+  {
+    fileName: '20260730100000_setup_recipe_database_authority.sql',
+    label: 'destructive SQL statement',
+    statement: 'delete from public.setup_recipe_items',
+  },
+];
 
 const contentRules = [
   {
@@ -68,7 +82,7 @@ const contentRules = [
   },
   {
     label: 'destructive SQL statement',
-    regex: /\bdelete\s+from\b/i,
+    regex: /\bdelete\s+from\s+[a-z0-9_.]+/i,
   },
   {
     label: 'destructive SQL statement',

@@ -40,11 +40,20 @@ const movedPublicSecurityDefinerSignatures = Object.freeze([
   'public.is_workspace_quote_manager(uuid)',
 ]);
 
-const finalPublicSecurityDefinerSignatures = Object.freeze(
+const preRecipePublicSecurityDefinerSignatures = Object.freeze(
   preMigrationPublicSecurityDefinerSignatures.filter(
     (signature) => !movedPublicSecurityDefinerSignatures.includes(signature),
   ),
 );
+
+const setupRecipePublicSecurityDefinerSignatures = Object.freeze([
+  'public.execute_admin_setup_recipe_write(text,uuid,uuid,bigint,jsonb)',
+]);
+
+const finalPublicSecurityDefinerSignatures = Object.freeze([
+  ...preRecipePublicSecurityDefinerSignatures,
+  ...setupRecipePublicSecurityDefinerSignatures,
+]);
 
 const platformManagedPublicSecurityDefinerSignatures = Object.freeze([
   'public.rls_auto_enable()',
@@ -70,6 +79,7 @@ const authenticatedPublicSecurityDefinerAllowlist = Object.freeze([
   'public.execute_admin_access_write(uuid,text,text)',
   'public.execute_admin_homepage_hero_image_write(uuid,jsonb)',
   'public.execute_admin_product_write(text,uuid,uuid,jsonb)',
+  'public.execute_admin_setup_recipe_write(text,uuid,uuid,bigint,jsonb)',
   'public.execute_admin_public_page_media_write(uuid,text,jsonb)',
   'public.execute_admin_quote_crm_handoff_queue_update(uuid,uuid,text,text)',
   'public.execute_admin_quote_workflow(uuid,uuid,text,text)',
@@ -113,9 +123,11 @@ module.exports = {
   finalPrivateFunctionSignatures,
   finalPublicSecurityDefinerSignatures,
   movedPublicSecurityDefinerSignatures,
+  preRecipePublicSecurityDefinerSignatures,
   platformManagedPublicSecurityDefinerSignatures,
   preMigrationPublicSecurityDefinerSignatures,
   privatePolicyHelperGrants,
   reviewedLivePublicSecurityDefinerSignatures,
   serviceRolePublicSecurityDefinerAllowlist,
+  setupRecipePublicSecurityDefinerSignatures,
 };

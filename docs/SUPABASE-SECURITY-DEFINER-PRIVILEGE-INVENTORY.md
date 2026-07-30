@@ -18,7 +18,7 @@ inventory as complete.
 
 - **Repository-owned application functions:** created by the ordered migration
   chain, reviewed by exact signature, and granted only to the six anonymous or
-  ten authenticated application RPC allowlists below.
+  eleven authenticated application RPC allowlists below.
 - **Supabase/platform-managed functions:** may exist only in managed
   environments. They require an explicit reviewed contract before any
   API/client execution is allowed.
@@ -44,7 +44,7 @@ uses either the server-only anon client for public flows or the session-bound
 authenticated client for admin flows. `PUBLIC` receives no execution grant.
 
 The intentional application access remains exactly six anonymous public RPCs
-and ten authenticated public RPCs. These grants must not be removed merely to
+and eleven authenticated public RPCs. These grants must not be removed merely to
 silence a generic advisor warning.
 
 The "prior SQL" column describes the explicit grant/revoke intent in the
@@ -67,6 +67,7 @@ before applying the reviewed allowlists.
 | `public.execute_admin_homepage_hero_image_write(uuid,jsonb)` | Authenticated call in `website/lib/hero/admin-homepage-hero-write.ts` | Uses current product admin helper | Revoke `PUBLIC`; grant `authenticated` | `authenticated` only |
 | `public.execute_admin_homepage_hero_write(uuid,jsonb)` | No current website call; historical compatibility wrapper | Calls the image-only hero write RPC | Revoke `PUBLIC`; grant `authenticated` | Owner-only; no client role grant |
 | `public.execute_admin_product_write(text,uuid,uuid,jsonb)` | Authenticated call in `website/lib/products/persistence/supabase-product-persistence.ts` | Uses current product admin helper and audit/outbox writes | Revoke `PUBLIC`; grant `authenticated` | `authenticated` only |
+| `public.execute_admin_setup_recipe_write(text,uuid,uuid,bigint,jsonb)` | #319 database-authority RPC; application consumer intentionally deferred to the second code PR | Uses current product-manager authority, recipe constraints/triggers, publication checks, and audit logs | Exact revoke and authenticated grant in `20260730100000_setup_recipe_database_authority.sql` | `authenticated` only |
 | `public.execute_admin_public_page_media_write(uuid,text,jsonb)` | Authenticated call in `website/lib/page-media/admin-public-page-media-write.ts` | Uses current product admin helper | Revoke `PUBLIC`; grant `authenticated` | `authenticated` only |
 | `public.execute_admin_quote_crm_handoff_queue_update(uuid,uuid,text,text)` | Authenticated call in `website/lib/quote/admin-write/admin-quote-request-crm-handoff-write.ts` | Uses current quote admin helper | Revoke `PUBLIC`; grant `authenticated` | `authenticated` only |
 | `public.execute_admin_quote_workflow(uuid,uuid,text,text)` | Authenticated call in `website/lib/quote/admin-write/admin-quote-request-status-write.ts` | Uses current quote admin helper | Revoke `PUBLIC`; grant `authenticated` | `authenticated` only |

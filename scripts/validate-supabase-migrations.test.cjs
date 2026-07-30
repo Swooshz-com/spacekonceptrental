@@ -7,7 +7,7 @@ const test = require('node:test');
 const {
   anonymousPublicSecurityDefinerAllowlist,
   authenticatedPublicSecurityDefinerAllowlist,
-  finalPublicSecurityDefinerSignatures,
+  preRecipePublicSecurityDefinerSignatures,
   platformManagedPublicSecurityDefinerSignatures,
   preMigrationPublicSecurityDefinerSignatures,
   privatePolicyHelperGrants,
@@ -339,7 +339,7 @@ test('real migration directory passes static validation', () => {
   const result = runValidator(realMigrationsDir);
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.match(result.stdout, /checked 34 migration SQL file\(s\)/);
+  assert.match(result.stdout, /checked 35 migration SQL file\(s\)/);
 });
 
 test('real base schema migration creates the planned MVP tables', () => {
@@ -457,6 +457,157 @@ test('real migrations add trusted active-workspace catalogue read surface', () =
     /grant execute on function public\.[^;]+ to service_role;/i,
   );
   assert.doesNotMatch(sql, /current_setting\('app\.catalogue_workspace_id/);
+});
+
+test('setup recipe migration defines the locked two-table workspace-safe schema', () => {
+  const migration = readRealMigration(
+    '20260730100000_setup_recipe_database_authority.sql',
+  );
+  const sql = normalizeSql(migration);
+
+  assert.match(sql, /create table public\.setup_recipes \(/);
+  assert.match(sql, /workspace_id uuid not null/);
+  assert.match(sql, /setup_product_id uuid not null/);
+  assert.match(sql, /revision bigint not null default 1/);
+  assert.match(sql, /constraint setup_recipes_pkey primary key \(workspace_id, setup_product_id\)/);
+  assert.match(sql, /constraint setup_recipes_revision_check check \(revision > 0\)/);
+  assert.match(
+    sql,
+    /foreign key \(setup_product_id, workspace_id\) references public\.products \(id, workspace_id\) on delete cascade on update restrict/,
+  );
+
+  assert.match(sql, /create table public\.setup_recipe_items \(/);
+  assert.match(
+    sql,
+    /primary key \(workspace_id, setup_product_id, included_product_id\)/,
+  );
+  assert.match(
+    sql,
+    /unique \(workspace_id, setup_product_id, position\)/,
+  );
+  assert.match(
+    sql,
+    /foreign key \(workspace_id, setup_product_id\) references public\.setup_recipes \(workspace_id, setup_product_id\) on delete cascade on update restrict/,
+  );
+  assert.match(
+    sql,
+    /foreign key \(included_product_id, workspace_id\) references public\.products \(id, workspace_id\) on delete restrict on update restrict/,
+  );
+  assert.match(sql, /check \(included_product_id <> setup_product_id\)/);
+  assert.match(sql, /check \(position between 0 and 19\)/);
+  assert.match(sql, /check \(base_quantity between 1 and 99\)/);
+  assert.match(
+    sql,
+    /create index setup_recipe_items_workspace_included_product_idx on public\.setup_recipe_items \(workspace_id, included_product_id\);/,
+  );
+  assert.doesNotMatch(sql, /products\.kind/);
+  assert.doesNotMatch(migration, /values\s*\(\s*'[0-9a-f-]{36}'/i);
+});
+
+test('setup recipe migration enforces aggregate, non-nesting, and publication invariants in the database', () => {
+  const sql = normalizeSql(
+    readRealMigration('20260730100000_setup_recipe_database_authority.sql'),
+  );
+
+  for (const triggerName of [
+    'setup_recipes_parent_write_guard',
+    'setup_recipes_aggregate_guard',
+    'setup_recipe_items_nesting_guard',
+    'setup_recipe_items_aggregate_guard',
+    'products_setup_recipe_dependency_guard',
+    'products_setup_recipe_publication_guard',
+  ]) {
+    assert.match(sql, new RegExp(`create (?:constraint )?trigger ${triggerName}`));
+  }
+  assert.match(sql, /setup_recipe_nested_setup/);
+  assert.match(sql, /setup_recipe_published_child_protected/);
+  assert.match(sql, /setup_recipe_published_child_invalid/);
+  assert.match(sql, /setup_recipe_positions_not_contiguous/);
+  assert.match(sql, /deferrable initially deferred/);
+  assert.match(sql, /if tg_op = 'delete'[\s\S]*?setup_recipe_published_parent_remove[\s\S]*?return old;/);
+  assert.match(sql, /pg_advisory_xact_lock/);
+});
+
+test('setup recipe migration exposes only reviewed RLS and RPC privilege contracts', () => {
+  const sql = normalizeSql(
+    readRealMigration('20260730100000_setup_recipe_database_authority.sql'),
+  );
+
+  for (const tableName of ['setup_recipes', 'setup_recipe_items']) {
+    assert.match(sql, new RegExp(`alter table public\\.${tableName} enable row level security;`));
+    assert.match(
+      sql,
+      new RegExp(`revoke all privileges on table public\\.${tableName} from public, anon, authenticated, service_role;`),
+    );
+    assert.doesNotMatch(
+      sql,
+      new RegExp(`grant (?:insert|update|delete|all)[\\s\\S]*on (?:table )?public\\.${tableName} to (?:anon|authenticated|service_role);`),
+    );
+  }
+  assert.match(sql, /setup_recipes_product_manager_select/);
+  assert.match(sql, /setup_recipe_items_product_manager_select/);
+  assert.match(sql, /private\.is_workspace_product_manager\(workspace_id\)/);
+  assert.match(
+    sql,
+    /revoke all privileges on function public\.execute_admin_setup_recipe_write\(text, uuid, uuid, bigint, jsonb\) from public, anon, authenticated, service_role;/,
+  );
+  assert.match(
+    sql,
+    /grant execute on function public\.execute_admin_setup_recipe_write\(text, uuid, uuid, bigint, jsonb\) to authenticated;/,
+  );
+  assert.doesNotMatch(
+    sql,
+    /grant execute on function public\.execute_admin_setup_recipe_write\([^;]+\) to (?:public|anon|service_role);/,
+  );
+});
+
+test('setup recipe RPC is bounded, optimistic-concurrency safe, and auditable', () => {
+  const sql = normalizeSql(
+    readRealMigration('20260730100000_setup_recipe_database_authority.sql'),
+  );
+
+  assert.match(
+    sql,
+    /create function public\.execute_admin_setup_recipe_write\( operation text, expected_workspace_id uuid, setup_product_id uuid, expected_revision bigint, items jsonb \)/,
+  );
+  assert.match(sql, /operation is null or operation not in \('replace', 'remove'\)/);
+  assert.match(sql, /setup_recipe_creation_revision_required/);
+  assert.match(sql, /setup_recipe_revision_conflict/);
+  assert.match(sql, /new_revision := current_revision \+ 1/);
+  assert.match(sql, /setup_recipe_empty_replacement/);
+  assert.match(sql, /setup_recipe_remove_items_must_be_empty/);
+  assert.match(sql, /setuprecipe\.replace/);
+  assert.match(sql, /setuprecipe\.remove/);
+  assert.match(sql, /jsonb_build_object\( 'operation'/);
+  assert.doesNotMatch(sql, /execute_admin_product_write/);
+  assert.match(sql, /delete from public\.setup_recipes/);
+  assert.match(sql, /delete from public\.setup_recipe_items/);
+});
+
+test('setup recipe catalogue projection is additive and fails closed without inference', () => {
+  const sql = normalizeSql(
+    readRealMigration('20260730100000_setup_recipe_database_authority.sql'),
+  );
+
+  assert.match(sql, /create or replace function public\.get_public_catalogue\(/);
+  assert.match(sql, /valid_setup_recipes as/);
+  assert.match(sql, /'product_kind', case/);
+  assert.match(sql, /when p\.valid_setup_product_id is not null then 'setup'/);
+  assert.match(sql, /else 'rental'/);
+  assert.match(sql, /'setup_composition', case/);
+  assert.match(sql, /when p\.valid_setup_product_id is null then null/);
+  assert.match(sql, /order by item\.position/);
+  assert.match(sql, /child\.status = 'published'/);
+  assert.match(sql, /and \(r\.setup_product_id is null or vsr\.setup_product_id is not null\)/);
+  assert.doesNotMatch(sql, /case[\s\S]{0,250}(category|rental_unit|slug|name)[\s\S]{0,250}product_kind/);
+  assert.match(
+    sql,
+    /revoke all privileges on function public\.get_public_catalogue\(uuid, text\) from public, anon, authenticated, service_role;/,
+  );
+  assert.match(
+    sql,
+    /grant execute on function public\.get_public_catalogue\(uuid, text\) to anon;/,
+  );
 });
 
 test('real migrations add narrow anonymous website quote insert policies only', () => {
@@ -2003,7 +2154,7 @@ test('forward privilege hardening uses exact signatures and explicit role allowl
     expectedPublicGrants.set(signature, roles);
   }
 
-  for (const signature of finalPublicSecurityDefinerSignatures) {
+  for (const signature of preRecipePublicSecurityDefinerSignatures) {
     assert.deepEqual(
       [...(grants.get(signature) ?? [])].sort(),
       [...(expectedPublicGrants.get(signature) ?? [])].sort(),
@@ -2014,9 +2165,12 @@ test('forward privilege hardening uses exact signatures and explicit role allowl
   const grantedPublicSignatures = [...grants.keys()]
     .filter((signature) => signature.startsWith('public.'))
     .sort();
+  const expectedPreRecipePublicGrants = [...expectedPublicGrants.keys()]
+    .filter((signature) => preRecipePublicSecurityDefinerSignatures.includes(signature))
+    .sort();
   assert.deepEqual(
     grantedPublicSignatures,
-    [...expectedPublicGrants.keys()].sort(),
+    expectedPreRecipePublicGrants,
     'The migration must not grant an unreviewed public function signature.',
   );
 
