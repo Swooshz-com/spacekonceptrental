@@ -89,7 +89,6 @@ create function public.assert_setup_recipe_valid(
 returns void
 language plpgsql
 volatile
-security definer
 set search_path = pg_catalog
 as $$
 declare
@@ -244,6 +243,7 @@ create function public.setup_recipe_item_nesting_guard()
 returns trigger
 language plpgsql
 volatile
+security definer
 set search_path = pg_catalog
 as $$
 begin
@@ -275,6 +275,7 @@ create function public.setup_recipe_aggregate_guard()
 returns trigger
 language plpgsql
 volatile
+security definer
 set search_path = pg_catalog
 as $$
 declare
@@ -359,6 +360,7 @@ create function public.setup_recipe_product_publication_guard()
 returns trigger
 language plpgsql
 volatile
+security definer
 set search_path = pg_catalog
 as $$
 begin
