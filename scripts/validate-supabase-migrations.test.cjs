@@ -568,9 +568,11 @@ test('setup recipe RPC is bounded, optimistic-concurrency safe, and auditable', 
 
   assert.match(
     sql,
-    /create function public\.execute_admin_setup_recipe_write\( operation text, expected_workspace_id uuid, setup_product_id uuid, expected_revision bigint, items jsonb \)/,
+    /create function public\.execute_admin_setup_recipe_write\( p_operation text, p_expected_workspace_id uuid, p_setup_product_id uuid, p_expected_revision bigint, p_items jsonb \)/,
   );
-  assert.match(sql, /operation is null or operation not in \('replace', 'remove'\)/);
+  assert.doesNotMatch(sql, new RegExp(['recipe', 'rpc'].join('_') + '\\.'));
+  assert.doesNotMatch(sql, new RegExp('<<' + ['recipe', 'rpc'].join('_') + '>>'));
+  assert.match(sql, /p_operation is null or p_operation not in \('replace', 'remove'\)/);
   assert.match(sql, /setup_recipe_creation_revision_required/);
   assert.match(sql, /setup_recipe_revision_conflict/);
   assert.match(sql, /new_revision := current_revision \+ 1/);

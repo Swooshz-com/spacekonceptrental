@@ -438,18 +438,17 @@ revoke all privileges on function public.touch_setup_recipe_updated_at() from pu
 -- first mutation; the advisory lock and row lock make revision checks and
 -- replacement atomic; deferred triggers re-check the final database state.
 create function public.execute_admin_setup_recipe_write(
-  operation text,
-  expected_workspace_id uuid,
-  setup_product_id uuid,
-  expected_revision bigint,
-  items jsonb
+  p_operation text,
+  p_expected_workspace_id uuid,
+  p_setup_product_id uuid,
+  p_expected_revision bigint,
+  p_items jsonb
 )
 returns jsonb
 language plpgsql
 security definer
 set search_path = pg_catalog
 as $$
-<<recipe_rpc>>
 declare
   actor_admin_user_id uuid;
   parent_status text;
@@ -468,24 +467,24 @@ declare
   positions integer[] := '{}'::integer[];
   quantities integer[] := '{}'::integer[];
 begin
-  if expected_workspace_id is null then
+  if p_expected_workspace_id is null then
     raise exception 'setup_recipe_workspace_required';
   end if;
 
-  actor_admin_user_id := public.current_product_admin_user_id(expected_workspace_id);
+  actor_admin_user_id := public.current_product_admin_user_id(p_expected_workspace_id);
   if actor_admin_user_id is null then
     raise exception 'unauthorized_admin_action';
   end if;
 
-  if operation is null or operation not in ('replace', 'remove') then
+  if p_operation is null or p_operation not in ('replace', 'remove') then
     raise exception 'unsupported_setup_recipe_operation';
   end if;
 
-  if setup_product_id is null then
+  if p_setup_product_id is null then
     raise exception 'setup_recipe_parent_required';
   end if;
 
-  if items is null or pg_catalog.jsonb_typeof(items) <> 'array' then
+  if p_items is null or pg_catalog.jsonb_typeof(p_items) <> 'array' then
     raise exception 'setup_recipe_items_array_required';
   end if;
 
@@ -494,8 +493,8 @@ begin
   select p.status
   into parent_status
   from public.products p
-  where p.workspace_id = recipe_rpc.expected_workspace_id
-    and p.id = recipe_rpc.setup_product_id
+  where p.workspace_id = p_expected_workspace_id
+    and p.id = p_setup_product_id
   for update;
 
   if not found then
@@ -505,13 +504,13 @@ begin
   select r.revision
   into current_revision
   from public.setup_recipes r
-  where r.workspace_id = recipe_rpc.expected_workspace_id
-    and r.setup_product_id = recipe_rpc.setup_product_id
+  where r.workspace_id = p_expected_workspace_id
+    and r.setup_product_id = p_setup_product_id
   for update;
   has_existing_recipe := found;
 
-  if operation = 'remove' then
-    if items <> '[]'::jsonb then
+  if p_operation = 'remove' then
+    if p_items <> '[]'::jsonb then
       raise exception 'setup_recipe_remove_items_must_be_empty';
     end if;
 
@@ -519,7 +518,7 @@ begin
       raise exception 'setup_recipe_not_found';
     end if;
 
-    if expected_revision is null or expected_revision <> current_revision then
+    if p_expected_revision is null or p_expected_revision <> current_revision then
       raise exception 'setup_recipe_revision_conflict';
     end if;
 
@@ -530,12 +529,12 @@ begin
     select count(*)::integer
     into current_item_count
     from public.setup_recipe_items i
-    where i.workspace_id = recipe_rpc.expected_workspace_id
-      and i.setup_product_id = recipe_rpc.setup_product_id;
+    where i.workspace_id = p_expected_workspace_id
+      and i.setup_product_id = p_setup_product_id;
 
     delete from public.setup_recipes r
-    where r.workspace_id = recipe_rpc.expected_workspace_id
-      and r.setup_product_id = recipe_rpc.setup_product_id;
+    where r.workspace_id = p_expected_workspace_id
+      and r.setup_product_id = p_setup_product_id;
 
     insert into public.audit_logs (
       workspace_id,
@@ -546,12 +545,12 @@ begin
       target_id,
       metadata
     ) values (
-      recipe_rpc.expected_workspace_id,
+      p_expected_workspace_id,
       actor_admin_user_id,
       'admin',
       'setupRecipe.remove',
       'setup_recipe',
-      recipe_rpc.setup_product_id,
+      p_setup_product_id,
       pg_catalog.jsonb_build_object(
         'revision', current_revision,
         'item_count', current_item_count
@@ -560,19 +559,19 @@ begin
 
     return pg_catalog.jsonb_build_object(
       'operation', 'remove',
-      'setup_product_id', recipe_rpc.setup_product_id::text,
+      'setup_product_id', p_setup_product_id::text,
       'revision', current_revision,
       'item_count', current_item_count
     );
   end if;
 
-  if items = '[]'::jsonb then
+  if p_items = '[]'::jsonb then
     raise exception 'setup_recipe_empty_replacement';
   end if;
 
   for item in
     select value
-    from pg_catalog.jsonb_array_elements(items)
+    from pg_catalog.jsonb_array_elements(p_items)
   loop
     item_count := item_count + 1;
 
@@ -601,7 +600,7 @@ begin
       raise exception 'setup_recipe_invalid_item';
     end;
 
-    if included_product_id = recipe_rpc.setup_product_id then
+    if included_product_id = p_setup_product_id then
       raise exception 'setup_recipe_self_reference';
     end if;
 
@@ -640,7 +639,7 @@ begin
   select count(*)
   into child_count
   from public.products p
-  where p.workspace_id = recipe_rpc.expected_workspace_id
+  where p.workspace_id = p_expected_workspace_id
     and p.id = any(child_ids);
 
   if child_count <> item_count then
@@ -650,7 +649,7 @@ begin
   if exists (
     select 1
     from public.setup_recipes r
-    where r.workspace_id = recipe_rpc.expected_workspace_id
+    where r.workspace_id = p_expected_workspace_id
       and r.setup_product_id = any(child_ids)
   ) then
     raise exception 'setup_recipe_nested_setup';
@@ -659,8 +658,8 @@ begin
   if exists (
     select 1
     from public.setup_recipe_items i
-    where i.workspace_id = recipe_rpc.expected_workspace_id
-      and i.included_product_id = recipe_rpc.setup_product_id
+    where i.workspace_id = p_expected_workspace_id
+      and i.included_product_id = p_setup_product_id
   ) then
     raise exception 'setup_recipe_nested_setup';
   end if;
@@ -668,7 +667,7 @@ begin
   if parent_status = 'published' and exists (
     select 1
     from public.products p
-    where p.workspace_id = recipe_rpc.expected_workspace_id
+    where p.workspace_id = p_expected_workspace_id
       and p.id = any(child_ids)
       and p.status <> 'published'
   ) then
@@ -676,7 +675,7 @@ begin
   end if;
 
   if has_existing_recipe then
-    if expected_revision is null or expected_revision <> current_revision then
+    if p_expected_revision is null or p_expected_revision <> current_revision then
       raise exception 'setup_recipe_revision_conflict';
     end if;
 
@@ -689,14 +688,14 @@ begin
     update public.setup_recipes
     set revision = new_revision,
         updated_at = pg_catalog.now()
-    where workspace_id = recipe_rpc.expected_workspace_id
-      and setup_product_id = recipe_rpc.setup_product_id;
+    where workspace_id = p_expected_workspace_id
+      and setup_product_id = p_setup_product_id;
 
     delete from public.setup_recipe_items i
-    where i.workspace_id = recipe_rpc.expected_workspace_id
-      and i.setup_product_id = recipe_rpc.setup_product_id;
+    where i.workspace_id = p_expected_workspace_id
+      and i.setup_product_id = p_setup_product_id;
   else
-    if expected_revision is distinct from 0 then
+    if p_expected_revision is distinct from 0 then
       raise exception 'setup_recipe_creation_revision_required';
     end if;
 
@@ -711,8 +710,8 @@ begin
       setup_product_id,
       revision
     ) values (
-      recipe_rpc.expected_workspace_id,
-      recipe_rpc.setup_product_id,
+      p_expected_workspace_id,
+      p_setup_product_id,
       new_revision
     );
   end if;
@@ -725,8 +724,8 @@ begin
     base_quantity
   )
   select
-    recipe_rpc.expected_workspace_id,
-    recipe_rpc.setup_product_id,
+    p_expected_workspace_id,
+    p_setup_product_id,
     child_ids[index_value],
     positions[index_value],
     quantities[index_value]
@@ -741,12 +740,12 @@ begin
     target_id,
     metadata
   ) values (
-    recipe_rpc.expected_workspace_id,
+    p_expected_workspace_id,
     actor_admin_user_id,
     'admin',
     'setupRecipe.replace',
     'setup_recipe',
-    recipe_rpc.setup_product_id,
+    p_setup_product_id,
     pg_catalog.jsonb_build_object(
       'revision', new_revision,
       'item_count', item_count
@@ -755,7 +754,7 @@ begin
 
   return pg_catalog.jsonb_build_object(
     'operation', 'replace',
-    'setup_product_id', recipe_rpc.setup_product_id::text,
+    'setup_product_id', p_setup_product_id::text,
     'revision', new_revision,
     'item_count', item_count
   );
