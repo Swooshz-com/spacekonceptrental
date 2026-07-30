@@ -560,6 +560,79 @@ test('approved DELETE plus unapproved TRUNCATE, DROP TABLE, or DROP SCHEMA fails
   }
 });
 
+test('DROP SCHEMA IF EXISTS is enumerated and rejected when unallowlisted', () => {
+  const violations = destructiveViolations('drop schema if exists public cascade;');
+
+  assert.match(violations.join('\n'), /:1: DROP SCHEMA destructive SQL statement/);
+});
+
+test('DROP SCHEMA targeting a non-public schema is enumerated and rejected', () => {
+  const violations = destructiveViolations('drop schema tenant_private cascade;');
+
+  assert.match(violations.join('\n'), /:1: DROP SCHEMA destructive SQL statement/);
+});
+
+test('DROP SCHEMA options remain material to the complete statement fingerprint', () => {
+  const bare = 'drop schema public cascade;';
+  const ifExists = 'drop schema if exists public cascade;';
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [{ occurrenceId: 'bare-schema-drop', statementClass: 'DROP SCHEMA', statement: bare }],
+  );
+  const violations = destructiveViolations(ifExists, allowlist);
+
+  assert.match(violations.join('\n'), /not exactly allowlisted/);
+  assert.match(violations.join('\n'), /bare-schema-drop was not found exactly once/);
+});
+
+test('DROP SCHEMA target remains material to the complete statement fingerprint', () => {
+  const publicSchema = 'drop schema public cascade;';
+  const otherSchema = 'drop schema tenant_private cascade;';
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [{ occurrenceId: 'public-schema-drop', statementClass: 'DROP SCHEMA', statement: publicSchema }],
+  );
+  const violations = destructiveViolations(otherSchema, allowlist);
+
+  assert.match(violations.join('\n'), /not exactly allowlisted/);
+  assert.match(violations.join('\n'), /public-schema-drop was not found exactly once/);
+});
+
+test('two identical DROP SCHEMA occurrences require two unique allowlist entries', () => {
+  const statement = 'drop schema if exists public cascade;';
+  const oneEntry = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [{ occurrenceId: 'only-schema-drop', statementClass: 'DROP SCHEMA', statement }],
+  );
+  const oneViolation = destructiveViolations(`${statement}\n${statement}`, oneEntry);
+
+  assert.equal(
+    oneViolation.filter((violation) => /not exactly allowlisted/.test(violation)).length,
+    1,
+  );
+
+  const twoEntries = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [
+      { occurrenceId: 'first-schema-drop', statementClass: 'DROP SCHEMA', statement },
+      { occurrenceId: 'second-schema-drop', statementClass: 'DROP SCHEMA', statement },
+    ],
+  );
+
+  assert.deepEqual(destructiveViolations(`${statement}\n${statement}`, twoEntries), []);
+});
+
+test('comments and quoted strings do not create DROP SCHEMA occurrences', () => {
+  const sql = [
+    '-- drop schema public cascade;',
+    '/* drop schema tenant_private cascade; */',
+    "select 'drop schema quoted_schema cascade;'",
+    'select $data$ drop schema dollar_schema cascade; $data$;',
+  ].join('\n');
+
+  assert.deepEqual(destructiveViolations(sql), []);
+});
+
 test('formatting-only differences normalize to the same destructive statement fingerprint', () => {
   const canonical = 'delete from public.setup_recipes r where r.workspace_id = p_workspace_id and r.setup_product_id = p_setup_product_id;';
   const formatted = `

@@ -88,7 +88,7 @@ const contentRules = [
 const destructiveStatementRules = [
   {
     statementClass: 'DROP SCHEMA',
-    regex: /\bdrop\s+schema\s+public\s+cascade\b/gi,
+    regex: /\bdrop\s+schema\b/gi,
   },
   {
     statementClass: 'DROP TABLE',
