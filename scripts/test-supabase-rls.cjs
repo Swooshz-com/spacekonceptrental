@@ -1579,6 +1579,10 @@ check('setup recipe database authority enforces schema, RPC, RLS, publication, a
   const parentC = '52000000-0000-4000-8000-000000000002';
   const crossChildB = '52000000-0000-4000-8000-000000000001';
   const childImageA = '53000000-0000-4000-8000-000000000001';
+  const itemCountProbeProductIds = Array.from(
+    { length: 21 },
+    (_, index) => `54000000-0000-4000-8000-${String(index + 1).padStart(12, '0')}`,
+  );
 
   const quoteJson = (value) => `'${JSON.stringify(value).replaceAll("'", "''")}'::jsonb`;
   const recipeCall = (operation, workspaceId, productId, revision, value) => `
@@ -1747,7 +1751,7 @@ check('setup recipe database authority enforces schema, RPC, RLS, publication, a
     statementFailsAs(
       'authenticated',
       ids.authMemberA,
-      `select public.execute_admin_setup_recipe_write('replace', '${ids.workspaceA}', '${parentA}', 0, ${quoteJson(Array.from({ length: 21 }, (_, index) => ({ included_product_id: childA, position: index % 20, base_quantity: 1 })))})`,
+      `select public.execute_admin_setup_recipe_write('replace', '${ids.workspaceA}', '${parentA}', 0, ${quoteJson(itemCountProbeProductIds.map((included_product_id, position) => ({ included_product_id, position, base_quantity: 1 })))})`,
       /setup_recipe_item_count_invalid/i,
     );
 
