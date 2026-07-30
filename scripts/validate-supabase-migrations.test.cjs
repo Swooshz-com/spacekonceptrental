@@ -84,6 +84,16 @@ function executableBodySql({
   return `${declaration}\n${asClause} ${delimiter}\n${body}\n${closingDelimiter};`;
 }
 
+function doLanguageBodySql({
+  prefix = 'DO LANGUAGE plpgsql',
+  delimiter = '$$',
+  body = 'begin drop schema tenant_private cascade; end;',
+  closingDelimiter = delimiter,
+  postCodeClause = '',
+} = {}) {
+  return `${prefix} ${delimiter}\n${body}\n${closingDelimiter}${postCodeClause};`;
+}
+
 function makeTempRoot() {
   const baseDir = os.tmpdir();
   fs.mkdirSync(baseDir, { recursive: true });
@@ -792,6 +802,426 @@ test('tagged DO blocks and comments between DO and the delimiter are supported',
   );
 
   assert.match(violations.join('\n'), /DELETE destructive SQL statement/);
+});
+
+// RED-to-GREEN coverage for valid pre-code DO LANGUAGE forms.
+test('untagged DO LANGUAGE bodies remain visible to destructive scanning', () => {
+  const violations = destructiveViolations(
+    doLanguageBodySql({
+      body: 'begin drop schema if exists tenant_private cascade; end;',
+    }),
+  );
+
+  assert.match(violations.join('\n'), /DROP SCHEMA destructive SQL statement/);
+});
+
+test('tagged DO LANGUAGE bodies remain visible to destructive scanning', () => {
+  const violations = destructiveViolations(
+    doLanguageBodySql({ delimiter: '$body$' }),
+  );
+
+  assert.match(violations.join('\n'), /DROP SCHEMA destructive SQL statement/);
+});
+
+test('mixed-case DO LANGUAGE keywords are recognized', () => {
+  const violations = destructiveViolations(
+    doLanguageBodySql({
+      prefix: 'dO lAnGuAgE plpgsql',
+      delimiter: '$mixed$',
+    }),
+  );
+
+  assert.match(violations.join('\n'), /DROP SCHEMA destructive SQL statement/);
+});
+
+test('multiline whitespace in DO LANGUAGE prefixes is recognized', () => {
+  const violations = destructiveViolations(
+    doLanguageBodySql({
+      prefix: 'DO\n\tLANGUAGE\r\nplpgsql\n',
+      delimiter: '$multiline$',
+    }),
+  );
+
+  assert.match(violations.join('\n'), /DROP SCHEMA destructive SQL statement/);
+});
+
+test('block comments between every DO LANGUAGE prefix token are recognized', () => {
+  const violations = destructiveViolations(
+    doLanguageBodySql({
+      prefix: 'DO/* one */LANGUAGE/* two */plpgsql/* three */',
+      delimiter: '$commented$',
+    }),
+  );
+
+  assert.match(violations.join('\n'), /DROP SCHEMA destructive SQL statement/);
+});
+
+test('line comments between every DO LANGUAGE prefix token are recognized', () => {
+  const violations = destructiveViolations(
+    doLanguageBodySql({
+      prefix: 'DO -- one\nLANGUAGE -- two\nplpgsql -- three\n',
+      delimiter: '$commented$',
+    }),
+  );
+
+  assert.match(violations.join('\n'), /DROP SCHEMA destructive SQL statement/);
+});
+
+test('quoted DO LANGUAGE identifiers with doubled quotes are recognized', () => {
+  const violations = destructiveViolations(
+    doLanguageBodySql({
+      prefix: 'DO LANGUAGE "pl""pgsql"',
+      delimiter: '$quoted$',
+    }),
+  );
+
+  assert.match(violations.join('\n'), /DROP SCHEMA destructive SQL statement/);
+});
+
+test('valid unquoted DO LANGUAGE identifier characters are recognized', () => {
+  const violations = destructiveViolations(
+    doLanguageBodySql({
+      prefix: 'DO LANGUAGE _plpgsql2$trusted',
+      delimiter: '$identifier$',
+    }),
+  );
+
+  assert.match(violations.join('\n'), /DROP SCHEMA destructive SQL statement/);
+});
+
+// Positive preservation coverage around the new prefix classifier.
+test('post-code LANGUAGE syntax remains supported', () => {
+  const violations = destructiveViolations(
+    doLanguageBodySql({
+      prefix: 'DO',
+      delimiter: '$post_code$',
+      postCodeClause: ' LANGUAGE plpgsql',
+    }),
+  );
+
+  assert.match(violations.join('\n'), /DROP SCHEMA destructive SQL statement/);
+});
+
+test('multiple DO LANGUAGE bodies are scanned independently', () => {
+  const sql = [
+    doLanguageBodySql({ delimiter: '$one$' }),
+    doLanguageBodySql({
+      prefix: 'DO LANGUAGE "plpgsql"',
+      delimiter: '$two$',
+    }),
+  ].join('\n');
+  const violations = destructiveViolations(sql);
+
+  assert.equal(
+    violations.filter((violation) => /DROP SCHEMA destructive SQL statement/.test(violation))
+      .length,
+    2,
+  );
+});
+
+test('direct DO plus DO LANGUAGE bodies are both scanned', () => {
+  const sql = [
+    executableBodySql({
+      declaration: 'DO',
+      asClause: '',
+      body: 'begin drop schema direct_schema cascade; end;',
+    }),
+    doLanguageBodySql({ delimiter: '$language_body$' }),
+  ].join('\n');
+  const violations = destructiveViolations(sql);
+
+  assert.equal(
+    violations.filter((violation) => /DROP SCHEMA destructive SQL statement/.test(violation))
+      .length,
+    2,
+  );
+});
+
+test('DO LANGUAGE detects non-public DROP SCHEMA targets', () => {
+  const violations = destructiveViolations(
+    doLanguageBodySql({
+      body: 'begin drop schema if exists tenant_private cascade; end;',
+    }),
+  );
+
+  assert.match(violations.join('\n'), /DROP SCHEMA destructive SQL statement/);
+});
+
+test('DO LANGUAGE detects destructive classes other than DROP SCHEMA', () => {
+  const violations = destructiveViolations(
+    doLanguageBodySql({
+      body: 'begin truncate table public.audit_logs; end;',
+    }),
+  );
+
+  assert.match(violations.join('\n'), /TRUNCATE destructive SQL statement/);
+});
+
+// Negative controls: invalid prefixes and non-code dollar strings stay masked.
+test('comments containing DO LANGUAGE do not authorize a dollar string', () => {
+  const sql = [
+    '-- DO LANGUAGE plpgsql',
+    '/* DO LANGUAGE "plpgsql" */',
+    'select $data$ drop schema tenant_private cascade; $data$;',
+  ].join('\n');
+
+  assert.deepEqual(destructiveViolations(sql), []);
+});
+
+test('quoted strings containing DO LANGUAGE do not authorize a dollar string', () => {
+  const sql = [
+    "select 'DO LANGUAGE plpgsql';",
+    'select $data$ drop schema tenant_private cascade; $data$;',
+  ].join('\n');
+
+  assert.deepEqual(destructiveViolations(sql), []);
+});
+
+test('SELECT dollar strings containing destructive SQL remain ordinary strings', () => {
+  const violations = destructiveViolations(
+    'select $tag$ drop schema tenant_private cascade; $tag$;',
+  );
+
+  assert.deepEqual(violations, []);
+});
+
+test('DO LANGUAGE without a language name does not authorize a dollar body', () => {
+  const violations = destructiveViolations(
+    'DO LANGUAGE $body$ drop schema tenant_private cascade; $body$;',
+  );
+
+  assert.deepEqual(violations, []);
+});
+
+test('an extra token before a DO LANGUAGE delimiter is rejected', () => {
+  const violations = destructiveViolations(
+    'DO LANGUAGE plpgsql SECURITY $body$ drop schema tenant_private cascade; $body$;',
+  );
+
+  assert.deepEqual(violations, []);
+});
+
+test('a string literal cannot be a DO LANGUAGE identifier', () => {
+  const violations = destructiveViolations(
+    "DO LANGUAGE 'plpgsql' $body$ drop schema tenant_private cascade; $body$;",
+  );
+
+  assert.deepEqual(violations, []);
+});
+
+test('a qualified DO LANGUAGE name is rejected', () => {
+  const violations = destructiveViolations(
+    'DO LANGUAGE public.plpgsql $body$ drop schema tenant_private cascade; $body$;',
+  );
+
+  assert.deepEqual(violations, []);
+});
+
+test('an expression-like DO LANGUAGE name is rejected', () => {
+  const violations = destructiveViolations(
+    'DO LANGUAGE plpgsql() $body$ drop schema tenant_private cascade; $body$;',
+  );
+
+  assert.deepEqual(violations, []);
+});
+
+test('mismatched DO LANGUAGE dollar tags fail closed', () => {
+  const violations = destructiveViolations(
+    doLanguageBodySql({
+      delimiter: '$expected$',
+      closingDelimiter: '$other$',
+    }),
+  );
+
+  assert.match(violations.join('\n'), /unterminated|lexical scan failed closed/);
+});
+
+test('unterminated DO LANGUAGE bodies fail closed', () => {
+  const violations = destructiveViolations(
+    'DO LANGUAGE plpgsql $body$ begin drop schema tenant_private cascade;',
+  );
+
+  assert.match(
+    violations.join('\n'),
+    /unterminated executable dollar-quoted body|lexical scan failed closed/,
+  );
+});
+
+test('nested ordinary dollar strings inside DO LANGUAGE remain masked', () => {
+  const violations = destructiveViolations(
+    doLanguageBodySql({
+      delimiter: '$outer$',
+      body: [
+        'begin',
+        '  perform $inner$ drop schema hidden_schema cascade; $inner$;',
+        '  drop schema visible_schema cascade;',
+        'end;',
+      ].join('\n'),
+    }),
+  );
+
+  assert.equal(
+    violations.filter((violation) => /DROP SCHEMA destructive SQL statement/.test(violation))
+      .length,
+    1,
+  );
+});
+
+test('a prior DO statement cannot authorize a later ordinary dollar string', () => {
+  const sql = [
+    executableBodySql({
+      declaration: 'DO',
+      asClause: '',
+      body: 'begin null; end;',
+    }),
+    'select $later$ drop schema tenant_private cascade; $later$;',
+  ].join('\n');
+
+  assert.deepEqual(destructiveViolations(sql), []);
+});
+
+// Authority-preservation coverage for complete statements and occurrences.
+test('DO LANGUAGE allowlisting retains the complete DROP SCHEMA statement', () => {
+  const statement = 'drop schema if exists tenant_private cascade;';
+  const sql = doLanguageBodySql({ body: `begin ${statement} end;` });
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [{
+      occurrenceId: 'do-language-schema-drop',
+      statementClass: 'DROP SCHEMA',
+      statement,
+    }],
+  );
+
+  assert.deepEqual(destructiveViolations(sql, allowlist), []);
+});
+
+test('DO LANGUAGE DROP SCHEMA target remains material', () => {
+  const approved = 'drop schema tenant_private cascade;';
+  const sql = doLanguageBodySql({
+    body: 'begin drop schema other_private cascade; end;',
+  });
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [{
+      occurrenceId: 'approved-target',
+      statementClass: 'DROP SCHEMA',
+      statement: approved,
+    }],
+  );
+  const violations = destructiveViolations(sql, allowlist);
+
+  assert.match(violations.join('\n'), /not exactly allowlisted/);
+  assert.match(violations.join('\n'), /approved-target was not found exactly once/);
+});
+
+test('DO LANGUAGE DROP SCHEMA options remain material', () => {
+  const approved = 'drop schema tenant_private cascade;';
+  const sql = doLanguageBodySql({
+    body: 'begin drop schema if exists tenant_private cascade; end;',
+  });
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [{
+      occurrenceId: 'approved-options',
+      statementClass: 'DROP SCHEMA',
+      statement: approved,
+    }],
+  );
+  const violations = destructiveViolations(sql, allowlist);
+
+  assert.match(violations.join('\n'), /not exactly allowlisted/);
+  assert.match(violations.join('\n'), /approved-options was not found exactly once/);
+});
+
+test('DO LANGUAGE destructive statement terminators remain material', () => {
+  const occurrence = 'drop schema tenant_private cascade;';
+  const sql = doLanguageBodySql({ body: `begin ${occurrence} end;` });
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [{
+      occurrenceId: 'missing-terminator',
+      statementClass: 'DROP SCHEMA',
+      statement: 'drop schema tenant_private cascade',
+    }],
+  );
+  const violations = destructiveViolations(sql, allowlist);
+
+  assert.match(violations.join('\n'), /not exactly allowlisted/);
+  assert.match(violations.join('\n'), /missing-terminator was not found exactly once/);
+});
+
+test('two DO LANGUAGE occurrences require two unique allowlist entries', () => {
+  const statement = 'drop schema tenant_private cascade;';
+  const sql = [
+    doLanguageBodySql({ delimiter: '$one$', body: `begin ${statement} end;` }),
+    doLanguageBodySql({ delimiter: '$two$', body: `begin ${statement} end;` }),
+  ].join('\n');
+  const duplicateIds = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [
+      { occurrenceId: 'duplicate-id', statementClass: 'DROP SCHEMA', statement },
+      { occurrenceId: 'duplicate-id', statementClass: 'DROP SCHEMA', statement },
+    ],
+  );
+  const duplicateViolations = destructiveViolations(sql, duplicateIds);
+
+  assert.match(duplicateViolations.join('\n'), /occurrence IDs must be present and unique/);
+  assert.match(duplicateViolations.join('\n'), /not exactly allowlisted/);
+
+  const uniqueEntries = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [
+      { occurrenceId: 'first-id', statementClass: 'DROP SCHEMA', statement },
+      { occurrenceId: 'second-id', statementClass: 'DROP SCHEMA', statement },
+    ],
+  );
+
+  assert.deepEqual(destructiveViolations(sql, uniqueEntries), []);
+});
+
+test('an additional DO LANGUAGE destructive occurrence fails independently', () => {
+  const approved = 'drop schema tenant_private cascade;';
+  const sql = doLanguageBodySql({
+    body: `begin ${approved} truncate table public.audit_logs; end;`,
+  });
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [{
+      occurrenceId: 'approved-schema-drop',
+      statementClass: 'DROP SCHEMA',
+      statement: approved,
+    }],
+  );
+  const violations = destructiveViolations(sql, allowlist);
+
+  assert.match(violations.join('\n'), /TRUNCATE destructive SQL statement/);
+  assert.doesNotMatch(violations.join('\n'), /approved-schema-drop was not found/);
+});
+
+test('a missing DO LANGUAGE destructive occurrence fails independently', () => {
+  const present = 'drop schema tenant_private cascade;';
+  const missing = 'truncate table public.audit_logs;';
+  const sql = doLanguageBodySql({ body: `begin ${present} end;` });
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [
+      {
+        occurrenceId: 'present-schema-drop',
+        statementClass: 'DROP SCHEMA',
+        statement: present,
+      },
+      {
+        occurrenceId: 'missing-truncate',
+        statementClass: 'TRUNCATE',
+        statement: missing,
+      },
+    ],
+  );
+  const violations = destructiveViolations(sql, allowlist);
+
+  assert.match(violations.join('\n'), /missing-truncate was not found exactly once/);
+  assert.doesNotMatch(violations.join('\n'), /present-schema-drop was not found/);
 });
 
 test('ordinary dollar-quoted strings remain masked', () => {

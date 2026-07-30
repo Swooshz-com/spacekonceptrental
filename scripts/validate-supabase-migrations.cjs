@@ -318,6 +318,101 @@ function blankSqlRange(characters, start, end) {
   }
 }
 
+function tokenizeDoStatementPrefix(content, start, end) {
+  const tokens = [];
+  let index = start;
+  let separated = true;
+
+  while (index < end) {
+    if (/\s/.test(content[index])) {
+      separated = true;
+      index += 1;
+      continue;
+    }
+
+    if (content.startsWith('--', index)) {
+      const lineEnd = content.indexOf('\n', index + 2);
+      index = lineEnd === -1 || lineEnd > end ? end : lineEnd;
+      separated = true;
+      continue;
+    }
+
+    if (content.startsWith('/*', index)) {
+      const commentEnd = readBlockCommentRange(content, index);
+      if (commentEnd > end) {
+        return null;
+      }
+      index = commentEnd;
+      separated = true;
+      continue;
+    }
+
+    if (!separated) {
+      return null;
+    }
+
+    if (content[index] === '"') {
+      const quotedEnd = readQuotedRange(content, index, '"');
+      if (
+        quotedEnd > end ||
+        content[quotedEnd - 1] !== '"' ||
+        quotedEnd === index + 2
+      ) {
+        return null;
+      }
+
+      tokens.push({
+        quoted: true,
+        value: content.slice(index, quotedEnd),
+      });
+      index = quotedEnd;
+      separated = false;
+      continue;
+    }
+
+    const identifier = content
+      .slice(index, end)
+      .match(/^[A-Za-z_\u0080-\uFFFF][A-Za-z0-9_$\u0080-\uFFFF]*/);
+    if (!identifier) {
+      return null;
+    }
+
+    tokens.push({
+      quoted: false,
+      value: identifier[0],
+    });
+    index += identifier[0].length;
+    separated = false;
+  }
+
+  return separated ? tokens : null;
+}
+
+function isExecutableDoDollarBody(content, characters, delimiterOffset) {
+  const statementStart = characters.lastIndexOf(';', delimiterOffset - 1) + 1;
+  const tokens = tokenizeDoStatementPrefix(
+    content,
+    statementStart,
+    delimiterOffset,
+  );
+  const isKeyword = (token, keyword) =>
+    token && !token.quoted && token.value.toLowerCase() === keyword;
+
+  if (!tokens || !isKeyword(tokens[0], 'do')) {
+    return false;
+  }
+
+  if (tokens.length === 1) {
+    return true;
+  }
+
+  return (
+    tokens.length === 3 &&
+    isKeyword(tokens[1], 'language') &&
+    Boolean(tokens[2])
+  );
+}
+
 function maskExecutableDollarBody(content, characters, bodyStart, dollarTag) {
   let index = bodyStart;
 
@@ -425,7 +520,9 @@ function maskSqlCommentsAndStringLiterals(content) {
     const dollarTag = dollarTagAt(content, index);
     if (dollarTag) {
       const maskedPrefix = characters.slice(0, index).join('');
-      const isExecutableDollarBody = /\b(?:as|do)\s*$/i.test(maskedPrefix);
+      const isExecutableDollarBody =
+        /\bas\s*$/i.test(maskedPrefix) ||
+        isExecutableDoDollarBody(content, characters, index);
 
       if (isExecutableDollarBody) {
         blankSqlRange(characters, index, index + dollarTag.length);
