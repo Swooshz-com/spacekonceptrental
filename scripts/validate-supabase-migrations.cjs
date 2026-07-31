@@ -19,6 +19,7 @@ const destructiveStatementAllowlist = [
     fileName: '20260730100000_setup_recipe_database_authority.sql',
     label: 'destructive SQL statement',
     statementClass: 'DELETE',
+    target: 'public.setup_recipes',
     statement: `
       delete from public.setup_recipes r
       where r.workspace_id = p_expected_workspace_id
@@ -30,6 +31,7 @@ const destructiveStatementAllowlist = [
     fileName: '20260730100000_setup_recipe_database_authority.sql',
     label: 'destructive SQL statement',
     statementClass: 'DELETE',
+    target: 'public.setup_recipe_items',
     statement: `
       delete from public.setup_recipe_items i
       where i.workspace_id = p_expected_workspace_id
@@ -100,7 +102,7 @@ const destructiveStatementRules = [
   },
   {
     statementClass: 'DELETE',
-    regex: /\bdelete\s+from\s+[a-z0-9_.]+/gi,
+    regex: /\bdelete\s+from\b/gi,
   },
   {
     statementClass: 'ALTER TABLE DROP COLUMN',
@@ -115,6 +117,34 @@ const destructiveStatementRules = [
     regex: /\balter\s+table\b[^;]*?\bdisable\s+row\s+level\s+security\b/gi,
   },
 ];
+
+const triviaTokenTypes = new Set([
+  'whitespace',
+  'line_comment',
+  'block_comment',
+]);
+const stringTokenTypes = new Set([
+  'standard_string',
+  'escape_string',
+  'unicode_string',
+  'dollar_string',
+]);
+const quotedIdentifierTokenTypes = new Set([
+  'quoted_identifier',
+  'unicode_quoted_identifier',
+]);
+const wordTokenTypes = new Set(['keyword', 'identifier']);
+const sqlKeywords = new Set([
+  'as',
+  'create',
+  'do',
+  'function',
+  'language',
+  'or',
+  'procedure',
+  'replace',
+  'uescape',
+]);
 
 function parseArgs(argv) {
   const migrationsDirArg = argv.find((arg) => !arg.startsWith('--'));
@@ -161,155 +191,6 @@ function dollarTagAt(content, index) {
   return match ? match[0] : null;
 }
 
-function readQuotedRange(content, start, quote) {
-  let index = start + 1;
-
-  while (index < content.length) {
-    if (quote === "'" && content[index] === '\\') {
-      index += 2;
-      continue;
-    }
-
-    if (content[index] === quote && content[index + 1] === quote) {
-      index += 2;
-      continue;
-    }
-
-    if (content[index] === quote) {
-      return index + 1;
-    }
-
-    index += 1;
-  }
-
-  return content.length;
-}
-
-function readBlockCommentRange(content, start) {
-  let depth = 1;
-  let index = start + 2;
-
-  while (index < content.length && depth > 0) {
-    if (content.startsWith('/*', index)) {
-      depth += 1;
-      index += 2;
-    } else if (content.startsWith('*/', index)) {
-      depth -= 1;
-      index += 2;
-    } else {
-      index += 1;
-    }
-  }
-
-  return index;
-}
-
-function findDollarClosingTag(content, start, dollarTag) {
-  let index = start;
-
-  while (index < content.length) {
-    if (content.startsWith('--', index)) {
-      const lineEnd = content.indexOf('\n', index + 2);
-      index = lineEnd === -1 ? content.length : lineEnd;
-      continue;
-    }
-
-    if (content.startsWith('/*', index)) {
-      index = readBlockCommentRange(content, index);
-      continue;
-    }
-
-    if (content[index] === "'" || content[index] === '"') {
-      index = readQuotedRange(content, index, content[index]);
-      continue;
-    }
-
-    if (content.startsWith(dollarTag, index)) {
-      return index;
-    }
-
-    index += 1;
-  }
-
-  return -1;
-}
-
-function normalizeSqlStatement(statement) {
-  const tokens = [];
-  let index = 0;
-
-  while (index < statement.length) {
-    if (/\s/.test(statement[index])) {
-      index += 1;
-      continue;
-    }
-
-    if (statement.startsWith('--', index)) {
-      const lineEnd = statement.indexOf('\n', index + 2);
-      index = lineEnd === -1 ? statement.length : lineEnd;
-      continue;
-    }
-
-    if (statement.startsWith('/*', index)) {
-      index = readBlockCommentRange(statement, index);
-      continue;
-    }
-
-    if (statement[index] === "'" || statement[index] === '"') {
-      const end = readQuotedRange(statement, index, statement[index]);
-      tokens.push({
-        kind: 'literal',
-        value: statement.slice(index, end),
-      });
-      index = end;
-      continue;
-    }
-
-    const dollarTag = dollarTagAt(statement, index);
-    if (dollarTag) {
-      const closingTag = statement.indexOf(dollarTag, index + dollarTag.length);
-      const end = closingTag === -1
-        ? statement.length
-        : closingTag + dollarTag.length;
-      tokens.push({
-        kind: 'literal',
-        value: statement.slice(index, end),
-      });
-      index = end;
-      continue;
-    }
-
-    const wordMatch = statement.slice(index).match(/^[A-Za-z_][A-Za-z0-9_$]*|^\d+(?:\.\d+)?/);
-    if (wordMatch) {
-      tokens.push({
-        kind: 'word',
-        value: wordMatch[0].toLowerCase(),
-      });
-      index += wordMatch[0].length;
-      continue;
-    }
-
-    const operatorMatch = statement.slice(index).match(/^(?:<>|<=|>=|!=|:=|::|=>|\|\||&&|\*\*|[-+*/%<>=])/);
-    if (operatorMatch) {
-      tokens.push({ kind: 'symbol', value: operatorMatch[0] });
-      index += operatorMatch[0].length;
-      continue;
-    }
-
-    tokens.push({ kind: 'symbol', value: statement[index] });
-    index += 1;
-  }
-
-  return tokens.reduce((normalized, token, tokenIndex) => {
-    const previous = tokens[tokenIndex - 1];
-    const previousNeedsSpace = previous &&
-      (previous.kind === 'word' || previous.kind === 'literal') &&
-      (token.kind === 'word' || token.kind === 'literal');
-
-    return `${normalized}${previousNeedsSpace ? ' ' : ''}${token.value}`;
-  }, '');
-}
-
 function blankSqlRange(characters, start, end) {
   for (let index = start; index < end; index += 1) {
     if (characters[index] !== '\r' && characters[index] !== '\n') {
@@ -318,332 +199,1226 @@ function blankSqlRange(characters, start, end) {
   }
 }
 
-function tokenizeDoStatementPrefix(content, start, end) {
-  const tokens = [];
-  let index = start;
-  let separated = true;
-
-  while (index < end) {
-    if (/\s/.test(content[index])) {
-      separated = true;
-      index += 1;
-      continue;
-    }
-
-    if (content.startsWith('--', index)) {
-      const lineEnd = content.indexOf('\n', index + 2);
-      index = lineEnd === -1 || lineEnd > end ? end : lineEnd;
-      separated = true;
-      continue;
-    }
-
-    if (content.startsWith('/*', index)) {
-      const commentEnd = readBlockCommentRange(content, index);
-      if (commentEnd > end) {
-        return null;
-      }
-      index = commentEnd;
-      separated = true;
-      continue;
-    }
-
-    if (!separated) {
-      return null;
-    }
-
-    if (content[index] === '"') {
-      const quotedEnd = readQuotedRange(content, index, '"');
-      if (
-        quotedEnd > end ||
-        content[quotedEnd - 1] !== '"' ||
-        quotedEnd === index + 2
-      ) {
-        return null;
-      }
-
-      tokens.push({
-        quoted: true,
-        value: content.slice(index, quotedEnd),
-      });
-      index = quotedEnd;
-      separated = false;
-      continue;
-    }
-
-    const identifier = content
-      .slice(index, end)
-      .match(/^[A-Za-z_\u0080-\uFFFF][A-Za-z0-9_$\u0080-\uFFFF]*/);
-    if (!identifier) {
-      return null;
-    }
-
-    tokens.push({
-      quoted: false,
-      value: identifier[0],
-    });
-    index += identifier[0].length;
-    separated = false;
-  }
-
-  return separated ? tokens : null;
-}
-
-function isExecutableDoDollarBody(content, characters, delimiterOffset) {
-  const statementStart = characters.lastIndexOf(';', delimiterOffset - 1) + 1;
-  const tokens = tokenizeDoStatementPrefix(
-    content,
-    statementStart,
-    delimiterOffset,
-  );
-  const isKeyword = (token, keyword) =>
-    token && !token.quoted && token.value.toLowerCase() === keyword;
-
-  if (!tokens || !isKeyword(tokens[0], 'do')) {
-    return false;
-  }
-
-  if (tokens.length === 1) {
-    return true;
-  }
-
-  return (
-    tokens.length === 3 &&
-    isKeyword(tokens[1], 'language') &&
-    Boolean(tokens[2])
-  );
-}
-
-function maskExecutableDollarBody(content, characters, bodyStart, dollarTag) {
-  let index = bodyStart;
+function readPostgresQuotedToken(
+  content,
+  start,
+  { prefixLength = 0, quote = "'", backslashEscapes = false } = {},
+) {
+  let index = start + prefixLength + 1;
 
   while (index < content.length) {
-    if (content.startsWith(dollarTag, index)) {
-      blankSqlRange(characters, index, index + dollarTag.length);
-      return {
-        end: index + dollarTag.length,
-        contentEnd: index,
-        error: null,
-      };
-    }
-
-    if (content.startsWith('--', index)) {
-      const lineEnd = content.indexOf('\n', index + 2);
-      const end = lineEnd === -1 ? content.length : lineEnd;
-      blankSqlRange(characters, index, end);
-      index = end;
+    if (backslashEscapes && content[index] === '\\') {
+      index += content[index + 1] === '\r' && content[index + 2] === '\n'
+        ? 3
+        : Math.min(2, content.length - index);
       continue;
     }
-
-    if (content.startsWith('/*', index)) {
-      const end = readBlockCommentRange(content, index);
-      blankSqlRange(characters, index, end);
-      index = end;
+    if (content[index] === quote && content[index + 1] === quote) {
+      index += 2;
       continue;
     }
-
-    if (content[index] === "'" || content[index] === '"') {
-      const end = readQuotedRange(content, index, content[index]);
-      blankSqlRange(characters, index, end);
-      index = end;
-      continue;
+    if (content[index] === quote) {
+      return { end: index + 1, closed: true };
     }
-
-    const nestedDollarTag = dollarTagAt(content, index);
-    if (nestedDollarTag) {
-      const nestedClosingTag = findDollarClosingTag(
-        content,
-        index + nestedDollarTag.length,
-        nestedDollarTag,
-      );
-
-      if (nestedClosingTag === -1) {
-        blankSqlRange(characters, index, content.length);
-        return {
-          end: content.length,
-          contentEnd: content.length,
-          error: {
-            offset: index,
-            message: `unterminated nested dollar-quoted string ${nestedDollarTag}`,
-          },
-        };
-      }
-
-      const end = nestedClosingTag + nestedDollarTag.length;
-      blankSqlRange(characters, index, end);
-      index = end;
-      continue;
-    }
-
     index += 1;
   }
 
-  blankSqlRange(characters, bodyStart, content.length);
-  return {
-    end: content.length,
-    contentEnd: content.length,
-    error: {
-      offset: bodyStart,
-      message: `unterminated executable dollar-quoted body ${dollarTag}`,
-    },
-  };
+  return { end: content.length, closed: false };
 }
 
-function maskSqlCommentsAndStringLiterals(content) {
-  const characters = content.split('');
+function readPostgresBlockComment(content, start) {
+  let depth = 1;
+  let index = start + 2;
+  while (index < content.length) {
+    if (content.startsWith('/*', index)) {
+      depth += 1;
+      index += 2;
+    } else if (content.startsWith('*/', index)) {
+      depth -= 1;
+      index += 2;
+      if (depth === 0) {
+        return { end: index, closed: true };
+      }
+    } else {
+      index += 1;
+    }
+  }
+  return { end: content.length, closed: false };
+}
+
+function lexPostgresSql(content) {
+  const tokens = [];
   const errors = [];
-  const executableDollarBodies = [];
   let index = 0;
 
+  const push = (type, start, end, extra = {}) => {
+    const token = {
+      type,
+      start,
+      end,
+      raw: content.slice(start, end),
+      ...extra,
+    };
+    tokens.push(token);
+    return token;
+  };
+  const error = (token, message, offset = token.start) => {
+    errors.push({ offset, message, token });
+  };
+
   while (index < content.length) {
+    const start = index;
+
+    if (/\s/.test(content[index])) {
+      while (index < content.length && /\s/.test(content[index])) {
+        index += 1;
+      }
+      push('whitespace', start, index);
+      continue;
+    }
     if (content.startsWith('--', index)) {
       const lineEnd = content.indexOf('\n', index + 2);
-      const end = lineEnd === -1 ? content.length : lineEnd;
-      blankSqlRange(characters, index, end);
-      index = end;
+      index = lineEnd === -1 ? content.length : lineEnd;
+      push('line_comment', start, index);
       continue;
     }
-
     if (content.startsWith('/*', index)) {
-      const end = readBlockCommentRange(content, index);
-      blankSqlRange(characters, index, end);
-      index = end;
+      const range = readPostgresBlockComment(content, index);
+      index = range.end;
+      const token = push('block_comment', start, index);
+      if (!range.closed) {
+        error(token, 'unterminated nested block comment');
+      }
       continue;
     }
-
-    if (content[index] === "'" || content[index] === '"') {
-      const end = readQuotedRange(content, index, content[index]);
-      blankSqlRange(characters, index, end);
-      index = end;
+    if (
+      (content[index] === 'E' || content[index] === 'e') &&
+      content[index + 1] === "'"
+    ) {
+      const range = readPostgresQuotedToken(content, index, {
+        prefixLength: 1,
+        backslashEscapes: true,
+      });
+      index = range.end;
+      const token = push('escape_string', start, index, {
+        closed: range.closed,
+        prefixLength: 1,
+        quote: "'",
+      });
+      if (!range.closed) {
+        error(token, 'unterminated escape string constant');
+      }
+      continue;
+    }
+    if (
+      (content[index] === 'U' || content[index] === 'u') &&
+      content[index + 1] === '&' &&
+      (content[index + 2] === "'" || content[index + 2] === '"')
+    ) {
+      const quote = content[index + 2];
+      const range = readPostgresQuotedToken(content, index, {
+        prefixLength: 2,
+        quote,
+      });
+      index = range.end;
+      const token = push(
+        quote === "'" ? 'unicode_string' : 'unicode_quoted_identifier',
+        start,
+        index,
+        { closed: range.closed, prefixLength: 2, quote },
+      );
+      if (!range.closed) {
+        error(
+          token,
+          quote === "'"
+            ? 'unterminated Unicode string constant'
+            : 'unterminated Unicode quoted identifier',
+        );
+      }
+      continue;
+    }
+    if (content[index] === "'") {
+      const range = readPostgresQuotedToken(content, index);
+      index = range.end;
+      const token = push('standard_string', start, index, {
+        closed: range.closed,
+        prefixLength: 0,
+        quote: "'",
+      });
+      if (!range.closed) {
+        error(token, 'unterminated standard string constant');
+      }
+      continue;
+    }
+    if (content[index] === '"') {
+      const range = readPostgresQuotedToken(content, index, { quote: '"' });
+      index = range.end;
+      const token = push('quoted_identifier', start, index, {
+        closed: range.closed,
+        prefixLength: 0,
+        quote: '"',
+      });
+      if (!range.closed) {
+        error(token, 'unterminated quoted identifier');
+      } else if (token.raw === '""') {
+        error(token, 'zero-length quoted identifier');
+      }
       continue;
     }
 
     const dollarTag = dollarTagAt(content, index);
     if (dollarTag) {
-      const maskedPrefix = characters.slice(0, index).join('');
-      const isExecutableDollarBody =
-        /\bas\s*$/i.test(maskedPrefix) ||
-        isExecutableDoDollarBody(content, characters, index);
-
-      if (isExecutableDollarBody) {
-        blankSqlRange(characters, index, index + dollarTag.length);
-        const body = maskExecutableDollarBody(
-          content,
-          characters,
-          index + dollarTag.length,
-          dollarTag,
-        );
-
-        executableDollarBodies.push({
-          start: index + dollarTag.length,
-          end: body.contentEnd,
-          delimiter: dollarTag,
-        });
-
-        if (body.error) {
-          errors.push(body.error);
-        }
-
-        index = body.end;
-        continue;
-      }
-
-      const closingTag = findDollarClosingTag(
-        content,
-        index + dollarTag.length,
+      const bodyStart = index + dollarTag.length;
+      const bodyEnd = content.indexOf(dollarTag, bodyStart);
+      const closed = bodyEnd !== -1;
+      index = closed ? bodyEnd + dollarTag.length : content.length;
+      const token = push('dollar_string', start, index, {
+        closed,
         dollarTag,
-      );
-
-      if (closingTag === -1) {
-        blankSqlRange(characters, index, content.length);
-        errors.push({
-          offset: index,
-          message: `unterminated dollar-quoted string ${dollarTag}`,
-        });
-        break;
+        bodyStart,
+        bodyEnd: closed ? bodyEnd : content.length,
+      });
+      if (!closed) {
+        error(token, 'unterminated dollar-quoted string');
       }
-
-      blankSqlRange(characters, index, closingTag + dollarTag.length);
-      index = closingTag + dollarTag.length;
       continue;
     }
 
+    const word = content
+      .slice(index)
+      .match(/^[A-Za-z_\u0080-\uFFFF][A-Za-z0-9_$\u0080-\uFFFF]*/);
+    if (word) {
+      index += word[0].length;
+      const value = word[0].toLowerCase();
+      push(sqlKeywords.has(value) ? 'keyword' : 'identifier', start, index, {
+        value,
+      });
+      continue;
+    }
+    const number = content
+      .slice(index)
+      .match(/^(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?/);
+    if (number) {
+      index += number[0].length;
+      push('number', start, index);
+      continue;
+    }
+    if (content[index] === ';') {
+      index += 1;
+      push('statement_terminator', start, index, { value: ';' });
+      continue;
+    }
+    if ('(),.[]'.includes(content[index])) {
+      index += 1;
+      push('punctuation', start, index, { value: content[start] });
+      continue;
+    }
+    const operator = content
+      .slice(index)
+      .match(/^(?:<>|<=|>=|!=|:=|::|=>|\|\||&&|\*\*|[-+*/%<>=~!@#^&|`?:$]+)/);
+    if (operator) {
+      index += operator[0].length;
+      push('operator', start, index, { value: operator[0] });
+      continue;
+    }
     index += 1;
+    push('punctuation', start, index, { value: content[start] });
   }
 
-  return {
-    sql: characters.join(''),
-    errors,
-    executableDollarBodies,
-  };
+  return { tokens, errors };
 }
 
-function statementStartForOffset(executableSql, offset, executableDollarBodies) {
-  const body = executableDollarBodies.find(
-    (range) => offset >= range.start && offset < range.end,
+function isPostgresWord(token, expected) {
+  return Boolean(
+    token &&
+    wordTokenTypes.has(token.type) &&
+    token.value === expected.toLowerCase(),
   );
-  const previousSemicolon = executableSql.lastIndexOf(';', offset - 1);
-  let start = Math.max(body?.start ?? 0, previousSemicolon + 1);
+}
 
-  while (/\s/.test(executableSql[start] ?? '')) {
-    start += 1;
+function significantPostgresTokenIndices(tokens, start = 0, end = tokens.length) {
+  const indices = [];
+  for (let index = start; index < end; index += 1) {
+    if (!triviaTokenTypes.has(tokens[index].type)) {
+      indices.push(index);
+    }
+  }
+  return indices;
+}
+
+function appendDecodedValue(output, sourceOffsets, value, sourceOffset) {
+  output.push(value);
+  for (let index = 0; index < value.length; index += 1) {
+    sourceOffsets.push(sourceOffset);
+  }
+}
+
+function decodeSimpleQuotedToken(token) {
+  const output = [];
+  const sourceOffsets = [];
+  const contentStart = token.start + token.prefixLength + 1;
+  const contentEnd = token.closed ? token.end - 1 : token.end;
+  let sourceIndex = contentStart;
+  let rawIndex = token.prefixLength + 1;
+
+  while (sourceIndex < contentEnd) {
+    if (
+      token.raw[rawIndex] === token.quote &&
+      token.raw[rawIndex + 1] === token.quote
+    ) {
+      appendDecodedValue(output, sourceOffsets, token.quote, sourceIndex);
+      sourceIndex += 2;
+      rawIndex += 2;
+      continue;
+    }
+    const codePoint = token.raw.codePointAt(rawIndex);
+    const value = String.fromCodePoint(codePoint);
+    appendDecodedValue(output, sourceOffsets, value, sourceIndex);
+    sourceIndex += value.length;
+    rawIndex += value.length;
   }
 
-  if (body) {
-    const prefix = executableSql.slice(start, offset);
-    const beginMatch = prefix.match(
-      /^\s*(?:(?:<<[A-Za-z_][A-Za-z0-9_]*>>)|[A-Za-z_][A-Za-z0-9_]*)?\s*begin\b/i,
+  return { value: output.join(''), sourceOffsets, error: null };
+}
+
+function parsePostgresByteEscape(raw, index) {
+  if (raw[index] !== '\\') {
+    return null;
+  }
+  const octal = raw.slice(index + 1).match(/^[0-7]{1,3}/);
+  if (octal) {
+    return {
+      byte: Number.parseInt(octal[0], 8),
+      next: index + 1 + octal[0].length,
+    };
+  }
+  if (raw[index + 1] === 'x') {
+    const hexadecimal = raw.slice(index + 2).match(/^[0-9A-Fa-f]{1,2}/);
+    return hexadecimal
+      ? {
+        byte: Number.parseInt(hexadecimal[0], 16),
+        next: index + 2 + hexadecimal[0].length,
+      }
+      : { error: true, next: index + 2 };
+  }
+  return null;
+}
+
+function isUnicodeSurrogate(codePoint) {
+  return codePoint >= 0xD800 && codePoint <= 0xDFFF;
+}
+
+function combineUnicodeSurrogates(high, low) {
+  return 0x10000 + ((high - 0xD800) << 10) + (low - 0xDC00);
+}
+
+function decodeEscapeStringToken(token) {
+  const raw = token.raw;
+  const output = [];
+  const sourceOffsets = [];
+  const contentEnd = token.closed ? raw.length - 1 : raw.length;
+  let index = token.prefixLength + 1;
+  const fail = (localOffset) => ({
+    value: '',
+    sourceOffsets: [],
+    error: {
+      offset: token.start + localOffset,
+      message: 'invalid or unsupported escape string sequence',
+    },
+  });
+
+  while (index < contentEnd) {
+    if (raw[index] === "'" && raw[index + 1] === "'") {
+      appendDecodedValue(output, sourceOffsets, "'", token.start + index);
+      index += 2;
+      continue;
+    }
+    if (raw[index] !== '\\') {
+      const codePoint = raw.codePointAt(index);
+      const value = String.fromCodePoint(codePoint);
+      if (codePoint === 0) {
+        return fail(index);
+      }
+      appendDecodedValue(output, sourceOffsets, value, token.start + index);
+      index += value.length;
+      continue;
+    }
+    if (index + 1 >= contentEnd) {
+      return fail(index);
+    }
+    if (raw[index + 1] === '\n') {
+      index += 2;
+      continue;
+    }
+    if (raw[index + 1] === '\r' && raw[index + 2] === '\n') {
+      index += 3;
+      continue;
+    }
+
+    const byteEscape = parsePostgresByteEscape(raw, index);
+    if (byteEscape) {
+      if (byteEscape.error) {
+        return fail(index);
+      }
+      const bytes = [];
+      const sourceOffset = token.start + index;
+      let next = index;
+      while (next < contentEnd) {
+        const parsed = parsePostgresByteEscape(raw, next);
+        if (!parsed || parsed.error) {
+          break;
+        }
+        bytes.push(parsed.byte);
+        next = parsed.next;
+      }
+      if (bytes.includes(0)) {
+        return fail(index);
+      }
+      try {
+        appendDecodedValue(
+          output,
+          sourceOffsets,
+          new TextDecoder('utf-8', { fatal: true })
+            .decode(Uint8Array.from(bytes)),
+          sourceOffset,
+        );
+      } catch {
+        return fail(index);
+      }
+      index = next;
+      continue;
+    }
+
+    const escape = raw[index + 1];
+    const simpleEscapes = {
+      b: '\b',
+      f: '\f',
+      n: '\n',
+      r: '\r',
+      t: '\t',
+    };
+    if (Object.prototype.hasOwnProperty.call(simpleEscapes, escape)) {
+      appendDecodedValue(
+        output,
+        sourceOffsets,
+        simpleEscapes[escape],
+        token.start + index,
+      );
+      index += 2;
+      continue;
+    }
+    if (escape === 'u' || escape === 'U') {
+      const length = escape === 'u' ? 4 : 8;
+      const hexadecimal = raw.slice(index + 2, index + 2 + length);
+      if (
+        hexadecimal.length !== length ||
+        !/^[0-9A-Fa-f]+$/.test(hexadecimal)
+      ) {
+        return fail(index);
+      }
+      let codePoint = Number.parseInt(hexadecimal, 16);
+      let next = index + 2 + length;
+      if (codePoint >= 0xD800 && codePoint <= 0xDBFF) {
+        const lowHex = raw.slice(next + 2, next + 6);
+        const low = Number.parseInt(lowHex, 16);
+        if (
+          raw.slice(next, next + 2) !== '\\u' ||
+          !/^[0-9A-Fa-f]{4}$/.test(lowHex) ||
+          low < 0xDC00 ||
+          low > 0xDFFF
+        ) {
+          return fail(index);
+        }
+        codePoint = combineUnicodeSurrogates(codePoint, low);
+        next += 6;
+      } else if (
+        isUnicodeSurrogate(codePoint) ||
+        codePoint > 0x10FFFF ||
+        codePoint === 0
+      ) {
+        return fail(index);
+      }
+      appendDecodedValue(
+        output,
+        sourceOffsets,
+        String.fromCodePoint(codePoint),
+        token.start + index,
+      );
+      index = next;
+      continue;
+    }
+
+    // PostgreSQL takes an otherwise unknown backslash escape literally.
+    appendDecodedValue(output, sourceOffsets, escape, token.start + index);
+    index += 2;
+  }
+
+  return { value: output.join(''), sourceOffsets, error: null };
+}
+
+function unicodeEscapeAt(raw, index, escapeCharacter) {
+  if (raw[index] !== escapeCharacter) {
+    return null;
+  }
+  if (raw[index + 1] === escapeCharacter) {
+    return { literalEscape: true, next: index + 2 };
+  }
+  const hasPlus = raw[index + 1] === '+';
+  const length = hasPlus ? 6 : 4;
+  const digitsStart = index + (hasPlus ? 2 : 1);
+  const hexadecimal = raw.slice(digitsStart, digitsStart + length);
+  return (
+    hexadecimal.length === length &&
+    /^[0-9A-Fa-f]+$/.test(hexadecimal)
+  )
+    ? {
+      codePoint: Number.parseInt(hexadecimal, 16),
+      next: digitsStart + length,
+    }
+    : { error: true, next: digitsStart + hexadecimal.length };
+}
+
+function decodeUnicodeToken(token) {
+  const raw = token.raw;
+  const output = [];
+  const sourceOffsets = [];
+  const contentEnd = token.closed ? raw.length - 1 : raw.length;
+  const escapeCharacter = token.unicodeEscapeCharacter ?? '\\';
+  let index = token.prefixLength + 1;
+  const fail = (localOffset) => ({
+    value: '',
+    sourceOffsets: [],
+    error: {
+      offset: token.start + localOffset,
+      message: 'invalid or unsupported Unicode escape sequence',
+    },
+  });
+
+  while (index < contentEnd) {
+    if (raw[index] === token.quote && raw[index + 1] === token.quote) {
+      appendDecodedValue(
+        output,
+        sourceOffsets,
+        token.quote,
+        token.start + index,
+      );
+      index += 2;
+      continue;
+    }
+    const parsed = unicodeEscapeAt(raw, index, escapeCharacter);
+    if (parsed) {
+      if (parsed.error) {
+        return fail(index);
+      }
+      if (parsed.literalEscape) {
+        appendDecodedValue(
+          output,
+          sourceOffsets,
+          escapeCharacter,
+          token.start + index,
+        );
+        index = parsed.next;
+        continue;
+      }
+      let codePoint = parsed.codePoint;
+      let next = parsed.next;
+      if (codePoint >= 0xD800 && codePoint <= 0xDBFF) {
+        const low = unicodeEscapeAt(raw, next, escapeCharacter);
+        if (
+          !low ||
+          low.error ||
+          low.literalEscape ||
+          low.codePoint < 0xDC00 ||
+          low.codePoint > 0xDFFF
+        ) {
+          return fail(index);
+        }
+        codePoint = combineUnicodeSurrogates(codePoint, low.codePoint);
+        next = low.next;
+      } else if (
+        isUnicodeSurrogate(codePoint) ||
+        codePoint > 0x10FFFF ||
+        codePoint === 0
+      ) {
+        return fail(index);
+      }
+      appendDecodedValue(
+        output,
+        sourceOffsets,
+        String.fromCodePoint(codePoint),
+        token.start + index,
+      );
+      index = next;
+      continue;
+    }
+    const codePoint = raw.codePointAt(index);
+    const value = String.fromCodePoint(codePoint);
+    if (codePoint === 0) {
+      return fail(index);
+    }
+    appendDecodedValue(output, sourceOffsets, value, token.start + index);
+    index += value.length;
+  }
+
+  return { value: output.join(''), sourceOffsets, error: null };
+}
+
+function decodePostgresStringToken(token) {
+  if (token.decoded) {
+    return token.decoded;
+  }
+  if (!token.closed) {
+    return null;
+  }
+  if (
+    token.type === 'standard_string' ||
+    token.type === 'quoted_identifier'
+  ) {
+    token.decoded = decodeSimpleQuotedToken(token);
+  } else if (token.type === 'escape_string') {
+    token.decoded = decodeEscapeStringToken(token);
+  } else if (
+    token.type === 'unicode_string' ||
+    token.type === 'unicode_quoted_identifier'
+  ) {
+    token.decoded = decodeUnicodeToken(token);
+  } else if (token.type === 'dollar_string') {
+    const value = token.raw.slice(
+      token.dollarTag.length,
+      -token.dollarTag.length,
     );
-    if (beginMatch) {
-      start += beginMatch[0].length;
-      while (/\s/.test(executableSql[start] ?? '')) {
-        start += 1;
+    token.decoded = {
+      value,
+      sourceOffsets: Array.from(
+        { length: value.length },
+        (_, index) => token.bodyStart + index,
+      ),
+      error: null,
+    };
+  }
+  return token.decoded ?? null;
+}
+
+function preparePostgresLiteralTokens(tokens, errors) {
+  const significant = significantPostgresTokenIndices(tokens);
+  const positions = new Map(
+    significant.map((tokenIndex, position) => [tokenIndex, position]),
+  );
+
+  for (const [tokenIndex, token] of tokens.entries()) {
+    if (
+      token.type === 'unicode_string' ||
+      token.type === 'unicode_quoted_identifier'
+    ) {
+      token.unicodeEscapeCharacter = '\\';
+      const position = positions.get(tokenIndex);
+      const uescapeIndex = significant[position + 1];
+      if (isPostgresWord(tokens[uescapeIndex], 'uescape')) {
+        const escapeTokenIndex = significant[position + 2];
+        const escapeToken = tokens[escapeTokenIndex];
+        token.unicodeClauseEndTokenIndex = escapeTokenIndex ?? uescapeIndex;
+        const decodedEscape = escapeToken?.type === 'standard_string'
+          ? decodePostgresStringToken(escapeToken)
+          : null;
+        const escapeCharacter = decodedEscape?.value;
+        if (
+          decodedEscape?.error ||
+          [...(escapeCharacter ?? '')].length !== 1 ||
+          /[0-9A-Fa-f+'"\s]/.test(escapeCharacter)
+        ) {
+          errors.push({
+            offset: tokens[uescapeIndex].start,
+            message: 'invalid Unicode UESCAPE clause',
+            token,
+          });
+        } else {
+          token.unicodeEscapeCharacter = escapeCharacter;
+        }
+      }
+
+      const decoded = decodePostgresStringToken(token);
+      if (decoded?.error) {
+        errors.push({ ...decoded.error, token });
+      }
+      if (
+        token.type === 'unicode_quoted_identifier' &&
+        decoded &&
+        decoded.value.length === 0
+      ) {
+        errors.push({
+          offset: token.start,
+          message: 'zero-length quoted identifier',
+          token,
+        });
+      }
+    } else if (token.type === 'escape_string' && token.closed) {
+      const decoded = decodePostgresStringToken(token);
+      if (decoded?.error) {
+        errors.push({ ...decoded.error, token });
       }
     }
   }
-
-  return start;
 }
 
-function statementEndForOffset(executableSql, offset, executableDollarBodies) {
-  const body = executableDollarBodies.find(
-    (range) => offset >= range.start && offset < range.end,
-  );
-  const nextSemicolon = executableSql.indexOf(';', offset);
-
-  if (body && (nextSemicolon === -1 || nextSemicolon >= body.end)) {
-    return body.end;
+function parsePostgresStringGroup(tokens, significant, position) {
+  const tokenIndex = significant[position];
+  const token = tokens[tokenIndex];
+  if (!token || !stringTokenTypes.has(token.type)) {
+    return null;
   }
 
-  return nextSemicolon === -1 ? executableSql.length : nextSemicolon + 1;
+  let nextPosition = position + 1;
+  if (token.unicodeClauseEndTokenIndex !== undefined) {
+    while (
+      nextPosition < significant.length &&
+      significant[nextPosition] <= token.unicodeClauseEndTokenIndex
+    ) {
+      nextPosition += 1;
+    }
+  }
+  return { token, tokenIndex, nextPosition };
 }
 
-function enumerateDestructiveStatements(content, executableSql, executableDollarBodies) {
-  const occurrences = [];
+function parsePostgresLanguageName(tokens, significant, position) {
+  const tokenIndex = significant[position];
+  const token = tokens[tokenIndex];
+  if (!token) {
+    return null;
+  }
 
-  for (const rule of destructiveStatementRules) {
-    rule.regex.lastIndex = 0;
+  if (
+    wordTokenTypes.has(token.type) ||
+    quotedIdentifierTokenTypes.has(token.type)
+  ) {
+    let nextPosition = position + 1;
+    if (token.unicodeClauseEndTokenIndex !== undefined) {
+      while (
+        nextPosition < significant.length &&
+        significant[nextPosition] <= token.unicodeClauseEndTokenIndex
+      ) {
+        nextPosition += 1;
+      }
+    }
+    const decoded = quotedIdentifierTokenTypes.has(token.type)
+      ? decodePostgresStringToken(token)
+      : { value: token.value };
+    return {
+      token,
+      tokenIndex,
+      nextPosition,
+      value: decoded?.value,
+    };
+  }
 
-    for (const match of executableSql.matchAll(rule.regex)) {
-      const start = statementStartForOffset(
-        executableSql,
-        match.index,
-        executableDollarBodies,
+  const stringGroup = parsePostgresStringGroup(
+    tokens,
+    significant,
+    position,
+  );
+  return stringGroup
+    ? {
+      ...stringGroup,
+      value: decodePostgresStringToken(stringGroup.token)?.value,
+    }
+    : null;
+}
+
+function postgresStatementTokenRanges(tokens) {
+  const ranges = [];
+  let start = 0;
+  for (let index = 0; index < tokens.length; index += 1) {
+    if (tokens[index].type === 'statement_terminator') {
+      ranges.push({ start, end: index });
+      start = index + 1;
+    }
+  }
+  if (start < tokens.length) {
+    ranges.push({ start, end: tokens.length });
+  }
+  return ranges;
+}
+
+function declaredPostgresLanguage(tokens, significant, startPosition) {
+  let depth = 0;
+  for (
+    let position = startPosition;
+    position < significant.length;
+    position += 1
+  ) {
+    const token = tokens[significant[position]];
+    if (token.type === 'punctuation' && token.value === '(') {
+      depth += 1;
+    } else if (token.type === 'punctuation' && token.value === ')') {
+      depth = Math.max(0, depth - 1);
+    } else if (depth === 0 && isPostgresWord(token, 'language')) {
+      return parsePostgresLanguageName(tokens, significant, position + 1);
+    }
+  }
+  return null;
+}
+
+function analyzePostgresExecutableContexts(tokens) {
+  const executableBodies = [];
+  const errors = [];
+  const fail = (token) => {
+    errors.push({
+      offset: token?.start ?? 0,
+      message: 'invalid or unsupported executable SQL body context',
+    });
+  };
+
+  for (const range of postgresStatementTokenRanges(tokens)) {
+    const significant = significantPostgresTokenIndices(
+      tokens,
+      range.start,
+      range.end,
+    );
+    if (significant.length === 0) {
+      continue;
+    }
+
+    const first = tokens[significant[0]];
+    if (isPostgresWord(first, 'do')) {
+      let body;
+      let position = 1;
+      if (isPostgresWord(tokens[significant[position]], 'language')) {
+        const language = parsePostgresLanguageName(
+          tokens,
+          significant,
+          position + 1,
+        );
+        if (!language) {
+          fail(tokens[significant[position]]);
+          continue;
+        }
+        body = parsePostgresStringGroup(
+          tokens,
+          significant,
+          language.nextPosition,
+        );
+        if (!body || body.nextPosition !== significant.length) {
+          fail(
+            tokens[significant[language.nextPosition]] ??
+            language.token,
+          );
+          continue;
+        }
+      } else {
+        body = parsePostgresStringGroup(tokens, significant, position);
+        if (!body) {
+          fail(tokens[significant[position]] ?? first);
+          continue;
+        }
+        position = body.nextPosition;
+        if (isPostgresWord(tokens[significant[position]], 'language')) {
+          const language = parsePostgresLanguageName(
+            tokens,
+            significant,
+            position + 1,
+          );
+          if (!language || language.nextPosition !== significant.length) {
+            fail(tokens[significant[position]]);
+            continue;
+          }
+          position = language.nextPosition;
+        }
+        if (position !== significant.length) {
+          fail(tokens[significant[position]]);
+          continue;
+        }
+      }
+      executableBodies.push({
+        token: body.token,
+        tokenIndex: body.tokenIndex,
+        context: 'DO',
+      });
+      continue;
+    }
+
+    if (!isPostgresWord(first, 'create')) {
+      continue;
+    }
+    let declarationPosition = 1;
+    if (
+      isPostgresWord(tokens[significant[declarationPosition]], 'or') &&
+      isPostgresWord(
+        tokens[significant[declarationPosition + 1]],
+        'replace',
+      )
+    ) {
+      declarationPosition += 2;
+    }
+    const declaration = tokens[significant[declarationPosition]];
+    if (
+      !isPostgresWord(declaration, 'function') &&
+      !isPostgresWord(declaration, 'procedure')
+    ) {
+      continue;
+    }
+    const language = declaredPostgresLanguage(
+      tokens,
+      significant,
+      declarationPosition + 1,
+    );
+    const normalizedLanguage = language?.value?.toLowerCase();
+
+    let depth = 0;
+    let asPosition = -1;
+    for (
+      let position = declarationPosition + 1;
+      position < significant.length;
+      position += 1
+    ) {
+      const token = tokens[significant[position]];
+      if (token.type === 'punctuation' && token.value === '(') {
+        depth += 1;
+      } else if (token.type === 'punctuation' && token.value === ')') {
+        depth = Math.max(0, depth - 1);
+      } else if (depth === 0 && isPostgresWord(token, 'as')) {
+        asPosition = position;
+        break;
+      }
+    }
+    if (asPosition === -1) {
+      continue;
+    }
+
+    const firstBody = parsePostgresStringGroup(
+      tokens,
+      significant,
+      asPosition + 1,
+    );
+    if (!firstBody) {
+      fail(tokens[significant[asPosition]]);
+      continue;
+    }
+    const afterFirst = tokens[significant[firstBody.nextPosition]];
+    if (
+      afterFirst?.type === 'punctuation' &&
+      afterFirst.value === ','
+    ) {
+      const linkSymbol = parsePostgresStringGroup(
+        tokens,
+        significant,
+        firstBody.nextPosition + 1,
       );
-      const end = statementEndForOffset(
-        executableSql,
-        match.index,
-        executableDollarBodies,
-      );
+      if (
+        !linkSymbol ||
+        normalizedLanguage !== 'c' ||
+        (
+          tokens[significant[linkSymbol.nextPosition]]?.type ===
+            'punctuation' &&
+          tokens[significant[linkSymbol.nextPosition]].value === ','
+        )
+      ) {
+        fail(afterFirst);
+      }
+      continue;
+    }
+    if (afterFirst && stringTokenTypes.has(afterFirst.type)) {
+      errors.push({
+        offset: afterFirst.start,
+        message: 'unsupported concatenated executable string constant',
+      });
+      continue;
+    }
+    if (
+      normalizedLanguage === 'c' ||
+      normalizedLanguage === 'internal'
+    ) {
+      continue;
+    }
 
-      occurrences.push({
-        offset: match.index,
-        statementClass: rule.statementClass,
-        statement: content.slice(start, end),
-        normalizedStatement: normalizeSqlStatement(content.slice(start, end)),
+    executableBodies.push({
+      token: firstBody.token,
+      tokenIndex: firstBody.tokenIndex,
+      context: isPostgresWord(declaration, 'function')
+        ? 'CREATE FUNCTION'
+        : 'CREATE PROCEDURE',
+    });
+  }
+
+  return { executableBodies, errors };
+}
+
+function buildPostgresClassificationSql(content, tokens) {
+  const characters = content.split('');
+  for (const token of tokens) {
+    if (
+      triviaTokenTypes.has(token.type) ||
+      stringTokenTypes.has(token.type) ||
+      quotedIdentifierTokenTypes.has(token.type)
+    ) {
+      blankSqlRange(characters, token.start, token.end);
+    }
+  }
+  return characters.join('');
+}
+
+function maskPostgresSqlForDestructiveScan(content) {
+  const lexed = lexPostgresSql(content);
+  preparePostgresLiteralTokens(lexed.tokens, lexed.errors);
+  const contexts = analyzePostgresExecutableContexts(lexed.tokens);
+  const errors = [...lexed.errors, ...contexts.errors];
+  const outerSql = buildPostgresClassificationSql(content, lexed.tokens);
+  const scanRegions = [{
+    text: content,
+    sql: outerSql,
+    sourceOffsets: Array.from({ length: content.length }, (_, index) => index),
+    executableBody: false,
+  }];
+  const executableDollarBodies = [];
+
+  for (const body of contexts.executableBodies) {
+    const decoded = decodePostgresStringToken(body.token);
+    if (!decoded || decoded.error || !body.token.closed) {
+      if (body.token.type === 'dollar_string' && !body.token.closed) {
+        const lexicalError = errors.find(
+          (error) => error.token === body.token,
+        );
+        if (lexicalError) {
+          lexicalError.message = 'unterminated executable dollar-quoted body';
+        }
+      }
+      continue;
+    }
+
+    const nested = lexPostgresSql(decoded.value);
+    preparePostgresLiteralTokens(nested.tokens, nested.errors);
+    for (const error of nested.errors) {
+      errors.push({
+        offset: decoded.sourceOffsets[error.offset] ?? body.token.start,
+        message: error.message,
+      });
+    }
+    scanRegions.push({
+      text: decoded.value,
+      sql: buildPostgresClassificationSql(decoded.value, nested.tokens),
+      sourceOffsets: decoded.sourceOffsets,
+      executableBody: true,
+    });
+    if (body.token.type === 'dollar_string') {
+      executableDollarBodies.push({
+        start: body.token.bodyStart,
+        end: body.token.bodyEnd,
+        delimiter: body.token.dollarTag,
       });
     }
   }
 
+  return {
+    sql: outerSql,
+    errors: errors.map(({ token: _token, ...error }) => error),
+    executableDollarBodies,
+    scanRegions,
+  };
+}
+
+function postgresNormalizedTokenKind(token) {
+  return (
+    wordTokenTypes.has(token.type) ||
+    token.type === 'number' ||
+    stringTokenTypes.has(token.type) ||
+    quotedIdentifierTokenTypes.has(token.type)
+  )
+    ? 'material'
+    : 'symbol';
+}
+
+function postgresNormalizedTokenValue(token) {
+  if (wordTokenTypes.has(token.type)) {
+    return token.value;
+  }
+  if (token.type === 'unicode_quoted_identifier') {
+    return `U&${token.raw.slice(2)}`;
+  }
+  if (token.type === 'escape_string') {
+    return `E${token.raw.slice(1)}`;
+  }
+  if (token.type === 'unicode_string') {
+    return `U&${token.raw.slice(2)}`;
+  }
+  return token.raw;
+}
+
+function normalizePostgresSqlStatement(statement) {
+  const tokens = lexPostgresSql(statement).tokens.filter(
+    (token) => !triviaTokenTypes.has(token.type),
+  );
+  return tokens.reduce((normalized, token, index) => {
+    const previous = tokens[index - 1];
+    const needsSpace =
+      previous &&
+      postgresNormalizedTokenKind(previous) === 'material' &&
+      postgresNormalizedTokenKind(token) === 'material';
+    return (
+      normalized +
+      (needsSpace ? ' ' : '') +
+      postgresNormalizedTokenValue(token)
+    );
+  }, '');
+}
+
+function postgresIdentifierTargetAt(tokens, significant, position) {
+  const parts = [];
+  let current = position;
+
+  const consumeIdentifier = () => {
+    const token = tokens[significant[current]];
+    if (
+      !token ||
+      (
+        !wordTokenTypes.has(token.type) &&
+        !quotedIdentifierTokenTypes.has(token.type)
+      )
+    ) {
+      return false;
+    }
+    parts.push(postgresNormalizedTokenValue(token));
+    current += 1;
+    if (token.unicodeClauseEndTokenIndex !== undefined) {
+      while (
+        current < significant.length &&
+        significant[current] <= token.unicodeClauseEndTokenIndex
+      ) {
+        parts.push(
+          ` ${postgresNormalizedTokenValue(tokens[significant[current]])}`,
+        );
+        current += 1;
+      }
+    }
+    return true;
+  };
+
+  if (!consumeIdentifier()) {
+    return null;
+  }
+  while (
+    tokens[significant[current]]?.type === 'punctuation' &&
+    tokens[significant[current]].value === '.'
+  ) {
+    parts.push('.');
+    current += 1;
+    if (!consumeIdentifier()) {
+      return null;
+    }
+  }
+  return parts.join('');
+}
+
+function destructiveTargetForStatement(statement, statementClass) {
+  const lexed = lexPostgresSql(statement);
+  preparePostgresLiteralTokens(lexed.tokens, lexed.errors);
+  const significant = significantPostgresTokenIndices(lexed.tokens);
+  const tokens = lexed.tokens;
+
+  for (let position = 0; position < significant.length; position += 1) {
+    const token = tokens[significant[position]];
+    let targetPosition = -1;
+
+    if (
+      statementClass === 'DELETE' &&
+      isPostgresWord(token, 'delete') &&
+      isPostgresWord(tokens[significant[position + 1]], 'from')
+    ) {
+      targetPosition = position + 2;
+      if (isPostgresWord(tokens[significant[targetPosition]], 'only')) {
+        targetPosition += 1;
+      }
+    } else if (
+      statementClass === 'TRUNCATE' &&
+      isPostgresWord(token, 'truncate')
+    ) {
+      targetPosition = position + 1;
+      if (isPostgresWord(tokens[significant[targetPosition]], 'table')) {
+        targetPosition += 1;
+      }
+      if (isPostgresWord(tokens[significant[targetPosition]], 'only')) {
+        targetPosition += 1;
+      }
+    } else if (
+      (statementClass === 'DROP TABLE' ||
+        statementClass === 'DROP SCHEMA' ||
+        statementClass === 'DROP POLICY') &&
+      isPostgresWord(token, 'drop') &&
+      isPostgresWord(
+        tokens[significant[position + 1]],
+        statementClass.slice(5).toLowerCase(),
+      )
+    ) {
+      targetPosition = position + 2;
+      if (
+        isPostgresWord(tokens[significant[targetPosition]], 'if') &&
+        isPostgresWord(tokens[significant[targetPosition + 1]], 'exists')
+      ) {
+        targetPosition += 2;
+      }
+    } else if (
+      statementClass.startsWith('ALTER TABLE') &&
+      isPostgresWord(token, 'alter') &&
+      isPostgresWord(tokens[significant[position + 1]], 'table')
+    ) {
+      targetPosition = position + 2;
+      if (isPostgresWord(tokens[significant[targetPosition]], 'only')) {
+        targetPosition += 1;
+      }
+    }
+
+    if (targetPosition !== -1) {
+      return postgresIdentifierTargetAt(tokens, significant, targetPosition);
+    }
+  }
+  return null;
+}
+
+function postgresStatementStart(sql, offset, executableBody) {
+  let start = sql.lastIndexOf(';', offset - 1) + 1;
+  while (/\s/.test(sql[start] ?? '')) {
+    start += 1;
+  }
+  if (executableBody) {
+    const begin = sql.slice(start, offset).match(
+      /^\s*(?:(?:<<[A-Za-z_][A-Za-z0-9_]*>>)|[A-Za-z_][A-Za-z0-9_]*)?\s*begin\b/i,
+    );
+    if (begin) {
+      start += begin[0].length;
+      while (/\s/.test(sql[start] ?? '')) {
+        start += 1;
+      }
+    }
+  }
+  return start;
+}
+
+function enumeratePostgresDestructiveStatements(content, masked) {
+  const occurrences = [];
+  for (const region of masked.scanRegions) {
+    for (const rule of destructiveStatementRules) {
+      rule.regex.lastIndex = 0;
+      for (const match of region.sql.matchAll(rule.regex)) {
+        const start = postgresStatementStart(
+          region.sql,
+          match.index,
+          region.executableBody,
+        );
+        const nextSemicolon = region.sql.indexOf(';', match.index);
+        const end = nextSemicolon === -1
+          ? region.sql.length
+          : nextSemicolon + 1;
+        const statement = region.text.slice(start, end);
+        occurrences.push({
+          offset: region.sourceOffsets[match.index] ?? 0,
+          statementClass: rule.statementClass,
+          target: destructiveTargetForStatement(
+            statement,
+            rule.statementClass,
+          ),
+          statement,
+          normalizedStatement: normalizePostgresSqlStatement(statement),
+        });
+      }
+    }
+  }
   return occurrences.sort((left, right) => left.offset - right.offset);
 }
 
@@ -653,7 +1428,7 @@ function validateDestructiveStatements(
   allowlist = destructiveStatementAllowlist,
 ) {
   const violations = [];
-  const masked = maskSqlCommentsAndStringLiterals(content);
+  const masked = maskPostgresSqlForDestructiveScan(content);
   const entries = allowlist.filter(
     (entry) => entry.fileName === fileName && entry.label === 'destructive SQL statement',
   );
@@ -668,6 +1443,15 @@ function validateDestructiveStatements(
       continue;
     }
     occurrenceIds.add(entry.occurrenceId);
+    const derivedTarget = destructiveTargetForStatement(
+      entry.statement,
+      entry.statementClass,
+    );
+    if (entry.target && entry.target !== derivedTarget) {
+      violations.push(
+        `${fileName}: destructive SQL allowlist occurrence ${entry.occurrenceId} has a target that does not match its complete statement.`,
+      );
+    }
   }
 
   for (const error of masked.errors) {
@@ -675,16 +1459,32 @@ function validateDestructiveStatements(
     violations.push(`${fileName}:${line}: ${error.message}; lexical scan failed closed.`);
   }
 
-  for (const occurrence of enumerateDestructiveStatements(
+  for (const occurrence of enumeratePostgresDestructiveStatements(
     content,
-    masked.sql,
-    masked.executableDollarBodies,
+    masked,
   )) {
+    if (!occurrence.target) {
+      const line = lineNumberForOffset(content, occurrence.offset);
+      violations.push(
+        `${fileName}:${line}: destructive SQL target could not be resolved; lexical scan failed closed.`,
+      );
+      continue;
+    }
     const entry = entries.find(
-      (candidate) =>
-        !usedOccurrenceIds.has(candidate.occurrenceId) &&
-        candidate.statementClass === occurrence.statementClass &&
-        normalizeSqlStatement(candidate.statement) === occurrence.normalizedStatement,
+      (candidate) => {
+        const candidateTarget = candidate.target ??
+          destructiveTargetForStatement(
+            candidate.statement,
+            candidate.statementClass,
+          );
+        return (
+          !usedOccurrenceIds.has(candidate.occurrenceId) &&
+          candidate.statementClass === occurrence.statementClass &&
+          candidateTarget === occurrence.target &&
+          normalizePostgresSqlStatement(candidate.statement) ===
+            occurrence.normalizedStatement
+        );
+      },
     );
 
     if (entry) {
@@ -694,7 +1494,7 @@ function validateDestructiveStatements(
 
     const line = lineNumberForOffset(content, occurrence.offset);
     violations.push(
-      `${fileName}:${line}: ${occurrence.statementClass} destructive SQL statement is not exactly allowlisted.`,
+      `${fileName}:${line}: ${occurrence.statementClass} destructive SQL statement is not exactly allowlisted (target ${occurrence.target}).`,
     );
   }
 
@@ -804,9 +1604,10 @@ if (require.main === module) {
 }
 
 module.exports = {
-  enumerateDestructiveStatements,
-  maskSqlCommentsAndStringLiterals,
-  normalizeSqlStatement,
+  enumerateDestructiveStatements: enumeratePostgresDestructiveStatements,
+  lexPostgresSql,
+  maskSqlCommentsAndStringLiterals: maskPostgresSqlForDestructiveScan,
+  normalizeSqlStatement: normalizePostgresSqlStatement,
   validateDestructiveStatements,
   validateMigrations,
 };

@@ -14,6 +14,8 @@ const {
   serviceRolePublicSecurityDefinerAllowlist,
 } = require('./security-definer-privilege-contract.cjs');
 const {
+  enumerateDestructiveStatements,
+  maskSqlCommentsAndStringLiterals,
   normalizeSqlStatement,
   validateDestructiveStatements,
 } = require('./validate-supabase-migrations.cjs');
@@ -990,7 +992,10 @@ test('DO LANGUAGE without a language name does not authorize a dollar body', () 
     'DO LANGUAGE $body$ drop schema tenant_private cascade; $body$;',
   );
 
-  assert.deepEqual(violations, []);
+  assert.match(
+    violations.join('\n'),
+    /invalid or unsupported executable SQL body context.*failed closed/,
+  );
 });
 
 test('an extra token before a DO LANGUAGE delimiter is rejected', () => {
@@ -998,15 +1003,21 @@ test('an extra token before a DO LANGUAGE delimiter is rejected', () => {
     'DO LANGUAGE plpgsql SECURITY $body$ drop schema tenant_private cascade; $body$;',
   );
 
-  assert.deepEqual(violations, []);
+  assert.match(
+    violations.join('\n'),
+    /invalid or unsupported executable SQL body context.*failed closed/,
+  );
 });
 
-test('a string literal cannot be a DO LANGUAGE identifier', () => {
+test('a string constant is a valid DO LANGUAGE name', () => {
   const violations = destructiveViolations(
     "DO LANGUAGE 'plpgsql' $body$ drop schema tenant_private cascade; $body$;",
   );
 
-  assert.deepEqual(violations, []);
+  assert.match(
+    violations.join('\n'),
+    /DROP SCHEMA destructive SQL statement/,
+  );
 });
 
 test('a qualified DO LANGUAGE name is rejected', () => {
@@ -1014,7 +1025,10 @@ test('a qualified DO LANGUAGE name is rejected', () => {
     'DO LANGUAGE public.plpgsql $body$ drop schema tenant_private cascade; $body$;',
   );
 
-  assert.deepEqual(violations, []);
+  assert.match(
+    violations.join('\n'),
+    /invalid or unsupported executable SQL body context.*failed closed/,
+  );
 });
 
 test('an expression-like DO LANGUAGE name is rejected', () => {
@@ -1022,7 +1036,445 @@ test('an expression-like DO LANGUAGE name is rejected', () => {
     'DO LANGUAGE plpgsql() $body$ drop schema tenant_private cascade; $body$;',
   );
 
+  assert.match(
+    violations.join('\n'),
+    /invalid or unsupported executable SQL body context.*failed closed/,
+  );
+});
+
+test('Unicode-escaped quoted DO LANGUAGE identifiers are recognized', () => {
+  const violations = destructiveViolations(
+    'DO LANGUAGE U&"plpgsql" $body$ begin delete from "messages"; end; $body$;',
+  );
+
+  assert.match(violations.join('\n'), /DELETE destructive SQL statement/);
+});
+
+test('Unicode-escaped quoted DO LANGUAGE identifiers support valid UESCAPE clauses', () => {
+  const violations = destructiveViolations(
+    'DO LANGUAGE U&"plpgsql" UESCAPE \'!\' $body$ begin delete from "messages"; end; $body$;',
+  );
+
+  assert.match(violations.join('\n'), /DELETE destructive SQL statement/);
+});
+
+test('escape, Unicode, and dollar string DO LANGUAGE names are recognized', () => {
+  const fixtures = [
+    'DO LANGUAGE E\'plpgsql\' $body$ begin delete from "messages"; end; $body$;',
+    'DO LANGUAGE U&\'plpgsql\' $body$ begin delete from "messages"; end; $body$;',
+    'DO LANGUAGE $lang$plpgsql$lang$ $body$ begin delete from "messages"; end; $body$;',
+  ];
+
+  for (const sql of fixtures) {
+    assert.match(
+      destructiveViolations(sql).join('\n'),
+      /DELETE destructive SQL statement/,
+      sql,
+    );
+  }
+});
+
+test('standard, escape, and Unicode DO string bodies are scanned as executable code', () => {
+  const fixtures = [
+    'DO \'BEGIN DELETE FROM "messages"; END\';',
+    'DO E\'BEGIN\\n DELETE FROM "messages";\\nEND\';',
+    'DO U&\'BEGIN!000a DELETE FROM "messages";!000aEND\' UESCAPE \'!\';',
+  ];
+
+  for (const sql of fixtures) {
+    assert.match(
+      destructiveViolations(sql).join('\n'),
+      /DELETE destructive SQL statement/,
+      sql,
+    );
+  }
+});
+
+test('escape-body byte, Unicode, and unknown escapes decode with PostgreSQL semantics', () => {
+  const fixtures = [
+    'DO E\'BEGIN \\x44ELETE FROM "messages"; END\';',
+    'DO E\'BEGIN \\104ELETE FROM "messages"; END\';',
+    'DO E\'BEGIN \\u0044ELETE FROM "messages"; END\';',
+    'DO E\'BEGIN \\DELETE FROM "messages"; END\';',
+  ];
+
+  for (const sql of fixtures) {
+    assert.match(
+      destructiveViolations(sql).join('\n'),
+      /DELETE destructive SQL statement/,
+      sql,
+    );
+  }
+});
+
+test('Unicode-body escapes decode before destructive classification', () => {
+  const fixtures = [
+    'DO U&\'BEGIN \\0044ELETE FROM "messages"; END\';',
+    'DO U&\'BEGIN !0044ELETE FROM "messages"; END\' UESCAPE \'!\';',
+  ];
+
+  for (const sql of fixtures) {
+    assert.match(
+      destructiveViolations(sql).join('\n'),
+      /DELETE destructive SQL statement/,
+      sql,
+    );
+  }
+});
+
+test('post-code LANGUAGE remains valid for single-quoted DO bodies', () => {
+  const violations = destructiveViolations(
+    'DO \'BEGIN DELETE FROM "messages"; END\' LANGUAGE \'plpgsql\';',
+  );
+
+  assert.match(violations.join('\n'), /DELETE destructive SQL statement/);
+});
+
+test('function standard, escape, and Unicode AS bodies are scanned', () => {
+  const fixtures = [
+    'CREATE FUNCTION public.f1() RETURNS void AS \'BEGIN DELETE FROM "messages"; END\' LANGUAGE plpgsql;',
+    'CREATE FUNCTION public.f2() RETURNS void AS E\'BEGIN\\n DELETE FROM "messages";\\nEND\' LANGUAGE plpgsql;',
+    'CREATE FUNCTION public.f3() RETURNS void AS U&\'BEGIN!000a DELETE FROM "messages";!000aEND\' UESCAPE \'!\' LANGUAGE plpgsql;',
+  ];
+
+  for (const sql of fixtures) {
+    assert.match(
+      destructiveViolations(sql).join('\n'),
+      /DELETE destructive SQL statement/,
+      sql,
+    );
+  }
+});
+
+test('procedure standard, escape, Unicode, and dollar AS bodies are scanned', () => {
+  const fixtures = [
+    'CREATE PROCEDURE public.p1() AS \'BEGIN DELETE FROM "messages"; END\' LANGUAGE plpgsql;',
+    'CREATE PROCEDURE public.p2() AS E\'BEGIN\\n DELETE FROM "messages";\\nEND\' LANGUAGE plpgsql;',
+    'CREATE PROCEDURE public.p3() AS U&\'BEGIN!000a DELETE FROM "messages";!000aEND\' UESCAPE \'!\' LANGUAGE plpgsql;',
+    'CREATE PROCEDURE public.p4() AS $body$ BEGIN DELETE FROM "messages"; END $body$ LANGUAGE plpgsql;',
+  ];
+
+  for (const sql of fixtures) {
+    assert.match(
+      destructiveViolations(sql).join('\n'),
+      /DELETE destructive SQL statement/,
+      sql,
+    );
+  }
+});
+
+test('C object-file and link-symbol AS strings remain non-executable', () => {
+  const violations = destructiveViolations(
+    'CREATE FUNCTION public.c_probe() RETURNS void AS \'delete from messages\', \'drop_table_symbol\' LANGUAGE c;',
+  );
+
   assert.deepEqual(violations, []);
+});
+
+test('PostgreSQL built-in C object-file and link-symbol form remains non-executable', () => {
+  const violations = destructiveViolations(
+    'CREATE FUNCTION public.plpgsql_handler_probe() RETURNS language_handler AS \'$libdir/plpgsql\', \'plpgsql_call_handler\' LANGUAGE c;',
+  );
+
+  assert.deepEqual(violations, []);
+});
+
+test('single C object-file AS strings remain non-executable', () => {
+  const violations = destructiveViolations(
+    'CREATE FUNCTION public.c_probe() RETURNS void AS \'delete from messages\' LANGUAGE c;',
+  );
+
+  assert.deepEqual(violations, []);
+});
+
+test('object-file and link-symbol pairs fail closed outside LANGUAGE c', () => {
+  const violations = destructiveViolations(
+    'CREATE FUNCTION public.bad_pair() RETURNS void AS \'delete from messages\', \'symbol\' LANGUAGE plpgsql;',
+  );
+
+  assert.match(
+    violations.join('\n'),
+    /invalid or unsupported executable SQL body context.*failed closed/,
+  );
+});
+
+test('quoted and schema-qualified quoted DELETE targets are classified', () => {
+  const fixtures = [
+    'DELETE FROM "messages";',
+    'DELETE FROM "Messages";',
+    'DELETE FROM "a""b";',
+    'DELETE FROM public."messages";',
+    'DELETE FROM "public"."messages";',
+    'DELETE FROM U&"m\\0065ssages";',
+  ];
+
+  for (const sql of fixtures) {
+    assert.match(
+      destructiveViolations(sql).join('\n'),
+      /DELETE destructive SQL statement/,
+      sql,
+    );
+  }
+});
+
+test('quoted destructive occurrences expose exact class, target, statement, and source offset', () => {
+  const sql = 'select 1;\nDELETE FROM "public"."Messages" WHERE "id" = 1;';
+  const masked = maskSqlCommentsAndStringLiterals(sql);
+  const occurrences = enumerateDestructiveStatements(sql, masked);
+
+  assert.equal(occurrences.length, 1);
+  assert.equal(occurrences[0].statementClass, 'DELETE');
+  assert.equal(occurrences[0].target, '"public"."Messages"');
+  assert.equal(
+    occurrences[0].normalizedStatement,
+    'delete from "public"."Messages" where "id"=1;',
+  );
+  assert.equal(sql.slice(0, occurrences[0].offset).split(/\r?\n/).length, 2);
+});
+
+test('quoted targets are classified for TRUNCATE, DROP TABLE, and DROP SCHEMA', () => {
+  const fixtures = [
+    ['TRUNCATE', 'TRUNCATE "messages";'],
+    ['DROP TABLE', 'DROP TABLE "messages";'],
+    ['DROP SCHEMA', 'DROP SCHEMA "private";'],
+  ];
+
+  for (const [statementClass, sql] of fixtures) {
+    assert.match(
+      destructiveViolations(sql).join('\n'),
+      new RegExp(`${statementClass} destructive SQL statement`),
+      sql,
+    );
+  }
+});
+
+test('one quoted destructive target cannot authorize a different target', () => {
+  const approved = 'delete from "messages";';
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [{ occurrenceId: 'quoted-delete', statement: approved }],
+  );
+
+  assert.deepEqual(destructiveViolations(approved, allowlist), []);
+  for (const changed of [
+    'delete from "Messages";',
+    'delete from "a""b";',
+    'delete from "public"."messages";',
+  ]) {
+    const violations = destructiveViolations(changed, allowlist);
+    assert.match(violations.join('\n'), /not exactly allowlisted/);
+    assert.match(
+      violations.join('\n'),
+      /quoted-delete was not found exactly once/,
+    );
+  }
+});
+
+test('quoted destructive fingerprints retain complete predicates and terminators', () => {
+  const approved = 'delete from "public"."messages" where "id" = 1;';
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [{ occurrenceId: 'quoted-bounded-delete', statement: approved }],
+  );
+
+  assert.deepEqual(destructiveViolations(approved, allowlist), []);
+  assert.match(
+    destructiveViolations(
+      'delete from "public"."messages" where "id" = 2;',
+      allowlist,
+    ).join('\n'),
+    /not exactly allowlisted/,
+  );
+  assert.match(
+    destructiveViolations(
+      'delete from "public"."messages" where "id" = 1',
+      allowlist,
+    ).join('\n'),
+    /not exactly allowlisted/,
+  );
+});
+
+test('ordinary standard, escape, Unicode, and dollar data strings remain masked', () => {
+  const sql = [
+    'select \'delete from "messages";\';',
+    'select E\'delete from "messages";\';',
+    'select U&\'delete from "messages";\';',
+    'select $data$ delete from "messages"; $data$;',
+  ].join('\n');
+
+  assert.deepEqual(destructiveViolations(sql), []);
+});
+
+test('comments and keyword-shaped quoted identifiers remain non-executable', () => {
+  const sql = [
+    '-- DO LANGUAGE plpgsql AS DELETE FROM "messages";',
+    '/* CREATE FUNCTION f() AS \'DELETE FROM messages\' */',
+    'select "DELETE FROM messages", "DO LANGUAGE", "DROP TABLE";',
+  ].join('\n');
+
+  assert.deepEqual(destructiveViolations(sql), []);
+});
+
+test('invalid Unicode UESCAPE forms fail closed with a fixed error', () => {
+  const fixtures = [
+    'DO U&\'BEGIN!000a DELETE FROM "messages";!000aEND\' UESCAPE \'0\';',
+    'DO U&\'BEGIN!000a DELETE FROM "messages";!000aEND\' UESCAPE \'!!\';',
+    'DO U&\'BEGIN!000a DELETE FROM "messages";!000aEND\' UESCAPE E\'!\';',
+  ];
+
+  for (const sql of fixtures) {
+    assert.match(
+      destructiveViolations(sql).join('\n'),
+      /invalid Unicode UESCAPE clause.*failed closed/,
+      sql,
+    );
+  }
+});
+
+test('malformed escape and Unicode body sequences fail closed', () => {
+  const fixtures = [
+    'DO E\'BEGIN \\x DELETE FROM "messages"; END\';',
+    'DO E\'BEGIN \\u123 DELETE FROM "messages"; END\';',
+    'DO U&\'BEGIN \\123 DELETE FROM "messages"; END\';',
+    'DO U&\'BEGIN \\D800 DELETE FROM "messages"; END\';',
+  ];
+
+  for (const sql of fixtures) {
+    assert.match(
+      destructiveViolations(sql).join('\n'),
+      /invalid or unsupported (?:escape string|Unicode escape) sequence.*failed closed/,
+      sql,
+    );
+  }
+});
+
+test('nested block comments preserve structure and unterminated nesting fails closed', () => {
+  const valid = [
+    '/* outer /* DELETE FROM "hidden"; */ still outer */',
+    'DELETE FROM "messages";',
+  ].join('\n');
+  const validViolations = destructiveViolations(valid);
+
+  assert.equal(
+    validViolations.filter((violation) => /DELETE destructive SQL statement/.test(violation))
+      .length,
+    1,
+  );
+  assert.match(
+    destructiveViolations('/* outer /* inner */').join('\n'),
+    /unterminated nested block comment.*failed closed/,
+  );
+});
+
+test('unterminated standard, escape, Unicode, and dollar strings fail closed', () => {
+  const fixtures = [
+    ['standard', 'DO \'BEGIN DELETE FROM "messages"; END;'],
+    ['escape', 'DO E\'BEGIN\\n DELETE FROM "messages";'],
+    ['Unicode', 'DO U&\'BEGIN!000a DELETE FROM "messages";'],
+    ['dollar', 'DO $body$ BEGIN DELETE FROM "messages"; END;'],
+  ];
+
+  for (const [kind, sql] of fixtures) {
+    assert.match(
+      destructiveViolations(sql).join('\n'),
+      new RegExp(`unterminated ${kind}|unterminated executable`),
+      sql,
+    );
+    assert.match(
+      destructiveViolations(sql).join('\n'),
+      /failed closed/,
+      sql,
+    );
+  }
+});
+
+test('invalid and unterminated quoted identifiers fail closed', () => {
+  for (const sql of [
+    'delete from "";',
+    'delete from "messages;',
+    'delete from U&"m!0065ssages" UESCAPE \'0\';',
+  ]) {
+    assert.match(
+      destructiveViolations(sql).join('\n'),
+      /quoted identifier|UESCAPE clause/,
+      sql,
+    );
+    assert.match(destructiveViolations(sql).join('\n'), /failed closed/, sql);
+  }
+});
+
+test('cross-statement text cannot authorize a later executable body', () => {
+  const sql = [
+    'select \'DO LANGUAGE plpgsql\';',
+    'select $data$ delete from "messages"; $data$;',
+    'DO \'BEGIN DELETE FROM "messages"; END\';',
+  ].join('\n');
+  const violations = destructiveViolations(sql);
+
+  assert.equal(
+    violations.filter((violation) => /DELETE destructive SQL statement/.test(violation))
+      .length,
+    1,
+  );
+});
+
+test('nested non-executable strings inside executable code stay masked', () => {
+  const sql =
+    'DO \'BEGIN PERFORM \'\'DELETE FROM "hidden"\'\'; DELETE FROM "visible"; END\';';
+  const violations = destructiveViolations(sql);
+
+  assert.equal(
+    violations.filter((violation) => /DELETE destructive SQL statement/.test(violation))
+      .length,
+    1,
+  );
+});
+
+test('quoted target lookalikes inside data strings stay masked', () => {
+  assert.deepEqual(
+    destructiveViolations(
+      'select \'DELETE FROM "Messages";\', E\'TRUNCATE "messages";\', U&\'DROP TABLE "messages";\';',
+    ),
+    [],
+  );
+});
+
+test('PostgreSQL-valid Run-31 fixtures reject through temporary migration CLI files', () => {
+  const fixtures = [
+    'DO LANGUAGE \'plpgsql\' $b$ BEGIN DELETE FROM "messages"; END $b$;',
+    'DO LANGUAGE U&"plpgsql" $b$ BEGIN DELETE FROM "messages"; END $b$;',
+    'DO LANGUAGE E\'plpgsql\' $b$ BEGIN DELETE FROM "messages"; END $b$;',
+    'DO LANGUAGE U&\'plpgsql\' $b$ BEGIN DELETE FROM "messages"; END $b$;',
+    'DO LANGUAGE $lang$plpgsql$lang$ $b$ BEGIN DELETE FROM "messages"; END $b$;',
+    'DO \'BEGIN DELETE FROM "messages"; END\';',
+    'DO E\'BEGIN\\n DELETE FROM "messages";\\nEND\';',
+    'DO U&\'BEGIN!000a DELETE FROM "messages";!000aEND\' UESCAPE \'!\';',
+    'CREATE FUNCTION public.f1() RETURNS void AS \'BEGIN DELETE FROM "messages"; END\' LANGUAGE plpgsql;',
+    'CREATE FUNCTION public.f2() RETURNS void AS E\'BEGIN\\n DELETE FROM "messages";\\nEND\' LANGUAGE plpgsql;',
+    'CREATE PROCEDURE public.p1() AS \'BEGIN DELETE FROM "messages"; END\' LANGUAGE plpgsql;',
+    'DELETE FROM "messages";',
+    'DO \'BEGIN DELETE FROM "Run31"."Messages"; END\';',
+    'DO \'BEGIN TRUNCATE "messages"; END\';',
+    'DO \'BEGIN DROP TABLE "messages"; END\';',
+    'DO \'BEGIN DROP SCHEMA "Run31Drop"; END\';',
+  ];
+
+  for (const [index, sql] of fixtures.entries()) {
+    const root = makeTempRoot();
+    const migrationsDir = writeMigration(
+      root,
+      `2026073112${String(index).padStart(4, '0')}_run31_cli_fixture.sql`,
+      sql,
+    );
+    const result = runValidator(migrationsDir);
+
+    assert.notEqual(result.status, 0, sql);
+    assert.match(
+      result.stderr,
+      /destructive SQL statement is not exactly allowlisted/,
+      sql,
+    );
+  }
 });
 
 test('mismatched DO LANGUAGE dollar tags fail closed', () => {
