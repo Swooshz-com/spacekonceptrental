@@ -3,9 +3,15 @@ import "server-only";
 import { NextResponse, type NextRequest } from "next/server";
 import { getAdminRouteRuntimeConfig } from "../server-runtime-config";
 import {
-  resolveServerAdminRuntimeRouteGateAdapter,
-  type ServerAdminRuntimeRouteGateAdapterResult
-} from "../admin/authorization/server-admin-runtime-route-gate-adapter";
+  createServerAdminCsrfProofRuntimeDependencies,
+  type ServerAdminCsrfProofRuntimeDependencies
+} from "../admin/authorization/server-admin-csrf-proof-runtime-dependencies";
+import {
+  resolveServerAdminCsrfProofSessionWorkspaceBinding,
+  type ServerAdminCsrfProofSessionWorkspaceBindingDependencies,
+  type ServerAdminCsrfProofSessionWorkspaceBindingResult
+} from "../admin/authorization/server-admin-csrf-proof-session-workspace-binding";
+import { resolveServerAdminMutationCapability } from "../admin/authorization/server-admin-mutation-capability";
 import {
   executeAdminSetupRecipeWrite,
   readAdminSetupRecipe
@@ -23,31 +29,16 @@ type AdminSetupRecipeRouteEnv = {
   ADMIN_MUTATIONS_ENABLED?: string | null;
 };
 
+type CreateRuntimeDependencies = (
+  verifierContext?: Parameters<typeof createServerAdminCsrfProofRuntimeDependencies>[0]
+) => ServerAdminCsrfProofRuntimeDependencies;
+
 type AdminSetupRecipeRouteDependencies = {
   env?: AdminSetupRecipeRouteEnv;
-  resolveRouteGate?: typeof resolveServerAdminRuntimeRouteGateAdapter;
+  createRuntimeDependencies?: CreateRuntimeDependencies;
+  resolveSessionWorkspaceBinding?: typeof resolveServerAdminCsrfProofSessionWorkspaceBinding;
+  bindingDependencies?: ServerAdminCsrfProofSessionWorkspaceBindingDependencies;
 };
-
-type AdminSetupRecipeReadPayload = {
-  action: "read";
-  setupProductId: string;
-};
-
-type AdminSetupRecipeWritePayload = {
-  action: "write";
-  operation: "replace" | "remove";
-  setupProductId: string;
-  expectedRevision: number;
-  items: Array<{
-    included_product_id: string;
-    position: number;
-    base_quantity: number;
-  }>;
-};
-
-type AdminSetupRecipePayload =
-  | AdminSetupRecipeReadPayload
-  | AdminSetupRecipeWritePayload;
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -68,55 +59,67 @@ async function adminAuthCheck(
   workspaceId: string;
   response?: NextResponse;
 }> {
-  const routeConfig = getAdminRouteRuntimeConfig();
-
-  const gateResult = await (
-    dependencies.resolveRouteGate ?? resolveServerAdminRuntimeRouteGateAdapter
-  )(
-    {
-      requestedOperation: "admin.setupRecipe.write",
-      requestMethod: request.method,
-      request: { method: request.method },
-      requiresMutationCapability: true
-    },
-    {
-      requestMetadata: {
-        expectedOrigin:
-          dependencies.env?.ADMIN_EXPECTED_ORIGIN ??
-          routeConfig.expectedOrigin,
-        expectedHost:
-          dependencies.env?.ADMIN_EXPECTED_HOST ?? routeConfig.expectedHost
-      },
-      gate: {
-        decision: {
-          workspace: {
-            trustedServerWorkspaceId:
-              dependencies.env?.ADMIN_TRUSTED_WORKSPACE_ID ??
-              routeConfig.trustedServerWorkspaceId
-          }
-        }
-      },
-      mutationCapability: {
-        env: {
-          ADMIN_MUTATIONS_ENABLED: dependencies.env?.ADMIN_MUTATIONS_ENABLED ?? undefined
-        }
-      }
-    }
+  const mutationCapability = resolveServerAdminMutationCapability(
+    dependencies.env ?? {}
   );
 
-  if (!gateResult.allowed) {
-    const status =
-      gateResult.statusCode === 401
-        ? 401
-        : gateResult.statusCode === 503
-          ? 503
-          : 403;
+  if (!mutationCapability.enabled) {
+    return {
+      allowed: false,
+      workspaceId: "",
+      response: safeJsonResponse(
+        { error: mutationCapability.reason },
+        mutationCapability.statusCode
+      )
+    };
+  }
+
+  const routeConfig = getAdminRouteRuntimeConfig(
+    dependencies.env ?? {}
+  );
+  const createRuntimeDependencies =
+    dependencies.createRuntimeDependencies ??
+    createServerAdminCsrfProofRuntimeDependencies;
+  const runtimeDependencies = createRuntimeDependencies();
+
+  const resolveSessionWorkspaceBinding =
+    dependencies.resolveSessionWorkspaceBinding ??
+    resolveServerAdminCsrfProofSessionWorkspaceBinding;
+  let binding: ServerAdminCsrfProofSessionWorkspaceBindingResult;
+
+  try {
+    binding = await resolveSessionWorkspaceBinding(
+      {
+        requestedOperation: "admin.setupRecipe.write"
+      },
+      {
+        ...(dependencies.bindingDependencies ?? {}),
+        workspace: {
+          trustedServerWorkspaceId:
+            dependencies.env?.ADMIN_TRUSTED_WORKSPACE_ID ??
+            routeConfig.trustedServerWorkspaceId
+        },
+        ...runtimeDependencies.sessionWorkspaceBindingDependencies
+      }
+    );
+  } catch {
+    return {
+      allowed: false,
+      workspaceId: "",
+      response: safeJsonResponse(
+        { error: "admin_csrf_session_workspace_binding_unavailable" },
+        503
+      )
+    };
+  }
+
+  if (!binding.bound) {
     return {
       allowed: false,
       workspaceId: "",
       response: safeJsonResponse(
         { error: "submission_not_allowed" },
-        status
+        403
       )
     };
   }
