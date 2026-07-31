@@ -1,4 +1,5 @@
 const assert = require('node:assert/strict');
+const crypto = require('node:crypto');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
@@ -129,6 +130,153 @@ function runValidator(migrationsDir, options = {}) {
       ...options.env,
     },
   });
+}
+
+const proceduralDynamicSqlPolicy =
+  'Procedural dynamic SQL is not permitted in reviewed migrations.';
+
+const proceduralDynamicExecutionFixtures = [
+  {
+    name: 'standard string EXECUTE',
+    statementClass: 'EXECUTE',
+    sql: "DO $body$ BEGIN EXECUTE 'SELECT 1'; END $body$;",
+  },
+  {
+    name: 'escape string EXECUTE',
+    statementClass: 'EXECUTE',
+    sql: "DO $body$ BEGIN EXECUTE E'SELECT\\n1'; END $body$;",
+  },
+  {
+    name: 'Unicode string EXECUTE',
+    statementClass: 'EXECUTE',
+    sql: "DO $body$ BEGIN EXECUTE U&'SELECT 1'; END $body$;",
+  },
+  {
+    name: 'dollar string EXECUTE',
+    statementClass: 'EXECUTE',
+    sql: 'DO $body$ BEGIN EXECUTE $sql$SELECT 1$sql$; END $body$;',
+  },
+  {
+    name: 'adjacent string EXECUTE',
+    statementClass: 'EXECUTE',
+    sql: "DO $body$ BEGIN EXECUTE 'SELECT ' \n '1'; END $body$;",
+  },
+  {
+    name: 'concatenated EXECUTE with quote functions',
+    statementClass: 'EXECUTE',
+    sql: `
+      DO $body$
+      DECLARE target_name text := 'messages';
+      BEGIN
+        EXECUTE 'SELECT ' || quote_ident(target_name)
+          || quote_literal('value') || quote_nullable(null);
+      END
+      $body$;
+    `,
+  },
+  {
+    name: 'format function EXECUTE with cast and conditional expression',
+    statementClass: 'EXECUTE',
+    sql: `
+      DO $body$
+      DECLARE target_name text := 'messages';
+      BEGIN
+        EXECUTE (
+          CASE WHEN target_name IS NULL
+            THEN format('SELECT 1')
+            ELSE format('SELECT * FROM %I', target_name::text)
+          END
+        );
+      END
+      $body$;
+    `,
+  },
+  {
+    name: 'variable EXECUTE with INTO STRICT and USING',
+    statementClass: 'EXECUTE',
+    sql: `
+      DO $body$
+      DECLARE command_variable text := 'SELECT $1'; result_value integer;
+      BEGIN
+        EXECUTE command_variable
+          INTO STRICT result_value
+          USING 1;
+      END
+      $body$;
+    `,
+  },
+  {
+    name: 'RETURN QUERY EXECUTE parameter',
+    statementClass: 'RETURN QUERY EXECUTE',
+    sql: `
+      CREATE FUNCTION public.run33_return_query(command_variable text)
+      RETURNS SETOF integer
+      LANGUAGE plpgsql
+      AS $body$
+      BEGIN
+        RETURN QUERY EXECUTE command_variable USING 1;
+      END
+      $body$;
+    `,
+  },
+  {
+    name: 'labelled FOR IN EXECUTE loop',
+    statementClass: 'FOR IN EXECUTE',
+    sql: `
+      DO $body$
+      DECLARE row_value record; command_variable text := 'SELECT 1';
+      BEGIN
+        <<dynamic_rows>>
+        FOR row_value IN EXECUTE command_variable USING 1 LOOP
+          NULL;
+        END LOOP dynamic_rows;
+      END
+      $body$;
+    `,
+  },
+  {
+    name: 'OPEN FOR EXECUTE function call',
+    statementClass: 'OPEN FOR EXECUTE',
+    sql: `
+      DO $body$
+      DECLARE cursor_name refcursor; command_variable text := 'SELECT 1';
+      BEGIN
+        OPEN cursor_name NO SCROLL
+          FOR EXECUTE command_variable USING 1;
+      END
+      $body$;
+    `,
+  },
+];
+
+const historicalDynamicSqlFileName =
+  '20260721190000_platform_rls_auto_enable_privilege_hardening.sql';
+const historicalDynamicSqlPath = path.join(
+  realMigrationsDir,
+  historicalDynamicSqlFileName,
+);
+
+function historicalDynamicSqlValidation({
+  content,
+  fileName = historicalDynamicSqlFileName,
+  migrationPath = historicalDynamicSqlPath,
+  rawContent = content,
+}) {
+  const state = {
+    historicalExceptionCount: 0,
+    unapprovedOccurrenceCount: 0,
+  };
+  const violations = validateDestructiveStatements(
+    fileName,
+    content,
+    [],
+    {
+      migrationPath,
+      rawContent,
+      proceduralDynamicSqlState: state,
+    },
+  );
+  return { state, violations };
 }
 
 function readRealBaseSchemaMigration() {
@@ -1477,6 +1625,503 @@ test('PostgreSQL-valid Run-31 fixtures reject through temporary migration CLI fi
   }
 });
 
+for (const fixture of proceduralDynamicExecutionFixtures) {
+  test(`procedural dynamic SQL rejects ${fixture.name}`, () => {
+    const masked = maskSqlCommentsAndStringLiterals(fixture.sql);
+    const findings = masked.errors.filter(
+      (error) => error.message.includes(proceduralDynamicSqlPolicy),
+    );
+
+    assert.equal(findings.length, 1);
+    assert.equal(
+      findings[0].proceduralStatementClass,
+      fixture.statementClass,
+    );
+    assert.match(
+      findings[0].executableBodyIdentity,
+      /^(?:DO|CREATE FUNCTION|CREATE PROCEDURE)@\d+$/,
+    );
+    assert.equal(findings[0].sourceOffset, findings[0].offset);
+
+    const violations = destructiveViolations(fixture.sql);
+    assert.equal(violations.length, 1);
+    assert.match(violations[0], new RegExp(proceduralDynamicSqlPolicy));
+  });
+
+  test(`procedural dynamic SQL rejects ${fixture.name} through the CLI`, () => {
+    const root = makeTempRoot();
+    try {
+      const migrationsDir = writeMigration(
+        root,
+        '20260731130000_run33_dynamic_cli_fixture.sql',
+        fixture.sql,
+      );
+      const result = runValidator(migrationsDir);
+
+      assert.notEqual(result.status, 0);
+      assert.match(result.stderr, new RegExp(proceduralDynamicSqlPolicy));
+      assert.doesNotMatch(result.stdout, /result PASS/);
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+}
+
+test('procedural dynamic SQL rejects nested blocks, comments, and multiline formatting', () => {
+  const sql = `
+    DO $body$
+    DECLARE command_variable text := 'SELECT 1';
+    BEGIN
+      <<outer_loop>>
+      LOOP
+        IF true THEN
+          /* bounded comment */
+          EXECUTE
+            command_variable;
+        END IF;
+        EXIT outer_loop;
+      END LOOP outer_loop;
+    END
+    $body$;
+  `;
+
+  const findings = maskSqlCommentsAndStringLiterals(sql).errors.filter(
+    (error) => error.message.includes(proceduralDynamicSqlPolicy),
+  );
+  assert.equal(findings.length, 1);
+  assert.equal(findings[0].proceduralStatementClass, 'EXECUTE');
+});
+
+test('procedural dynamic SQL recognises comments between surface keywords', () => {
+  const sql = `
+    CREATE FUNCTION public.run33_commented_return(command_variable text)
+    RETURNS SETOF integer LANGUAGE plpgsql AS $first$
+    BEGIN
+      RETURN /* a */ QUERY /* b */ EXECUTE command_variable;
+    END
+    $first$;
+    DO $second$
+    DECLARE row_value record; command_variable text := 'select 1';
+    BEGIN
+      FOR row_value IN /* c */ EXECUTE command_variable LOOP
+        NULL;
+      END LOOP;
+    END
+    $second$;
+    DO $third$
+    DECLARE cursor_name refcursor; command_variable text := 'select 1';
+    BEGIN
+      OPEN cursor_name FOR /* d */ EXECUTE command_variable;
+    END
+    $third$;
+  `;
+
+  const findings = maskSqlCommentsAndStringLiterals(sql).errors.filter(
+    (error) => error.message.includes(proceduralDynamicSqlPolicy),
+  );
+  assert.deepEqual(
+    findings.map((finding) => finding.proceduralStatementClass),
+    [
+      'RETURN QUERY EXECUTE',
+      'FOR IN EXECUTE',
+      'OPEN FOR EXECUTE',
+    ],
+  );
+});
+
+test('procedural dynamic SQL findings bind source offsets, lines, bodies, and classes', () => {
+  const sql = [
+    'DO $first$',
+    'BEGIN',
+    '  EXECUTE first_command;',
+    '  RETURN QUERY EXECUTE second_command;',
+    'END',
+    '$first$;',
+    'DO $second$',
+    'BEGIN',
+    '  OPEN second_cursor FOR EXECUTE third_command;',
+    'END',
+    '$second$;',
+  ].join('\n');
+
+  const findings = maskSqlCommentsAndStringLiterals(sql).errors.filter(
+    (error) => error.message.includes(proceduralDynamicSqlPolicy),
+  );
+  assert.deepEqual(
+    findings.map((finding) => finding.proceduralStatementClass),
+    ['EXECUTE', 'RETURN QUERY EXECUTE', 'OPEN FOR EXECUTE'],
+  );
+  assert.deepEqual(
+    findings.map((finding) => finding.sourceOffset),
+    [
+      sql.indexOf('EXECUTE first_command'),
+      sql.indexOf('EXECUTE second_command'),
+      sql.indexOf('EXECUTE third_command'),
+    ],
+  );
+  assert.equal(new Set(
+    findings.map((finding) => finding.executableBodyIdentity),
+  ).size, 2);
+
+  const violations = destructiveViolations(sql);
+  assert.match(violations[0], /fixture\.sql:3:/);
+  assert.match(violations[1], /fixture\.sql:4:/);
+  assert.match(violations[2], /fixture\.sql:9:/);
+});
+
+test('procedural dynamic SQL diagnostic does not expose the command expression', () => {
+  const privateMarker = 'RUN33_DYNAMIC_COMMAND_EXPRESSION_MUST_NOT_APPEAR';
+  const sql = `
+    DO $body$
+    BEGIN
+      EXECUTE '${privateMarker}';
+    END
+    $body$;
+  `;
+  const root = makeTempRoot();
+  try {
+    const migrationsDir = writeMigration(
+      root,
+      '20260731130001_run33_no_expression_leak.sql',
+      sql,
+    );
+    const result = runValidator(migrationsDir);
+
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, new RegExp(proceduralDynamicSqlPolicy));
+    assert.doesNotMatch(result.stderr, new RegExp(privateMarker));
+    assert.doesNotMatch(result.stdout, new RegExp(privateMarker));
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('procedural dynamic SQL controls remain non-executable data', () => {
+  const controls = [
+    `
+      DO $body$
+      BEGIN
+        -- EXECUTE 'SELECT 1';
+        PERFORM 'EXECUTE string data';
+        PERFORM execute FROM public.messages;
+        PERFORM "execute" FROM public.messages;
+      END
+      $body$;
+    `,
+    'SELECT $data$EXECUTE command_variable$data$;',
+    "SELECT 'EXECUTE command_variable';",
+    `
+      CREATE FUNCTION public.run33_sql_control()
+      RETURNS text
+      LANGUAGE sql
+      AS 'SELECT execute FROM public.messages';
+    `,
+    `
+      CREATE FUNCTION public.run33_c_control()
+      RETURNS void
+      AS '$libdir/run33_control', 'run33_symbol'
+      LANGUAGE c;
+    `,
+  ];
+
+  for (const sql of controls) {
+    assert.deepEqual(destructiveViolations(sql), []);
+  }
+});
+
+test('an unquoted execute column in a SQL CASE expression is ordinary data', () => {
+  const sql = `
+    DO $$
+    BEGIN
+      PERFORM CASE WHEN true THEN execute ELSE 0 END
+      FROM public.messages;
+    END
+    $$;
+  `;
+
+  assert.deepEqual(destructiveViolations(sql), []);
+});
+
+test('procedural CASE branches still reject dynamic execution', () => {
+  const sql = `
+    DO $$
+    DECLARE
+      command_variable text := 'SELECT 1';
+    BEGIN
+      CASE WHEN true THEN
+        EXECUTE command_variable;
+      ELSE
+        NULL;
+      END CASE;
+    END
+    $$;
+  `;
+
+  const violations = destructiveViolations(sql);
+  assert.equal(violations.length, 1);
+  assert.match(violations[0], /Procedural statement class: EXECUTE/);
+});
+
+test('a conditional command expression still rejects dynamic execution', () => {
+  const sql = `
+    DO $$
+    BEGIN
+      EXECUTE CASE WHEN true THEN 'SELECT 1' ELSE 'SELECT 2' END;
+    END
+    $$;
+  `;
+
+  const violations = destructiveViolations(sql);
+  assert.equal(violations.length, 1);
+  assert.match(violations[0], /Procedural statement class: EXECUTE/);
+});
+
+test('exact canonical historical procedural dynamic SQL exception passes', () => {
+  const content = fs.readFileSync(historicalDynamicSqlPath, 'utf8');
+  const result = historicalDynamicSqlValidation({ content });
+
+  assert.deepEqual(result.violations, []);
+  assert.deepEqual(result.state, {
+    historicalExceptionCount: 1,
+    unapprovedOccurrenceCount: 0,
+  });
+});
+
+test('historical exception fingerprints match the controller contract', () => {
+  const content = fs
+    .readFileSync(historicalDynamicSqlPath, 'utf8')
+    .replace(/\r\n/g, '\n');
+  const buffer = Buffer.from(content, 'utf8');
+  const blobHeader = Buffer.from(`blob ${buffer.length}\0`, 'utf8');
+
+  assert.equal(
+    crypto.createHash('sha1')
+      .update(Buffer.concat([blobHeader, buffer]))
+      .digest('hex'),
+    '5729e7a81fbb39ee04f6e5cb37450a261e55468f',
+  );
+  assert.equal(
+    crypto.createHash('sha256').update(content, 'utf8').digest('hex').toUpperCase(),
+    '939DA4DDB6ABB1D884317E56835CAA7027B51CCD7B40BE1AB4FCB3362C73A35A',
+  );
+});
+
+test('historical exception accepts only LF or equivalent CRLF content', () => {
+  const canonicalLf = fs
+    .readFileSync(historicalDynamicSqlPath, 'utf8')
+    .replace(/\r\n/g, '\n');
+  const crlf = canonicalLf.replace(/\n/g, '\r\n');
+
+  assert.deepEqual(
+    historicalDynamicSqlValidation({ content: canonicalLf }).violations,
+    [],
+  );
+  assert.deepEqual(
+    historicalDynamicSqlValidation({ content: crlf }).violations,
+    [],
+  );
+});
+
+test('historical exception rejects bare carriage-return content', () => {
+  const content = fs
+    .readFileSync(historicalDynamicSqlPath, 'utf8')
+    .replace(/\r\n|\n/g, '\r');
+  const result = historicalDynamicSqlValidation({ content });
+
+  assert.equal(result.state.historicalExceptionCount, 0);
+  assert.equal(result.state.unapprovedOccurrenceCount, 0);
+  assert.match(
+    result.violations.join('\n'),
+    /immutable historical migration fingerprint mismatch/,
+  );
+});
+
+test('canonical historical content under another path fails', () => {
+  const content = fs.readFileSync(historicalDynamicSqlPath, 'utf8');
+  const result = historicalDynamicSqlValidation({
+    content,
+    migrationPath: path.join(
+      os.tmpdir(),
+      'copied-historical-migration',
+      historicalDynamicSqlFileName,
+    ),
+  });
+
+  assert.equal(result.state.historicalExceptionCount, 0);
+  assert.equal(result.state.unapprovedOccurrenceCount, 1);
+  assert.match(result.violations.join('\n'), new RegExp(proceduralDynamicSqlPolicy));
+});
+
+test('one-byte historical canonical-content change fails', () => {
+  const content = fs
+    .readFileSync(historicalDynamicSqlPath, 'utf8')
+    .replace('optional public', 'optional Public');
+  const result = historicalDynamicSqlValidation({ content });
+
+  assert.equal(result.state.historicalExceptionCount, 0);
+  assert.equal(result.state.unapprovedOccurrenceCount, 1);
+  assert.match(result.violations.join('\n'), new RegExp(proceduralDynamicSqlPolicy));
+});
+
+test('a second historical EXECUTE occurrence fails', () => {
+  const content = fs
+    .readFileSync(historicalDynamicSqlPath, 'utf8')
+    .replace(
+      '  end if;',
+      "  execute 'select 1';\n  end if;",
+    );
+  const result = historicalDynamicSqlValidation({ content });
+
+  assert.equal(result.state.historicalExceptionCount, 0);
+  assert.equal(result.state.unapprovedOccurrenceCount, 2);
+  assert.equal(
+    result.violations.filter(
+      (violation) => violation.includes(proceduralDynamicSqlPolicy),
+    ).length,
+    2,
+  );
+});
+
+for (const mutation of [
+  {
+    name: 'changed function target',
+    replace: ['public.rls_auto_enable()', 'public.other_helper()'],
+  },
+  {
+    name: 'changed role set',
+    replace: ['public, anon, authenticated, service_role', 'public, anon'],
+  },
+  {
+    name: 'changed privilege',
+    replace: ['revoke execute on function', 'revoke usage on function'],
+  },
+]) {
+  test(`historical exception rejects ${mutation.name}`, () => {
+    const canonical = fs.readFileSync(historicalDynamicSqlPath, 'utf8');
+    const content = canonical.replace(...mutation.replace);
+    const result = historicalDynamicSqlValidation({ content });
+
+    assert.notEqual(content, canonical);
+    assert.equal(result.state.historicalExceptionCount, 0);
+    assert.equal(result.state.unapprovedOccurrenceCount, 1);
+    assert.match(result.violations.join('\n'), new RegExp(proceduralDynamicSqlPolicy));
+  });
+}
+
+for (const expression of [
+  {
+    name: 'concatenated equivalent text',
+    sql: `EXECUTE 'revoke execute on function public.rls_auto_enable() ' ||
+      'from public, anon, authenticated, service_role';`,
+  },
+  {
+    name: 'format equivalent text',
+    sql: `EXECUTE format('%s',
+      'revoke execute on function public.rls_auto_enable() from public, anon, authenticated, service_role');`,
+  },
+  {
+    name: 'variable-held equivalent text',
+    declaration: `command_variable text :=
+      'revoke execute on function public.rls_auto_enable() from public, anon, authenticated, service_role';`,
+    sql: 'EXECUTE command_variable;',
+  },
+  {
+    name: 'parameter-held equivalent text',
+    sql: 'EXECUTE command_parameter;',
+  },
+  {
+    name: 'dollar-quoted equivalent text',
+    sql: 'EXECUTE $command$revoke execute on function public.rls_auto_enable() from public, anon, authenticated, service_role$command$;',
+  },
+  {
+    name: 'escape-string equivalent text',
+    sql: "EXECUTE E'revoke execute on function public.rls_auto_enable() from public, anon, authenticated, service_role';",
+  },
+  {
+    name: 'Unicode-string equivalent text',
+    sql: "EXECUTE U&'revoke execute on function public.rls_auto_enable() from public, anon, authenticated, service_role';",
+  },
+]) {
+  test(`historical exception rejects ${expression.name}`, () => {
+    const content = `
+      DO $migration$
+      DECLARE
+        command_parameter text := 'select 1';
+        ${expression.declaration ?? ''}
+      BEGIN
+        ${expression.sql}
+      END
+      $migration$;
+    `;
+    const result = historicalDynamicSqlValidation({ content });
+
+    assert.equal(result.state.historicalExceptionCount, 0);
+    assert.equal(result.state.unapprovedOccurrenceCount, 1);
+    assert.match(result.violations.join('\n'), new RegExp(proceduralDynamicSqlPolicy));
+  });
+}
+
+test('future migration containing the exact historical command fails', () => {
+  const fileName = '20260801120000_future_dynamic_sql.sql';
+  const content = `
+    DO $body$
+    BEGIN
+      EXECUTE 'revoke execute on function public.rls_auto_enable() from public, anon, authenticated, service_role';
+    END
+    $body$;
+  `;
+  const result = historicalDynamicSqlValidation({
+    content,
+    fileName,
+    migrationPath: path.join(realMigrationsDir, fileName),
+  });
+
+  assert.equal(result.state.historicalExceptionCount, 0);
+  assert.equal(result.state.unapprovedOccurrenceCount, 1);
+  assert.match(result.violations.join('\n'), new RegExp(proceduralDynamicSqlPolicy));
+});
+
+test('additional destructive dynamic statement in historical content fails', () => {
+  const content = fs
+    .readFileSync(historicalDynamicSqlPath, 'utf8')
+    .replace(
+      '  end if;',
+      "  execute 'drop table public.messages';\n  end if;",
+    );
+  const result = historicalDynamicSqlValidation({ content });
+
+  assert.equal(result.state.historicalExceptionCount, 0);
+  assert.equal(result.state.unapprovedOccurrenceCount, 2);
+  assert.equal(
+    result.violations.filter(
+      (violation) => violation.includes(proceduralDynamicSqlPolicy),
+    ).length,
+    2,
+  );
+});
+
+test('copied historical migration fails through the complete CLI', () => {
+  const root = makeTempRoot();
+  try {
+    const content = fs.readFileSync(historicalDynamicSqlPath, 'utf8');
+    const migrationsDir = writeMigration(
+      root,
+      historicalDynamicSqlFileName,
+      content,
+    );
+    const result = runValidator(migrationsDir);
+
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, new RegExp(proceduralDynamicSqlPolicy));
+    assert.match(
+      result.stderr,
+      /historical_dynamic_sql_exceptions=0, unapproved_procedural_dynamic_sql_occurrences=1/,
+    );
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test('mismatched DO LANGUAGE dollar tags fail closed', () => {
   const violations = destructiveViolations(
     doLanguageBodySql({
@@ -1778,6 +2423,10 @@ test('real migration directory passes static validation', () => {
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
   assert.match(result.stdout, /checked 35 migration SQL file\(s\)/);
+  assert.match(
+    result.stdout,
+    /historical_dynamic_sql_exceptions=1, unapproved_procedural_dynamic_sql_occurrences=0/,
+  );
 });
 
 test('real base schema migration creates the planned MVP tables', () => {

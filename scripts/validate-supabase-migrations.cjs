@@ -1,4 +1,5 @@
 const fs = require('node:fs');
+const crypto = require('node:crypto');
 const path = require('node:path');
 
 const repoRoot = path.resolve(__dirname, '..');
@@ -134,6 +135,22 @@ const quotedIdentifierTokenTypes = new Set([
   'unicode_quoted_identifier',
 ]);
 const wordTokenTypes = new Set(['keyword', 'identifier']);
+const proceduralDynamicSqlPolicy =
+  'Procedural dynamic SQL is not permitted in reviewed migrations.';
+const historicalProceduralDynamicSqlException = Object.freeze({
+  repositoryPath:
+    'supabase/migrations/' +
+    '20260721190000_platform_rls_auto_enable_privilege_hardening.sql',
+  fileName:
+    '20260721190000_platform_rls_auto_enable_privilege_hardening.sql',
+  gitBlobSha1: '5729e7a81fbb39ee04f6e5cb37450a261e55468f',
+  canonicalLfSha256:
+    '939DA4DDB6ABB1D884317E56835CAA7027B51CCD7B40BE1AB4FCB3362C73A35A',
+  proceduralStatementClass: 'EXECUTE',
+  decodedCommand:
+    'revoke execute on function public.rls_auto_enable() ' +
+    'from public, anon, authenticated, service_role',
+});
 const sqlKeywords = new Set([
   'as',
   'create',
@@ -980,6 +997,7 @@ function analyzePostgresExecutableContexts(tokens) {
     const first = tokens[significant[0]];
     if (isPostgresWord(first, 'do')) {
       let body;
+      let normalizedLanguage = 'plpgsql';
       let position = 1;
       if (isPostgresWord(tokens[significant[position]], 'language')) {
         const language = parsePostgresLanguageName(
@@ -991,6 +1009,7 @@ function analyzePostgresExecutableContexts(tokens) {
           fail(tokens[significant[position]]);
           continue;
         }
+        normalizedLanguage = language.value?.toLowerCase();
         body = parsePostgresStringGroup(
           tokens,
           significant,
@@ -1020,6 +1039,7 @@ function analyzePostgresExecutableContexts(tokens) {
             fail(tokens[significant[position]]);
             continue;
           }
+          normalizedLanguage = language.value?.toLowerCase();
           position = language.nextPosition;
         }
         if (position !== significant.length) {
@@ -1031,6 +1051,7 @@ function analyzePostgresExecutableContexts(tokens) {
         token: body.token,
         tokenIndex: body.tokenIndex,
         context: 'DO',
+        language: normalizedLanguage,
       });
       continue;
     }
@@ -1135,10 +1156,219 @@ function analyzePostgresExecutableContexts(tokens) {
       context: isPostgresWord(declaration, 'function')
         ? 'CREATE FUNCTION'
         : 'CREATE PROCEDURE',
+      language: normalizedLanguage,
     });
   }
 
   return { executableBodies, errors };
+}
+
+function isPostgresOperator(token, expected) {
+  return Boolean(
+    token &&
+    token.type === 'operator' &&
+    token.value === expected,
+  );
+}
+
+function isPlpgsqlStatementStart(
+  tokens,
+  significant,
+  position,
+  enteredBodyAtRangeStart,
+) {
+  if (position === 0) {
+    return enteredBodyAtRangeStart;
+  }
+
+  const previous = tokens[significant[position - 1]];
+  if (
+    isPostgresWord(previous, 'begin') ||
+    isPostgresWord(previous, 'loop')
+  ) {
+    return true;
+  }
+
+  if (
+    isPostgresWord(previous, 'then') ||
+    isPostgresWord(previous, 'else')
+  ) {
+    let closedCaseDepth = 0;
+    for (let candidate = position - 2; candidate >= 0; candidate -= 1) {
+      const candidateToken = tokens[significant[candidate]];
+      if (isPostgresWord(candidateToken, 'end')) {
+        closedCaseDepth += 1;
+        continue;
+      }
+      if (!isPostgresWord(candidateToken, 'case')) {
+        continue;
+      }
+      if (closedCaseDepth > 0) {
+        closedCaseDepth -= 1;
+        continue;
+      }
+      return isPlpgsqlStatementStart(
+        tokens,
+        significant,
+        candidate,
+        enteredBodyAtRangeStart,
+      );
+    }
+    return true;
+  }
+
+  if (
+    isPostgresOperator(previous, '>>') &&
+    wordTokenTypes.has(tokens[significant[position - 2]]?.type) &&
+    isPostgresOperator(tokens[significant[position - 3]], '<<')
+  ) {
+    const labelStart = position - 3;
+    return labelStart === 0
+      ? enteredBodyAtRangeStart
+      : isPlpgsqlStatementStart(
+        tokens,
+        significant,
+        labelStart,
+        enteredBodyAtRangeStart,
+      );
+  }
+
+  return false;
+}
+
+function findPlpgsqlWordSequence(
+  tokens,
+  significant,
+  startPosition,
+  firstWord,
+  secondWord,
+) {
+  let depth = 0;
+  for (
+    let position = startPosition;
+    position < significant.length;
+    position += 1
+  ) {
+    const token = tokens[significant[position]];
+    if (token.type === 'punctuation' && token.value === '(') {
+      depth += 1;
+      continue;
+    }
+    if (token.type === 'punctuation' && token.value === ')') {
+      depth = Math.max(0, depth - 1);
+      continue;
+    }
+    if (
+      depth === 0 &&
+      isPostgresWord(token, firstWord) &&
+      isPostgresWord(
+        tokens[significant[position + 1]],
+        secondWord,
+      )
+    ) {
+      return position;
+    }
+  }
+  return -1;
+}
+
+function enumeratePlpgsqlDynamicExecutionStatements(tokens) {
+  const occurrences = [];
+  let enteredBody = false;
+
+  for (const range of postgresStatementTokenRanges(tokens)) {
+    const significant = significantPostgresTokenIndices(
+      tokens,
+      range.start,
+      range.end,
+    );
+    const enteredBodyAtRangeStart = enteredBody;
+
+    for (let position = 0; position < significant.length; position += 1) {
+      const token = tokens[significant[position]];
+      if (isPostgresWord(token, 'begin')) {
+        enteredBody = true;
+      }
+      if (
+        !enteredBody ||
+        !isPlpgsqlStatementStart(
+          tokens,
+          significant,
+          position,
+          enteredBodyAtRangeStart,
+        )
+      ) {
+        continue;
+      }
+
+      if (isPostgresWord(token, 'execute')) {
+        const next = tokens[significant[position + 1]];
+        if (
+          !isPostgresOperator(next, ':=') &&
+          !isPostgresOperator(next, '=')
+        ) {
+          occurrences.push({
+            offset: token.start,
+            proceduralStatementClass: 'EXECUTE',
+            matchesHistoricalConstantCommand: Boolean(
+              next?.type === 'standard_string' &&
+              position + 2 === significant.length &&
+              decodePostgresStringToken(next)?.value ===
+                historicalProceduralDynamicSqlException.decodedCommand,
+            ),
+          });
+        }
+        continue;
+      }
+
+      if (
+        isPostgresWord(token, 'return') &&
+        isPostgresWord(tokens[significant[position + 1]], 'query') &&
+        isPostgresWord(tokens[significant[position + 2]], 'execute')
+      ) {
+        occurrences.push({
+          offset: tokens[significant[position + 2]].start,
+          proceduralStatementClass: 'RETURN QUERY EXECUTE',
+        });
+        continue;
+      }
+
+      if (isPostgresWord(token, 'for')) {
+        const dynamicPosition = findPlpgsqlWordSequence(
+          tokens,
+          significant,
+          position + 1,
+          'in',
+          'execute',
+        );
+        if (dynamicPosition !== -1) {
+          occurrences.push({
+            offset: tokens[significant[dynamicPosition + 1]].start,
+            proceduralStatementClass: 'FOR IN EXECUTE',
+          });
+        }
+        continue;
+      }
+
+      if (isPostgresWord(token, 'open')) {
+        const dynamicPosition = findPlpgsqlWordSequence(
+          tokens,
+          significant,
+          position + 1,
+          'for',
+          'execute',
+        );
+        if (dynamicPosition !== -1) {
+          occurrences.push({
+            offset: tokens[significant[dynamicPosition + 1]].start,
+            proceduralStatementClass: 'OPEN FOR EXECUTE',
+          });
+        }
+      }
+    }
+  }
+
+  return occurrences.sort((left, right) => left.offset - right.offset);
 }
 
 function buildPostgresClassificationSql(content, tokens) {
@@ -1191,6 +1421,37 @@ function maskPostgresSqlForDestructiveScan(content) {
         message: error.message,
       });
     }
+    if (nested.errors.length > 0) {
+      continue;
+    }
+
+    if (body.language === 'plpgsql') {
+      const dynamicExecutions =
+        enumeratePlpgsqlDynamicExecutionStatements(nested.tokens);
+      if (dynamicExecutions.length > 0) {
+        const executableBodyIdentity =
+          `${body.context}@${body.token.start}`;
+        for (const occurrence of dynamicExecutions) {
+          const sourceOffset =
+            decoded.sourceOffsets[occurrence.offset] ?? body.token.start;
+          errors.push({
+            offset: sourceOffset,
+            sourceOffset,
+            executableBodyIdentity,
+            proceduralStatementClass:
+              occurrence.proceduralStatementClass,
+            matchesHistoricalConstantCommand:
+              occurrence.matchesHistoricalConstantCommand === true,
+            message:
+              `${proceduralDynamicSqlPolicy} ` +
+              `Procedural statement class: ` +
+              `${occurrence.proceduralStatementClass}.`,
+          });
+        }
+        continue;
+      }
+    }
+
     scanRegions.push({
       text: decoded.value,
       sql: buildPostgresClassificationSql(decoded.value, nested.tokens),
@@ -1212,6 +1473,64 @@ function maskPostgresSqlForDestructiveScan(content) {
     executableDollarBodies,
     scanRegions,
   };
+}
+
+function canonicalLfContent(content) {
+  if (/\r(?!\n)/.test(content)) {
+    return null;
+  }
+  return content.replace(/\r\n/g, '\n');
+}
+
+function gitBlobSha1(content) {
+  const contentBuffer = Buffer.from(content, 'utf8');
+  const header = Buffer.from(`blob ${contentBuffer.length}\0`, 'utf8');
+  return crypto
+    .createHash('sha1')
+    .update(Buffer.concat([header, contentBuffer]))
+    .digest('hex');
+}
+
+function historicalProceduralExceptionPathMatches(migrationPath) {
+  if (!migrationPath) {
+    return false;
+  }
+  const repositoryPath = path
+    .relative(repoRoot, path.resolve(migrationPath))
+    .split(path.sep)
+    .join('/');
+  return (
+    repositoryPath ===
+    historicalProceduralDynamicSqlException.repositoryPath
+  );
+}
+
+function historicalProceduralExceptionFileMatches(
+  migrationPath,
+  rawContent,
+) {
+  if (
+    !historicalProceduralExceptionPathMatches(migrationPath) ||
+    rawContent === undefined
+  ) {
+    return false;
+  }
+
+  const canonicalContent = canonicalLfContent(rawContent);
+  if (canonicalContent === null) {
+    return false;
+  }
+  const sha256 = crypto
+    .createHash('sha256')
+    .update(canonicalContent, 'utf8')
+    .digest('hex')
+    .toUpperCase();
+  return (
+    sha256 ===
+      historicalProceduralDynamicSqlException.canonicalLfSha256 &&
+    gitBlobSha1(canonicalContent) ===
+      historicalProceduralDynamicSqlException.gitBlobSha1
+  );
 }
 
 function postgresNormalizedTokenKind(token) {
@@ -1426,9 +1745,15 @@ function validateDestructiveStatements(
   fileName,
   content,
   allowlist = destructiveStatementAllowlist,
+  options = {},
 ) {
   const violations = [];
   const masked = maskPostgresSqlForDestructiveScan(content);
+  const proceduralDynamicSqlState =
+    options.proceduralDynamicSqlState ?? {
+      historicalExceptionCount: 0,
+      unapprovedOccurrenceCount: 0,
+    };
   const entries = allowlist.filter(
     (entry) => entry.fileName === fileName && entry.label === 'destructive SQL statement',
   );
@@ -1454,7 +1779,39 @@ function validateDestructiveStatements(
     }
   }
 
+  const dynamicExecutionErrors = masked.errors.filter(
+    (error) => error.proceduralStatementClass,
+  );
+  const historicalPathMatches =
+    historicalProceduralExceptionPathMatches(options.migrationPath);
+  const historicalFileMatches =
+    historicalProceduralExceptionFileMatches(
+      options.migrationPath,
+      options.rawContent,
+    );
+  if (historicalPathMatches && !historicalFileMatches) {
+    violations.push(
+      `${fileName}: immutable historical migration fingerprint mismatch.`,
+    );
+  }
+
   for (const error of masked.errors) {
+    if (error.proceduralStatementClass) {
+      const isHistoricalException = Boolean(
+        historicalFileMatches &&
+        fileName === historicalProceduralDynamicSqlException.fileName &&
+        dynamicExecutionErrors.length === 1 &&
+        proceduralDynamicSqlState.historicalExceptionCount === 0 &&
+        error.proceduralStatementClass ===
+          historicalProceduralDynamicSqlException.proceduralStatementClass &&
+        error.matchesHistoricalConstantCommand === true,
+      );
+      if (isHistoricalException) {
+        proceduralDynamicSqlState.historicalExceptionCount += 1;
+        continue;
+      }
+      proceduralDynamicSqlState.unapprovedOccurrenceCount += 1;
+    }
     const line = lineNumberForOffset(content, error.offset);
     violations.push(`${fileName}:${line}: ${error.message}; lexical scan failed closed.`);
   }
@@ -1526,9 +1883,15 @@ function validateFileName(fileName, violations) {
   }
 }
 
-function validateFileContent(migrationsDir, fileName, violations) {
+function validateFileContent(
+  migrationsDir,
+  fileName,
+  violations,
+  proceduralDynamicSqlState,
+) {
   const filePath = path.join(migrationsDir, fileName);
-  const content = fs.readFileSync(filePath, 'utf8').replace(/^\uFEFF/, '');
+  const rawContent = fs.readFileSync(filePath, 'utf8');
+  const content = rawContent.replace(/^\uFEFF/, '');
 
   for (const rule of contentRules) {
     rule.regex.lastIndex = 0;
@@ -1542,27 +1905,53 @@ function validateFileContent(migrationsDir, fileName, violations) {
     violations.push(`${fileName}:${line}: ${rule.label} is not allowed in Supabase migrations.`);
   }
 
-  violations.push(...validateDestructiveStatements(fileName, content));
+  violations.push(...validateDestructiveStatements(
+    fileName,
+    content,
+    destructiveStatementAllowlist,
+    {
+      migrationPath: filePath,
+      rawContent,
+      proceduralDynamicSqlState,
+    },
+  ));
 }
 
 function validateMigrations(migrationsDir) {
   const violations = [];
+  const proceduralDynamicSqlState = {
+    historicalExceptionCount: 0,
+    unapprovedOccurrenceCount: 0,
+  };
 
   if (!fs.existsSync(migrationsDir)) {
     violations.push(`Supabase migrations directory does not exist: ${migrationsDir}`);
-    return { files: [], violations };
+    return {
+      files: [],
+      violations,
+      proceduralDynamicSqlSummary: proceduralDynamicSqlState,
+    };
   }
 
   if (!fs.statSync(migrationsDir).isDirectory()) {
     violations.push(`Supabase migrations path is not a directory: ${migrationsDir}`);
-    return { files: [], violations };
+    return {
+      files: [],
+      violations,
+      proceduralDynamicSqlSummary: proceduralDynamicSqlState,
+    };
   }
 
   const files = listSqlFiles(migrationsDir);
 
   for (const fileName of files) {
     validateFileName(fileName, violations);
-    validateFileContent(migrationsDir, fileName, violations);
+    validateFileContent(
+      migrationsDir,
+      fileName,
+      violations,
+      proceduralDynamicSqlState,
+    );
   }
 
   if (path.resolve(migrationsDir) === defaultMigrationsDir) {
@@ -1574,14 +1963,34 @@ function validateMigrations(migrationsDir) {
         );
       }
     }
+    if (proceduralDynamicSqlState.historicalExceptionCount !== 1) {
+      violations.push(
+        `${historicalProceduralDynamicSqlException.fileName}: ` +
+        'the immutable historical procedural dynamic SQL exception ' +
+        'must be present exactly once.',
+      );
+    }
   }
 
-  return { files, violations };
+  return {
+    files,
+    violations,
+    proceduralDynamicSqlSummary: proceduralDynamicSqlState,
+  };
 }
 
 function main() {
   const { migrationsDir } = parseArgs(process.argv.slice(2));
-  const { files, violations } = validateMigrations(migrationsDir);
+  const {
+    files,
+    violations,
+    proceduralDynamicSqlSummary,
+  } = validateMigrations(migrationsDir);
+
+  const proceduralSummary =
+    'Procedural dynamic SQL summary: ' +
+    `historical_dynamic_sql_exceptions=${proceduralDynamicSqlSummary.historicalExceptionCount}, ` +
+    `unapproved_procedural_dynamic_sql_occurrences=${proceduralDynamicSqlSummary.unapprovedOccurrenceCount}.`;
 
   if (violations.length > 0) {
     for (const violation of violations) {
@@ -1590,6 +1999,7 @@ function main() {
     console.error(
       `Summary: checked ${files.length} migration SQL file(s), errors ${violations.length}, result FAIL.`,
     );
+    console.error(proceduralSummary);
     process.exitCode = 1;
     return;
   }
@@ -1597,6 +2007,7 @@ function main() {
   console.log(
     `Summary: checked ${files.length} migration SQL file(s), errors 0, result PASS.`,
   );
+  console.log(proceduralSummary);
 }
 
 if (require.main === module) {
