@@ -1252,4 +1252,3 @@ describe("protected admin shell", () => {
     ).not.toBeInTheDocument();
   });
 });
-
