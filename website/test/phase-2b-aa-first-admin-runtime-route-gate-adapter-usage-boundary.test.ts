@@ -294,7 +294,8 @@ describe("Phase 2B-AA first admin runtime route gate adapter usage boundary", ()
       "website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/route.ts",
       "website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-sync-dry-run-contract/route.ts",
       "website/app/api/admin/quote-requests/crm-handoff-packet/lifecycle-reconciliation/route.ts",
-      "website/app/api/admin/quote-requests/crm-handoff-packet/route.ts"
+      "website/app/api/admin/quote-requests/crm-handoff-packet/route.ts",
+      "website/app/api/admin/setup-recipe/route.ts"
     ]);
     expect(readTrackedFiles(["website/app/api/products"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/categories"])).toEqual([]);

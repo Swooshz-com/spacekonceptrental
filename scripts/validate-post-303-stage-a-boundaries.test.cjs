@@ -221,8 +221,8 @@ test('all protected mutation paths gate capability before provider-backed bindin
     }
   }
 
-  assert.equal(mutationRoutes.length, 18);
-  assert.equal(capabilityFiles.size, 10);
+  assert.equal(mutationRoutes.length, 19);
+  assert.equal(capabilityFiles.size, 11);
 
   for (const relativePath of capabilityFiles) {
     const source = read(relativePath);
