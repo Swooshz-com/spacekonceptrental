@@ -279,7 +279,7 @@ function loadProjectValidationRules(root) {
         validateWorkflow: ruleFunctionFromModule(moduleExports, rulePath),
       });
     } catch (error) {
-      fail(`Could not load n8n workflow validation rule ${path.relative(root, rulePath) || rulePath}: ${error.message}`);
+      failUnexpected();
     }
   }
 
@@ -303,8 +303,7 @@ function runProjectValidationRules(rules, context) {
         utils,
       });
     } catch (error) {
-      const ruleName = path.relative(context.root, rule.filePath) || rule.filePath;
-      fail(`${context.relative} failed n8n workflow validation rule ${ruleName}: ${error.message}`);
+      failUnexpected();
     }
   }
 }
@@ -313,22 +312,28 @@ const root = process.cwd();
 const messages = [];
 let errors = 0;
 let warnings = 0;
+const REDACTED_WARNING = 'N8N_VALIDATION_WARNING: PRIVATE_RESOURCE_REFERENCE_REDACTED';
+const UNEXPECTED_VALIDATION_ERROR = 'N8N_VALIDATION_ERROR: UNEXPECTED_VALIDATION_FAILURE';
 
 function fail(message) {
   errors += 1;
   console.error(`FAIL: ${message}`);
 }
 
-function warn(message) {
+function failUnexpected() {
+  errors += 1;
+  console.error(UNEXPECTED_VALIDATION_ERROR);
+}
+
+function warn(_message) {
   warnings += 1;
-  console.warn(`WARN: ${message}`);
 }
 
 let parsedArgs;
 try {
   parsedArgs = parseArgs(process.argv.slice(2));
 } catch (error) {
-  fail(error.message);
+  fail('Invalid n8n validator arguments.');
   parsedArgs = { workflowDirArg: null, policyArg: null, allowPreparedDir: false, mode: 'repo-template' };
 }
 
@@ -336,7 +341,7 @@ let policy;
 try {
   policy = loadPolicy(root, parsedArgs.policyArg);
 } catch (error) {
-  fail(error.message);
+  fail('N8N validation policy could not be loaded.');
   policy = loadPolicy(root, null);
 }
 
@@ -389,7 +394,7 @@ for (const filePath of files) {
   try {
     workflow = JSON.parse(text);
   } catch (error) {
-    fail(`${relative} is not valid JSON: ${error.message}`);
+    fail(`${relative} is not valid JSON.`);
     continue;
   }
 
@@ -512,6 +517,10 @@ for (const filePath of files) {
 
 for (const message of messages) {
   console.log(message);
+}
+
+if (warnings > 0) {
+  console.warn(`${REDACTED_WARNING} - count=${warnings}`);
 }
 
 if (policy.failOnWarnings && warnings > 0) {

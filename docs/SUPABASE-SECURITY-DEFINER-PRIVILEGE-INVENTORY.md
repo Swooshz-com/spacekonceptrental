@@ -18,7 +18,7 @@ inventory as complete.
 
 - **Repository-owned application functions:** created by the ordered migration
   chain, reviewed by exact signature, and granted only to the six anonymous or
-  ten authenticated application RPC allowlists below.
+  eleven authenticated application RPC allowlists below.
 - **Supabase/platform-managed functions:** may exist only in managed
   environments. They require an explicit reviewed contract before any
   API/client execution is allowed.
@@ -37,14 +37,13 @@ Anonymous execution is limited to these exact signatures:
 - `public.get_public_quote_submission_digest(uuid,uuid,text,text,text,text,text,date,text,text,text,text,jsonb,uuid)`
 - `public.submit_public_quote_request(uuid,uuid,text,text,text,text,text,date,text,text,text,text,jsonb,uuid,text,bigint,text)`
 
-Authenticated execution is limited to the ten public RPCs with deliberate
-session-bound website call sites shown below. No public-schema `SECURITY
+Eleven authenticated RPC signatures are allowlisted. Ten currently have website call sites. The setup-recipe RPC is deliberately database-authority-only until the second code PR. No public-schema `SECURITY
 DEFINER` function requires `service_role` execution: current server runtime
 uses either the server-only anon client for public flows or the session-bound
 authenticated client for admin flows. `PUBLIC` receives no execution grant.
 
 The intentional application access remains exactly six anonymous public RPCs
-and ten authenticated public RPCs. These grants must not be removed merely to
+and eleven authenticated public RPCs. These grants must not be removed merely to
 silence a generic advisor warning.
 
 The "prior SQL" column describes the explicit grant/revoke intent in the
@@ -67,6 +66,7 @@ before applying the reviewed allowlists.
 | `public.execute_admin_homepage_hero_image_write(uuid,jsonb)` | Authenticated call in `website/lib/hero/admin-homepage-hero-write.ts` | Uses current product admin helper | Revoke `PUBLIC`; grant `authenticated` | `authenticated` only |
 | `public.execute_admin_homepage_hero_write(uuid,jsonb)` | No current website call; historical compatibility wrapper | Calls the image-only hero write RPC | Revoke `PUBLIC`; grant `authenticated` | Owner-only; no client role grant |
 | `public.execute_admin_product_write(text,uuid,uuid,jsonb)` | Authenticated call in `website/lib/products/persistence/supabase-product-persistence.ts` | Uses current product admin helper and audit/outbox writes | Revoke `PUBLIC`; grant `authenticated` | `authenticated` only |
+| `public.execute_admin_setup_recipe_write(text,uuid,uuid,bigint,jsonb)` | #319 database-authority RPC; application consumer intentionally deferred to the second code PR | Uses current product-manager authority, recipe constraints/triggers, publication checks, and audit logs | Exact revoke and authenticated grant in `20260730100000_setup_recipe_database_authority.sql` | `authenticated` only |
 | `public.execute_admin_public_page_media_write(uuid,text,jsonb)` | Authenticated call in `website/lib/page-media/admin-public-page-media-write.ts` | Uses current product admin helper | Revoke `PUBLIC`; grant `authenticated` | `authenticated` only |
 | `public.execute_admin_quote_crm_handoff_queue_update(uuid,uuid,text,text)` | Authenticated call in `website/lib/quote/admin-write/admin-quote-request-crm-handoff-write.ts` | Uses current quote admin helper | Revoke `PUBLIC`; grant `authenticated` | `authenticated` only |
 | `public.execute_admin_quote_workflow(uuid,uuid,text,text)` | Authenticated call in `website/lib/quote/admin-write/admin-quote-request-status-write.ts` | Uses current quote admin helper | Revoke `PUBLIC`; grant `authenticated` | `authenticated` only |
@@ -94,6 +94,66 @@ before applying the reviewed allowlists.
 There are no repository-owned public `SECURITY DEFINER` event-trigger
 functions. The two public trigger functions above are ordinary row-trigger
 functions and remain owner-executable through their attached triggers.
+
+## Setup-Recipe SECURITY DEFINER Trigger Inventory
+
+These three repository-owned functions are exact database-trigger entries, not
+browser-callable RPCs. Each is owned by `postgres` (the migration/database
+owner), is `SECURITY DEFINER`, and fixes `search_path` to `pg_catalog`. Their
+objects and helper calls are schema-qualified. Direct `EXECUTE` is denied for
+`PUBLIC`, `anon`, `authenticated`, and `service_role` by the exact migration
+revokes below. PostgreSQL trigger dispatch remains valid because the attached
+trigger invokes the function with its owner privileges; no role `EXECUTE`
+grant is required for table-trigger execution. There is no browser call site
+for any of these functions.
+
+### `public.setup_recipe_item_nesting_guard()`
+
+- Owner: `postgres` (migration/database owner).
+- SECURITY DEFINER: yes.
+- Fixed `search_path`: `pg_catalog`.
+- Trigger dependency: deferred constraint trigger
+  `setup_recipe_items_nesting_guard` on `public.setup_recipe_items`.
+- Internal helper dependency: `public.lock_setup_recipe_authority()`.
+- Direct EXECUTE: denied for `PUBLIC`, `anon`, `authenticated`, and
+  `service_role`.
+- Trigger execution: valid through the attached table trigger and owner
+  privileges; no client grant is needed.
+- Browser call site: none.
+
+### `public.setup_recipe_aggregate_guard()`
+
+- Owner: `postgres` (migration/database owner).
+- SECURITY DEFINER: yes.
+- Fixed `search_path`: `pg_catalog`.
+- Trigger dependency: deferred constraint triggers
+  `setup_recipes_aggregate_guard` and `setup_recipe_items_aggregate_guard` on
+  the two recipe tables.
+- Internal helper dependency: `public.assert_setup_recipe_valid(uuid,uuid)`;
+  that assertion uses `public.lock_setup_recipe_authority()` and the shared
+  `public.is_public_catalogue_product(uuid,uuid)` predicate.
+- Direct EXECUTE: denied for `PUBLIC`, `anon`, `authenticated`, and
+  `service_role`.
+- Trigger execution: valid through the attached table triggers and owner
+  privileges; no client grant is needed.
+- Browser call site: none.
+
+### `public.setup_recipe_product_publication_guard()`
+
+- Owner: `postgres` (migration/database owner).
+- SECURITY DEFINER: yes.
+- Fixed `search_path`: `pg_catalog`.
+- Trigger dependency: deferred constraint trigger
+  `products_setup_recipe_publication_guard` on `public.products` status
+  updates.
+- Internal helper dependency: `public.assert_setup_recipe_valid(uuid,uuid)`;
+  that assertion uses `public.lock_setup_recipe_authority()` and the shared
+  `public.is_public_catalogue_product(uuid,uuid)` predicate.
+- Direct EXECUTE: denied for `PUBLIC`, `anon`, `authenticated`, and
+  `service_role`.
+- Trigger execution: valid through the attached table trigger and owner
+  privileges; no client grant is needed.
+- Browser call site: none.
 
 ## Supabase/Platform-Managed Event-Trigger Contract
 

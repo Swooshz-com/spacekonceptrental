@@ -682,7 +682,7 @@ function registerSecurityRemediationRlsChecks({
             or coalesce(with_check, '') like '%private.%'
           )
       `),
-      '25',
+      '27',
       'All policy dependencies must follow the moved helper OIDs.',
     );
     assert.equal(
@@ -695,6 +695,7 @@ function registerSecurityRemediationRlsChecks({
         where not trigger.tgisinternal
           and namespace.nspname = 'public'
           and proc.prosecdef
+          and trigger.tgname in ('admin_access_touch_updated_at', 'admin_access_prevent_owner_mutation')
       `),
       '2',
       'Both admin_access trigger functions must remain attached.',

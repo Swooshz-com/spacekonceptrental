@@ -1254,3 +1254,90 @@ test('normal validation rejects Pinecone delete nodes that bypass retry with nev
     fs.rmSync(tempRoot, { recursive: true, force: true });
   }
 });
+
+test('validator redacts endpoint and resource references from warning output', () => {
+  const tempRoot = makeTempRoot();
+  const endpointValues = [
+    'https://synthetic.invalid.example/endpoint-alpha',
+    'https://synthetic.invalid.example/endpoint-beta',
+  ];
+  const resourceValues = ['A'.repeat(40), 'B'.repeat(40)];
+
+  try {
+    const workflowDir = path.join(tempRoot, 'n8n-workflows');
+    writeWorkflow(workflowDir, 'synthetic-warning-fixture.workflow.json', {
+      name: 'Synthetic Warning Fixture',
+      active: false,
+      nodes: [{
+        name: 'Synthetic Node',
+        parameters: {
+          endpoint: endpointValues[0],
+          fallbackEndpoint: endpointValues[1],
+          documentId: resourceValues[0],
+          folderId: resourceValues[1],
+        },
+      }],
+      connections: {},
+      settings: {},
+    });
+
+    const result = runValidator([workflowDir], {
+      env: {
+        N8N_WORKFLOW_VALIDATION_RULES_AUTOLOAD: '0',
+      },
+    });
+    const combinedOutput = `${result.stdout}\n${result.stderr}`;
+
+    assert.equal(result.status, 0, 'synthetic warning fixture must retain a passing exit status');
+    for (const value of [...endpointValues, ...resourceValues]) {
+      assert.equal(result.stdout.includes(value), false);
+      assert.equal(result.stderr.includes(value), false);
+    }
+    assert.match(result.stderr, /N8N_VALIDATION_WARNING: PRIVATE_RESOURCE_REFERENCE_REDACTED - count=3/);
+    assert.match(result.stdout, /Summary: workflows checked 1, errors 0, warnings 3, result PASS\./);
+    assert.doesNotMatch(combinedOutput, /synthetic\.invalid\.example|A{40}|B{40}/);
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test('unexpected validator exceptions use public-safe output', () => {
+  const tempRoot = makeTempRoot();
+  const endpointValue = 'https://synthetic.invalid.example/unexpected';
+  const resourceValue = 'C'.repeat(40);
+
+  try {
+    const workflowDir = path.join(tempRoot, 'n8n-workflows');
+    const rulePath = path.join(tempRoot, 'throwing-validation-rule.cjs');
+    writeWorkflow(workflowDir, 'synthetic-exception-fixture.workflow.json', {
+      name: 'Synthetic Exception Fixture',
+      active: false,
+      nodes: [{ name: 'Synthetic Node', parameters: {} }],
+      connections: {},
+      settings: {},
+    });
+    fs.writeFileSync(
+      rulePath,
+      `module.exports = () => { throw new Error(${JSON.stringify(`${endpointValue} ${resourceValue}`)}); };\n`,
+      'utf8',
+    );
+
+    const result = runValidator([workflowDir], {
+      env: {
+        N8N_WORKFLOW_VALIDATION_RULES_AUTOLOAD: '0',
+        N8N_WORKFLOW_VALIDATION_RULES: rulePath,
+      },
+    });
+    const combinedOutput = `${result.stdout}\n${result.stderr}`;
+
+    assert.equal(result.status, 1, 'unexpected validation exceptions must remain failures');
+    assert.match(combinedOutput, /N8N_VALIDATION_ERROR: UNEXPECTED_VALIDATION_FAILURE/);
+    assert.match(combinedOutput, /Summary: workflows checked 1, errors 1, warnings 0, result FAIL\./);
+    assert.equal(result.stdout.includes(endpointValue), false);
+    assert.equal(result.stderr.includes(endpointValue), false);
+    assert.equal(result.stdout.includes(resourceValue), false);
+    assert.equal(result.stderr.includes(resourceValue), false);
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+});

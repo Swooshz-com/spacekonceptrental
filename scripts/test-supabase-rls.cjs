@@ -62,6 +62,8 @@ const expectedTables = [
   'quote_requests',
   'search_index_documents',
   'search_index_jobs',
+  'setup_recipe_items',
+  'setup_recipes',
   'transcript_audit_events',
   'transcript_evidence_records',
   'usage_events',
@@ -471,6 +473,7 @@ function grantBrowserRoleSelects() {
   psql(`
     grant usage on schema public to anon, authenticated;
     grant select on all tables in schema public to anon, authenticated;
+    revoke all privileges on table public.setup_recipes, public.setup_recipe_items from anon;
   `);
 }
 
@@ -1565,6 +1568,571 @@ check('trusted active-workspace catalogue RPC does not return inactive workspace
     '',
     'trusted catalogue RPC should not return another workspace product by slug',
   );
+});
+
+check('setup recipe database authority enforces schema, RPC, RLS, publication, and fail-closed projection', () => {
+  const parentA = '51000000-0000-4000-8000-000000000001';
+  const childA = '51000000-0000-4000-8000-000000000002';
+  const childB = '51000000-0000-4000-8000-000000000003';
+  const parentB = '51000000-0000-4000-8000-000000000004';
+  const draftChildA = '51000000-0000-4000-8000-000000000005';
+  const parentC = '52000000-0000-4000-8000-000000000002';
+  const crossChildB = '52000000-0000-4000-8000-000000000001';
+  const childImageA = '53000000-0000-4000-8000-000000000001';
+  const visibilityCategory = '40000000-0000-4000-8000-000000000010';
+  const visibilityParent = '51000000-0000-4000-8000-000000000006';
+  const visibilityChild = '51000000-0000-4000-8000-000000000007';
+  const itemCountProbeProductIds = Array.from(
+    { length: 21 },
+    (_, index) => `54000000-0000-4000-8000-${String(index + 1).padStart(12, '0')}`,
+  );
+
+  const quoteJson = (value) => `'${JSON.stringify(value).replaceAll("'", "''")}'::jsonb`;
+  const recipeCall = (operation, workspaceId, productId, revision, value) => `
+    select public.execute_admin_setup_recipe_write(
+      '${operation}',
+      '${workspaceId}'::uuid,
+      '${productId}'::uuid,
+      ${revision === null ? 'null' : revision},
+      ${quoteJson(value)}
+    )
+  `;
+  const ownerConstraintFailure = (sql, error, label) =>
+    statementFails(sql, error, label);
+
+  psql(`
+    insert into public.categories (
+      id, workspace_id, slug, name, is_published, sort_order
+    ) values (
+      '${visibilityCategory}', '${ids.workspaceA}', 'hidden-setup-child-category', 'Hidden setup child category', false, 10
+    );
+
+    insert into public.products (
+      id, workspace_id, category_id, slug, name, short_description, status, sort_order
+    ) values
+      ('${parentA}', '${ids.workspaceA}', '${ids.categoryPublishedA}', 'setup-parent-a', 'Setup Parent A', 'Setup A', 'draft', 50),
+      ('${childA}', '${ids.workspaceA}', '${ids.categoryPublishedA}', 'setup-child-a', 'Setup Child A', 'Child A', 'published', 51),
+      ('${childB}', '${ids.workspaceA}', '${ids.categoryPublishedA}', 'setup-child-b', 'Setup Child B', 'Child B', 'draft', 52),
+      ('${parentB}', '${ids.workspaceA}', '${ids.categoryPublishedA}', 'setup-parent-b', 'Setup Parent B', 'Setup B', 'draft', 53),
+      ('${draftChildA}', '${ids.workspaceA}', '${ids.categoryPublishedA}', 'setup-draft-child-a', 'Setup Draft Child A', 'Draft child', 'draft', 54),
+      ('${visibilityParent}', '${ids.workspaceA}', '${ids.categoryPublishedA}', 'setup-visibility-parent', 'Setup visibility parent', 'Visibility parent', 'draft', 55),
+      ('${visibilityChild}', '${ids.workspaceA}', '${visibilityCategory}', 'setup-hidden-child', 'Hidden setup child', 'Must not leak', 'published', 56),
+      ('${parentC}', '${ids.workspaceB}', '${ids.categoryPublishedB}', 'setup-parent-c', 'Setup Parent C', 'Setup C', 'draft', 50),
+      ('${crossChildB}', '${ids.workspaceB}', '${ids.categoryPublishedB}', 'setup-cross-child-b', 'Setup Cross Child B', 'Cross child', 'published', 51);
+
+    insert into public.product_images (
+      id, workspace_id, product_id, storage_bucket, storage_path, alt_text, sort_order, is_primary
+    ) values (
+      '${childImageA}', '${ids.workspaceA}', '${childA}', 'test-public', 'setup-child-a.jpg', 'Setup Child A image', 1, true
+    );
+  `);
+
+  try {
+    assert.equal(
+      psql(`select count(*)::text from pg_catalog.pg_constraint where conrelid = 'public.setup_recipes'::pg_catalog.regclass and contype in ('p', 'f', 'u', 'c')`),
+      '3',
+      'setup_recipes should have the three locked schema constraints',
+    );
+    assert.equal(
+      psql(`select count(*)::text from pg_catalog.pg_constraint where conrelid = 'public.setup_recipe_items'::pg_catalog.regclass and contype in ('p', 'f', 'u', 'c')`),
+      '7',
+      'setup_recipe_items should have the seven locked schema constraints',
+    );
+    for (const tableName of ['setup_recipes', 'setup_recipe_items']) {
+      assert.equal(
+        psql(`select relrowsecurity::text from pg_catalog.pg_class where oid = 'public.${tableName}'::pg_catalog.regclass`),
+        'true',
+        `${tableName} must have RLS enabled`,
+      );
+    }
+
+    for (const role of ['anon', 'service_role']) {
+      assert.equal(
+        psql(`select pg_catalog.has_table_privilege('${role}', 'public.setup_recipes', 'SELECT')::text`),
+        'false',
+        `${role} must not have direct setup_recipes SELECT privilege`,
+      );
+      assert.equal(
+        psql(`select pg_catalog.has_table_privilege('${role}', 'public.setup_recipe_items', 'SELECT')::text`),
+        'false',
+        `${role} must not have direct setup_recipe_items SELECT privilege`,
+      );
+    }
+    assert.equal(
+      psql(`select pg_catalog.has_table_privilege('authenticated', 'public.setup_recipes', 'SELECT')::text`),
+      'true',
+      'authenticated must retain reviewed recipe metadata SELECT',
+    );
+    assert.equal(
+      psql(`select pg_catalog.has_function_privilege('anon', 'public.execute_admin_setup_recipe_write(text,uuid,uuid,bigint,jsonb)', 'EXECUTE')::text`),
+      'false',
+      'anon must not execute the setup recipe RPC',
+    );
+    assert.equal(
+      psql(`select pg_catalog.has_function_privilege('authenticated', 'public.execute_admin_setup_recipe_write(text,uuid,uuid,bigint,jsonb)', 'EXECUTE')::text`),
+      'true',
+      'authenticated must execute the setup recipe RPC',
+    );
+    assert.equal(
+      psql(`select pg_catalog.has_function_privilege('service_role', 'public.execute_admin_setup_recipe_write(text,uuid,uuid,bigint,jsonb)', 'EXECUTE')::text`),
+      'false',
+      'service_role must not execute the setup recipe RPC',
+    );
+    assert.equal(
+      psql(`select exists (select 1 from pg_catalog.aclexplode(coalesce((select proacl from pg_catalog.pg_proc where oid = 'public.execute_admin_setup_recipe_write(text,uuid,uuid,bigint,jsonb)'::pg_catalog.regprocedure), pg_catalog.acldefault('f', (select proowner from pg_catalog.pg_proc where oid = 'public.execute_admin_setup_recipe_write(text,uuid,uuid,bigint,jsonb)'::pg_catalog.regprocedure)))) acl where acl.grantee = 0 and acl.privilege_type = 'EXECUTE')::text`),
+      'false',
+      'PUBLIC must not provide inherited setup recipe RPC EXECUTE',
+    );
+
+    statementFailsAs(
+      'anon',
+      null,
+      `select count(*)::text from public.setup_recipes`,
+      /permission denied|row-level security/i,
+    );
+    statementFailsAs(
+      'anon',
+      null,
+      `select count(*)::text from public.setup_recipe_items`,
+      /permission denied|row-level security/i,
+    );
+    assertCsv(
+      scalarAs('authenticated', ids.authViewerA, `select count(*)::text from public.setup_recipes`),
+      '0',
+      'viewer must not read recipe metadata',
+    );
+    assertCsv(
+      scalarAs('authenticated', ids.authNoMembership, `select count(*)::text from public.setup_recipes`),
+      '0',
+      'no-membership user must not read recipe metadata',
+    );
+    statementFailsAs(
+      'anon',
+      null,
+      `insert into public.setup_recipes (workspace_id, setup_product_id) values ('${ids.workspaceA}', '${parentA}')`,
+    );
+    statementFailsAs(
+      'authenticated',
+      ids.authViewerA,
+      `select public.execute_admin_setup_recipe_write('replace', '${ids.workspaceA}', '${parentA}', 0, ${quoteJson([{ included_product_id: childA, position: 0, base_quantity: 1 }])})`,
+      /unauthorized_admin_action/i,
+    );
+    statementFailsAs(
+      'authenticated',
+      ids.authMemberA,
+      `select public.execute_admin_setup_recipe_write('invalid', '${ids.workspaceA}', '${parentA}', 0, '[]'::jsonb)`,
+      /unsupported_setup_recipe_operation/i,
+    );
+    statementFailsAs(
+      'authenticated',
+      ids.authMemberA,
+      `select public.execute_admin_setup_recipe_write('replace', '${ids.workspaceA}', '${parentA}', 0, ${quoteJson([{ included_product_id: childA, position: 0, base_quantity: 0 }])})`,
+      /setup_recipe_quantity_invalid/i,
+    );
+    statementFailsAs(
+      'authenticated',
+      ids.authMemberA,
+      `select public.execute_admin_setup_recipe_write('replace', '${ids.workspaceA}', '${parentA}', 0, ${quoteJson([{ included_product_id: childA, position: 20, base_quantity: 1 }])})`,
+      /setup_recipe_position_invalid/i,
+    );
+    statementFailsAs(
+      'authenticated',
+      ids.authMemberA,
+      `select public.execute_admin_setup_recipe_write('replace', '${ids.workspaceA}', '${parentA}', 0, ${quoteJson([{ included_product_id: parentA, position: 0, base_quantity: 1 }])})`,
+      /setup_recipe_self_reference/i,
+    );
+    statementFailsAs(
+      'authenticated',
+      ids.authMemberA,
+      `select public.execute_admin_setup_recipe_write('replace', '${ids.workspaceA}', '${parentA}', 0, ${quoteJson([{ included_product_id: crossChildB, position: 0, base_quantity: 1 }])})`,
+      /setup_recipe_child_workspace_mismatch/i,
+    );
+    statementFailsAs(
+      'authenticated',
+      ids.authMemberA,
+      `select public.execute_admin_setup_recipe_write('replace', '${ids.workspaceA}', '${parentA}', 0, ${quoteJson([{ included_product_id: childA, position: 0, base_quantity: 1 }, { included_product_id: childA, position: 1, base_quantity: 1 }])})`,
+      /setup_recipe_duplicate_child/i,
+    );
+    statementFailsAs(
+      'authenticated',
+      ids.authMemberA,
+      `select public.execute_admin_setup_recipe_write('replace', '${ids.workspaceA}', '${parentA}', 0, ${quoteJson([{ included_product_id: childA, position: 1, base_quantity: 1 }])})`,
+      /setup_recipe_positions_not_contiguous/i,
+    );
+    statementFailsAs(
+      'authenticated',
+      ids.authMemberA,
+      `select public.execute_admin_setup_recipe_write('replace', '${ids.workspaceA}', '${parentA}', 0, ${quoteJson(itemCountProbeProductIds.map((included_product_id, position) => ({ included_product_id, position, base_quantity: 1 })))})`,
+      /setup_recipe_item_count_invalid/i,
+    );
+
+    ownerConstraintFailure(
+      `begin; insert into public.setup_recipes (workspace_id, setup_product_id) values ('${ids.workspaceA}', '${parentA}'); insert into public.setup_recipe_items (workspace_id, setup_product_id, included_product_id, position, base_quantity) values ('${ids.workspaceA}', '${parentA}', '${childA}', 0, 0); commit;`,
+      /setup_recipe_items_base_quantity_check|check constraint/i,
+      'direct SQL must enforce quantity bounds',
+    );
+    ownerConstraintFailure(
+      `begin; insert into public.setup_recipes (workspace_id, setup_product_id) values ('${ids.workspaceA}', '${parentA}'); insert into public.setup_recipe_items (workspace_id, setup_product_id, included_product_id, position, base_quantity) values ('${ids.workspaceA}', '${parentA}', '${childA}', 20, 1); commit;`,
+      /setup_recipe_items_position_check|check constraint/i,
+      'direct SQL must enforce position bounds',
+    );
+    ownerConstraintFailure(
+      `begin; insert into public.setup_recipes (workspace_id, setup_product_id) values ('${ids.workspaceA}', '${parentA}'); insert into public.setup_recipe_items (workspace_id, setup_product_id, included_product_id, position, base_quantity) values ('${ids.workspaceA}', '${parentA}', '${childA}', 0, 1), ('${ids.workspaceA}', '${parentA}', '${childA}', 1, 1); commit;`,
+      /setup_recipe_items_pkey|duplicate key/i,
+      'direct SQL must reject duplicate children',
+    );
+    ownerConstraintFailure(
+      `begin; insert into public.setup_recipes (workspace_id, setup_product_id) values ('${ids.workspaceA}', '${parentA}'); insert into public.setup_recipe_items (workspace_id, setup_product_id, included_product_id, position, base_quantity) values ('${ids.workspaceA}', '${parentA}', '${childA}', 0, 1), ('${ids.workspaceA}', '${parentA}', '${draftChildA}', 0, 1); commit;`,
+      /setup_recipe_items_setup_position_key|duplicate key/i,
+      'direct SQL must reject duplicate positions',
+    );
+    ownerConstraintFailure(
+      `begin; insert into public.setup_recipes (workspace_id, setup_product_id) values ('${ids.workspaceA}', '${parentA}'); insert into public.setup_recipe_items (workspace_id, setup_product_id, included_product_id, position, base_quantity) values ('${ids.workspaceA}', '${parentA}', '${parentA}', 0, 1); commit;`,
+      /setup_recipe_items_not_self_check|check constraint/i,
+      'direct SQL must reject self-reference',
+    );
+    ownerConstraintFailure(
+      `begin; insert into public.setup_recipes (workspace_id, setup_product_id) values ('${ids.workspaceA}', '${parentA}'); insert into public.setup_recipe_items (workspace_id, setup_product_id, included_product_id, position, base_quantity) values ('${ids.workspaceA}', '${parentA}', '${crossChildB}', 0, 1); commit;`,
+      /setup_recipe_items_included_product_workspace_id_fkey|foreign key/i,
+      'direct SQL must reject cross-workspace children',
+    );
+
+    const created = JSON.parse(
+      queryCommittedAs(
+        'authenticated',
+        ids.authMemberA,
+        recipeCall('replace', ids.workspaceA, parentA, 0, [
+          { included_product_id: childA, position: 0, base_quantity: 2 },
+        ]),
+      ),
+    );
+    assert.deepEqual(created, {
+      operation: 'replace',
+      setup_product_id: parentA,
+      revision: 1,
+      item_count: 1,
+    });
+    assert.equal(
+      scalarAs('authenticated', ids.authMemberA, `select count(*)::text from public.setup_recipes where workspace_id = '${ids.workspaceA}' and setup_product_id = '${parentA}'`),
+      '1',
+      'product managers should read their workspace recipe header',
+    );
+    assert.equal(
+      scalarAs('authenticated', ids.authMemberA, `select count(*)::text from public.setup_recipe_items where workspace_id = '${ids.workspaceA}' and setup_product_id = '${parentA}'`),
+      '1',
+      'product managers should read their workspace recipe items',
+    );
+
+    const replaced = JSON.parse(
+      queryCommittedAs(
+        'authenticated',
+        ids.authMemberA,
+        recipeCall('replace', ids.workspaceA, parentA, 1, [
+          { included_product_id: childA, position: 0, base_quantity: 3 },
+        ]),
+      ),
+    );
+    assert.equal(replaced.revision, 2);
+    assert.equal(replaced.item_count, 1);
+    statementFailsAs(
+      'authenticated',
+      ids.authMemberA,
+      recipeCall('replace', ids.workspaceA, parentA, 1, [
+        { included_product_id: childA, position: 0, base_quantity: 4 },
+      ]),
+      /setup_recipe_revision_conflict/i,
+    );
+    assert.equal(
+      scalarAs('authenticated', ids.authMemberA, `select revision::text || ':' || base_quantity::text from public.setup_recipes r join public.setup_recipe_items i using (workspace_id, setup_product_id) where r.workspace_id = '${ids.workspaceA}' and r.setup_product_id = '${parentA}'`),
+      '2:3',
+      'stale revision conflict must perform zero mutation',
+    );
+    statementFailsAs(
+      'authenticated',
+      ids.authMemberA,
+      recipeCall('replace', ids.workspaceA, parentA, 2, [
+        { included_product_id: childA, position: 0, base_quantity: 0 },
+      ]),
+      /setup_recipe_quantity_invalid/i,
+    );
+    assert.equal(
+      scalarAs('authenticated', ids.authMemberA, `select revision::text || ':' || base_quantity::text from public.setup_recipes r join public.setup_recipe_items i using (workspace_id, setup_product_id) where r.workspace_id = '${ids.workspaceA}' and r.setup_product_id = '${parentA}'`),
+      '2:3',
+      'invalid replacement must roll back completely',
+    );
+    statementFailsAs(
+      'authenticated',
+      ids.authMemberA,
+      recipeCall('replace', ids.workspaceA, parentA, 2, []),
+      /setup_recipe_empty_replacement/i,
+    );
+
+    queryCommittedAs(
+      'authenticated',
+      ids.authMemberA,
+      recipeCall('replace', ids.workspaceA, parentB, 0, [
+        { included_product_id: childB, position: 0, base_quantity: 4 },
+      ]),
+    );
+    statementFailsAs(
+      'authenticated',
+      ids.authMemberA,
+      recipeCall('replace', ids.workspaceA, parentB, 1, [
+        { included_product_id: parentA, position: 0, base_quantity: 1 },
+      ]),
+      /setup_recipe_nested_setup/i,
+    );
+    statementFailsAs(
+      'authenticated',
+      ids.authMemberA,
+      recipeCall('replace', ids.workspaceA, childB, 0, [
+        { included_product_id: draftChildA, position: 0, base_quantity: 1 },
+      ]),
+      /setup_recipe_nested_setup/i,
+    );
+    queryCommittedAs(
+      'authenticated',
+      ids.authMemberA,
+      recipeCall('remove', ids.workspaceA, parentB, 1, []),
+    );
+
+    queryCommittedAs(
+      'authenticated',
+      ids.authMemberA,
+      `select public.execute_admin_product_write('product.publish', '${childB}', '${ids.workspaceA}', '{}'::jsonb)`,
+    );
+    queryCommittedAs(
+      'authenticated',
+      ids.authMemberA,
+      recipeCall('replace', ids.workspaceA, parentA, 2, [
+        { included_product_id: childA, position: 0, base_quantity: 2 },
+        { included_product_id: childB, position: 1, base_quantity: 4 },
+      ]),
+    );
+    queryCommittedAs(
+      'authenticated',
+      ids.authMemberA,
+      `select public.execute_admin_product_write('product.publish', '${parentA}', '${ids.workspaceA}', '{}'::jsonb)`,
+    );
+
+    const publicCatalogue = JSON.parse(
+      scalarAs('anon', null, `select public.get_public_catalogue('${ids.workspaceA}', null)::text`),
+    );
+    const publicProducts = publicCatalogue.products;
+    const projectedSetup = publicProducts.find((product) => product.id === parentA);
+    const projectedRental = publicProducts.find((product) => product.id === childA);
+    assert.equal(projectedSetup.product_kind, 'setup');
+    assert.deepEqual(
+      projectedSetup.setup_composition.map((item) => ({ id: item.id, position: item.position, base_quantity: item.base_quantity })),
+      [
+        { id: childA, position: 0, base_quantity: 2 },
+        { id: childB, position: 1, base_quantity: 4 },
+      ],
+      'public setup composition must be non-empty, ordered, and quantity-preserving',
+    );
+    assert.equal(projectedSetup.setup_composition[0].product_images[0].storage_path, 'setup-child-a.jpg');
+    assert.equal(projectedRental.product_kind, 'rental');
+    assert.equal(projectedRental.setup_composition, null);
+    assert.equal(projectedSetup.workspace_id, undefined);
+    assert.equal(projectedSetup.revision, undefined);
+    assert.equal(projectedSetup.cost, undefined);
+
+    queryCommittedAs(
+      'authenticated',
+      ids.authMemberA,
+      recipeCall('replace', ids.workspaceA, visibilityParent, 0, [
+        { included_product_id: visibilityChild, position: 0, base_quantity: 1 },
+      ]),
+    );
+    const hiddenCategoryProjection = JSON.parse(
+      psql(`
+        begin;
+        set local session_replication_role = 'replica';
+        update public.products
+        set status = 'published'
+        where id = '${visibilityParent}'
+          and workspace_id = '${ids.workspaceA}';
+        select public.get_public_catalogue('${ids.workspaceA}', null)::text;
+        rollback;
+      `),
+    );
+    assert.equal(
+      hiddenCategoryProjection.products.some((product) => product.id === visibilityChild),
+      false,
+      'published child in an unpublished category must be absent from top-level catalogue output',
+    );
+    assert.equal(
+      hiddenCategoryProjection.products.some((product) => product.id === visibilityParent),
+      false,
+      'setup with a non-public child must be omitted from public output',
+    );
+    assert.equal(
+      JSON.stringify(hiddenCategoryProjection).includes(visibilityChild),
+      false,
+      'hidden child identity and public fields must not leak through setup_composition',
+    );
+
+    psql(`
+      begin;
+      set local session_replication_role = 'replica';
+      update public.products
+      set status = 'published'
+      where id = '${visibilityParent}'
+        and workspace_id = '${ids.workspaceA}';
+      commit;
+    `);
+    psql(`
+      update public.categories
+      set is_published = true
+      where id = '${visibilityCategory}'
+        and workspace_id = '${ids.workspaceA}';
+    `);
+    const restoredCategoryProjection = JSON.parse(
+      psql(`select public.get_public_catalogue('${ids.workspaceA}', null)::text`),
+    );
+    const restoredVisibilityParent = restoredCategoryProjection.products.find(
+      (product) => product.id === visibilityParent,
+    );
+    assert.equal(
+      restoredVisibilityParent.product_kind,
+      'setup',
+      'restoring category visibility must restore the valid setup projection',
+    );
+    assert.deepEqual(
+      restoredVisibilityParent.setup_composition.map((item) => ({
+        id: item.id,
+        position: item.position,
+        base_quantity: item.base_quantity,
+      })),
+      [{ id: visibilityChild, position: 0, base_quantity: 1 }],
+      'restored setup projection must contain the complete ordered child composition',
+    );
+
+    statementFailsAs(
+      'authenticated',
+      ids.authMemberA,
+      recipeCall('replace', ids.workspaceA, parentA, 3, [
+        { included_product_id: childA, position: 0, base_quantity: 2 },
+        { included_product_id: draftChildA, position: 1, base_quantity: 1 },
+      ]),
+      /setup_recipe_published_child_invalid/i,
+    );
+    statementFailsAs(
+      'authenticated',
+      ids.authMemberA,
+      recipeCall('remove', ids.workspaceA, parentA, 3, []),
+      /setup_recipe_published_parent_remove/i,
+    );
+    statementFailsAs(
+      'authenticated',
+      ids.authMemberA,
+      `select public.execute_admin_product_write('product.archive', '${childA}', '${ids.workspaceA}', '{}'::jsonb)`,
+      /setup_recipe_published_child_protected/i,
+    );
+    statementFailsAs(
+      'authenticated',
+      ids.authMemberA,
+      `select public.execute_admin_product_write('product.update', '${childA}', '${ids.workspaceA}', '{"status":"draft"}'::jsonb)`,
+      /setup_recipe_published_child_protected/i,
+    );
+    ownerConstraintFailure(
+      `delete from public.products where id = '${childA}' and workspace_id = '${ids.workspaceA}'`,
+      /setup_recipe_published_child_protected|violates foreign key/i,
+      'published setup child deletion must be protected',
+    );
+
+    const invalidChildProjection = JSON.parse(
+      psql(`
+        begin;
+        set local session_replication_role = 'replica';
+        update public.products set status = 'draft' where id = '${childB}' and workspace_id = '${ids.workspaceA}';
+        select public.get_public_catalogue('${ids.workspaceA}', null)::text;
+        rollback;
+      `),
+    );
+    assert.equal(
+      invalidChildProjection.products.some((product) => product.id === parentA),
+      false,
+      'invalid published child authority must omit the whole setup parent',
+    );
+    assert.equal(
+      invalidChildProjection.products.some((product) => product.id === childB),
+      false,
+      'unpublished child data must not leak through an invalid setup projection',
+    );
+
+    const invalidPositionProjection = JSON.parse(
+      psql(`
+        begin;
+        set local session_replication_role = 'replica';
+        update public.setup_recipe_items set position = 2 where workspace_id = '${ids.workspaceA}' and setup_product_id = '${parentA}' and included_product_id = '${childB}';
+        select public.get_public_catalogue('${ids.workspaceA}', null)::text;
+        rollback;
+      `),
+    );
+    assert.equal(
+      invalidPositionProjection.products.some((product) => product.id === parentA),
+      false,
+      'invalid duplicate/gapped position authority must omit the whole setup parent',
+    );
+
+    queryCommittedAs(
+      'authenticated',
+      ids.authMemberA,
+      `select public.execute_admin_product_write('product.archive', '${parentA}', '${ids.workspaceA}', '{}'::jsonb)`,
+    );
+    const removed = JSON.parse(
+      queryCommittedAs(
+        'authenticated',
+        ids.authMemberA,
+        recipeCall('remove', ids.workspaceA, parentA, 3, []),
+      ),
+    );
+    assert.equal(removed.operation, 'remove');
+    assert.equal(removed.revision, 3);
+    assert.equal(
+      scalarAs('authenticated', ids.authMemberA, `select count(*)::text from public.setup_recipes where setup_product_id = '${parentA}'`),
+      '0',
+      'unpublished recipe removal must delete header and items atomically',
+    );
+
+    queryCommittedAs(
+      'authenticated',
+      ids.authMemberB,
+      recipeCall('replace', ids.workspaceB, parentC, 0, [
+        { included_product_id: crossChildB, position: 0, base_quantity: 7 },
+      ]),
+    );
+    assert.equal(
+      scalarAs('authenticated', ids.authMemberA, `select count(*)::text from public.setup_recipes where workspace_id = '${ids.workspaceB}'`),
+      '0',
+      'workspace A manager must not read workspace B recipe metadata',
+    );
+    assert.equal(
+      scalarAs('authenticated', ids.authMemberB, `select count(*)::text from public.setup_recipes where workspace_id = '${ids.workspaceB}'`),
+      '1',
+      'workspace B manager must read only its own recipe metadata',
+    );
+
+    assert.equal(
+      psql(`select count(*)::text from public.audit_logs where target_id in ('${parentA}', '${parentB}', '${parentC}') and action in ('setupRecipe.replace', 'setupRecipe.remove')`),
+      '7',
+      'recipe writes must use only the locked audit actions',
+    );
+  } finally {
+    psql(`
+      begin;
+      set local session_replication_role = 'replica';
+      update public.products set status = 'draft' where id in ('${parentA}', '${parentB}', '${parentC}', '${visibilityParent}') and workspace_id in ('${ids.workspaceA}', '${ids.workspaceB}');
+      delete from public.setup_recipes where setup_product_id in ('${parentA}', '${parentB}', '${parentC}', '${visibilityParent}');
+      delete from public.search_index_documents where source_id in ('${parentA}', '${parentB}', '${parentC}', '${childA}', '${childB}', '${visibilityParent}', '${visibilityChild}');
+      delete from public.search_index_jobs where source_id in ('${parentA}', '${parentB}', '${parentC}', '${childA}', '${childB}', '${visibilityParent}', '${visibilityChild}');
+      delete from public.product_images where id = '${childImageA}';
+      delete from public.products where id in ('${parentA}', '${childA}', '${childB}', '${parentB}', '${draftChildA}', '${visibilityParent}', '${visibilityChild}', '${parentC}', '${crossChildB}');
+      delete from public.categories where id = '${visibilityCategory}' and workspace_id = '${ids.workspaceA}';
+      commit;
+    `, { check: false });
+  }
 });
 
 check('homepage hero content exposes enabled public reads and protected admin writes only', () => {

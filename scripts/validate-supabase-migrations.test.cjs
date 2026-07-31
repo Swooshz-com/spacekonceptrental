@@ -1,4 +1,5 @@
 const assert = require('node:assert/strict');
+const crypto = require('node:crypto');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
@@ -7,12 +8,18 @@ const test = require('node:test');
 const {
   anonymousPublicSecurityDefinerAllowlist,
   authenticatedPublicSecurityDefinerAllowlist,
-  finalPublicSecurityDefinerSignatures,
+  preRecipePublicSecurityDefinerSignatures,
   platformManagedPublicSecurityDefinerSignatures,
   preMigrationPublicSecurityDefinerSignatures,
   privatePolicyHelperGrants,
   serviceRolePublicSecurityDefinerAllowlist,
 } = require('./security-definer-privilege-contract.cjs');
+const {
+  enumerateDestructiveStatements,
+  maskSqlCommentsAndStringLiterals,
+  normalizeSqlStatement,
+  validateDestructiveStatements,
+} = require('./validate-supabase-migrations.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const validatorPath = path.join(repoRoot, 'scripts', 'validate-supabase-migrations.cjs');
@@ -38,6 +45,57 @@ const serviceOnlyRlsTables = [
   'usage_events',
   'audit_logs',
 ];
+
+const setupRecipeMigrationFileName =
+  '20260730100000_setup_recipe_database_authority.sql';
+const setupRecipeRemoveDelete = `
+  delete from public.setup_recipes r
+  where r.workspace_id = p_expected_workspace_id
+    and r.setup_product_id = p_setup_product_id;
+`;
+const setupRecipeReplaceItemsDelete = `
+  delete from public.setup_recipe_items i
+  where i.workspace_id = p_expected_workspace_id
+    and i.setup_product_id = p_setup_product_id;
+`;
+
+function customDestructiveAllowlist(fileName, entries) {
+  return entries.map(({ occurrenceId, statementClass = 'DELETE', statement }) => ({
+    occurrenceId,
+    fileName,
+    label: 'destructive SQL statement',
+    statementClass,
+    statement,
+  }));
+}
+
+function destructiveViolations(sql, allowlist = []) {
+  return validateDestructiveStatements(
+    '20260526143000_validator_fixture.sql',
+    sql,
+    allowlist,
+  );
+}
+
+function executableBodySql({
+  declaration = 'create function public.example() returns void language plpgsql',
+  asClause = 'as',
+  delimiter = '$$',
+  body = 'begin delete from public.messages; end;',
+  closingDelimiter = delimiter,
+} = {}) {
+  return `${declaration}\n${asClause} ${delimiter}\n${body}\n${closingDelimiter};`;
+}
+
+function doLanguageBodySql({
+  prefix = 'DO LANGUAGE plpgsql',
+  delimiter = '$$',
+  body = 'begin drop schema tenant_private cascade; end;',
+  closingDelimiter = delimiter,
+  postCodeClause = '',
+} = {}) {
+  return `${prefix} ${delimiter}\n${body}\n${closingDelimiter}${postCodeClause};`;
+}
 
 function makeTempRoot() {
   const baseDir = os.tmpdir();
@@ -72,6 +130,153 @@ function runValidator(migrationsDir, options = {}) {
       ...options.env,
     },
   });
+}
+
+const proceduralDynamicSqlPolicy =
+  'Procedural dynamic SQL is not permitted in reviewed migrations.';
+
+const proceduralDynamicExecutionFixtures = [
+  {
+    name: 'standard string EXECUTE',
+    statementClass: 'EXECUTE',
+    sql: "DO $body$ BEGIN EXECUTE 'SELECT 1'; END $body$;",
+  },
+  {
+    name: 'escape string EXECUTE',
+    statementClass: 'EXECUTE',
+    sql: "DO $body$ BEGIN EXECUTE E'SELECT\\n1'; END $body$;",
+  },
+  {
+    name: 'Unicode string EXECUTE',
+    statementClass: 'EXECUTE',
+    sql: "DO $body$ BEGIN EXECUTE U&'SELECT 1'; END $body$;",
+  },
+  {
+    name: 'dollar string EXECUTE',
+    statementClass: 'EXECUTE',
+    sql: 'DO $body$ BEGIN EXECUTE $sql$SELECT 1$sql$; END $body$;',
+  },
+  {
+    name: 'adjacent string EXECUTE',
+    statementClass: 'EXECUTE',
+    sql: "DO $body$ BEGIN EXECUTE 'SELECT ' \n '1'; END $body$;",
+  },
+  {
+    name: 'concatenated EXECUTE with quote functions',
+    statementClass: 'EXECUTE',
+    sql: `
+      DO $body$
+      DECLARE target_name text := 'messages';
+      BEGIN
+        EXECUTE 'SELECT ' || quote_ident(target_name)
+          || quote_literal('value') || quote_nullable(null);
+      END
+      $body$;
+    `,
+  },
+  {
+    name: 'format function EXECUTE with cast and conditional expression',
+    statementClass: 'EXECUTE',
+    sql: `
+      DO $body$
+      DECLARE target_name text := 'messages';
+      BEGIN
+        EXECUTE (
+          CASE WHEN target_name IS NULL
+            THEN format('SELECT 1')
+            ELSE format('SELECT * FROM %I', target_name::text)
+          END
+        );
+      END
+      $body$;
+    `,
+  },
+  {
+    name: 'variable EXECUTE with INTO STRICT and USING',
+    statementClass: 'EXECUTE',
+    sql: `
+      DO $body$
+      DECLARE command_variable text := 'SELECT $1'; result_value integer;
+      BEGIN
+        EXECUTE command_variable
+          INTO STRICT result_value
+          USING 1;
+      END
+      $body$;
+    `,
+  },
+  {
+    name: 'RETURN QUERY EXECUTE parameter',
+    statementClass: 'RETURN QUERY EXECUTE',
+    sql: `
+      CREATE FUNCTION public.run33_return_query(command_variable text)
+      RETURNS SETOF integer
+      LANGUAGE plpgsql
+      AS $body$
+      BEGIN
+        RETURN QUERY EXECUTE command_variable USING 1;
+      END
+      $body$;
+    `,
+  },
+  {
+    name: 'labelled FOR IN EXECUTE loop',
+    statementClass: 'FOR IN EXECUTE',
+    sql: `
+      DO $body$
+      DECLARE row_value record; command_variable text := 'SELECT 1';
+      BEGIN
+        <<dynamic_rows>>
+        FOR row_value IN EXECUTE command_variable USING 1 LOOP
+          NULL;
+        END LOOP dynamic_rows;
+      END
+      $body$;
+    `,
+  },
+  {
+    name: 'OPEN FOR EXECUTE function call',
+    statementClass: 'OPEN FOR EXECUTE',
+    sql: `
+      DO $body$
+      DECLARE cursor_name refcursor; command_variable text := 'SELECT 1';
+      BEGIN
+        OPEN cursor_name NO SCROLL
+          FOR EXECUTE command_variable USING 1;
+      END
+      $body$;
+    `,
+  },
+];
+
+const historicalDynamicSqlFileName =
+  '20260721190000_platform_rls_auto_enable_privilege_hardening.sql';
+const historicalDynamicSqlPath = path.join(
+  realMigrationsDir,
+  historicalDynamicSqlFileName,
+);
+
+function historicalDynamicSqlValidation({
+  content,
+  fileName = historicalDynamicSqlFileName,
+  migrationPath = historicalDynamicSqlPath,
+  rawContent = content,
+}) {
+  const state = {
+    historicalExceptionCount: 0,
+    unapprovedOccurrenceCount: 0,
+  };
+  const violations = validateDestructiveStatements(
+    fileName,
+    content,
+    [],
+    {
+      migrationPath,
+      rawContent,
+      proceduralDynamicSqlState: state,
+    },
+  );
+  return { state, violations };
 }
 
 function readRealBaseSchemaMigration() {
@@ -304,6 +509,1884 @@ test('common destructive SQL statements fail static validation', () => {
   }
 });
 
+test('one explicitly allowlisted DELETE occurrence passes', () => {
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [{
+      occurrenceId: 'one-bounded-delete',
+      statement: setupRecipeRemoveDelete,
+    }],
+  );
+
+  assert.deepEqual(destructiveViolations(setupRecipeRemoveDelete, allowlist), []);
+});
+
+test('an allowlisted DELETE followed by an unreviewed DELETE fails', () => {
+  const root = makeTempRoot();
+  const migrationsDir = writeMigration(
+    root,
+    setupRecipeMigrationFileName,
+    `
+      ${setupRecipeRemoveDelete}
+      delete from public.messages;
+    `,
+  );
+
+  const result = runValidator(migrationsDir);
+
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /DELETE destructive SQL statement/i);
+  assert.match(result.stderr, /:\d+: DELETE destructive SQL statement/i);
+});
+
+test('an unreviewed DELETE followed by an allowlisted DELETE fails', () => {
+  const root = makeTempRoot();
+  const migrationsDir = writeMigration(
+    root,
+    setupRecipeMigrationFileName,
+    `
+      delete from public.messages;
+      ${setupRecipeRemoveDelete}
+    `,
+  );
+
+  const result = runValidator(migrationsDir);
+
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /DELETE destructive SQL statement/i);
+  assert.match(result.stderr, /:1:/);
+});
+
+test('multiple DELETE occurrences pass only when every occurrence is explicitly allowlisted', () => {
+  const root = makeTempRoot();
+  const migrationsDir = writeMigration(
+    root,
+    setupRecipeMigrationFileName,
+    `
+      ${setupRecipeRemoveDelete}
+      ${setupRecipeReplaceItemsDelete}
+    `,
+  );
+
+  const result = runValidator(migrationsDir);
+
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+});
+
+test('mixed destructive statement classes fail when any occurrence is unapproved', () => {
+  const root = makeTempRoot();
+  const migrationsDir = writeMigration(
+    root,
+    setupRecipeMigrationFileName,
+    `
+      ${setupRecipeRemoveDelete}
+      truncate table public.messages;
+      drop table public.audit_logs;
+    `,
+  );
+
+  const result = runValidator(migrationsDir);
+
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /TRUNCATE destructive SQL statement/i);
+  assert.match(result.stderr, /DROP TABLE destructive SQL statement/i);
+});
+
+test('bounded DELETE followed by unbounded DELETE on the same table fails the second occurrence', () => {
+  const statement = 'delete from public.setup_recipes r where r.workspace_id = p_workspace_id;';
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [{ occurrenceId: 'bounded-delete', statement }],
+  );
+  const violations = destructiveViolations(
+    `${statement}\ndelete from public.setup_recipes;`,
+    allowlist,
+  );
+
+  assert.equal(
+    violations.filter((violation) => /not exactly allowlisted/.test(violation)).length,
+    1,
+  );
+  assert.match(violations.join('\n'), /:2: DELETE destructive SQL statement/);
+});
+
+test('unbounded DELETE followed by bounded DELETE on the same table fails the first occurrence', () => {
+  const statement = 'delete from public.setup_recipes r where r.workspace_id = p_workspace_id;';
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [{ occurrenceId: 'bounded-delete', statement }],
+  );
+  const violations = destructiveViolations(
+    `delete from public.setup_recipes;\n${statement}`,
+    allowlist,
+  );
+
+  assert.match(violations.join('\n'), /:1: DELETE destructive SQL statement/);
+  assert.doesNotMatch(
+    violations.join('\n'),
+    /bounded-delete was not found/,
+  );
+});
+
+test('two identical DELETE occurrences fail when only one occurrence is allowlisted', () => {
+  const statement = 'delete from public.setup_recipes where workspace_id = p_workspace_id;';
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [{ occurrenceId: 'only-approved-occurrence', statement }],
+  );
+  const violations = destructiveViolations(`${statement}\n${statement}`, allowlist);
+
+  assert.equal(
+    violations.filter((violation) => /not exactly allowlisted/.test(violation)).length,
+    1,
+  );
+});
+
+test('two identical DELETE occurrences pass only with two unique allowlist entries', () => {
+  const statement = 'delete from public.setup_recipes where workspace_id = p_workspace_id;';
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [
+      { occurrenceId: 'first-approved-occurrence', statement },
+      { occurrenceId: 'second-approved-occurrence', statement },
+    ],
+  );
+  const violations = destructiveViolations(`${statement}\n${statement}`, allowlist);
+
+  assert.deepEqual(violations, []);
+});
+
+test('a missing expected allowlist occurrence fails even when another occurrence passes', () => {
+  const first = 'delete from public.setup_recipes where workspace_id = p_workspace_id;';
+  const second = 'delete from public.setup_recipe_items where workspace_id = p_workspace_id;';
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [
+      { occurrenceId: 'first-expected', statement: first },
+      { occurrenceId: 'second-expected', statement: second },
+    ],
+  );
+  const violations = destructiveViolations(first, allowlist);
+
+  assert.match(
+    violations.join('\n'),
+    /second-expected was not found exactly once/,
+  );
+});
+
+test('two different bounded DELETE statements on one table do not share approval', () => {
+  const first = 'delete from public.setup_recipes where workspace_id = p_workspace_id;';
+  const second = 'delete from public.setup_recipes where workspace_id = p_other_workspace_id;';
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [{ occurrenceId: 'first-predicate', statement: first }],
+  );
+  const violations = destructiveViolations(`${first}\n${second}`, allowlist);
+
+  assert.match(violations.join('\n'), /:2: DELETE destructive SQL statement/);
+});
+
+test('approved DELETE plus an unapproved DELETE on another table fails independently', () => {
+  const approved = 'delete from public.setup_recipes where workspace_id = p_workspace_id;';
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [{ occurrenceId: 'setup-delete', statement: approved }],
+  );
+  const violations = destructiveViolations(
+    `${approved}\ndelete from public.messages where workspace_id = p_workspace_id;`,
+    allowlist,
+  );
+
+  assert.match(violations.join('\n'), /:2: DELETE destructive SQL statement/);
+});
+
+test('approved DELETE plus unapproved TRUNCATE, DROP TABLE, or DROP SCHEMA fails each class', () => {
+  const approved = 'delete from public.setup_recipes where workspace_id = p_workspace_id;';
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [{ occurrenceId: 'setup-delete', statement: approved }],
+  );
+
+  for (const [statementClass, statement] of [
+    ['TRUNCATE', 'truncate table public.messages;'],
+    ['DROP TABLE', 'drop table public.messages;'],
+    ['DROP SCHEMA', 'drop schema public cascade;'],
+  ]) {
+    const violations = destructiveViolations(`${approved}\n${statement}`, allowlist);
+    assert.match(
+      violations.join('\n'),
+      new RegExp(`:2: ${statementClass} destructive SQL statement`),
+    );
+  }
+});
+
+test('DROP SCHEMA IF EXISTS is enumerated and rejected when unallowlisted', () => {
+  const violations = destructiveViolations('drop schema if exists public cascade;');
+
+  assert.match(violations.join('\n'), /:1: DROP SCHEMA destructive SQL statement/);
+});
+
+test('DROP SCHEMA targeting a non-public schema is enumerated and rejected', () => {
+  const violations = destructiveViolations('drop schema tenant_private cascade;');
+
+  assert.match(violations.join('\n'), /:1: DROP SCHEMA destructive SQL statement/);
+});
+
+test('DROP SCHEMA options remain material to the complete statement fingerprint', () => {
+  const bare = 'drop schema public cascade;';
+  const ifExists = 'drop schema if exists public cascade;';
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [{ occurrenceId: 'bare-schema-drop', statementClass: 'DROP SCHEMA', statement: bare }],
+  );
+  const violations = destructiveViolations(ifExists, allowlist);
+
+  assert.match(violations.join('\n'), /not exactly allowlisted/);
+  assert.match(violations.join('\n'), /bare-schema-drop was not found exactly once/);
+});
+
+test('DROP SCHEMA target remains material to the complete statement fingerprint', () => {
+  const publicSchema = 'drop schema public cascade;';
+  const otherSchema = 'drop schema tenant_private cascade;';
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [{ occurrenceId: 'public-schema-drop', statementClass: 'DROP SCHEMA', statement: publicSchema }],
+  );
+  const violations = destructiveViolations(otherSchema, allowlist);
+
+  assert.match(violations.join('\n'), /not exactly allowlisted/);
+  assert.match(violations.join('\n'), /public-schema-drop was not found exactly once/);
+});
+
+test('two identical DROP SCHEMA occurrences require two unique allowlist entries', () => {
+  const statement = 'drop schema if exists public cascade;';
+  const oneEntry = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [{ occurrenceId: 'only-schema-drop', statementClass: 'DROP SCHEMA', statement }],
+  );
+  const oneViolation = destructiveViolations(`${statement}\n${statement}`, oneEntry);
+
+  assert.equal(
+    oneViolation.filter((violation) => /not exactly allowlisted/.test(violation)).length,
+    1,
+  );
+
+  const twoEntries = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [
+      { occurrenceId: 'first-schema-drop', statementClass: 'DROP SCHEMA', statement },
+      { occurrenceId: 'second-schema-drop', statementClass: 'DROP SCHEMA', statement },
+    ],
+  );
+
+  assert.deepEqual(destructiveViolations(`${statement}\n${statement}`, twoEntries), []);
+});
+
+test('comments and quoted strings do not create DROP SCHEMA occurrences', () => {
+  const sql = [
+    '-- drop schema public cascade;',
+    '/* drop schema tenant_private cascade; */',
+    "select 'drop schema quoted_schema cascade;'",
+    'select $data$ drop schema dollar_schema cascade; $data$;',
+  ].join('\n');
+
+  assert.deepEqual(destructiveViolations(sql), []);
+});
+
+test('formatting-only differences normalize to the same destructive statement fingerprint', () => {
+  const canonical = 'delete from public.setup_recipes r where r.workspace_id = p_workspace_id and r.setup_product_id = p_setup_product_id;';
+  const formatted = `
+    DELETE /* formatting comment */
+    FROM public.setup_recipes r
+    WHERE r.workspace_id = p_workspace_id
+      AND r.setup_product_id = p_setup_product_id
+    ;
+  `;
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [{ occurrenceId: 'formatted-delete', statement: canonical }],
+  );
+
+  assert.equal(normalizeSqlStatement(formatted), normalizeSqlStatement(canonical));
+  assert.deepEqual(destructiveViolations(formatted, allowlist), []);
+});
+
+test('predicate differences remain distinct destructive statement fingerprints', () => {
+  const canonical = 'delete from public.setup_recipes where workspace_id = p_workspace_id;';
+  const changedPredicate = 'delete from public.setup_recipes where workspace_id = p_other_workspace_id;';
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [{ occurrenceId: 'predicate-delete', statement: canonical }],
+  );
+
+  assert.notEqual(
+    normalizeSqlStatement(canonical),
+    normalizeSqlStatement(changedPredicate),
+  );
+  assert.match(
+    destructiveViolations(changedPredicate, allowlist).join('\n'),
+    /not exactly allowlisted/,
+  );
+});
+
+test('multiline DELETE statements are captured as complete occurrences', () => {
+  const statement = `
+    delete from public.setup_recipes r
+    where r.workspace_id = p_workspace_id
+      and r.setup_product_id = p_setup_product_id;
+  `;
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [{ occurrenceId: 'multiline-delete', statement }],
+  );
+
+  assert.deepEqual(destructiveViolations(statement, allowlist), []);
+});
+
+test('DELETE statements using a CTE are matched with the complete CTE statement', () => {
+  const statement = `
+    with targets as (
+      select id from public.setup_recipes where workspace_id = p_workspace_id
+    )
+    delete from public.setup_recipes
+    where id in (select id from targets);
+  `;
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [{ occurrenceId: 'cte-delete', statement }],
+  );
+
+  assert.deepEqual(destructiveViolations(statement, allowlist), []);
+});
+
+test('DELETE statements with aliases and USING clauses retain their material scope', () => {
+  const statement = `
+    delete from public.setup_recipes r
+    using public.workspaces w
+    where r.workspace_id = w.id
+      and w.id = p_workspace_id;
+  `;
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [{ occurrenceId: 'using-delete', statement }],
+  );
+
+  assert.deepEqual(destructiveViolations(statement, allowlist), []);
+});
+
+test('comments and string literals do not create destructive SQL approvals or violations', () => {
+  const root = makeTempRoot();
+  const migrationsDir = writeMigration(
+    root,
+    '20260730100000_comment_and_string_literals.sql',
+    `
+      -- delete from public.messages;
+      /* truncate table public.audit_logs; */
+      select 'drop table public.products';
+      select $$delete from public.messages$$;
+      create table public.safe_literal_probe (id uuid primary key);
+    `,
+  );
+
+  const result = runValidator(migrationsDir);
+
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+});
+
+test('untagged executable function bodies remain visible to destructive scanning', () => {
+  const violations = destructiveViolations(executableBodySql());
+
+  assert.match(violations.join('\n'), /DELETE destructive SQL statement/);
+});
+
+test('tagged executable function bodies remain visible to destructive scanning', () => {
+  const violations = destructiveViolations(
+    executableBodySql({ delimiter: '$body$' }),
+  );
+
+  assert.match(violations.join('\n'), /DELETE destructive SQL statement/);
+});
+
+test('a block comment between AS and an executable dollar delimiter is normalized away', () => {
+  const violations = destructiveViolations(
+    executableBodySql({ asClause: 'AS/* comment */' }),
+  );
+
+  assert.match(violations.join('\n'), /DELETE destructive SQL statement/);
+});
+
+test('a line comment between AS and an executable dollar delimiter is normalized away', () => {
+  const violations = destructiveViolations(
+    executableBodySql({ asClause: 'AS -- comment\n' }),
+  );
+
+  assert.match(violations.join('\n'), /DELETE destructive SQL statement/);
+});
+
+test('mixed-case AS and multiline executable dollar spacing are supported', () => {
+  const violations = destructiveViolations(
+    executableBodySql({
+      asClause: 'aS\n/* multiline comment */\n',
+      delimiter: '$body$',
+    }),
+  );
+
+  assert.match(violations.join('\n'), /DELETE destructive SQL statement/);
+});
+
+test('untagged DO blocks remain visible to destructive scanning', () => {
+  const violations = destructiveViolations(
+    executableBodySql({ declaration: 'DO', asClause: '' }),
+  );
+
+  assert.match(violations.join('\n'), /DELETE destructive SQL statement/);
+});
+
+test('tagged DO blocks and comments between DO and the delimiter are supported', () => {
+  const violations = destructiveViolations(
+    executableBodySql({
+      declaration: 'DO',
+      asClause: '/* comment */',
+      delimiter: '$do_body$',
+    }),
+  );
+
+  assert.match(violations.join('\n'), /DELETE destructive SQL statement/);
+});
+
+// RED-to-GREEN coverage for valid pre-code DO LANGUAGE forms.
+test('untagged DO LANGUAGE bodies remain visible to destructive scanning', () => {
+  const violations = destructiveViolations(
+    doLanguageBodySql({
+      body: 'begin drop schema if exists tenant_private cascade; end;',
+    }),
+  );
+
+  assert.match(violations.join('\n'), /DROP SCHEMA destructive SQL statement/);
+});
+
+test('tagged DO LANGUAGE bodies remain visible to destructive scanning', () => {
+  const violations = destructiveViolations(
+    doLanguageBodySql({ delimiter: '$body$' }),
+  );
+
+  assert.match(violations.join('\n'), /DROP SCHEMA destructive SQL statement/);
+});
+
+test('mixed-case DO LANGUAGE keywords are recognized', () => {
+  const violations = destructiveViolations(
+    doLanguageBodySql({
+      prefix: 'dO lAnGuAgE plpgsql',
+      delimiter: '$mixed$',
+    }),
+  );
+
+  assert.match(violations.join('\n'), /DROP SCHEMA destructive SQL statement/);
+});
+
+test('multiline whitespace in DO LANGUAGE prefixes is recognized', () => {
+  const violations = destructiveViolations(
+    doLanguageBodySql({
+      prefix: 'DO\n\tLANGUAGE\r\nplpgsql\n',
+      delimiter: '$multiline$',
+    }),
+  );
+
+  assert.match(violations.join('\n'), /DROP SCHEMA destructive SQL statement/);
+});
+
+test('block comments between every DO LANGUAGE prefix token are recognized', () => {
+  const violations = destructiveViolations(
+    doLanguageBodySql({
+      prefix: 'DO/* one */LANGUAGE/* two */plpgsql/* three */',
+      delimiter: '$commented$',
+    }),
+  );
+
+  assert.match(violations.join('\n'), /DROP SCHEMA destructive SQL statement/);
+});
+
+test('line comments between every DO LANGUAGE prefix token are recognized', () => {
+  const violations = destructiveViolations(
+    doLanguageBodySql({
+      prefix: 'DO -- one\nLANGUAGE -- two\nplpgsql -- three\n',
+      delimiter: '$commented$',
+    }),
+  );
+
+  assert.match(violations.join('\n'), /DROP SCHEMA destructive SQL statement/);
+});
+
+test('quoted DO LANGUAGE identifiers with doubled quotes are recognized', () => {
+  const violations = destructiveViolations(
+    doLanguageBodySql({
+      prefix: 'DO LANGUAGE "pl""pgsql"',
+      delimiter: '$quoted$',
+    }),
+  );
+
+  assert.match(violations.join('\n'), /DROP SCHEMA destructive SQL statement/);
+});
+
+test('valid unquoted DO LANGUAGE identifier characters are recognized', () => {
+  const violations = destructiveViolations(
+    doLanguageBodySql({
+      prefix: 'DO LANGUAGE _plpgsql2$trusted',
+      delimiter: '$identifier$',
+    }),
+  );
+
+  assert.match(violations.join('\n'), /DROP SCHEMA destructive SQL statement/);
+});
+
+// Positive preservation coverage around the new prefix classifier.
+test('post-code LANGUAGE syntax remains supported', () => {
+  const violations = destructiveViolations(
+    doLanguageBodySql({
+      prefix: 'DO',
+      delimiter: '$post_code$',
+      postCodeClause: ' LANGUAGE plpgsql',
+    }),
+  );
+
+  assert.match(violations.join('\n'), /DROP SCHEMA destructive SQL statement/);
+});
+
+test('multiple DO LANGUAGE bodies are scanned independently', () => {
+  const sql = [
+    doLanguageBodySql({ delimiter: '$one$' }),
+    doLanguageBodySql({
+      prefix: 'DO LANGUAGE "plpgsql"',
+      delimiter: '$two$',
+    }),
+  ].join('\n');
+  const violations = destructiveViolations(sql);
+
+  assert.equal(
+    violations.filter((violation) => /DROP SCHEMA destructive SQL statement/.test(violation))
+      .length,
+    2,
+  );
+});
+
+test('direct DO plus DO LANGUAGE bodies are both scanned', () => {
+  const sql = [
+    executableBodySql({
+      declaration: 'DO',
+      asClause: '',
+      body: 'begin drop schema direct_schema cascade; end;',
+    }),
+    doLanguageBodySql({ delimiter: '$language_body$' }),
+  ].join('\n');
+  const violations = destructiveViolations(sql);
+
+  assert.equal(
+    violations.filter((violation) => /DROP SCHEMA destructive SQL statement/.test(violation))
+      .length,
+    2,
+  );
+});
+
+test('DO LANGUAGE detects non-public DROP SCHEMA targets', () => {
+  const violations = destructiveViolations(
+    doLanguageBodySql({
+      body: 'begin drop schema if exists tenant_private cascade; end;',
+    }),
+  );
+
+  assert.match(violations.join('\n'), /DROP SCHEMA destructive SQL statement/);
+});
+
+test('DO LANGUAGE detects destructive classes other than DROP SCHEMA', () => {
+  const violations = destructiveViolations(
+    doLanguageBodySql({
+      body: 'begin truncate table public.audit_logs; end;',
+    }),
+  );
+
+  assert.match(violations.join('\n'), /TRUNCATE destructive SQL statement/);
+});
+
+// Negative controls: invalid prefixes and non-code dollar strings stay masked.
+test('comments containing DO LANGUAGE do not authorize a dollar string', () => {
+  const sql = [
+    '-- DO LANGUAGE plpgsql',
+    '/* DO LANGUAGE "plpgsql" */',
+    'select $data$ drop schema tenant_private cascade; $data$;',
+  ].join('\n');
+
+  assert.deepEqual(destructiveViolations(sql), []);
+});
+
+test('quoted strings containing DO LANGUAGE do not authorize a dollar string', () => {
+  const sql = [
+    "select 'DO LANGUAGE plpgsql';",
+    'select $data$ drop schema tenant_private cascade; $data$;',
+  ].join('\n');
+
+  assert.deepEqual(destructiveViolations(sql), []);
+});
+
+test('SELECT dollar strings containing destructive SQL remain ordinary strings', () => {
+  const violations = destructiveViolations(
+    'select $tag$ drop schema tenant_private cascade; $tag$;',
+  );
+
+  assert.deepEqual(violations, []);
+});
+
+test('DO LANGUAGE without a language name does not authorize a dollar body', () => {
+  const violations = destructiveViolations(
+    'DO LANGUAGE $body$ drop schema tenant_private cascade; $body$;',
+  );
+
+  assert.match(
+    violations.join('\n'),
+    /invalid or unsupported executable SQL body context.*failed closed/,
+  );
+});
+
+test('an extra token before a DO LANGUAGE delimiter is rejected', () => {
+  const violations = destructiveViolations(
+    'DO LANGUAGE plpgsql SECURITY $body$ drop schema tenant_private cascade; $body$;',
+  );
+
+  assert.match(
+    violations.join('\n'),
+    /invalid or unsupported executable SQL body context.*failed closed/,
+  );
+});
+
+test('a string constant is a valid DO LANGUAGE name', () => {
+  const violations = destructiveViolations(
+    "DO LANGUAGE 'plpgsql' $body$ drop schema tenant_private cascade; $body$;",
+  );
+
+  assert.match(
+    violations.join('\n'),
+    /DROP SCHEMA destructive SQL statement/,
+  );
+});
+
+test('a qualified DO LANGUAGE name is rejected', () => {
+  const violations = destructiveViolations(
+    'DO LANGUAGE public.plpgsql $body$ drop schema tenant_private cascade; $body$;',
+  );
+
+  assert.match(
+    violations.join('\n'),
+    /invalid or unsupported executable SQL body context.*failed closed/,
+  );
+});
+
+test('an expression-like DO LANGUAGE name is rejected', () => {
+  const violations = destructiveViolations(
+    'DO LANGUAGE plpgsql() $body$ drop schema tenant_private cascade; $body$;',
+  );
+
+  assert.match(
+    violations.join('\n'),
+    /invalid or unsupported executable SQL body context.*failed closed/,
+  );
+});
+
+test('Unicode-escaped quoted DO LANGUAGE identifiers are recognized', () => {
+  const violations = destructiveViolations(
+    'DO LANGUAGE U&"plpgsql" $body$ begin delete from "messages"; end; $body$;',
+  );
+
+  assert.match(violations.join('\n'), /DELETE destructive SQL statement/);
+});
+
+test('Unicode-escaped quoted DO LANGUAGE identifiers support valid UESCAPE clauses', () => {
+  const violations = destructiveViolations(
+    'DO LANGUAGE U&"plpgsql" UESCAPE \'!\' $body$ begin delete from "messages"; end; $body$;',
+  );
+
+  assert.match(violations.join('\n'), /DELETE destructive SQL statement/);
+});
+
+test('escape, Unicode, and dollar string DO LANGUAGE names are recognized', () => {
+  const fixtures = [
+    'DO LANGUAGE E\'plpgsql\' $body$ begin delete from "messages"; end; $body$;',
+    'DO LANGUAGE U&\'plpgsql\' $body$ begin delete from "messages"; end; $body$;',
+    'DO LANGUAGE $lang$plpgsql$lang$ $body$ begin delete from "messages"; end; $body$;',
+  ];
+
+  for (const sql of fixtures) {
+    assert.match(
+      destructiveViolations(sql).join('\n'),
+      /DELETE destructive SQL statement/,
+      sql,
+    );
+  }
+});
+
+test('standard, escape, and Unicode DO string bodies are scanned as executable code', () => {
+  const fixtures = [
+    'DO \'BEGIN DELETE FROM "messages"; END\';',
+    'DO E\'BEGIN\\n DELETE FROM "messages";\\nEND\';',
+    'DO U&\'BEGIN!000a DELETE FROM "messages";!000aEND\' UESCAPE \'!\';',
+  ];
+
+  for (const sql of fixtures) {
+    assert.match(
+      destructiveViolations(sql).join('\n'),
+      /DELETE destructive SQL statement/,
+      sql,
+    );
+  }
+});
+
+test('escape-body byte, Unicode, and unknown escapes decode with PostgreSQL semantics', () => {
+  const fixtures = [
+    'DO E\'BEGIN \\x44ELETE FROM "messages"; END\';',
+    'DO E\'BEGIN \\104ELETE FROM "messages"; END\';',
+    'DO E\'BEGIN \\u0044ELETE FROM "messages"; END\';',
+    'DO E\'BEGIN \\DELETE FROM "messages"; END\';',
+  ];
+
+  for (const sql of fixtures) {
+    assert.match(
+      destructiveViolations(sql).join('\n'),
+      /DELETE destructive SQL statement/,
+      sql,
+    );
+  }
+});
+
+test('Unicode-body escapes decode before destructive classification', () => {
+  const fixtures = [
+    'DO U&\'BEGIN \\0044ELETE FROM "messages"; END\';',
+    'DO U&\'BEGIN !0044ELETE FROM "messages"; END\' UESCAPE \'!\';',
+  ];
+
+  for (const sql of fixtures) {
+    assert.match(
+      destructiveViolations(sql).join('\n'),
+      /DELETE destructive SQL statement/,
+      sql,
+    );
+  }
+});
+
+test('post-code LANGUAGE remains valid for single-quoted DO bodies', () => {
+  const violations = destructiveViolations(
+    'DO \'BEGIN DELETE FROM "messages"; END\' LANGUAGE \'plpgsql\';',
+  );
+
+  assert.match(violations.join('\n'), /DELETE destructive SQL statement/);
+});
+
+test('function standard, escape, and Unicode AS bodies are scanned', () => {
+  const fixtures = [
+    'CREATE FUNCTION public.f1() RETURNS void AS \'BEGIN DELETE FROM "messages"; END\' LANGUAGE plpgsql;',
+    'CREATE FUNCTION public.f2() RETURNS void AS E\'BEGIN\\n DELETE FROM "messages";\\nEND\' LANGUAGE plpgsql;',
+    'CREATE FUNCTION public.f3() RETURNS void AS U&\'BEGIN!000a DELETE FROM "messages";!000aEND\' UESCAPE \'!\' LANGUAGE plpgsql;',
+  ];
+
+  for (const sql of fixtures) {
+    assert.match(
+      destructiveViolations(sql).join('\n'),
+      /DELETE destructive SQL statement/,
+      sql,
+    );
+  }
+});
+
+test('procedure standard, escape, Unicode, and dollar AS bodies are scanned', () => {
+  const fixtures = [
+    'CREATE PROCEDURE public.p1() AS \'BEGIN DELETE FROM "messages"; END\' LANGUAGE plpgsql;',
+    'CREATE PROCEDURE public.p2() AS E\'BEGIN\\n DELETE FROM "messages";\\nEND\' LANGUAGE plpgsql;',
+    'CREATE PROCEDURE public.p3() AS U&\'BEGIN!000a DELETE FROM "messages";!000aEND\' UESCAPE \'!\' LANGUAGE plpgsql;',
+    'CREATE PROCEDURE public.p4() AS $body$ BEGIN DELETE FROM "messages"; END $body$ LANGUAGE plpgsql;',
+  ];
+
+  for (const sql of fixtures) {
+    assert.match(
+      destructiveViolations(sql).join('\n'),
+      /DELETE destructive SQL statement/,
+      sql,
+    );
+  }
+});
+
+test('C object-file and link-symbol AS strings remain non-executable', () => {
+  const violations = destructiveViolations(
+    'CREATE FUNCTION public.c_probe() RETURNS void AS \'delete from messages\', \'drop_table_symbol\' LANGUAGE c;',
+  );
+
+  assert.deepEqual(violations, []);
+});
+
+test('PostgreSQL built-in C object-file and link-symbol form remains non-executable', () => {
+  const violations = destructiveViolations(
+    'CREATE FUNCTION public.plpgsql_handler_probe() RETURNS language_handler AS \'$libdir/plpgsql\', \'plpgsql_call_handler\' LANGUAGE c;',
+  );
+
+  assert.deepEqual(violations, []);
+});
+
+test('single C object-file AS strings remain non-executable', () => {
+  const violations = destructiveViolations(
+    'CREATE FUNCTION public.c_probe() RETURNS void AS \'delete from messages\' LANGUAGE c;',
+  );
+
+  assert.deepEqual(violations, []);
+});
+
+test('object-file and link-symbol pairs fail closed outside LANGUAGE c', () => {
+  const violations = destructiveViolations(
+    'CREATE FUNCTION public.bad_pair() RETURNS void AS \'delete from messages\', \'symbol\' LANGUAGE plpgsql;',
+  );
+
+  assert.match(
+    violations.join('\n'),
+    /invalid or unsupported executable SQL body context.*failed closed/,
+  );
+});
+
+test('quoted and schema-qualified quoted DELETE targets are classified', () => {
+  const fixtures = [
+    'DELETE FROM "messages";',
+    'DELETE FROM "Messages";',
+    'DELETE FROM "a""b";',
+    'DELETE FROM public."messages";',
+    'DELETE FROM "public"."messages";',
+    'DELETE FROM U&"m\\0065ssages";',
+  ];
+
+  for (const sql of fixtures) {
+    assert.match(
+      destructiveViolations(sql).join('\n'),
+      /DELETE destructive SQL statement/,
+      sql,
+    );
+  }
+});
+
+test('quoted destructive occurrences expose exact class, target, statement, and source offset', () => {
+  const sql = 'select 1;\nDELETE FROM "public"."Messages" WHERE "id" = 1;';
+  const masked = maskSqlCommentsAndStringLiterals(sql);
+  const occurrences = enumerateDestructiveStatements(sql, masked);
+
+  assert.equal(occurrences.length, 1);
+  assert.equal(occurrences[0].statementClass, 'DELETE');
+  assert.equal(occurrences[0].target, '"public"."Messages"');
+  assert.equal(
+    occurrences[0].normalizedStatement,
+    'delete from "public"."Messages" where "id"=1;',
+  );
+  assert.equal(sql.slice(0, occurrences[0].offset).split(/\r?\n/).length, 2);
+});
+
+test('quoted targets are classified for TRUNCATE, DROP TABLE, and DROP SCHEMA', () => {
+  const fixtures = [
+    ['TRUNCATE', 'TRUNCATE "messages";'],
+    ['DROP TABLE', 'DROP TABLE "messages";'],
+    ['DROP SCHEMA', 'DROP SCHEMA "private";'],
+  ];
+
+  for (const [statementClass, sql] of fixtures) {
+    assert.match(
+      destructiveViolations(sql).join('\n'),
+      new RegExp(`${statementClass} destructive SQL statement`),
+      sql,
+    );
+  }
+});
+
+test('one quoted destructive target cannot authorize a different target', () => {
+  const approved = 'delete from "messages";';
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [{ occurrenceId: 'quoted-delete', statement: approved }],
+  );
+
+  assert.deepEqual(destructiveViolations(approved, allowlist), []);
+  for (const changed of [
+    'delete from "Messages";',
+    'delete from "a""b";',
+    'delete from "public"."messages";',
+  ]) {
+    const violations = destructiveViolations(changed, allowlist);
+    assert.match(violations.join('\n'), /not exactly allowlisted/);
+    assert.match(
+      violations.join('\n'),
+      /quoted-delete was not found exactly once/,
+    );
+  }
+});
+
+test('quoted destructive fingerprints retain complete predicates and terminators', () => {
+  const approved = 'delete from "public"."messages" where "id" = 1;';
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [{ occurrenceId: 'quoted-bounded-delete', statement: approved }],
+  );
+
+  assert.deepEqual(destructiveViolations(approved, allowlist), []);
+  assert.match(
+    destructiveViolations(
+      'delete from "public"."messages" where "id" = 2;',
+      allowlist,
+    ).join('\n'),
+    /not exactly allowlisted/,
+  );
+  assert.match(
+    destructiveViolations(
+      'delete from "public"."messages" where "id" = 1',
+      allowlist,
+    ).join('\n'),
+    /not exactly allowlisted/,
+  );
+});
+
+test('ordinary standard, escape, Unicode, and dollar data strings remain masked', () => {
+  const sql = [
+    'select \'delete from "messages";\';',
+    'select E\'delete from "messages";\';',
+    'select U&\'delete from "messages";\';',
+    'select $data$ delete from "messages"; $data$;',
+  ].join('\n');
+
+  assert.deepEqual(destructiveViolations(sql), []);
+});
+
+test('comments and keyword-shaped quoted identifiers remain non-executable', () => {
+  const sql = [
+    '-- DO LANGUAGE plpgsql AS DELETE FROM "messages";',
+    '/* CREATE FUNCTION f() AS \'DELETE FROM messages\' */',
+    'select "DELETE FROM messages", "DO LANGUAGE", "DROP TABLE";',
+  ].join('\n');
+
+  assert.deepEqual(destructiveViolations(sql), []);
+});
+
+test('invalid Unicode UESCAPE forms fail closed with a fixed error', () => {
+  const fixtures = [
+    'DO U&\'BEGIN!000a DELETE FROM "messages";!000aEND\' UESCAPE \'0\';',
+    'DO U&\'BEGIN!000a DELETE FROM "messages";!000aEND\' UESCAPE \'!!\';',
+    'DO U&\'BEGIN!000a DELETE FROM "messages";!000aEND\' UESCAPE E\'!\';',
+  ];
+
+  for (const sql of fixtures) {
+    assert.match(
+      destructiveViolations(sql).join('\n'),
+      /invalid Unicode UESCAPE clause.*failed closed/,
+      sql,
+    );
+  }
+});
+
+test('malformed escape and Unicode body sequences fail closed', () => {
+  const fixtures = [
+    'DO E\'BEGIN \\x DELETE FROM "messages"; END\';',
+    'DO E\'BEGIN \\u123 DELETE FROM "messages"; END\';',
+    'DO U&\'BEGIN \\123 DELETE FROM "messages"; END\';',
+    'DO U&\'BEGIN \\D800 DELETE FROM "messages"; END\';',
+  ];
+
+  for (const sql of fixtures) {
+    assert.match(
+      destructiveViolations(sql).join('\n'),
+      /invalid or unsupported (?:escape string|Unicode escape) sequence.*failed closed/,
+      sql,
+    );
+  }
+});
+
+test('nested block comments preserve structure and unterminated nesting fails closed', () => {
+  const valid = [
+    '/* outer /* DELETE FROM "hidden"; */ still outer */',
+    'DELETE FROM "messages";',
+  ].join('\n');
+  const validViolations = destructiveViolations(valid);
+
+  assert.equal(
+    validViolations.filter((violation) => /DELETE destructive SQL statement/.test(violation))
+      .length,
+    1,
+  );
+  assert.match(
+    destructiveViolations('/* outer /* inner */').join('\n'),
+    /unterminated nested block comment.*failed closed/,
+  );
+});
+
+test('unterminated standard, escape, Unicode, and dollar strings fail closed', () => {
+  const fixtures = [
+    ['standard', 'DO \'BEGIN DELETE FROM "messages"; END;'],
+    ['escape', 'DO E\'BEGIN\\n DELETE FROM "messages";'],
+    ['Unicode', 'DO U&\'BEGIN!000a DELETE FROM "messages";'],
+    ['dollar', 'DO $body$ BEGIN DELETE FROM "messages"; END;'],
+  ];
+
+  for (const [kind, sql] of fixtures) {
+    assert.match(
+      destructiveViolations(sql).join('\n'),
+      new RegExp(`unterminated ${kind}|unterminated executable`),
+      sql,
+    );
+    assert.match(
+      destructiveViolations(sql).join('\n'),
+      /failed closed/,
+      sql,
+    );
+  }
+});
+
+test('invalid and unterminated quoted identifiers fail closed', () => {
+  for (const sql of [
+    'delete from "";',
+    'delete from "messages;',
+    'delete from U&"m!0065ssages" UESCAPE \'0\';',
+  ]) {
+    assert.match(
+      destructiveViolations(sql).join('\n'),
+      /quoted identifier|UESCAPE clause/,
+      sql,
+    );
+    assert.match(destructiveViolations(sql).join('\n'), /failed closed/, sql);
+  }
+});
+
+test('cross-statement text cannot authorize a later executable body', () => {
+  const sql = [
+    'select \'DO LANGUAGE plpgsql\';',
+    'select $data$ delete from "messages"; $data$;',
+    'DO \'BEGIN DELETE FROM "messages"; END\';',
+  ].join('\n');
+  const violations = destructiveViolations(sql);
+
+  assert.equal(
+    violations.filter((violation) => /DELETE destructive SQL statement/.test(violation))
+      .length,
+    1,
+  );
+});
+
+test('nested non-executable strings inside executable code stay masked', () => {
+  const sql =
+    'DO \'BEGIN PERFORM \'\'DELETE FROM "hidden"\'\'; DELETE FROM "visible"; END\';';
+  const violations = destructiveViolations(sql);
+
+  assert.equal(
+    violations.filter((violation) => /DELETE destructive SQL statement/.test(violation))
+      .length,
+    1,
+  );
+});
+
+test('quoted target lookalikes inside data strings stay masked', () => {
+  assert.deepEqual(
+    destructiveViolations(
+      'select \'DELETE FROM "Messages";\', E\'TRUNCATE "messages";\', U&\'DROP TABLE "messages";\';',
+    ),
+    [],
+  );
+});
+
+test('PostgreSQL-valid Run-31 fixtures reject through temporary migration CLI files', () => {
+  const fixtures = [
+    'DO LANGUAGE \'plpgsql\' $b$ BEGIN DELETE FROM "messages"; END $b$;',
+    'DO LANGUAGE U&"plpgsql" $b$ BEGIN DELETE FROM "messages"; END $b$;',
+    'DO LANGUAGE E\'plpgsql\' $b$ BEGIN DELETE FROM "messages"; END $b$;',
+    'DO LANGUAGE U&\'plpgsql\' $b$ BEGIN DELETE FROM "messages"; END $b$;',
+    'DO LANGUAGE $lang$plpgsql$lang$ $b$ BEGIN DELETE FROM "messages"; END $b$;',
+    'DO \'BEGIN DELETE FROM "messages"; END\';',
+    'DO E\'BEGIN\\n DELETE FROM "messages";\\nEND\';',
+    'DO U&\'BEGIN!000a DELETE FROM "messages";!000aEND\' UESCAPE \'!\';',
+    'CREATE FUNCTION public.f1() RETURNS void AS \'BEGIN DELETE FROM "messages"; END\' LANGUAGE plpgsql;',
+    'CREATE FUNCTION public.f2() RETURNS void AS E\'BEGIN\\n DELETE FROM "messages";\\nEND\' LANGUAGE plpgsql;',
+    'CREATE PROCEDURE public.p1() AS \'BEGIN DELETE FROM "messages"; END\' LANGUAGE plpgsql;',
+    'DELETE FROM "messages";',
+    'DO \'BEGIN DELETE FROM "Run31"."Messages"; END\';',
+    'DO \'BEGIN TRUNCATE "messages"; END\';',
+    'DO \'BEGIN DROP TABLE "messages"; END\';',
+    'DO \'BEGIN DROP SCHEMA "Run31Drop"; END\';',
+  ];
+
+  for (const [index, sql] of fixtures.entries()) {
+    const root = makeTempRoot();
+    const migrationsDir = writeMigration(
+      root,
+      `2026073112${String(index).padStart(4, '0')}_run31_cli_fixture.sql`,
+      sql,
+    );
+    const result = runValidator(migrationsDir);
+
+    assert.notEqual(result.status, 0, sql);
+    assert.match(
+      result.stderr,
+      /destructive SQL statement is not exactly allowlisted/,
+      sql,
+    );
+  }
+});
+
+for (const fixture of proceduralDynamicExecutionFixtures) {
+  test(`procedural dynamic SQL rejects ${fixture.name}`, () => {
+    const masked = maskSqlCommentsAndStringLiterals(fixture.sql);
+    const findings = masked.errors.filter(
+      (error) => error.message.includes(proceduralDynamicSqlPolicy),
+    );
+
+    assert.equal(findings.length, 1);
+    assert.equal(
+      findings[0].proceduralStatementClass,
+      fixture.statementClass,
+    );
+    assert.match(
+      findings[0].executableBodyIdentity,
+      /^(?:DO|CREATE FUNCTION|CREATE PROCEDURE)@\d+$/,
+    );
+    assert.equal(findings[0].sourceOffset, findings[0].offset);
+
+    const violations = destructiveViolations(fixture.sql);
+    assert.equal(violations.length, 1);
+    assert.match(violations[0], new RegExp(proceduralDynamicSqlPolicy));
+  });
+
+  test(`procedural dynamic SQL rejects ${fixture.name} through the CLI`, () => {
+    const root = makeTempRoot();
+    try {
+      const migrationsDir = writeMigration(
+        root,
+        '20260731130000_run33_dynamic_cli_fixture.sql',
+        fixture.sql,
+      );
+      const result = runValidator(migrationsDir);
+
+      assert.notEqual(result.status, 0);
+      assert.match(result.stderr, new RegExp(proceduralDynamicSqlPolicy));
+      assert.doesNotMatch(result.stdout, /result PASS/);
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+}
+
+test('procedural dynamic SQL rejects nested blocks, comments, and multiline formatting', () => {
+  const sql = `
+    DO $body$
+    DECLARE command_variable text := 'SELECT 1';
+    BEGIN
+      <<outer_loop>>
+      LOOP
+        IF true THEN
+          /* bounded comment */
+          EXECUTE
+            command_variable;
+        END IF;
+        EXIT outer_loop;
+      END LOOP outer_loop;
+    END
+    $body$;
+  `;
+
+  const findings = maskSqlCommentsAndStringLiterals(sql).errors.filter(
+    (error) => error.message.includes(proceduralDynamicSqlPolicy),
+  );
+  assert.equal(findings.length, 1);
+  assert.equal(findings[0].proceduralStatementClass, 'EXECUTE');
+});
+
+test('procedural dynamic SQL recognises comments between surface keywords', () => {
+  const sql = `
+    CREATE FUNCTION public.run33_commented_return(command_variable text)
+    RETURNS SETOF integer LANGUAGE plpgsql AS $first$
+    BEGIN
+      RETURN /* a */ QUERY /* b */ EXECUTE command_variable;
+    END
+    $first$;
+    DO $second$
+    DECLARE row_value record; command_variable text := 'select 1';
+    BEGIN
+      FOR row_value IN /* c */ EXECUTE command_variable LOOP
+        NULL;
+      END LOOP;
+    END
+    $second$;
+    DO $third$
+    DECLARE cursor_name refcursor; command_variable text := 'select 1';
+    BEGIN
+      OPEN cursor_name FOR /* d */ EXECUTE command_variable;
+    END
+    $third$;
+  `;
+
+  const findings = maskSqlCommentsAndStringLiterals(sql).errors.filter(
+    (error) => error.message.includes(proceduralDynamicSqlPolicy),
+  );
+  assert.deepEqual(
+    findings.map((finding) => finding.proceduralStatementClass),
+    [
+      'RETURN QUERY EXECUTE',
+      'FOR IN EXECUTE',
+      'OPEN FOR EXECUTE',
+    ],
+  );
+});
+
+test('procedural dynamic SQL findings bind source offsets, lines, bodies, and classes', () => {
+  const sql = [
+    'DO $first$',
+    'BEGIN',
+    '  EXECUTE first_command;',
+    '  RETURN QUERY EXECUTE second_command;',
+    'END',
+    '$first$;',
+    'DO $second$',
+    'BEGIN',
+    '  OPEN second_cursor FOR EXECUTE third_command;',
+    'END',
+    '$second$;',
+  ].join('\n');
+
+  const findings = maskSqlCommentsAndStringLiterals(sql).errors.filter(
+    (error) => error.message.includes(proceduralDynamicSqlPolicy),
+  );
+  assert.deepEqual(
+    findings.map((finding) => finding.proceduralStatementClass),
+    ['EXECUTE', 'RETURN QUERY EXECUTE', 'OPEN FOR EXECUTE'],
+  );
+  assert.deepEqual(
+    findings.map((finding) => finding.sourceOffset),
+    [
+      sql.indexOf('EXECUTE first_command'),
+      sql.indexOf('EXECUTE second_command'),
+      sql.indexOf('EXECUTE third_command'),
+    ],
+  );
+  assert.equal(new Set(
+    findings.map((finding) => finding.executableBodyIdentity),
+  ).size, 2);
+
+  const violations = destructiveViolations(sql);
+  assert.match(violations[0], /fixture\.sql:3:/);
+  assert.match(violations[1], /fixture\.sql:4:/);
+  assert.match(violations[2], /fixture\.sql:9:/);
+});
+
+test('procedural dynamic SQL diagnostic does not expose the command expression', () => {
+  const privateMarker = 'RUN33_DYNAMIC_COMMAND_EXPRESSION_MUST_NOT_APPEAR';
+  const sql = `
+    DO $body$
+    BEGIN
+      EXECUTE '${privateMarker}';
+    END
+    $body$;
+  `;
+  const root = makeTempRoot();
+  try {
+    const migrationsDir = writeMigration(
+      root,
+      '20260731130001_run33_no_expression_leak.sql',
+      sql,
+    );
+    const result = runValidator(migrationsDir);
+
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, new RegExp(proceduralDynamicSqlPolicy));
+    assert.doesNotMatch(result.stderr, new RegExp(privateMarker));
+    assert.doesNotMatch(result.stdout, new RegExp(privateMarker));
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('procedural dynamic SQL controls remain non-executable data', () => {
+  const controls = [
+    `
+      DO $body$
+      BEGIN
+        -- EXECUTE 'SELECT 1';
+        PERFORM 'EXECUTE string data';
+        PERFORM execute FROM public.messages;
+        PERFORM "execute" FROM public.messages;
+      END
+      $body$;
+    `,
+    'SELECT $data$EXECUTE command_variable$data$;',
+    "SELECT 'EXECUTE command_variable';",
+    `
+      CREATE FUNCTION public.run33_sql_control()
+      RETURNS text
+      LANGUAGE sql
+      AS 'SELECT execute FROM public.messages';
+    `,
+    `
+      CREATE FUNCTION public.run33_c_control()
+      RETURNS void
+      AS '$libdir/run33_control', 'run33_symbol'
+      LANGUAGE c;
+    `,
+  ];
+
+  for (const sql of controls) {
+    assert.deepEqual(destructiveViolations(sql), []);
+  }
+});
+
+test('an unquoted execute column in a SQL CASE expression is ordinary data', () => {
+  const sql = `
+    DO $$
+    BEGIN
+      PERFORM CASE WHEN true THEN execute ELSE 0 END
+      FROM public.messages;
+    END
+    $$;
+  `;
+
+  assert.deepEqual(destructiveViolations(sql), []);
+});
+
+test('procedural CASE branches still reject dynamic execution', () => {
+  const sql = `
+    DO $$
+    DECLARE
+      command_variable text := 'SELECT 1';
+    BEGIN
+      CASE WHEN true THEN
+        EXECUTE command_variable;
+      ELSE
+        NULL;
+      END CASE;
+    END
+    $$;
+  `;
+
+  const violations = destructiveViolations(sql);
+  assert.equal(violations.length, 1);
+  assert.match(violations[0], /Procedural statement class: EXECUTE/);
+});
+
+test('a conditional command expression still rejects dynamic execution', () => {
+  const sql = `
+    DO $$
+    BEGIN
+      EXECUTE CASE WHEN true THEN 'SELECT 1' ELSE 'SELECT 2' END;
+    END
+    $$;
+  `;
+
+  const violations = destructiveViolations(sql);
+  assert.equal(violations.length, 1);
+  assert.match(violations[0], /Procedural statement class: EXECUTE/);
+});
+
+test('exact canonical historical procedural dynamic SQL exception passes', () => {
+  const content = fs.readFileSync(historicalDynamicSqlPath, 'utf8');
+  const result = historicalDynamicSqlValidation({ content });
+
+  assert.deepEqual(result.violations, []);
+  assert.deepEqual(result.state, {
+    historicalExceptionCount: 1,
+    unapprovedOccurrenceCount: 0,
+  });
+});
+
+test('historical exception fingerprints match the controller contract', () => {
+  const content = fs
+    .readFileSync(historicalDynamicSqlPath, 'utf8')
+    .replace(/\r\n/g, '\n');
+  const buffer = Buffer.from(content, 'utf8');
+  const blobHeader = Buffer.from(`blob ${buffer.length}\0`, 'utf8');
+
+  assert.equal(
+    crypto.createHash('sha1')
+      .update(Buffer.concat([blobHeader, buffer]))
+      .digest('hex'),
+    '5729e7a81fbb39ee04f6e5cb37450a261e55468f',
+  );
+  assert.equal(
+    crypto.createHash('sha256').update(content, 'utf8').digest('hex').toUpperCase(),
+    '939DA4DDB6ABB1D884317E56835CAA7027B51CCD7B40BE1AB4FCB3362C73A35A',
+  );
+});
+
+test('historical exception accepts only LF or equivalent CRLF content', () => {
+  const canonicalLf = fs
+    .readFileSync(historicalDynamicSqlPath, 'utf8')
+    .replace(/\r\n/g, '\n');
+  const crlf = canonicalLf.replace(/\n/g, '\r\n');
+
+  assert.deepEqual(
+    historicalDynamicSqlValidation({ content: canonicalLf }).violations,
+    [],
+  );
+  assert.deepEqual(
+    historicalDynamicSqlValidation({ content: crlf }).violations,
+    [],
+  );
+});
+
+test('historical exception rejects bare carriage-return content', () => {
+  const content = fs
+    .readFileSync(historicalDynamicSqlPath, 'utf8')
+    .replace(/\r\n|\n/g, '\r');
+  const result = historicalDynamicSqlValidation({ content });
+
+  assert.equal(result.state.historicalExceptionCount, 0);
+  assert.equal(result.state.unapprovedOccurrenceCount, 0);
+  assert.match(
+    result.violations.join('\n'),
+    /immutable historical migration fingerprint mismatch/,
+  );
+});
+
+test('canonical historical content under another path fails', () => {
+  const content = fs.readFileSync(historicalDynamicSqlPath, 'utf8');
+  const result = historicalDynamicSqlValidation({
+    content,
+    migrationPath: path.join(
+      os.tmpdir(),
+      'copied-historical-migration',
+      historicalDynamicSqlFileName,
+    ),
+  });
+
+  assert.equal(result.state.historicalExceptionCount, 0);
+  assert.equal(result.state.unapprovedOccurrenceCount, 1);
+  assert.match(result.violations.join('\n'), new RegExp(proceduralDynamicSqlPolicy));
+});
+
+test('one-byte historical canonical-content change fails', () => {
+  const content = fs
+    .readFileSync(historicalDynamicSqlPath, 'utf8')
+    .replace('optional public', 'optional Public');
+  const result = historicalDynamicSqlValidation({ content });
+
+  assert.equal(result.state.historicalExceptionCount, 0);
+  assert.equal(result.state.unapprovedOccurrenceCount, 1);
+  assert.match(result.violations.join('\n'), new RegExp(proceduralDynamicSqlPolicy));
+});
+
+test('a second historical EXECUTE occurrence fails', () => {
+  const content = fs
+    .readFileSync(historicalDynamicSqlPath, 'utf8')
+    .replace(
+      '  end if;',
+      "  execute 'select 1';\n  end if;",
+    );
+  const result = historicalDynamicSqlValidation({ content });
+
+  assert.equal(result.state.historicalExceptionCount, 0);
+  assert.equal(result.state.unapprovedOccurrenceCount, 2);
+  assert.equal(
+    result.violations.filter(
+      (violation) => violation.includes(proceduralDynamicSqlPolicy),
+    ).length,
+    2,
+  );
+});
+
+for (const mutation of [
+  {
+    name: 'changed function target',
+    replace: ['public.rls_auto_enable()', 'public.other_helper()'],
+  },
+  {
+    name: 'changed role set',
+    replace: ['public, anon, authenticated, service_role', 'public, anon'],
+  },
+  {
+    name: 'changed privilege',
+    replace: ['revoke execute on function', 'revoke usage on function'],
+  },
+]) {
+  test(`historical exception rejects ${mutation.name}`, () => {
+    const canonical = fs.readFileSync(historicalDynamicSqlPath, 'utf8');
+    const content = canonical.replace(...mutation.replace);
+    const result = historicalDynamicSqlValidation({ content });
+
+    assert.notEqual(content, canonical);
+    assert.equal(result.state.historicalExceptionCount, 0);
+    assert.equal(result.state.unapprovedOccurrenceCount, 1);
+    assert.match(result.violations.join('\n'), new RegExp(proceduralDynamicSqlPolicy));
+  });
+}
+
+for (const expression of [
+  {
+    name: 'concatenated equivalent text',
+    sql: `EXECUTE 'revoke execute on function public.rls_auto_enable() ' ||
+      'from public, anon, authenticated, service_role';`,
+  },
+  {
+    name: 'format equivalent text',
+    sql: `EXECUTE format('%s',
+      'revoke execute on function public.rls_auto_enable() from public, anon, authenticated, service_role');`,
+  },
+  {
+    name: 'variable-held equivalent text',
+    declaration: `command_variable text :=
+      'revoke execute on function public.rls_auto_enable() from public, anon, authenticated, service_role';`,
+    sql: 'EXECUTE command_variable;',
+  },
+  {
+    name: 'parameter-held equivalent text',
+    sql: 'EXECUTE command_parameter;',
+  },
+  {
+    name: 'dollar-quoted equivalent text',
+    sql: 'EXECUTE $command$revoke execute on function public.rls_auto_enable() from public, anon, authenticated, service_role$command$;',
+  },
+  {
+    name: 'escape-string equivalent text',
+    sql: "EXECUTE E'revoke execute on function public.rls_auto_enable() from public, anon, authenticated, service_role';",
+  },
+  {
+    name: 'Unicode-string equivalent text',
+    sql: "EXECUTE U&'revoke execute on function public.rls_auto_enable() from public, anon, authenticated, service_role';",
+  },
+]) {
+  test(`historical exception rejects ${expression.name}`, () => {
+    const content = `
+      DO $migration$
+      DECLARE
+        command_parameter text := 'select 1';
+        ${expression.declaration ?? ''}
+      BEGIN
+        ${expression.sql}
+      END
+      $migration$;
+    `;
+    const result = historicalDynamicSqlValidation({ content });
+
+    assert.equal(result.state.historicalExceptionCount, 0);
+    assert.equal(result.state.unapprovedOccurrenceCount, 1);
+    assert.match(result.violations.join('\n'), new RegExp(proceduralDynamicSqlPolicy));
+  });
+}
+
+test('future migration containing the exact historical command fails', () => {
+  const fileName = '20260801120000_future_dynamic_sql.sql';
+  const content = `
+    DO $body$
+    BEGIN
+      EXECUTE 'revoke execute on function public.rls_auto_enable() from public, anon, authenticated, service_role';
+    END
+    $body$;
+  `;
+  const result = historicalDynamicSqlValidation({
+    content,
+    fileName,
+    migrationPath: path.join(realMigrationsDir, fileName),
+  });
+
+  assert.equal(result.state.historicalExceptionCount, 0);
+  assert.equal(result.state.unapprovedOccurrenceCount, 1);
+  assert.match(result.violations.join('\n'), new RegExp(proceduralDynamicSqlPolicy));
+});
+
+test('additional destructive dynamic statement in historical content fails', () => {
+  const content = fs
+    .readFileSync(historicalDynamicSqlPath, 'utf8')
+    .replace(
+      '  end if;',
+      "  execute 'drop table public.messages';\n  end if;",
+    );
+  const result = historicalDynamicSqlValidation({ content });
+
+  assert.equal(result.state.historicalExceptionCount, 0);
+  assert.equal(result.state.unapprovedOccurrenceCount, 2);
+  assert.equal(
+    result.violations.filter(
+      (violation) => violation.includes(proceduralDynamicSqlPolicy),
+    ).length,
+    2,
+  );
+});
+
+test('copied historical migration fails through the complete CLI', () => {
+  const root = makeTempRoot();
+  try {
+    const content = fs.readFileSync(historicalDynamicSqlPath, 'utf8');
+    const migrationsDir = writeMigration(
+      root,
+      historicalDynamicSqlFileName,
+      content,
+    );
+    const result = runValidator(migrationsDir);
+
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, new RegExp(proceduralDynamicSqlPolicy));
+    assert.match(
+      result.stderr,
+      /historical_dynamic_sql_exceptions=0, unapproved_procedural_dynamic_sql_occurrences=1/,
+    );
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('mismatched DO LANGUAGE dollar tags fail closed', () => {
+  const violations = destructiveViolations(
+    doLanguageBodySql({
+      delimiter: '$expected$',
+      closingDelimiter: '$other$',
+    }),
+  );
+
+  assert.match(violations.join('\n'), /unterminated|lexical scan failed closed/);
+});
+
+test('unterminated DO LANGUAGE bodies fail closed', () => {
+  const violations = destructiveViolations(
+    'DO LANGUAGE plpgsql $body$ begin drop schema tenant_private cascade;',
+  );
+
+  assert.match(
+    violations.join('\n'),
+    /unterminated executable dollar-quoted body|lexical scan failed closed/,
+  );
+});
+
+test('nested ordinary dollar strings inside DO LANGUAGE remain masked', () => {
+  const violations = destructiveViolations(
+    doLanguageBodySql({
+      delimiter: '$outer$',
+      body: [
+        'begin',
+        '  perform $inner$ drop schema hidden_schema cascade; $inner$;',
+        '  drop schema visible_schema cascade;',
+        'end;',
+      ].join('\n'),
+    }),
+  );
+
+  assert.equal(
+    violations.filter((violation) => /DROP SCHEMA destructive SQL statement/.test(violation))
+      .length,
+    1,
+  );
+});
+
+test('a prior DO statement cannot authorize a later ordinary dollar string', () => {
+  const sql = [
+    executableBodySql({
+      declaration: 'DO',
+      asClause: '',
+      body: 'begin null; end;',
+    }),
+    'select $later$ drop schema tenant_private cascade; $later$;',
+  ].join('\n');
+
+  assert.deepEqual(destructiveViolations(sql), []);
+});
+
+// Authority-preservation coverage for complete statements and occurrences.
+test('DO LANGUAGE allowlisting retains the complete DROP SCHEMA statement', () => {
+  const statement = 'drop schema if exists tenant_private cascade;';
+  const sql = doLanguageBodySql({ body: `begin ${statement} end;` });
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [{
+      occurrenceId: 'do-language-schema-drop',
+      statementClass: 'DROP SCHEMA',
+      statement,
+    }],
+  );
+
+  assert.deepEqual(destructiveViolations(sql, allowlist), []);
+});
+
+test('DO LANGUAGE DROP SCHEMA target remains material', () => {
+  const approved = 'drop schema tenant_private cascade;';
+  const sql = doLanguageBodySql({
+    body: 'begin drop schema other_private cascade; end;',
+  });
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [{
+      occurrenceId: 'approved-target',
+      statementClass: 'DROP SCHEMA',
+      statement: approved,
+    }],
+  );
+  const violations = destructiveViolations(sql, allowlist);
+
+  assert.match(violations.join('\n'), /not exactly allowlisted/);
+  assert.match(violations.join('\n'), /approved-target was not found exactly once/);
+});
+
+test('DO LANGUAGE DROP SCHEMA options remain material', () => {
+  const approved = 'drop schema tenant_private cascade;';
+  const sql = doLanguageBodySql({
+    body: 'begin drop schema if exists tenant_private cascade; end;',
+  });
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [{
+      occurrenceId: 'approved-options',
+      statementClass: 'DROP SCHEMA',
+      statement: approved,
+    }],
+  );
+  const violations = destructiveViolations(sql, allowlist);
+
+  assert.match(violations.join('\n'), /not exactly allowlisted/);
+  assert.match(violations.join('\n'), /approved-options was not found exactly once/);
+});
+
+test('DO LANGUAGE destructive statement terminators remain material', () => {
+  const occurrence = 'drop schema tenant_private cascade;';
+  const sql = doLanguageBodySql({ body: `begin ${occurrence} end;` });
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [{
+      occurrenceId: 'missing-terminator',
+      statementClass: 'DROP SCHEMA',
+      statement: 'drop schema tenant_private cascade',
+    }],
+  );
+  const violations = destructiveViolations(sql, allowlist);
+
+  assert.match(violations.join('\n'), /not exactly allowlisted/);
+  assert.match(violations.join('\n'), /missing-terminator was not found exactly once/);
+});
+
+test('two DO LANGUAGE occurrences require two unique allowlist entries', () => {
+  const statement = 'drop schema tenant_private cascade;';
+  const sql = [
+    doLanguageBodySql({ delimiter: '$one$', body: `begin ${statement} end;` }),
+    doLanguageBodySql({ delimiter: '$two$', body: `begin ${statement} end;` }),
+  ].join('\n');
+  const duplicateIds = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [
+      { occurrenceId: 'duplicate-id', statementClass: 'DROP SCHEMA', statement },
+      { occurrenceId: 'duplicate-id', statementClass: 'DROP SCHEMA', statement },
+    ],
+  );
+  const duplicateViolations = destructiveViolations(sql, duplicateIds);
+
+  assert.match(duplicateViolations.join('\n'), /occurrence IDs must be present and unique/);
+  assert.match(duplicateViolations.join('\n'), /not exactly allowlisted/);
+
+  const uniqueEntries = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [
+      { occurrenceId: 'first-id', statementClass: 'DROP SCHEMA', statement },
+      { occurrenceId: 'second-id', statementClass: 'DROP SCHEMA', statement },
+    ],
+  );
+
+  assert.deepEqual(destructiveViolations(sql, uniqueEntries), []);
+});
+
+test('an additional DO LANGUAGE destructive occurrence fails independently', () => {
+  const approved = 'drop schema tenant_private cascade;';
+  const sql = doLanguageBodySql({
+    body: `begin ${approved} truncate table public.audit_logs; end;`,
+  });
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [{
+      occurrenceId: 'approved-schema-drop',
+      statementClass: 'DROP SCHEMA',
+      statement: approved,
+    }],
+  );
+  const violations = destructiveViolations(sql, allowlist);
+
+  assert.match(violations.join('\n'), /TRUNCATE destructive SQL statement/);
+  assert.doesNotMatch(violations.join('\n'), /approved-schema-drop was not found/);
+});
+
+test('a missing DO LANGUAGE destructive occurrence fails independently', () => {
+  const present = 'drop schema tenant_private cascade;';
+  const missing = 'truncate table public.audit_logs;';
+  const sql = doLanguageBodySql({ body: `begin ${present} end;` });
+  const allowlist = customDestructiveAllowlist(
+    '20260526143000_validator_fixture.sql',
+    [
+      {
+        occurrenceId: 'present-schema-drop',
+        statementClass: 'DROP SCHEMA',
+        statement: present,
+      },
+      {
+        occurrenceId: 'missing-truncate',
+        statementClass: 'TRUNCATE',
+        statement: missing,
+      },
+    ],
+  );
+  const violations = destructiveViolations(sql, allowlist);
+
+  assert.match(violations.join('\n'), /missing-truncate was not found exactly once/);
+  assert.doesNotMatch(violations.join('\n'), /present-schema-drop was not found/);
+});
+
+test('ordinary dollar-quoted strings remain masked', () => {
+  const violations = destructiveViolations(
+    'select $data$ delete from public.messages; $data$;',
+  );
+
+  assert.deepEqual(violations, []);
+});
+
+test('destructive-looking text in line and block comments remains masked', () => {
+  const violations = destructiveViolations(
+    '-- delete from public.messages;\n/* truncate table public.messages; */',
+  );
+
+  assert.deepEqual(violations, []);
+});
+
+test('multiple executable dollar bodies are each scanned', () => {
+  const sql = [
+    executableBodySql({ declaration: 'DO', asClause: '', delimiter: '$one$' }),
+    executableBodySql({ declaration: 'DO', asClause: '', delimiter: '$two$' }),
+  ].join('\n');
+  const violations = destructiveViolations(sql);
+
+  assert.equal(
+    violations.filter((violation) => /DELETE destructive SQL statement/.test(violation)).length,
+    2,
+  );
+});
+
+test('an executable body followed by an ordinary dollar string scans only the executable body', () => {
+  const sql = `${executableBodySql({ declaration: 'DO', asClause: '' })}\nselect $data$ delete from public.messages; $data$;`;
+  const violations = destructiveViolations(sql);
+
+  assert.equal(
+    violations.filter((violation) => /DELETE destructive SQL statement/.test(violation)).length,
+    1,
+  );
+});
+
+test('an ordinary dollar string followed by an executable body still detects the body', () => {
+  const sql = `select $data$ delete from public.messages; $data$;\n${executableBodySql({ declaration: 'DO', asClause: '' })}`;
+  const violations = destructiveViolations(sql);
+
+  assert.equal(
+    violations.filter((violation) => /DELETE destructive SQL statement/.test(violation)).length,
+    1,
+  );
+});
+
+test('mismatched dollar tags fail closed instead of masking the remainder', () => {
+  const violations = destructiveViolations(
+    executableBodySql({ delimiter: '$expected$', closingDelimiter: '$other$' }),
+  );
+
+  assert.match(violations.join('\n'), /unterminated|lexical scan failed closed/);
+});
+
+test('unterminated executable dollar bodies fail closed', () => {
+  const violations = destructiveViolations(
+    'create function public.example() returns void language plpgsql as $$ begin delete from public.messages;',
+  );
+
+  assert.match(violations.join('\n'), /unterminated executable dollar-quoted body/);
+  assert.match(violations.join('\n'), /lexical scan failed closed/);
+});
+
 test('validator does not require or use a live Supabase connection', () => {
   const root = makeTempRoot();
   const migrationsDir = writeMigration(
@@ -339,7 +2422,11 @@ test('real migration directory passes static validation', () => {
   const result = runValidator(realMigrationsDir);
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.match(result.stdout, /checked 34 migration SQL file\(s\)/);
+  assert.match(result.stdout, /checked 35 migration SQL file\(s\)/);
+  assert.match(
+    result.stdout,
+    /historical_dynamic_sql_exceptions=1, unapproved_procedural_dynamic_sql_occurrences=0/,
+  );
 });
 
 test('real base schema migration creates the planned MVP tables', () => {
@@ -457,6 +2544,223 @@ test('real migrations add trusted active-workspace catalogue read surface', () =
     /grant execute on function public\.[^;]+ to service_role;/i,
   );
   assert.doesNotMatch(sql, /current_setting\('app\.catalogue_workspace_id/);
+});
+
+test('setup recipe migration defines the locked two-table workspace-safe schema', () => {
+  const migration = readRealMigration(
+    '20260730100000_setup_recipe_database_authority.sql',
+  );
+  const sql = normalizeSql(migration);
+
+  assert.match(sql, /create table public\.setup_recipes \(/);
+  assert.match(sql, /workspace_id uuid not null/);
+  assert.match(sql, /setup_product_id uuid not null/);
+  assert.match(sql, /revision bigint not null default 1/);
+  assert.match(sql, /constraint setup_recipes_pkey primary key \(workspace_id, setup_product_id\)/);
+  assert.match(sql, /constraint setup_recipes_revision_check check \(revision > 0\)/);
+  assert.match(
+    sql,
+    /foreign key \(setup_product_id, workspace_id\) references public\.products \(id, workspace_id\) on delete cascade on update restrict/,
+  );
+
+  assert.match(sql, /create table public\.setup_recipe_items \(/);
+  assert.match(
+    sql,
+    /primary key \(workspace_id, setup_product_id, included_product_id\)/,
+  );
+  assert.match(
+    sql,
+    /unique \(workspace_id, setup_product_id, position\)/,
+  );
+  assert.match(
+    sql,
+    /foreign key \(workspace_id, setup_product_id\) references public\.setup_recipes \(workspace_id, setup_product_id\) on delete cascade on update restrict/,
+  );
+  assert.match(
+    sql,
+    /foreign key \(included_product_id, workspace_id\) references public\.products \(id, workspace_id\) on delete restrict on update restrict/,
+  );
+  assert.match(sql, /check \(included_product_id <> setup_product_id\)/);
+  assert.match(sql, /check \(position between 0 and 19\)/);
+  assert.match(sql, /check \(base_quantity between 1 and 99\)/);
+  assert.match(
+    sql,
+    /create index setup_recipe_items_workspace_included_product_idx on public\.setup_recipe_items \(workspace_id, included_product_id\);/,
+  );
+  assert.doesNotMatch(sql, /products\.kind/);
+  assert.doesNotMatch(migration, /values\s*\(\s*'[0-9a-f-]{36}'/i);
+});
+
+test('setup recipe migration enforces aggregate, non-nesting, and publication invariants in the database', () => {
+  const sql = normalizeSql(
+    readRealMigration('20260730100000_setup_recipe_database_authority.sql'),
+  );
+
+  for (const triggerName of [
+    'setup_recipes_parent_write_guard',
+    'setup_recipes_aggregate_guard',
+    'setup_recipe_items_nesting_guard',
+    'setup_recipe_items_aggregate_guard',
+    'products_setup_recipe_dependency_guard',
+    'products_setup_recipe_publication_guard',
+  ]) {
+    assert.match(sql, new RegExp(`create (?:constraint )?trigger ${triggerName}`));
+  }
+  assert.match(sql, /setup_recipe_nested_setup/);
+  assert.match(sql, /setup_recipe_published_child_protected/);
+  assert.match(sql, /setup_recipe_published_child_invalid/);
+  assert.match(sql, /setup_recipe_published_parent_invalid/);
+  assert.match(sql, /setup_recipe_positions_not_contiguous/);
+  assert.match(sql, /deferrable initially deferred/);
+  assert.match(sql, /if tg_op = 'delete'[\s\S]*?setup_recipe_published_parent_remove[\s\S]*?return old;/);
+  assert.match(sql, /pg_advisory_xact_lock/);
+  assert.match(sql, /create function public\.is_public_catalogue_product\( target_workspace_id uuid, target_product_id uuid \) returns boolean language sql stable set search_path = pg_catalog/);
+});
+
+test('setup recipe migration exposes only reviewed RLS and RPC privilege contracts', () => {
+  const sql = normalizeSql(
+    readRealMigration('20260730100000_setup_recipe_database_authority.sql'),
+  );
+
+  for (const tableName of ['setup_recipes', 'setup_recipe_items']) {
+    assert.match(sql, new RegExp(`alter table public\\.${tableName} enable row level security;`));
+    assert.match(
+      sql,
+      new RegExp(`revoke all privileges on table public\\.${tableName} from public, anon, authenticated, service_role;`),
+    );
+    assert.doesNotMatch(
+      sql,
+      new RegExp(`grant (?:insert|update|delete|all)[\\s\\S]*on (?:table )?public\\.${tableName} to (?:anon|authenticated|service_role);`),
+    );
+  }
+  assert.match(sql, /setup_recipes_product_manager_select/);
+  assert.match(sql, /setup_recipe_items_product_manager_select/);
+  assert.match(sql, /private\.is_workspace_product_manager\(workspace_id\)/);
+  assert.match(
+    sql,
+    /revoke all privileges on function public\.assert_setup_recipe_valid\(uuid, uuid\) from public, anon, authenticated, service_role;/,
+  );
+  assert.match(
+    sql,
+    /revoke all privileges on function public\.is_public_catalogue_product\(uuid, uuid\) from public, anon, authenticated, service_role;/,
+  );
+  for (const functionName of [
+    'setup_recipe_item_nesting_guard',
+    'setup_recipe_aggregate_guard',
+    'setup_recipe_product_publication_guard',
+  ]) {
+    assert.match(
+      sql,
+      new RegExp(`create function public\\.${functionName}\\(\\) returns trigger language plpgsql volatile security definer set search_path = pg_catalog as`),
+    );
+    assert.match(
+      sql,
+      new RegExp(`revoke all privileges on function public\\.${functionName}\\(\\) from public, anon, authenticated, service_role;`),
+    );
+  }
+  assert.match(
+    sql,
+    /revoke all privileges on function public\.execute_admin_setup_recipe_write\(text, uuid, uuid, bigint, jsonb\) from public, anon, authenticated, service_role;/,
+  );
+  assert.match(
+    sql,
+    /grant execute on function public\.execute_admin_setup_recipe_write\(text, uuid, uuid, bigint, jsonb\) to authenticated;/,
+  );
+  assert.doesNotMatch(
+    sql,
+    /grant execute on function public\.execute_admin_setup_recipe_write\([^;]+\) to (?:public|anon|service_role);/,
+  );
+});
+
+test('setup recipe RPC is bounded, optimistic-concurrency safe, and auditable', () => {
+  const sql = normalizeSql(
+    readRealMigration('20260730100000_setup_recipe_database_authority.sql'),
+  );
+
+  assert.match(
+    sql,
+    /create function public\.execute_admin_setup_recipe_write\( p_operation text, p_expected_workspace_id uuid, p_setup_product_id uuid, p_expected_revision bigint, p_items jsonb \)/,
+  );
+  assert.doesNotMatch(sql, new RegExp(['recipe', 'rpc'].join('_') + '\\.'));
+  assert.doesNotMatch(sql, new RegExp('<<' + ['recipe', 'rpc'].join('_') + '>>'));
+  assert.match(sql, /p_operation is null or p_operation not in \('replace', 'remove'\)/);
+  assert.match(sql, /setup_recipe_creation_revision_required/);
+  assert.match(sql, /setup_recipe_revision_conflict/);
+  assert.match(sql, /new_revision := current_revision \+ 1/);
+  assert.match(sql, /setup_recipe_empty_replacement/);
+  assert.match(sql, /setup_recipe_remove_items_must_be_empty/);
+  assert.match(sql, /setuprecipe\.replace/);
+  assert.match(sql, /setuprecipe\.remove/);
+  assert.match(sql, /jsonb_build_object\( 'operation'/);
+  assert.doesNotMatch(sql, /execute_admin_product_write/);
+  assert.match(sql, /delete from public\.setup_recipes/);
+  assert.match(sql, /delete from public\.setup_recipe_items/);
+});
+
+test('setup recipe catalogue projection is additive and fails closed without inference', () => {
+  const sql = normalizeSql(
+    readRealMigration('20260730100000_setup_recipe_database_authority.sql'),
+  );
+
+  assert.match(sql, /create or replace function public\.get_public_catalogue\(/);
+  assert.match(sql, /valid_setup_recipes as/);
+  assert.match(sql, /'product_kind', case/);
+  assert.match(sql, /when p\.valid_setup_product_id is not null then 'setup'/);
+  assert.match(sql, /else 'rental'/);
+  assert.match(sql, /'setup_composition', case/);
+  assert.match(sql, /when p\.valid_setup_product_id is null then null/);
+  assert.match(sql, /order by item\.position/);
+  assert.match(sql, /public\.is_public_catalogue_product\(child\.workspace_id, child\.id\)/);
+  assert.match(sql, /public\.is_public_catalogue_product\(parent\.workspace_id, parent\.id\)/);
+  assert.match(sql, /public\.is_public_catalogue_product\(p\.workspace_id, p\.id\)/);
+  assert.match(sql, /and \(r\.setup_product_id is null or vsr\.setup_product_id is not null\)/);
+  assert.doesNotMatch(sql, /case[\s\S]{0,250}(category|rental_unit|slug|name)[\s\S]{0,250}product_kind/);
+  assert.match(
+    sql,
+    /revoke all privileges on function public\.get_public_catalogue\(uuid, text\) from public, anon, authenticated, service_role;/,
+  );
+  assert.match(
+    sql,
+    /grant execute on function public\.get_public_catalogue\(uuid, text\) to anon;/,
+  );
+});
+
+test('SECURITY DEFINER inventory documents every setup recipe trigger and the split RPC count', () => {
+  const inventory = fs.readFileSync(
+    path.join(repoRoot, 'docs', 'SUPABASE-SECURITY-DEFINER-PRIVILEGE-INVENTORY.md'),
+    'utf8',
+  );
+
+  assert.match(inventory, /Eleven authenticated RPC signatures are allowlisted/);
+  assert.match(inventory, /Ten currently have website call sites/);
+  assert.match(
+    inventory,
+    /The setup-recipe RPC is deliberately database-authority-only until the second code PR\./,
+  );
+
+  for (const functionName of [
+    'public.setup_recipe_item_nesting_guard()',
+    'public.setup_recipe_aggregate_guard()',
+    'public.setup_recipe_product_publication_guard()',
+  ]) {
+    const escapedFunctionName = functionName
+      .replaceAll('.', '\\.')
+      .replaceAll('(', '\\(')
+      .replaceAll(')', '\\)');
+    const entry = new RegExp(
+      '### `' + escapedFunctionName + '`[\\s\\S]*?' +
+        'Owner: `postgres`[\\s\\S]*?' +
+        'SECURITY DEFINER: yes\\.[\\s\\S]*?' +
+        'Fixed `search_path`: `pg_catalog`\\.[\\s\\S]*?' +
+        'Trigger dependency:[\\s\\S]*?' +
+        'Internal helper dependency:[\\s\\S]*?' +
+        'Direct EXECUTE: denied for `PUBLIC`, `anon`, `authenticated`, and[\\s\\S]*?' +
+        '`service_role`\\.[\\s\\S]*?' +
+        'Trigger execution: valid[\\s\\S]*?' +
+        'Browser call site: none\\.',
+    );
+    assert.match(inventory, entry);
+  }
 });
 
 test('real migrations add narrow anonymous website quote insert policies only', () => {
@@ -2003,7 +4307,7 @@ test('forward privilege hardening uses exact signatures and explicit role allowl
     expectedPublicGrants.set(signature, roles);
   }
 
-  for (const signature of finalPublicSecurityDefinerSignatures) {
+  for (const signature of preRecipePublicSecurityDefinerSignatures) {
     assert.deepEqual(
       [...(grants.get(signature) ?? [])].sort(),
       [...(expectedPublicGrants.get(signature) ?? [])].sort(),
@@ -2014,9 +4318,12 @@ test('forward privilege hardening uses exact signatures and explicit role allowl
   const grantedPublicSignatures = [...grants.keys()]
     .filter((signature) => signature.startsWith('public.'))
     .sort();
+  const expectedPreRecipePublicGrants = [...expectedPublicGrants.keys()]
+    .filter((signature) => preRecipePublicSecurityDefinerSignatures.includes(signature))
+    .sort();
   assert.deepEqual(
     grantedPublicSignatures,
-    [...expectedPublicGrants.keys()].sort(),
+    expectedPreRecipePublicGrants,
     'The migration must not grant an unreviewed public function signature.',
   );
 
