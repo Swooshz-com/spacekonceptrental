@@ -13,6 +13,10 @@ import {
 } from "../admin/authorization/server-admin-csrf-proof-session-workspace-binding";
 import { resolveServerAdminMutationCapability } from "../admin/authorization/server-admin-mutation-capability";
 import {
+  resolveServerAdminRuntimeRouteGateAdapter,
+  type ServerAdminRuntimeRouteGateAdapterResult
+} from "../admin/authorization/server-admin-runtime-route-gate-adapter";
+import {
   executeAdminSetupRecipeWrite,
   readAdminSetupRecipe
 } from "./setup-recipe-repository";
@@ -37,6 +41,7 @@ type AdminSetupRecipeRouteDependencies = {
   env?: AdminSetupRecipeRouteEnv;
   createRuntimeDependencies?: CreateRuntimeDependencies;
   resolveSessionWorkspaceBinding?: typeof resolveServerAdminCsrfProofSessionWorkspaceBinding;
+  resolveRouteGate?: typeof resolveServerAdminRuntimeRouteGateAdapter;
   bindingDependencies?: ServerAdminCsrfProofSessionWorkspaceBindingDependencies;
 };
 
@@ -49,6 +54,11 @@ function safeJsonResponse(
   status: number
 ): NextResponse {
   return NextResponse.json(body, { status });
+}
+
+function getTimestampMs() {
+  const now = Date.now();
+  return Number.isFinite(now) && now >= 0 ? now : null;
 }
 
 async function adminAuthCheck(
@@ -120,6 +130,70 @@ async function adminAuthCheck(
       response: safeJsonResponse(
         { error: "submission_not_allowed" },
         403
+      )
+    };
+  }
+
+  const resolveRouteGate =
+    dependencies.resolveRouteGate ??
+    resolveServerAdminRuntimeRouteGateAdapter;
+  const verifierContext = {
+    expectedSessionBinding: binding.sessionBinding,
+    currentTimestampMs: getTimestampMs()
+  };
+  const verifierRuntimeDependencies = createRuntimeDependencies(verifierContext);
+  let routeGate: ServerAdminRuntimeRouteGateAdapterResult;
+
+  try {
+    routeGate = await resolveRouteGate(
+      {
+        requestedOperation: "admin.setupRecipe.write",
+        requestMethod: request.method,
+        request: { method: request.method },
+        requiresMutationCapability: true
+      },
+      {
+        requestMetadata: {
+          expectedOrigin:
+            dependencies.env?.ADMIN_EXPECTED_ORIGIN ??
+            routeConfig.expectedOrigin,
+          expectedHost:
+            dependencies.env?.ADMIN_EXPECTED_HOST ??
+            routeConfig.expectedHost
+        },
+        gate: {
+          csrfVerifier: {
+            ...verifierContext,
+            ...verifierRuntimeDependencies.verifierDependencies
+          },
+          decision: {
+            workspace: {
+              trustedServerWorkspaceId:
+                dependencies.env?.ADMIN_TRUSTED_WORKSPACE_ID ??
+                routeConfig.trustedServerWorkspaceId
+            }
+          }
+        }
+      }
+    );
+  } catch {
+    return {
+      allowed: false,
+      workspaceId: "",
+      response: safeJsonResponse(
+        { error: "admin_authorization_gate_unavailable" },
+        503
+      )
+    };
+  }
+
+  if (!routeGate.allowed) {
+    return {
+      allowed: false,
+      workspaceId: "",
+      response: safeJsonResponse(
+        { error: routeGate.reason ?? "submission_not_allowed" },
+        routeGate.statusCode ?? 403
       )
     };
   }
