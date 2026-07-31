@@ -901,7 +901,6 @@ function assertNoRuntimeSupabaseUse() {
   ]);
   const approvedSetupRecipeAdminFiles = new Set([
     'website/lib/catalogue/setup-recipe-repository.ts',
-    'website/lib/catalogue/admin-setup-recipe-write-route.ts',
   ]);
   const approvedQuoteWriteFiles = new Map([
     [
