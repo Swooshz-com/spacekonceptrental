@@ -35,14 +35,32 @@ export function quoteSelectionValidItemsForCatalogue(
 ): QuoteSelectionValidItem[] {
   return catalogue.products.map((product) => ({
     category: productCategory(product),
-    kind: productCategory(product).toLowerCase() === "setups" ? "setup" as const : "rental" as const,
+    kind: isSetupCatalogueProduct(product) ? "setup" as const : "rental" as const,
     name: product.name,
     slug: product.slug
   }));
 }
 
 export function isSetupCatalogueProduct(product: PublicCatalogueProduct): boolean {
+  if (product.productKind !== undefined) {
+    return product.productKind === "setup";
+  }
   return productCategory(product).toLowerCase() === "setups";
+}
+
+export function hasAuthoritativeSetupComposition(product: PublicCatalogueProduct): boolean {
+  return product.productKind === "setup" && Array.isArray(product.safeSetupComposition) && product.safeSetupComposition.length > 0;
+}
+
+export function getSetupCompositionItems(product: PublicCatalogueProduct) {
+  if (!hasAuthoritativeSetupComposition(product) || !product.safeSetupComposition) {
+    return [];
+  }
+  return product.safeSetupComposition;
+}
+
+export function isProductKindAvailable(product: PublicCatalogueProduct): boolean {
+  return product.productKind !== undefined;
 }
 
 export function quoteCanonicalIdentities(
@@ -292,6 +310,9 @@ export function StitchDetail({
   related?: PublicCatalogueProduct[];
 }) {
   const canonicalSetup = isSetupCatalogueProduct(product);
+  const hasAuthoritativeComposition = hasAuthoritativeSetupComposition(product);
+  const compositionItems = getSetupCompositionItems(product);
+  const showComposition = canonicalSetup && hasAuthoritativeComposition && compositionItems.length > 0;
   const image = product.primaryImage;
   const alt = textOrUndefined(image?.altText) ?? `${product.name} furniture rental setup`;
   const imgSrc = image?.publicUrl ?? stitchImageSrc(canonicalSetup ? galaImage : fallbackProductImage(product));
@@ -299,7 +320,16 @@ export function StitchDetail({
   const quoteItem = quoteSelectionItem(
     product,
     imgSrc,
-    canonicalSetup ? "setup" : "rental"
+    canonicalSetup ? "setup" : "rental",
+    showComposition ? compositionItems.map((ci) => ({
+      slug: ci.slug,
+      name: ci.name,
+      category: ci.rentalUnit,
+      kind: "setup-included" as const,
+      imageSrc: ci.images[0]?.publicUrl ?? stitchImageSrc(fallbackProductImage({ slug: ci.slug, name: ci.name, rentalUnit: ci.rentalUnit, sortOrder: 0, id: ci.id, source: "supabase" } as PublicCatalogueProduct)),
+      quantity: ci.baseQuantity,
+      setupBaseQuantity: ci.baseQuantity
+    })) : undefined
   );
   const catalogueImageMap = new Map<string, { alt: string; src: string }>();
   catalogueImageMap.set(imgSrc, { alt, src: imgSrc });
@@ -329,6 +359,64 @@ export function StitchDetail({
     : `Back to ${backLabel}`;
 
   if (canonicalSetup) {
+    if (showComposition) {
+      return (
+        <section className="stitch-detail-page stitch-detail-page--setup">
+          <div className="stitch-container">
+            <div className="stitch-detail-open-grid stitch-detail-open-grid--setup">
+              <div className="stitch-detail-open-media stitch-detail-open-media--carousel stitch-setup-media">
+                <SetupImageCarousel
+                  images={setupCarouselImages}
+                  label={`${product.name} setup images`}
+                  nextLabel="Next setup image"
+                  previousLabel="Previous setup image"
+                />
+              </div>
+              <div className="stitch-detail-open-copy stitch-setup-summary">
+                <p className="stitch-eyebrow">Setups / Direction</p>
+                <h2 className="stitch-detail-title">{product.name}</h2>
+                <p>{productSummary(product)}</p>
+                <div className="stitch-detail-spec-card stitch-detail-spec-card--setup">
+                  <h2>Setup details</h2>
+                  <dl>
+                    <div>
+                      <dt>Direction</dt>
+                      <dd>Styled setup</dd>
+                    </div>
+                    <div>
+                      <dt>Included rental pieces</dt>
+                      <dd>
+                        <ul className="stitch-setup-composition-list" aria-label="Setup composition">
+                          {compositionItems.map((item) => (
+                            <li key={item.id}>
+                              <Link href={`/catalogue/${item.slug}`} className="stitch-setup-composition-link">
+                                {item.name}
+                              </Link>
+                              <span className="stitch-setup-composition-qty">&times; {item.baseQuantity}</span>
+                              <span className="stitch-setup-composition-unit">{item.rentalUnit}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+                <div className="stitch-detail-actions stitch-detail-actions--setup">
+                  <QuoteSelectionButton item={quoteItem} />
+                  <Link className="stitch-detail-button stitch-detail-button--back" href={backHref}>
+                    {detailBackLabel}
+                  </Link>
+                  <Link className="stitch-detail-button stitch-detail-button--request" href="/quote">
+                    Request Quote
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+    }
+
     return (
       <section className="stitch-detail-page stitch-detail-page--setup">
         <div className="stitch-container">

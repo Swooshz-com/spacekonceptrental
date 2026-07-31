@@ -71,6 +71,7 @@ function readTrackedProductionSources(paths: string[]) {
 
 const authorisedState: ProtectedAdminShellState = {
   status: "authorised_admin",
+  workspaceId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
   dashboard: {
     status: "loaded",
     data: {

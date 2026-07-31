@@ -82,6 +82,8 @@ describe("protected admin shell", () => {
 
     await expect(resolveProtectedAdminShellState()).resolves.toEqual({
       status: "authorised_admin",
+
+      workspaceId: "99999999-9999-4999-8999-999999999999",
       adminAccess: {
         status: "loaded",
         currentAdmin: {
@@ -196,6 +198,8 @@ describe("protected admin shell", () => {
   });
 
   it("keeps authorised admins in a safe state when dashboard reads are unavailable", async () => {
+    process.env.ADMIN_TRUSTED_WORKSPACE_ID =
+      "99999999-9999-4999-8999-999999999999";
     vi.mocked(resolveServerAdminRuntimeRouteGateAdapter).mockResolvedValueOnce({
       allowed: true,
       reason: "allowed",
@@ -211,6 +215,8 @@ describe("protected admin shell", () => {
 
     await expect(resolveProtectedAdminShellState()).resolves.toEqual({
       status: "authorised_admin",
+
+      workspaceId: "99999999-9999-4999-8999-999999999999",
       adminAccess: {
         status: "unavailable"
       },
@@ -225,6 +231,8 @@ describe("protected admin shell", () => {
       <AdminShellContent
         state={{
           status: "authorised_admin",
+
+          workspaceId: "99999999-9999-4999-8999-999999999999",
           dashboard: {
             status: "loaded",
             data: {
@@ -416,6 +424,8 @@ describe("protected admin shell", () => {
         view={{ kind: "catalogue" }}
         state={{
           status: "authorised_admin",
+
+          workspaceId: "99999999-9999-4999-8999-999999999999",
           dashboard: {
             status: "loaded",
             data: {
@@ -534,6 +544,8 @@ describe("protected admin shell", () => {
         view={{ kind: "setups" }}
         state={{
           status: "authorised_admin",
+
+          workspaceId: "99999999-9999-4999-8999-999999999999",
           dashboard: {
             status: "loaded",
             data: {
@@ -606,13 +618,13 @@ describe("protected admin shell", () => {
     );
 
     expect(
-      screen.getByRole("region", { name: /derived setup review workflow/i })
+      screen.getByRole("region", { name: /setup recipe management workflow/i })
     ).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: /^setups$/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/review setup-style presentation derived from published catalogue items/i)
+      screen.getByText(/authoritative setup recipes define ordered rental pieces with base quantities/i)
     ).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /manage catalogue/i })
@@ -621,11 +633,11 @@ describe("protected admin shell", () => {
       screen.getByRole("link", { name: /view public setups/i })
     ).toHaveAttribute("href", "/setups");
     expect(
-      screen.getByText(/setups are currently derived from published catalogue items/i)
+      screen.getByText(/authoritative setup recipes/i)
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/no setup-specific editor or records/i)
-    ).toBeInTheDocument();
+      screen.getAllByText(/define ordered rental pieces/i).length
+    ).toBeGreaterThan(0);
     expect(
       screen.getByRole("region", { name: /derived setup overview/i })
     ).toBeInTheDocument();
@@ -634,21 +646,18 @@ describe("protected admin shell", () => {
     expect(screen.getByText(/image review/i)).toBeInTheDocument();
 
     const loungeCard = screen.getByRole("article", {
-      name: /setup candidate modular lounge/i
+      name: /recipe editor for modular lounge/i
     });
     expect(loungeCard).toHaveTextContent(/modular lounge/i);
     expect(loungeCard).toHaveTextContent(/lounge/i);
-    expect(loungeCard).toHaveTextContent(/published/i);
-    expect(loungeCard).toHaveTextContent(/image ready/i);
-    expect(loungeCard).toHaveTextContent(/soft lounge seating/i);
+    expect(loungeCard).toHaveTextContent(/loading recipe/i);
 
     const chairCard = screen.getByRole("article", {
-      name: /setup candidate accent chair/i
+      name: /recipe editor for accent chair/i
     });
-    expect(chairCard).toHaveTextContent(/needs image alt text/i);
-    expect(
-      screen.getAllByRole("link", { name: /edit in catalogue/i }).length
-    ).toBe(2);
+    expect(chairCard).toHaveTextContent(/loading recipe/i);
+    expect(chairCard).toHaveTextContent(/accent chair/i);
+    expect(screen.getByRole("link", { name: /manage catalogue/i })).toBeInTheDocument();
     expect(screen.queryByText(/hidden plinth/i)).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /add setup|edit setup/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /add setup|edit setup/i })).not.toBeInTheDocument();
@@ -666,6 +675,8 @@ describe("protected admin shell", () => {
         view={{ kind: "setups" }}
         state={{
           status: "authorised_admin",
+
+          workspaceId: "99999999-9999-4999-8999-999999999999",
           dashboard: {
             status: "loaded",
             data: {
@@ -713,7 +724,7 @@ describe("protected admin shell", () => {
   it("keeps Setups source derived and free of fake editor or storage path controls", () => {
     const shellSource = readAppFile("app/admin/protected-admin-shell.tsx");
 
-    expect(shellSource).toContain("Derived setup review workflow");
+    expect(shellSource).toContain("Setup recipe management workflow");
     expect(shellSource).toContain('href="/setups"');
     expect(shellSource).toContain('href="/admin/catalogue"');
     expect(shellSource).toContain('product.status === "published"');
@@ -770,6 +781,8 @@ describe("protected admin shell", () => {
         view={{ kind: "home" }}
         state={{
           status: "authorised_admin",
+
+          workspaceId: "99999999-9999-4999-8999-999999999999",
           dashboard: {
             status: "loaded",
             data: {
@@ -887,6 +900,8 @@ describe("protected admin shell", () => {
       },
       {
         status: "authorised_admin" as const,
+
+        workspaceId: "99999999-9999-4999-8999-999999999999",
         dashboard: {
           status: "unavailable" as const
         }
@@ -937,6 +952,8 @@ describe("protected admin shell", () => {
       <AdminShellContent
         state={{
           status: "authorised_admin",
+
+          workspaceId: "99999999-9999-4999-8999-999999999999",
           dashboard: {
             status: "unavailable"
           }
@@ -955,6 +972,8 @@ describe("protected admin shell", () => {
   it("renders a real hero-only form plus calm empty states for enquiry email and delivery log", () => {
     const baseState = {
       status: "authorised_admin" as const,
+
+      workspaceId: "99999999-9999-4999-8999-999999999999",
       dashboard: {
         status: "loaded" as const,
         data: {
@@ -1069,6 +1088,8 @@ describe("protected admin shell", () => {
       <AdminShellContent
         state={{
           status: "authorised_admin",
+
+          workspaceId: "99999999-9999-4999-8999-999999999999",
           dashboard: {
             status: "loaded",
             data: {
@@ -1149,6 +1170,8 @@ describe("protected admin shell", () => {
       <AdminShellContent
         state={{
           status: "authorised_admin",
+
+          workspaceId: "99999999-9999-4999-8999-999999999999",
           dashboard: {
             status: "loaded",
             data: {
@@ -1229,3 +1252,4 @@ describe("protected admin shell", () => {
     ).not.toBeInTheDocument();
   });
 });
+

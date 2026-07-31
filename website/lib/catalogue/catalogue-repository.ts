@@ -10,8 +10,12 @@ import type {
   PublicCatalogue,
   PublicCatalogueCategory,
   PublicCatalogueImage,
-  PublicCatalogueProduct
+  PublicCatalogueProduct,
+  ProductKind,
+  SafeSetupComposition,
+  SafeSetupCompositionItem
 } from "./types";
+import { classifySetupComposition } from "./setup-recipe-types";
 
 type SupabaseQueryResult = {
   data: unknown;
@@ -76,6 +80,8 @@ type ProductRow = {
   status?: unknown;
   sort_order?: unknown;
   product_images?: unknown;
+  product_kind?: unknown;
+  setup_composition?: unknown;
 };
 
 type CatalogueRpcPayload = {
@@ -189,6 +195,69 @@ function toCategory(row: CategoryRow): PublicCatalogueCategory | undefined {
   };
 }
 
+function toCompositionImage(
+  row: Record<string, unknown>,
+  options: PublicCatalogueRepositoryOptions
+): PublicCatalogueImage | undefined {
+  const id = getString(row.id);
+  const storageBucket = getString(row.storage_bucket);
+  const storagePath = getString(row.storage_path);
+
+  if (!id || !storageBucket || !storagePath) return undefined;
+
+  return {
+    id,
+    storageBucket,
+    storagePath,
+    publicUrl: buildPublicImageUrl(storageBucket, storagePath, options),
+    altText: getString(row.alt_text),
+    sortOrder: getNumber(row.sort_order),
+    isPrimary: row.is_primary === true
+  };
+}
+
+function toSafeSetupComposition(
+  raw: unknown,
+  options: PublicCatalogueRepositoryOptions
+): { kind?: ProductKind; composition?: SafeSetupComposition | null } {
+  const result = classifySetupComposition(
+    isRecord(raw) ? raw.product_kind : undefined,
+    isRecord(raw) ? raw.setup_composition : undefined
+  );
+
+  if (!result.ok) {
+    return {};
+  }
+
+  if (result.kind === "rental") {
+    return { kind: "rental", composition: null };
+  }
+
+  const composition: SafeSetupComposition = result.composition.map((item) => ({
+    id: item.id,
+    slug: item.slug,
+    name: item.name,
+    shortDescription: item.shortDescription,
+    rentalUnit: item.rentalUnit,
+    images: item.images.map((img) => toImage(
+      {
+        id: img.id,
+        storage_bucket: img.storageBucket,
+        storage_path: img.storagePath,
+        alt_text: img.altText,
+        sort_order: img.sortOrder,
+        is_primary: img.isPrimary
+      },
+      options
+    )).filter((img): img is PublicCatalogueImage => Boolean(img))
+      .sort((a, b) => a.sortOrder - b.sortOrder),
+    position: item.position,
+    baseQuantity: item.baseQuantity
+  }));
+
+  return { kind: "setup", composition };
+}
+
 function toProduct(
   row: ProductRow,
   categoryById: Map<string, PublicCatalogueCategory>,
@@ -216,6 +285,8 @@ function toProduct(
   const category = categoryId ? categoryById.get(categoryId) : undefined;
   const categoryName = getString(row.category_name) ?? category?.name;
 
+  const recipe = toSafeSetupComposition(row, options);
+
   return {
     id,
     slug,
@@ -228,7 +299,9 @@ function toProduct(
     categoryName,
     images,
     primaryImage,
-    source: "supabase"
+    source: "supabase",
+    productKind: recipe.kind,
+    safeSetupComposition: recipe.composition
   };
 }
 

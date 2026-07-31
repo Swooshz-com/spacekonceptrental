@@ -12,6 +12,7 @@ import { getAdminRouteRuntimeConfig } from "../../lib/server-runtime-config";
 import { CatalogueOwnerWorkflow } from "../../components/admin/catalogue-owner-workflow";
 import { AdminAccessManagementPanel } from "../../components/admin/admin-access-management-panel";
 import { HeroContentManagementPanel } from "../../components/admin/hero-content-management-panel";
+import { SetupRecipeEditor } from "../../components/admin/setup-recipe-editor";
 import {
   resolveAdminAccessDashboardRead,
   type AdminAccessDashboardReadResult
@@ -30,6 +31,7 @@ export type ProtectedAdminShellState =
     }
   | {
       status: "authorised_admin";
+      workspaceId: string;
       dashboard: AdminProductDashboardReadResult;
       adminAccess?: AdminAccessDashboardReadResult;
     }
@@ -295,6 +297,7 @@ export async function resolveProtectedAdminShellState(): Promise<ProtectedAdminS
 
     return {
       status: "authorised_admin",
+      workspaceId: trustedServerWorkspaceId ?? "",
       dashboard,
       adminAccess
     };
@@ -712,9 +715,11 @@ function AdminCatalogueOperations({
 }
 
 function AdminSetupsOperations({
-  dashboard
+  dashboard,
+  workspaceId
 }: {
   dashboard: AdminProductDashboardReadResult;
+  workspaceId: string;
 }) {
   if (dashboard.status === "unavailable") {
     return (
@@ -740,19 +745,23 @@ function AdminSetupsOperations({
   const allCandidatesNeedImageReview =
     setupCandidates.length > 0 &&
     needsImageReview.length === setupCandidates.length;
+  const availableProducts = dashboard.data.products
+    .filter((p) => p.status === "published")
+    .map((p) => ({ id: p.id, name: p.name }));
 
   return (
     <section
       className={styles.managementStack}
-      aria-label="Derived setup review workflow"
+      aria-label="Setup recipe management workflow"
     >
       <section className={styles.placeholderPanel}>
         <div className={styles.panelTitleRow}>
           <div>
-            <h2>Setup presentation review</h2>
+            <h2>Setup recipe management</h2>
             <p>
-              Setups are currently derived from published Catalogue items. To
-              change setup content for launch, edit the relevant Catalogue item.
+              Authoritative setup recipes define ordered rental pieces with base
+              quantities. Server-owned recipe data is used for public display and
+              quote reconstruction.
             </p>
           </div>
           <nav className={styles.inlineActions} aria-label="Setup actions">
@@ -764,11 +773,6 @@ function AdminSetupsOperations({
             </a>
           </nav>
         </div>
-        <p>
-          Only published, public-ready catalogue items should appear in the
-          public setup presentation. No setup-specific editor or records are
-          available in this launch slice.
-        </p>
       </section>
 
       <section
@@ -801,7 +805,7 @@ function AdminSetupsOperations({
           <h2>No public setup candidates yet</h2>
           <p>
             Published catalogue items will populate Setups. Add or publish a
-            public-ready catalogue item, then return here to review it.
+            public-ready catalogue item, then return here to manage its recipe.
           </p>
           <a className={styles.primaryButton} href="/admin/catalogue">
             Manage catalogue
@@ -811,14 +815,12 @@ function AdminSetupsOperations({
         <section className={styles.rowPanel}>
           <div className={styles.tableHeader}>
             <div>
-              <h2>Public setup candidates</h2>
+              <h2>Setup recipe editor</h2>
               <p>
-                Public-like setup cards sourced from existing Catalogue data.
+                Define ordered rental pieces for each setup using the authoritative
+                server-side recipe. Changes are atomic and versioned.
               </p>
             </div>
-            <span className={`${styles.statusPill} ${styles.statusPillMuted}`}>
-              Derived from Catalogue
-            </span>
           </div>
 
           {allCandidatesNeedImageReview ? (
@@ -835,48 +837,25 @@ function AdminSetupsOperations({
                 : "Unassigned category";
               const imageReady =
                 product.imageCount > 0 && hasText(product.primaryImageAltText);
-              const readinessLabel = imageReady
-                ? "Image ready"
-                : product.imageCount > 0
-                  ? "Needs image alt text"
-                  : "Needs image";
 
               return (
                 <article
                   className={styles.setupCard}
                   key={product.id}
-                  aria-label={`Setup candidate ${product.name}`}
+                  aria-label={`Recipe editor for ${product.name}`}
                 >
                   <div className={styles.setupCardHeader}>
                     <div>
                       <h3>{product.name}</h3>
                       <p>{categoryName}</p>
                     </div>
-                    <span
-                      className={`${styles.statusTag} ${styles.statusTagPublished}`}
-                    >
-                      Published
-                    </span>
                   </div>
-                  <p>
-                    {product.shortDescription ??
-                      "Catalogue item available for setup presentation and enquiry context."}
-                  </p>
-                  <div className={styles.setupCardMeta}>
-                    <span
-                      className={`${styles.statusTag} ${
-                        imageReady
-                          ? styles.statusTagPublished
-                          : styles.statusPillWarning
-                      }`}
-                    >
-                      {readinessLabel}
-                    </span>
-                    <span>{product.imageCount} image(s)</span>
-                  </div>
-                  <a className={styles.secondaryButton} href="/admin/catalogue">
-                    Edit in Catalogue
-                  </a>
+                  <SetupRecipeEditor
+                    workspaceId={workspaceId}
+                    setupProductId={product.id}
+                    setupProductName={product.name}
+                    availableProducts={availableProducts}
+                  />
                 </article>
               );
             })}
@@ -1087,7 +1066,7 @@ function AdminOperationsView({
   }
 
   if (view.kind === "setups") {
-    return <AdminSetupsOperations dashboard={state.dashboard} />;
+    return <AdminSetupsOperations dashboard={state.dashboard} workspaceId={state.workspaceId} />;
   }
 
   if (view.kind === "enquiry-email") {
