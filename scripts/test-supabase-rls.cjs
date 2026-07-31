@@ -899,6 +899,10 @@ function assertNoRuntimeSupabaseUse() {
   const approvedCatalogueReadFiles = new Set([
     'website/lib/catalogue/catalogue-repository.ts',
   ]);
+  const approvedSetupRecipeAdminFiles = new Set([
+    'website/lib/catalogue/setup-recipe-repository.ts',
+    'website/lib/catalogue/admin-setup-recipe-write-route.ts',
+  ]);
   const approvedQuoteWriteFiles = new Map([
     [
       'website/lib/quote/quote-repository.ts',
@@ -1221,6 +1225,21 @@ function assertNoRuntimeSupabaseUse() {
         );
         assertNoMatches(filePath, content, serverBlockedPatterns);
         assertNoMatches(filePath, content, blockedMediaUploadTablePatterns);
+        return;
+      }
+
+      if (approvedSetupRecipeAdminFiles.has(relativePath)) {
+        assert.match(
+          content,
+          /import\s+["']server-only["'];/,
+          `${relativePath} must be marked server-only.`,
+        );
+        assert.match(
+          content,
+          /createServerSupabaseClient/,
+          `${relativePath} must use the approved server Supabase wrapper.`,
+        );
+        assertNoMatches(filePath, content, serverBlockedPatterns);
         return;
       }
 
