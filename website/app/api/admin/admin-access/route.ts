@@ -145,6 +145,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   const verifierContext = {
     expectedSessionBinding: binding.sessionBinding,
+    expectedWorkspaceId: binding.adminContext.workspaceId,
     currentTimestampMs: timestampMs,
     maxProofAgeMs: defaultProofMaxAgeMs
   };

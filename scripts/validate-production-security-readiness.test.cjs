@@ -84,8 +84,6 @@ function websiteAuthenticatedRpcCallNames() {
   return names;
 }
 
-const setupRecipeRpcName = 'execute_admin_setup_recipe_write';
-
 function reviewedPublicSecurityDefinerCatalog() {
   const anonAllowlist = new Set(anonymousPublicSecurityDefinerAllowlist);
   const authenticatedAllowlist = new Set(
@@ -260,8 +258,8 @@ test('canonical RPC counts and website-consumer boundary remain distinct', () =>
   );
   assert.equal(
     authenticatedPublicSecurityDefinerAllowlist.length,
-    11,
-    'The authenticated executable contract must retain eleven signatures.',
+    12,
+    'The authenticated executable contract must retain twelve signatures.',
   );
 
   const canonicalAuthenticatedNames = new Set(
@@ -276,26 +274,19 @@ test('canonical RPC counts and website-consumer boundary remain distinct', () =>
 
   assert.equal(
     authenticatedWebsiteCallNames.size,
-    authenticatedPublicSecurityDefinerAllowlist.length - 1,
-    'Ten authenticated RPC signatures currently have website call sites; the remaining setup-recipe signature is DB-only.',
-  );
-  assert.equal(
-    authenticatedWebsiteCallNames.has(setupRecipeRpcName),
-    false,
-    'The setup-recipe RPC must not gain an application call site in this PR.',
+    authenticatedPublicSecurityDefinerAllowlist.length,
+    'All twelve authenticated RPC signatures must have website call sites.',
   );
   assert.deepEqual(
     [...authenticatedWebsiteCallNames].sort(),
-    [...canonicalAuthenticatedNames]
-      .filter((name) => name !== setupRecipeRpcName)
-      .sort(),
-    'Every authenticated allowlisted RPC except setup-recipe must retain exactly one website-consumer boundary.',
+    [...canonicalAuthenticatedNames].sort(),
+    'Every authenticated allowlisted RPC must retain a website-consumer boundary.',
   );
 });
 
 test('security-definer documentation derives its authenticated totals from the canonical contract', () => {
   const inventory = fs.readFileSync(securityDefinerInventoryPath, 'utf8');
-  const websiteCallCount = authenticatedPublicSecurityDefinerAllowlist.length - 1;
+  const websiteCallCount = authenticatedPublicSecurityDefinerAllowlist.length;
 
   assert.match(
     inventory,
@@ -306,11 +297,7 @@ test('security-definer documentation derives its authenticated totals from the c
   );
   assert.match(
     inventory,
-    new RegExp(`${countLabel(websiteCallCount)} currently have website call sites`, 'i'),
-  );
-  assert.match(
-    inventory,
-    /The setup-recipe RPC is deliberately database-authority-only until the second code PR\./,
+    new RegExp(`All ${countLabel(websiteCallCount)} have website call sites`, 'i'),
   );
 });
 

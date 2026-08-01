@@ -293,6 +293,62 @@ describe("public catalogue repository", () => {
     ]);
   });
 
+  it("makes malformed raw setup composition authority unavailable without rental inference", async () => {
+    const { supabase } = createMockSupabase({
+      get_public_catalogue: {
+        data: {
+          categories: [{
+            id: "category-published",
+            slug: "lounge-seating",
+            name: "Lounge Seating",
+            description: null,
+            sort_order: 0,
+            is_published: true
+          }],
+          products: [{
+            id: "setup-product",
+            category_id: "category-published",
+            slug: "malformed-setup",
+            name: "Malformed Setup",
+            short_description: null,
+            description: null,
+            rental_unit: "setup",
+            status: "published",
+            sort_order: 0,
+            product_images: [],
+            product_kind: "setup",
+            setup_composition: [{
+              id: "child-product",
+              slug: "child",
+              name: "Child",
+              short_description: null,
+              rental_unit: "item",
+              product_images: [{
+                id: "child-image",
+                storage_bucket: "catalogue-public",
+                storage_path: "workspace/child.webp",
+                alt_text: null,
+                sort_order: 0
+              }],
+              position: 0,
+              base_quantity: 1
+            }]
+          }]
+        },
+        error: null
+      }
+    });
+
+    const product = await getPublicProductBySlug("malformed-setup", {
+      workspaceId: workspaceA,
+      supabase
+    });
+
+    expect(product).toBeTruthy();
+    expect(product?.productKind).toBeUndefined();
+    expect(product?.safeSetupComposition).toBeUndefined();
+  });
+
   it("keeps production catalogue data access server-only and catalogue-scoped", () => {
     const source = readFileSync(
       resolve(process.cwd(), "lib/catalogue/catalogue-repository.ts"),

@@ -219,6 +219,7 @@ async function verifyAdminWriteBoundary(
     dependencies.resolveRouteGate ?? resolveServerAdminRuntimeRouteGateAdapter;
   const verifierContext = {
     expectedSessionBinding: binding.sessionBinding,
+    expectedWorkspaceId: binding.adminContext.workspaceId,
     currentTimestampMs: timestampMs,
     maxProofAgeMs: getProofMaxAgeMs(dependencies)
   };

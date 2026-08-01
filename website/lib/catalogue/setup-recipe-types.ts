@@ -67,6 +67,19 @@ function getFiniteInteger(value: unknown): number | undefined {
     : undefined;
 }
 
+function hasExactKeys(value: Record<string, unknown>, keys: readonly string[]) {
+  const actualKeys = Object.keys(value);
+
+  return (
+    actualKeys.length === keys.length &&
+    keys.every((key) => Object.prototype.hasOwnProperty.call(value, key))
+  );
+}
+
+function getNullableString(value: unknown) {
+  return value === null || typeof value === "string" ? value : undefined;
+}
+
 export function reconstructSetupQuantity(
   parentQuantity: unknown,
   baseQuantity: unknown
@@ -92,47 +105,83 @@ export function reconstructSetupQuantity(
     : undefined;
 }
 
-function toImages(value: unknown): PublicCatalogueImage[] {
-  if (!Array.isArray(value)) return [];
+function toImages(value: unknown): PublicCatalogueImage[] | undefined {
+  if (!Array.isArray(value)) return undefined;
   const result: PublicCatalogueImage[] = [];
   for (const row of value) {
-    if (!isRecord(row)) continue;
+    if (
+      !isRecord(row) ||
+      !hasExactKeys(row, [
+        "id",
+        "storage_bucket",
+        "storage_path",
+        "alt_text",
+        "sort_order",
+        "is_primary"
+      ])
+    ) {
+      return undefined;
+    }
+
     const id = getString(row.id);
     const storageBucket = getString(row.storage_bucket);
     const storagePath = getString(row.storage_path);
-    if (!id || !storageBucket || !storagePath) continue;
+    const altText = getNullableString(row.alt_text);
+    const sortOrder = getFiniteInteger(row.sort_order);
+
+    if (
+      !id ||
+      !storageBucket ||
+      !storagePath ||
+      altText === undefined ||
+      sortOrder === undefined ||
+      sortOrder < 0 ||
+      typeof row.is_primary !== "boolean"
+    ) {
+      return undefined;
+    }
+
     result.push({
       id,
       storageBucket,
       storagePath,
-      altText: getString(row.alt_text),
-      sortOrder: getFiniteInteger(row.sort_order) ?? 0,
-      isPrimary: row.is_primary === true
+      altText: altText === null ? undefined : altText,
+      sortOrder,
+      isPrimary: row.is_primary
     });
   }
   return result;
 }
 
 function normalizeCompositionItem(
-  value: unknown,
-  _index: number
+  value: unknown
 ): SetupCompositionItem | undefined {
   if (!isRecord(value)) return undefined;
 
-  const allowedKeys = new Set([
-    "id", "slug", "name", "short_description", "rental_unit",
-    "product_images", "position", "base_quantity"
-  ]);
-
-  if (Object.keys(value).some((key) => !allowedKeys.has(key))) {
+  if (
+    !hasExactKeys(value, [
+      "id",
+      "slug",
+      "name",
+      "short_description",
+      "rental_unit",
+      "product_images",
+      "position",
+      "base_quantity"
+    ])
+  ) {
     return undefined;
   }
 
   const id = getString(value.id);
   const slug = getString(value.slug);
   const name = getString(value.name);
+  const rentalUnit = getString(value.rental_unit);
+  const shortDescription = getNullableString(value.short_description);
 
-  if (!id || !slug || !name) return undefined;
+  if (!id || !slug || !name || !rentalUnit || shortDescription === undefined) {
+    return undefined;
+  }
 
   const rawPosition = value.position;
   if (typeof rawPosition !== "number" || !Number.isFinite(rawPosition) || !Number.isSafeInteger(rawPosition)) {
@@ -149,15 +198,16 @@ function normalizeCompositionItem(
   if (position < 0 || position >= SETUP_MAX_ITEMS) return undefined;
   if (baseQuantity < SETUP_MIN_QUANTITY || baseQuantity > SETUP_MAX_QUANTITY) return undefined;
 
-  const shortDescription = getString(value.short_description);
-  const rentalUnit = getString(value.rental_unit) ?? "item";
   const images = toImages(value.product_images);
+
+  if (!images) return undefined;
 
   return {
     id,
     slug,
     name,
-    shortDescription,
+    shortDescription:
+      shortDescription === null ? undefined : shortDescription,
     rentalUnit,
     images,
     position,
@@ -283,7 +333,7 @@ export function classifySetupComposition(
 
     const items: SetupCompositionItem[] = [];
     for (let i = 0; i < rawComposition.length; i++) {
-      const item = normalizeCompositionItem(rawComposition[i], i);
+      const item = normalizeCompositionItem(rawComposition[i]);
       if (!item) {
         return { ok: false, code: "malformed-children" };
       }

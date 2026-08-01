@@ -4,7 +4,9 @@ This is the review contract for `public` schema `SECURITY DEFINER` functions.
 Repository-owned application functions are hardened by
 `20260721183000_public_security_definer_privilege_hardening.sql`. The optional
 Supabase/platform-managed event-trigger helper is hardened, when present, by
-`20260721190000_platform_rls_auto_enable_privilege_hardening.sql`.
+`20260721190000_platform_rls_auto_enable_privilege_hardening.sql`. The durable
+administrator CSRF replay authority is added by
+`20260802013000_admin_csrf_proof_replay_authority.sql`.
 
 The application inventory was derived from the ordered migration chain,
 website RPC call sites, final `pg_policies`, trigger catalogs, and the
@@ -18,7 +20,7 @@ inventory as complete.
 
 - **Repository-owned application functions:** created by the ordered migration
   chain, reviewed by exact signature, and granted only to the six anonymous or
-  eleven authenticated application RPC allowlists below.
+  twelve authenticated application RPC allowlists below.
 - **Supabase/platform-managed functions:** may exist only in managed
   environments. They require an explicit reviewed contract before any
   API/client execution is allowed.
@@ -37,13 +39,13 @@ Anonymous execution is limited to these exact signatures:
 - `public.get_public_quote_submission_digest(uuid,uuid,text,text,text,text,text,date,text,text,text,text,jsonb,uuid)`
 - `public.submit_public_quote_request(uuid,uuid,text,text,text,text,text,date,text,text,text,text,jsonb,uuid,text,bigint,text)`
 
-Eleven authenticated RPC signatures are allowlisted. Ten currently have website call sites. The setup-recipe RPC is deliberately database-authority-only until the second code PR. No public-schema `SECURITY
+Twelve authenticated RPC signatures are allowlisted. All twelve have website call sites. No public-schema `SECURITY
 DEFINER` function requires `service_role` execution: current server runtime
 uses either the server-only anon client for public flows or the session-bound
 authenticated client for admin flows. `PUBLIC` receives no execution grant.
 
 The intentional application access remains exactly six anonymous public RPCs
-and eleven authenticated public RPCs. These grants must not be removed merely to
+and twelve authenticated public RPCs. These grants must not be removed merely to
 silence a generic advisor warning.
 
 The "prior SQL" column describes the explicit grant/revoke intent in the
@@ -60,13 +62,14 @@ before applying the reviewed allowlists.
 | `public.current_admin_access_id(uuid)` | Internal admin-access helper; no website RPC call | Used by `execute_admin_access_write` | Revoke `PUBLIC`; grant `authenticated` | Public owner-only internal helper |
 | `public.current_product_admin_user_id(uuid)` | Internal write helper; no website RPC call | Used by product, hero, and page-media write RPCs | Revoke `PUBLIC`; grant `authenticated` | Public owner-only internal helper |
 | `public.current_quote_admin_user_id(uuid)` | Internal quote helper; no website RPC call | Quote manifest/outcome RLS and quote write RPCs | Revoke `PUBLIC`; grant `authenticated` | Original moved to `private` for RLS; public owner-only compatibility wrapper |
+| `public.consume_admin_csrf_proof(text,uuid,text,bigint,bigint)` | Authenticated server-only call in `website/lib/admin/authorization/server-admin-csrf-proof-replay-repository.ts` | Resolves current product-admin authority, performs bounded expiry cleanup, and atomically inserts the HMAC fingerprint | Exact all-role revoke and authenticated-only grant in `20260802013000_admin_csrf_proof_replay_authority.sql` | `authenticated` only |
 | `public.enqueue_search_index_job(uuid,text,uuid,text,text,text,text,jsonb,text)` | Authenticated call in `website/lib/search-index/supabase-search-index-adapter.ts` | Called by listing write functions and the website adapter | Revoke `PUBLIC`; grant `authenticated` | `authenticated` only |
 | `public.ensure_admin_access_membership(uuid)` | Authenticated call in `website/lib/admin/authorization/supabase-admin-profile-membership-adapters.ts` | Uses admin-access identity helpers | Revoke `PUBLIC`; grant `authenticated` | `authenticated` only |
 | `public.execute_admin_access_write(uuid,text,text)` | Authenticated call in `website/lib/admin/access/admin-access-management.ts` | Uses owner and current-access helpers | Exact revoke in `20260721090000`; grant `authenticated` | `authenticated` only |
 | `public.execute_admin_homepage_hero_image_write(uuid,jsonb)` | Authenticated call in `website/lib/hero/admin-homepage-hero-write.ts` | Uses current product admin helper | Revoke `PUBLIC`; grant `authenticated` | `authenticated` only |
 | `public.execute_admin_homepage_hero_write(uuid,jsonb)` | No current website call; historical compatibility wrapper | Calls the image-only hero write RPC | Revoke `PUBLIC`; grant `authenticated` | Owner-only; no client role grant |
 | `public.execute_admin_product_write(text,uuid,uuid,jsonb)` | Authenticated call in `website/lib/products/persistence/supabase-product-persistence.ts` | Uses current product admin helper and audit/outbox writes | Revoke `PUBLIC`; grant `authenticated` | `authenticated` only |
-| `public.execute_admin_setup_recipe_write(text,uuid,uuid,bigint,jsonb)` | #319 database-authority RPC; application consumer intentionally deferred to the second code PR | Uses current product-manager authority, recipe constraints/triggers, publication checks, and audit logs | Exact revoke and authenticated grant in `20260730100000_setup_recipe_database_authority.sql` | `authenticated` only |
+| `public.execute_admin_setup_recipe_write(text,uuid,uuid,bigint,jsonb)` | Authenticated call in `website/lib/catalogue/setup-recipe-repository.ts` | Uses current product-manager authority, recipe constraints/triggers, publication checks, and audit logs | Exact revoke and authenticated grant in `20260730100000_setup_recipe_database_authority.sql` | `authenticated` only |
 | `public.execute_admin_public_page_media_write(uuid,text,jsonb)` | Authenticated call in `website/lib/page-media/admin-public-page-media-write.ts` | Uses current product admin helper | Revoke `PUBLIC`; grant `authenticated` | `authenticated` only |
 | `public.execute_admin_quote_crm_handoff_queue_update(uuid,uuid,text,text)` | Authenticated call in `website/lib/quote/admin-write/admin-quote-request-crm-handoff-write.ts` | Uses current quote admin helper | Revoke `PUBLIC`; grant `authenticated` | `authenticated` only |
 | `public.execute_admin_quote_workflow(uuid,uuid,text,text)` | Authenticated call in `website/lib/quote/admin-write/admin-quote-request-status-write.ts` | Uses current quote admin helper | Revoke `PUBLIC`; grant `authenticated` | `authenticated` only |
@@ -154,6 +157,36 @@ for any of these functions.
 - Trigger execution: valid through the attached table trigger and owner
   privileges; no client grant is needed.
 - Browser call site: none.
+
+## Durable CSRF Replay SECURITY DEFINER RPC
+
+### `public.consume_admin_csrf_proof(text,uuid,text,bigint,bigint)`
+
+- Owner: `postgres` (migration/database owner).
+- SECURITY DEFINER: yes.
+- Fixed `search_path`: `pg_catalog`.
+- Authorization dependency:
+  `public.current_product_admin_user_id(expected_workspace_id)`; inactive,
+  unauthorized, unauthenticated, and cross-workspace callers receive `false`.
+- Storage dependency: `public.admin_csrf_proof_consumptions`, with RLS enabled,
+  no client policy, and no direct client or `service_role` table privilege.
+- Atomicity: one `INSERT ... ON CONFLICT (proof_fingerprint) DO NOTHING`
+  statement is the replay boundary. There is no separate existence check.
+- Cleanup: one deterministic expired-row CTE ordered by expiry and fingerprint,
+  limited to 128 rows and locked with `FOR UPDATE SKIP LOCKED`, feeds the only
+  reviewed cleanup `DELETE`.
+- Failure semantics: malformed operations, fingerprints, timestamps,
+  authorization, expiry, or conversion return `false`; only the inserting
+  transaction returns exact boolean `true`.
+- Direct EXECUTE: denied for `PUBLIC`, `anon`, and `service_role`; granted only
+  to `authenticated` after an explicit all-role revoke.
+- Server call site:
+  `website/lib/admin/authorization/server-admin-csrf-proof-replay-repository.ts`
+  through the canonical session-bound Supabase client.
+- Privacy: PostgreSQL receives only a lowercase hexadecimal HMAC fingerprint,
+  workspace ID, operation, resolved administrator ID, and bounded timestamps;
+  it receives no raw proof, nonce, session binding, cookie, token, signature,
+  secret, request body, or customer data.
 
 ## Supabase/Platform-Managed Event-Trigger Contract
 

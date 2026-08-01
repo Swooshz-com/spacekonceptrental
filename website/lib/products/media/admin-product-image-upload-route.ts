@@ -319,6 +319,7 @@ async function authorizeUpload(
 
   const verifierContext = {
     expectedSessionBinding: binding.sessionBinding,
+    expectedWorkspaceId: binding.adminContext.workspaceId,
     currentTimestampMs: timestampMs,
     maxProofAgeMs: getProofMaxAgeMs(dependencies)
   };

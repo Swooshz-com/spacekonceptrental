@@ -15,6 +15,7 @@ import type {
   ServerAdminCsrfSignatureVerifierInput
 } from "./server-admin-csrf-proof-verifier";
 import { getAdminCsrfProofSecret } from "../../server-runtime-config";
+import { consumeServerAdminCsrfProof } from "./server-admin-csrf-proof-replay-repository";
 
 const bindingVersion = "csrf-session-binding-v1";
 const csrfProofBindingRoles = new Set(["owner", "admin"]);
@@ -145,8 +146,14 @@ export function createServerAdminCsrfProofRuntimeDependencies(
   verifierContext: Omit<
     ServerAdminCsrfProofVerifierDependencies,
     "verifySignature" | "checkReplay"
-  > = {}
+  > = {},
+  dependencies: {
+    consumeCsrfProof?: typeof consumeServerAdminCsrfProof;
+  } = {}
 ): ServerAdminCsrfProofRuntimeDependencies {
+  const consumeCsrfProof =
+    dependencies.consumeCsrfProof ?? consumeServerAdminCsrfProof;
+
   return {
     issuerDependencies: {
       generateNonce: generateServerAdminCsrfNonce,
@@ -158,8 +165,8 @@ export function createServerAdminCsrfProofRuntimeDependencies(
     },
     verifierDependencies: {
       ...verifierContext,
-      verifySignature: verifyServerAdminCsrfSignature
-      // checkReplay is intentionally deferred
+      verifySignature: verifyServerAdminCsrfSignature,
+      checkReplay: consumeCsrfProof
     }
   };
 }

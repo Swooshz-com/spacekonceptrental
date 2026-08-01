@@ -239,18 +239,14 @@ function toSafeSetupComposition(
     name: item.name,
     shortDescription: item.shortDescription,
     rentalUnit: item.rentalUnit,
-    images: item.images.map((img) => toImage(
-      {
-        id: img.id,
-        storage_bucket: img.storageBucket,
-        storage_path: img.storagePath,
-        alt_text: img.altText,
-        sort_order: img.sortOrder,
-        is_primary: img.isPrimary
-      },
-      options
-    )).filter((img): img is PublicCatalogueImage => Boolean(img))
-      .sort((a, b) => a.sortOrder - b.sortOrder),
+    images: item.images.map((img) => ({
+      ...img,
+      publicUrl: buildPublicImageUrl(
+        img.storageBucket,
+        img.storagePath,
+        options
+      )
+    })).sort((a, b) => a.sortOrder - b.sortOrder),
     position: item.position,
     baseQuantity: item.baseQuantity
   }));

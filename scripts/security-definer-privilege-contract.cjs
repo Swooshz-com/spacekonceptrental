@@ -53,9 +53,14 @@ const setupRecipePublicSecurityDefinerSignatures = Object.freeze([
   'public.execute_admin_setup_recipe_write(text,uuid,uuid,bigint,jsonb)',
 ]);
 
+const csrfReplayPublicSecurityDefinerSignatures = Object.freeze([
+  'public.consume_admin_csrf_proof(text,uuid,text,bigint,bigint)',
+]);
+
 const finalPublicSecurityDefinerSignatures = Object.freeze([
   ...preRecipePublicSecurityDefinerSignatures,
   ...setupRecipePublicSecurityDefinerSignatures,
+  ...csrfReplayPublicSecurityDefinerSignatures,
 ]);
 
 const platformManagedPublicSecurityDefinerSignatures = Object.freeze([
@@ -88,6 +93,7 @@ const authenticatedPublicSecurityDefinerAllowlist = Object.freeze([
   'public.execute_admin_quote_workflow(uuid,uuid,text,text)',
   'public.get_admin_access_membership(uuid,uuid)',
   'public.list_admin_access_records(uuid)',
+  'public.consume_admin_csrf_proof(text,uuid,text,bigint,bigint)',
 ]);
 
 const serviceRolePublicSecurityDefinerAllowlist = Object.freeze([]);
@@ -123,6 +129,7 @@ const privatePolicyHelperGrants = Object.freeze({
 module.exports = {
   anonymousPublicSecurityDefinerAllowlist,
   authenticatedPublicSecurityDefinerAllowlist,
+  csrfReplayPublicSecurityDefinerSignatures,
   finalPrivateFunctionSignatures,
   finalPublicSecurityDefinerSignatures,
   movedPublicSecurityDefinerSignatures,

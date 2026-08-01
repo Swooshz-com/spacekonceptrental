@@ -2422,7 +2422,7 @@ test('real migration directory passes static validation', () => {
   const result = runValidator(realMigrationsDir);
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.match(result.stdout, /checked 35 migration SQL file\(s\)/);
+  assert.match(result.stdout, /checked 36 migration SQL file\(s\)/);
   assert.match(
     result.stdout,
     /historical_dynamic_sql_exceptions=1, unapproved_procedural_dynamic_sql_occurrences=0/,
@@ -2725,17 +2725,118 @@ test('setup recipe catalogue projection is additive and fails closed without inf
   );
 });
 
-test('SECURITY DEFINER inventory documents every setup recipe trigger and the split RPC count', () => {
+test('durable admin CSRF replay migration defines the exact private table contract', () => {
+  const migration = readRealMigration(
+    '20260802013000_admin_csrf_proof_replay_authority.sql',
+  );
+  const sql = normalizeSql(migration);
+
+  assert.match(sql, /create table public\.admin_csrf_proof_consumptions \(/);
+  for (const column of [
+    'proof_fingerprint text primary key',
+    'workspace_id uuid not null',
+    'operation text not null',
+    'actor_admin_user_id uuid not null',
+    'issued_at timestamptz not null',
+    'expires_at timestamptz not null',
+    'consumed_at timestamptz not null default statement_timestamp\(\)',
+  ]) {
+    assert.match(sql, new RegExp(column));
+  }
+  assert.match(sql, /proof_fingerprint ~ '\^\[0-9a-f\]\{64\}\$'/);
+  for (const operation of [
+    'product.write',
+    'category.write',
+    'productImage.write',
+    'hero.write',
+    'quote.write',
+    'membership.manage',
+    'admin.setupRecipe.read',
+    'admin.setupRecipe.write',
+  ]) {
+    assert.match(
+      sql,
+      new RegExp(operation.toLowerCase().replaceAll('.', '\\.')),
+    );
+  }
+  assert.match(sql, /expires_at > issued_at/);
+  assert.match(sql, /expires_at - issued_at <= interval '5 minutes'/);
+  assert.match(
+    sql,
+    /create index admin_csrf_proof_consumptions_expires_at_idx on public\.admin_csrf_proof_consumptions \(expires_at\);/,
+  );
+  assert.match(sql, /alter table public\.admin_csrf_proof_consumptions enable row level security;/);
+  assert.match(
+    sql,
+    /revoke all privileges on table public\.admin_csrf_proof_consumptions from public, anon, authenticated, service_role;/,
+  );
+  assert.doesNotMatch(sql, /create policy [^;]+ on public\.admin_csrf_proof_consumptions/);
+});
+
+test('durable admin CSRF replay RPC is exact, bounded, atomic, and least privilege', () => {
+  const migration = readRealMigration(
+    '20260802013000_admin_csrf_proof_replay_authority.sql',
+  );
+  const sql = normalizeSql(migration);
+  const tableDefinition = sql.match(
+    /create table public\.admin_csrf_proof_consumptions \(([\s\S]*?)\);/,
+  )?.[1] ?? '';
+
+  assert.match(
+    sql,
+    /create function public\.consume_admin_csrf_proof\( p_operation text, p_expected_workspace_id uuid, p_proof_fingerprint text, p_issued_at_ms bigint, p_expires_at_ms bigint \) returns boolean language plpgsql volatile security definer set search_path = pg_catalog/,
+  );
+  assert.match(
+    sql,
+    /public\.current_product_admin_user_id\(p_expected_workspace_id\)/,
+  );
+  assert.match(sql, /limit 128 for update skip locked/);
+  assert.match(
+    sql,
+    /delete from public\.admin_csrf_proof_consumptions consumption using expired_fingerprints/,
+  );
+  assert.match(sql, /on conflict \(proof_fingerprint\) do nothing returning true/);
+  assert.doesNotMatch(sql, /select exists[\s\S]{0,300}proof_fingerprint/);
+  assert.match(
+    sql,
+    /revoke execute on function public\.consume_admin_csrf_proof\( text, uuid, text, bigint, bigint \) from public, anon, authenticated, service_role;/,
+  );
+  assert.match(
+    sql,
+    /grant execute on function public\.consume_admin_csrf_proof\( text, uuid, text, bigint, bigint \) to authenticated;/,
+  );
+  assert.doesNotMatch(
+    sql,
+    /grant execute on function public\.consume_admin_csrf_proof\([^;]+\) to (?:public|anon|service_role);/,
+  );
+  for (const forbiddenColumn of [
+    'raw_proof',
+    'nonce',
+    'session_binding',
+    'cookie',
+    'access_token',
+    'signature',
+    'hmac_secret',
+    'request_body',
+  ]) {
+    assert.doesNotMatch(
+      tableDefinition,
+      new RegExp(`\\b${forbiddenColumn}\\b`),
+    );
+  }
+});
+
+test('SECURITY DEFINER inventory documents setup recipe and durable CSRF replay authority', () => {
   const inventory = fs.readFileSync(
     path.join(repoRoot, 'docs', 'SUPABASE-SECURITY-DEFINER-PRIVILEGE-INVENTORY.md'),
     'utf8',
   );
 
-  assert.match(inventory, /Eleven authenticated RPC signatures are allowlisted/);
-  assert.match(inventory, /Ten currently have website call sites/);
+  assert.match(inventory, /Twelve authenticated RPC signatures are allowlisted/);
+  assert.match(inventory, /All twelve have website call sites/);
   assert.match(
     inventory,
-    /The setup-recipe RPC is deliberately database-authority-only until the second code PR\./,
+    /public\.consume_admin_csrf_proof\(text,uuid,text,bigint,bigint\)/,
   );
 
   for (const functionName of [

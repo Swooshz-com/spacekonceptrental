@@ -41,6 +41,8 @@ type AdminSetupRecipeOperation =
   | "admin.setupRecipe.read"
   | "admin.setupRecipe.write";
 
+const defaultProofMaxAgeMs = 5 * 60_000;
+
 export type AdminSetupRecipeRouteDependencies = {
   env?: AdminSetupRecipeRouteEnv;
   createRuntimeDependencies?: CreateRuntimeDependencies;
@@ -146,7 +148,9 @@ async function adminAuthCheck(
     resolveServerAdminRuntimeRouteGateAdapter;
   const verifierContext = {
     expectedSessionBinding: binding.sessionBinding,
-    currentTimestampMs: getTimestampMs()
+    expectedWorkspaceId: binding.adminContext.workspaceId,
+    currentTimestampMs: getTimestampMs(),
+    maxProofAgeMs: defaultProofMaxAgeMs
   };
   const verifierRuntimeDependencies = createRuntimeDependencies(verifierContext);
   let routeGate: ServerAdminRuntimeRouteGateAdapterResult;

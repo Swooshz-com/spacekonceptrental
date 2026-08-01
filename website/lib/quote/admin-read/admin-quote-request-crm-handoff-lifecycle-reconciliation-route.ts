@@ -238,6 +238,7 @@ export async function handleAdminQuoteRequestCrmHandoffLifecycleReconciliationRo
     dependencies.resolveRouteGate ?? resolveServerAdminRuntimeRouteGateAdapter;
   const verifierContext = {
     expectedSessionBinding: binding.sessionBinding,
+    expectedWorkspaceId: binding.adminContext.workspaceId,
     currentTimestampMs: timestampMs,
     maxProofAgeMs: getProofMaxAgeMs(dependencies)
   };

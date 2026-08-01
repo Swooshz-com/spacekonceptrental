@@ -344,8 +344,11 @@ describe("POST /api/admin/csrf-proof", () => {
         },
         createServerAdminCsrfProofRuntimeDependencies({
           expectedSessionBinding,
+          expectedWorkspaceId: trustedWorkspaceId,
           currentTimestampMs: now + 1_000,
           maxProofAgeMs: 5 * 60_000
+        }, {
+          consumeCsrfProof: async () => true
         }).verifierDependencies
       );
 

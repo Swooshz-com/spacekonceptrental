@@ -1,5 +1,5 @@
 const assert = require('node:assert/strict');
-const { spawnSync } = require('node:child_process');
+const { spawn, spawnSync } = require('node:child_process');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
@@ -44,6 +44,7 @@ const dockerConfigDir = fs.mkdtempSync(
 );
 
 const expectedTables = [
+  'admin_csrf_proof_consumptions',
   'admin_users',
   'audit_logs',
   'catalogue_public_workspace_config',
@@ -490,6 +491,7 @@ function grantBrowserRoleSelects() {
     grant usage on schema public to anon, authenticated;
     grant select on all tables in schema public to anon, authenticated;
     revoke all privileges on table public.setup_recipes, public.setup_recipe_items from anon;
+    revoke all privileges on table public.admin_csrf_proof_consumptions from anon, authenticated;
   `);
 }
 
@@ -899,6 +901,61 @@ function assertCsv(actual, expected, label) {
   assert.equal(actual, expected, label);
 }
 
+function consumeReplayInNodeProcess({
+  authUserId,
+  fingerprint,
+  issuedAtMs,
+  expiresAtMs,
+}) {
+  const childSource = `
+    const { spawnSync } = require('node:child_process');
+    const sql = [
+      'begin;',
+      'set local role authenticated;',
+      \`set local "request.jwt.claim.role" = 'authenticated';\`,
+      \`set local "request.jwt.claim.sub" = '\${process.env.REPLAY_AUTH_USER_ID}';\`,
+      \`select public.consume_admin_csrf_proof('product.write', '${ids.workspaceA}'::uuid, '\${process.env.REPLAY_FINGERPRINT}', \${process.env.REPLAY_ISSUED_AT}::bigint, \${process.env.REPLAY_EXPIRES_AT}::bigint)::text;\`,
+      'commit;',
+    ].join('\\n');
+    const result = spawnSync('docker', [
+      'exec', '-i', process.env.REPLAY_CONTAINER_NAME,
+      'psql', '-v', 'ON_ERROR_STOP=1', '-X', '-q', '-t', '-A',
+      '-U', 'postgres', '-d', 'postgres',
+    ], { input: sql, encoding: 'utf8' });
+    if (result.status !== 0) process.exit(2);
+    process.stdout.write(result.stdout.replace(/\\r/g, '').trim());
+  `;
+
+  return new Promise((resolve, reject) => {
+    const child = spawn(process.execPath, ['-e', childSource], {
+      cwd: repoRoot,
+      env: {
+        ...process.env,
+        REPLAY_CONTAINER_NAME: containerName,
+        REPLAY_AUTH_USER_ID: authUserId,
+        REPLAY_FINGERPRINT: fingerprint,
+        REPLAY_ISSUED_AT: String(issuedAtMs),
+        REPLAY_EXPIRES_AT: String(expiresAtMs),
+      },
+      stdio: ['ignore', 'pipe', 'ignore'],
+    });
+    let output = '';
+
+    child.stdout.setEncoding('utf8');
+    child.stdout.on('data', (chunk) => {
+      output += chunk;
+    });
+    child.on('error', () => reject(new Error('Replay child process failed to start.')));
+    child.on('close', (code) => {
+      if (code !== 0) {
+        reject(new Error('Replay child process failed.'));
+        return;
+      }
+      resolve(output.trim());
+    });
+  });
+}
+
 function assertNoRuntimeSupabaseUse() {
   const browserAndRouteRoots = [
     path.join(repoRoot, 'website', 'app'),
@@ -911,6 +968,7 @@ function assertNoRuntimeSupabaseUse() {
     'website/lib/supabase/server.ts',
     'website/lib/admin/authorization/supabase-admin-auth-identity-adapter.ts',
     'website/lib/admin/authorization/supabase-admin-profile-membership-adapters.ts',
+    'website/lib/admin/authorization/server-admin-csrf-proof-replay-repository.ts',
   ]);
   const approvedCatalogueReadFiles = new Set([
     'website/lib/catalogue/catalogue-repository.ts',
@@ -2172,6 +2230,289 @@ check('setup recipe database authority enforces schema, RPC, RLS, publication, a
       commit;
     `, { check: false });
   }
+});
+
+check('durable admin CSRF replay authority is atomic, shared, bounded, and least privilege', async () => {
+  const signature =
+    'public.consume_admin_csrf_proof(text,uuid,text,bigint,bigint)';
+  const timestampMs = Date.now();
+  const validIssuedAtMs = timestampMs - 1_000;
+  const validExpiresAtMs = timestampMs + 240_000;
+  const fingerprints = {
+    first: `a${'0'.repeat(63)}`,
+    wrongWorkspace: `b${'0'.repeat(63)}`,
+    viewer: `c${'0'.repeat(63)}`,
+    concurrent: `d${'0'.repeat(63)}`,
+    restarted: `e${'0'.repeat(63)}`,
+    cleanup: `f${'0'.repeat(63)}`,
+    nonExpired: `9${'0'.repeat(63)}`,
+  };
+  const consumeCall = (
+    operation,
+    workspaceId,
+    fingerprint,
+    issuedAt = validIssuedAtMs,
+    expiresAt = validExpiresAtMs,
+  ) => `
+    select public.consume_admin_csrf_proof(
+      '${operation}',
+      '${workspaceId}'::uuid,
+      '${fingerprint}',
+      ${issuedAt}::bigint,
+      ${expiresAt}::bigint
+    )::text
+  `;
+
+  assert.equal(
+    psql(`select pg_catalog.pg_get_userbyid(proowner) from pg_catalog.pg_proc where oid = '${signature}'::pg_catalog.regprocedure`),
+    'postgres',
+    'replay RPC owner must be postgres',
+  );
+  assert.equal(
+    psql(`select prosecdef::text || ':' || pg_catalog.array_to_string(proconfig, ',') from pg_catalog.pg_proc where oid = '${signature}'::pg_catalog.regprocedure`),
+    'true:search_path=pg_catalog',
+    'replay RPC must be SECURITY DEFINER with fixed pg_catalog search_path',
+  );
+  assert.equal(
+    psql(`select relrowsecurity::text from pg_catalog.pg_class where oid = 'public.admin_csrf_proof_consumptions'::pg_catalog.regclass`),
+    'true',
+    'replay table must have RLS enabled',
+  );
+  assert.equal(
+    psql(`select count(*)::text from pg_catalog.pg_policy where polrelid = 'public.admin_csrf_proof_consumptions'::pg_catalog.regclass`),
+    '0',
+    'replay table must have no client policy',
+  );
+  assert.equal(
+    psql(`select pg_catalog.string_agg(attname, ',' order by attnum) from pg_catalog.pg_attribute where attrelid = 'public.admin_csrf_proof_consumptions'::pg_catalog.regclass and attnum > 0 and not attisdropped`),
+    'proof_fingerprint,workspace_id,operation,actor_admin_user_id,issued_at,expires_at,consumed_at',
+    'replay table must contain only the reviewed privacy-minimized columns',
+  );
+  assert.equal(
+    psql(`select count(*)::text from pg_catalog.pg_constraint where conrelid = 'public.admin_csrf_proof_consumptions'::pg_catalog.regclass`),
+    '6',
+    'replay table must retain the primary key and five locked checks',
+  );
+  assert.equal(
+    psql(`select count(*)::text from pg_catalog.pg_indexes where schemaname = 'public' and tablename = 'admin_csrf_proof_consumptions' and indexname = 'admin_csrf_proof_consumptions_expires_at_idx'`),
+    '1',
+    'replay expiry index must exist exactly once',
+  );
+
+  for (const role of ['anon', 'authenticated', 'service_role']) {
+    for (const privilege of ['SELECT', 'INSERT', 'UPDATE', 'DELETE']) {
+      assert.equal(
+        psql(`select pg_catalog.has_table_privilege('${role}', 'public.admin_csrf_proof_consumptions', '${privilege}')::text`),
+        'false',
+        `${role} must not have direct replay table ${privilege}`,
+      );
+    }
+  }
+  assert.equal(
+    psql(`select exists (select 1 from pg_catalog.aclexplode(coalesce((select relacl from pg_catalog.pg_class where oid = 'public.admin_csrf_proof_consumptions'::pg_catalog.regclass), pg_catalog.acldefault('r', (select relowner from pg_catalog.pg_class where oid = 'public.admin_csrf_proof_consumptions'::pg_catalog.regclass)))) acl where acl.grantee = 0 and acl.privilege_type in ('SELECT', 'INSERT', 'UPDATE', 'DELETE'))::text`),
+    'false',
+    'PUBLIC must not inherit a direct replay table data privilege',
+  );
+  for (const role of ['anon', 'service_role']) {
+    assert.equal(
+      psql(`select pg_catalog.has_function_privilege('${role}', '${signature}', 'EXECUTE')::text`),
+      'false',
+      `${role} must not execute the replay RPC`,
+    );
+  }
+  assert.equal(
+    psql(`select exists (select 1 from pg_catalog.aclexplode(coalesce((select proacl from pg_catalog.pg_proc where oid = '${signature}'::pg_catalog.regprocedure), pg_catalog.acldefault('f', (select proowner from pg_catalog.pg_proc where oid = '${signature}'::pg_catalog.regprocedure)))) acl where acl.grantee = 0 and acl.privilege_type = 'EXECUTE')::text`),
+    'false',
+    'PUBLIC must not inherit replay RPC execution',
+  );
+  assert.equal(
+    psql(`select pg_catalog.has_function_privilege('authenticated', '${signature}', 'EXECUTE')::text`),
+    'true',
+    'authenticated must have the exact reviewed replay RPC grant',
+  );
+
+  statementFailsAs('anon', null, consumeCall(
+    'product.write', ids.workspaceA, fingerprints.first,
+  ), /permission denied/i);
+  const serviceRoleResult = psql(`
+    begin;
+    set local role service_role;
+    ${consumeCall('product.write', ids.workspaceA, fingerprints.first)};
+    rollback;
+  `, { check: false });
+  assert.notEqual(serviceRoleResult.status, 0, 'service_role replay execution must be denied');
+
+  for (const role of ['anon', 'authenticated']) {
+    statementFailsAs(
+      role,
+      role === 'authenticated' ? ids.authMemberA : null,
+      'select count(*) from public.admin_csrf_proof_consumptions',
+      /permission denied|row-level security/i,
+    );
+  }
+  for (const statement of [
+    `insert into public.admin_csrf_proof_consumptions (proof_fingerprint, workspace_id, operation, actor_admin_user_id, issued_at, expires_at) values ('${fingerprints.first}', '${ids.workspaceA}', 'product.write', '${ids.adminA}', now(), now() + interval '1 minute')`,
+    `update public.admin_csrf_proof_consumptions set operation = 'hero.write'`,
+    `delete from public.admin_csrf_proof_consumptions`,
+  ]) {
+    statementFailsAs('authenticated', ids.authMemberA, statement);
+  }
+  const explicitRlsResult = psql(`
+    begin;
+    grant select on table public.admin_csrf_proof_consumptions to authenticated;
+    set local role authenticated;
+    set local "request.jwt.claim.role" = 'authenticated';
+    set local "request.jwt.claim.sub" = '${ids.authMemberA}';
+    select count(*) from public.admin_csrf_proof_consumptions;
+    rollback;
+  `);
+  assert.equal(
+    explicitRlsResult,
+    '0',
+    'no-policy RLS must expose zero rows even under a rolled-back disposable direct grant',
+  );
+
+  assert.equal(
+    queryCommittedAs('authenticated', ids.authMemberA, consumeCall(
+      'product.write', ids.workspaceA, fingerprints.first,
+    )),
+    'true',
+    'first replay consumption must succeed',
+  );
+  assert.equal(
+    queryCommittedAs('authenticated', ids.authMemberA, consumeCall(
+      'product.write', ids.workspaceA, fingerprints.first,
+    )),
+    'false',
+    'duplicate replay consumption must fail',
+  );
+  assert.equal(
+    scalarAs('authenticated', ids.authMemberA, consumeCall(
+      'product.write', ids.workspaceB, fingerprints.wrongWorkspace,
+    )),
+    'false',
+    'wrong workspace must fail closed',
+  );
+  assert.equal(
+    scalarAs('authenticated', ids.authViewerA, consumeCall(
+      'product.write', ids.workspaceA, fingerprints.viewer,
+    )),
+    'false',
+    'unauthorized viewer must fail closed',
+  );
+  assert.equal(
+    scalarAs('authenticated', ids.authNoMembership, consumeCall(
+      'product.write', ids.workspaceA, `1${'0'.repeat(63)}`,
+    )),
+    'false',
+    'administrator without an active membership must fail closed',
+  );
+  assert.equal(
+    psql(`
+      begin;
+      update public.admin_users set status = 'inactive' where id = '${ids.adminA}';
+      set local role authenticated;
+      set local "request.jwt.claim.role" = 'authenticated';
+      set local "request.jwt.claim.sub" = '${ids.authMemberA}';
+      ${consumeCall('product.write', ids.workspaceA, `2${'0'.repeat(63)}`)};
+      rollback;
+    `),
+    'false',
+    'inactive administrator must fail closed',
+  );
+
+  for (const [label, call] of [
+    ['invalid fingerprint', consumeCall('product.write', ids.workspaceA, 'not-hex')],
+    ['invalid operation', consumeCall('unknown.write', ids.workspaceA, `3${'0'.repeat(63)}`)],
+    ['null timestamp', `select public.consume_admin_csrf_proof('product.write', '${ids.workspaceA}', '${`4${'0'.repeat(63)}`}', null, ${validExpiresAtMs})::text`],
+    ['negative timestamp', consumeCall('product.write', ids.workspaceA, `5${'0'.repeat(63)}`, -1, validExpiresAtMs)],
+    ['unsafe timestamp', consumeCall('product.write', ids.workspaceA, `6${'0'.repeat(63)}`, 9007199254740992, 9007199254740993)],
+    ['excessive lifetime', consumeCall('product.write', ids.workspaceA, `7${'0'.repeat(63)}`, validIssuedAtMs, validIssuedAtMs + 300001)],
+    ['expired proof', consumeCall('product.write', ids.workspaceA, `8${'0'.repeat(63)}`, timestampMs - 301000, timestampMs - 1000)],
+  ]) {
+    assert.equal(
+      scalarAs('authenticated', ids.authMemberA, call),
+      'false',
+      `${label} must fail closed`,
+    );
+  }
+
+  const concurrentResults = await Promise.all([
+    consumeReplayInNodeProcess({
+      authUserId: ids.authMemberA,
+      fingerprint: fingerprints.concurrent,
+      issuedAtMs: validIssuedAtMs,
+      expiresAtMs: validExpiresAtMs,
+    }),
+    consumeReplayInNodeProcess({
+      authUserId: ids.authMemberA,
+      fingerprint: fingerprints.concurrent,
+      issuedAtMs: validIssuedAtMs,
+      expiresAtMs: validExpiresAtMs,
+    }),
+  ]);
+  assert.deepEqual(
+    concurrentResults.sort(),
+    ['false', 'true'],
+    'two concurrent Node processes must produce exactly one accepted consumption',
+  );
+
+  assert.equal(
+    await consumeReplayInNodeProcess({
+      authUserId: ids.authMemberA,
+      fingerprint: fingerprints.restarted,
+      issuedAtMs: validIssuedAtMs,
+      expiresAtMs: validExpiresAtMs,
+    }),
+    'true',
+    'first application process must consume the proof',
+  );
+  assert.equal(
+    await consumeReplayInNodeProcess({
+      authUserId: ids.authMemberA,
+      fingerprint: fingerprints.restarted,
+      issuedAtMs: validIssuedAtMs,
+      expiresAtMs: validExpiresAtMs,
+    }),
+    'false',
+    'a fresh application process must observe the durable prior consumption',
+  );
+
+  const expiredRows = Array.from({ length: 140 }, (_, index) => {
+    const suffix = index.toString(16).padStart(63, '0');
+    return `('8${suffix}', '${ids.workspaceA}', 'product.write', '${ids.adminA}', statement_timestamp() - interval '10 minutes', statement_timestamp() - interval '6 minutes')`;
+  }).join(',\n');
+  psql(`
+    insert into public.admin_csrf_proof_consumptions (
+      proof_fingerprint, workspace_id, operation, actor_admin_user_id,
+      issued_at, expires_at
+    ) values ${expiredRows};
+    insert into public.admin_csrf_proof_consumptions (
+      proof_fingerprint, workspace_id, operation, actor_admin_user_id,
+      issued_at, expires_at
+    ) values (
+      '${fingerprints.nonExpired}', '${ids.workspaceA}', 'product.write',
+      '${ids.adminA}', statement_timestamp(),
+      statement_timestamp() + interval '4 minutes'
+    );
+  `);
+  assert.equal(
+    queryCommittedAs('authenticated', ids.authMemberA, consumeCall(
+      'product.write', ids.workspaceA, fingerprints.cleanup,
+    )),
+    'true',
+    'valid consumption must trigger one bounded cleanup',
+  );
+  assert.equal(
+    psql(`select count(*)::text from public.admin_csrf_proof_consumptions where expires_at <= statement_timestamp()`),
+    '12',
+    'one cleanup invocation must delete no more and no fewer than 128 of 140 expired fixture rows',
+  );
+  assert.equal(
+    psql(`select count(*)::text from public.admin_csrf_proof_consumptions where proof_fingerprint = '${fingerprints.nonExpired}'`),
+    '1',
+    'cleanup must never remove a non-expired row',
+  );
 });
 
 check('homepage hero content exposes enabled public reads and protected admin writes only', () => {
@@ -5962,14 +6303,14 @@ check('runtime website Supabase code stays server-only', () => {
   assertNoRuntimeSupabaseUse();
 });
 
-function runChecks() {
+async function runChecks() {
   for (const item of checks) {
-    item.fn();
+    await item.fn();
     console.log(`PASS ${item.name}`);
   }
 }
 
-function main() {
+async function main() {
   assertSafeContainerName(containerName);
 
   console.log(`Starting local-only RLS test database (${dockerImage})...`);
@@ -6095,7 +6436,7 @@ function main() {
     runSqlFile(securityTestSupportPath);
     grantBrowserRoleSelects();
     seedFixtures();
-    runChecks();
+    await runChecks();
   } finally {
     if (keepContainer) {
       console.log(`Keeping local test container for inspection: ${containerName}`);
@@ -6116,4 +6457,7 @@ registerSecurityRemediationRlsChecks({
   statementFailsAs,
 });
 
-main();
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

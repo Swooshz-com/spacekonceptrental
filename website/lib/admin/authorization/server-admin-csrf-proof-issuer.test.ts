@@ -151,11 +151,13 @@ describe("server admin CSRF proof issuer", () => {
       },
       {
         expectedSessionBinding: "session-binding-1",
+        expectedWorkspaceId: "11111111-1111-4111-8111-111111111111",
         expectedNonce: "nonce-1",
         currentTimestampMs: now + 1_000,
         maxProofAgeMs: 5 * 60_000,
         verifySignature: async ({ payloadSegment, signatureSegment }) =>
-          signatureSegment === encodeBase64Url(`signed:${payloadSegment}`)
+          signatureSegment === encodeBase64Url(`signed:${payloadSegment}`),
+        checkReplay: async () => true
       }
     );
 
