@@ -43,6 +43,7 @@
     "smoke:preview": "node scripts/smoke-preview.cjs",
     "smoke:production-readonly": "node scripts/smoke-production-readonly.cjs",
     "test:docker-readiness": "node --test scripts/ensure-docker-running.test.cjs",
+    "test:postgres-readiness": "node --test scripts/wait-for-postgres-readiness.test.cjs",
     "test:local-uat-owner-flow": "node --test scripts/local-uat-owner-flow.test.cjs",
     "test:owner-flow-smoke": "node --test scripts/smoke-owner-flow-local.test.cjs",
     "test:production-security-readiness": "node --test scripts/validate-production-security-readiness.test.cjs",

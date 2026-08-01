@@ -125,7 +125,7 @@ export async function readAdminSetupRecipe(
     const revision = Number(
       (headerResult.data as Record<string, unknown>)?.revision ?? 0
     );
-    if (!revision || revision <= 0) {
+    if (!Number.isSafeInteger(revision) || revision <= 0) {
       return { ok: false, code: "not-found" };
     }
 
@@ -137,21 +137,59 @@ export async function readAdminSetupRecipe(
       .order("position");
 
     if (itemsResult.error) {
-      return { ok: true, revision, items: [] };
+      return { ok: false, code: "read-failure" };
     }
 
-    const items: AdminRecipeReadItem[] = (
-      Array.isArray(itemsResult.data) ? itemsResult.data : []
-    ).map((row: unknown) => {
-      const r = row as Record<string, unknown>;
-      return {
-        workspace_id: String(r.workspace_id ?? ""),
-        setup_product_id: String(r.setup_product_id ?? ""),
-        included_product_id: String(r.included_product_id ?? ""),
-        position: Number(r.position ?? 0),
-        base_quantity: Number(r.base_quantity ?? 0)
-      };
-    });
+    if (!Array.isArray(itemsResult.data) || itemsResult.data.length < 1) {
+      return { ok: false, code: "read-failure" };
+    }
+
+    const items: AdminRecipeReadItem[] = [];
+    for (const row of itemsResult.data) {
+      if (!isRecord(row)) {
+        return { ok: false, code: "read-failure" };
+      }
+
+      const workspace = getString(row.workspace_id);
+      const setupProduct = getString(row.setup_product_id);
+      const includedProduct = getString(row.included_product_id);
+      const position = row.position;
+      const baseQuantity = row.base_quantity;
+
+      if (
+        !workspace ||
+        !setupProduct ||
+        !includedProduct ||
+        workspace !== workspaceId ||
+        setupProduct !== setupProductId ||
+        !Number.isSafeInteger(position) ||
+        position < 0 ||
+        position > 19 ||
+        !Number.isSafeInteger(baseQuantity) ||
+        baseQuantity < 1 ||
+        baseQuantity > 99
+      ) {
+        return { ok: false, code: "read-failure" };
+      }
+
+      items.push({
+        workspace_id: workspace,
+        setup_product_id: setupProduct,
+        included_product_id: includedProduct,
+        position,
+        base_quantity: baseQuantity
+      });
+    }
+
+    const positions = new Set(items.map((item) => item.position));
+    const childIds = new Set(items.map((item) => item.included_product_id));
+    if (
+      positions.size !== items.length ||
+      childIds.size !== items.length ||
+      items.some((item, index) => item.position !== index)
+    ) {
+      return { ok: false, code: "read-failure" };
+    }
 
     return { ok: true, revision, items };
   } catch {

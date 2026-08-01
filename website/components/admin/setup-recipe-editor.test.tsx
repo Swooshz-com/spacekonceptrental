@@ -86,6 +86,39 @@ describe("SetupRecipeEditor behavioural workflow", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
+  it("treats an item-query failure as unavailable and sends no write", async () => {
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse({ error: "read-failure" }, 503)
+    );
+
+    renderEditor();
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Failed to load recipe."
+    );
+    expect(screen.getByRole("button", { name: "Retry" })).toBeEnabled();
+    expect(screen.queryByRole("button", { name: "Save Recipe" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Remove Recipe" })).not.toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(requestBody(fetchMock.mock.calls[0]!)).toMatchObject({ action: "read" });
+  });
+
+  it("cannot overwrite an existing recipe after a later item-query failure", async () => {
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse({ revision: 3, items: recipeItems(["child-a"]) }))
+      .mockResolvedValueOnce(jsonResponse({ error: "read-failure" }, 503));
+
+    renderEditor();
+    await screen.findByText("Child A");
+    fireEvent.click(screen.getByRole("button", { name: "Reload" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Failed to load recipe.");
+    expect(screen.queryByRole("button", { name: "Save Recipe" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Remove Recipe" })).not.toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock.mock.calls.some((call) => requestBody(call).action === "write")).toBe(false);
+  });
+
   it("renders the not-found state and starts a recipe from the first eligible non-parent product", async () => {
     fetchMock.mockResolvedValueOnce(jsonResponse({ error: "not found" }, 404));
     renderEditor();
@@ -140,6 +173,27 @@ describe("SetupRecipeEditor behavioural workflow", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Start Recipe" }));
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps editing for a published parent but never offers removal", async () => {
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse({ revision: 3, items: recipeItems(["child-a"]) }))
+      .mockResolvedValueOnce(jsonResponse({ ok: true, operation: "replace", revision: 4 }))
+      .mockResolvedValueOnce(jsonResponse({ revision: 4, items: recipeItems(["child-a"]) }));
+
+    renderEditor({ parentStatus: "published" });
+    await screen.findByText("Child A");
+
+    expect(screen.queryByRole("button", { name: "Remove Recipe" })).not.toBeInTheDocument();
+    expect(screen.getByText(/published setup recipes remain in place/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Save Recipe" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3));
+    expect(requestBody(fetchMock.mock.calls[1]!)).toMatchObject({
+      operation: "replace",
+      expectedRevision: 3
+    });
+    expect(fetchMock.mock.calls.some((call) => requestBody(call).operation === "remove")).toBe(false);
   });
 
   it("does not create a self-referencing draft when the parent is the only product", async () => {
@@ -284,7 +338,8 @@ describe("SetupRecipeEditor behavioural workflow", () => {
   it("requires confirmation before a remove request", async () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse({ revision: 3, items: recipeItems(["child-a"]) }))
-      .mockResolvedValueOnce(jsonResponse({ ok: true, operation: "remove", revision: 4 }));
+      .mockResolvedValueOnce(jsonResponse({ ok: true, operation: "remove", revision: 4 }))
+      .mockResolvedValueOnce(jsonResponse({ error: "not found" }, 404));
     renderEditor();
     await screen.findByText("Child A");
 
@@ -308,6 +363,8 @@ describe("SetupRecipeEditor behavioural workflow", () => {
       expectedRevision: 3,
       items: []
     });
+    await waitFor(() => expect(screen.getByText(/No recipe exists yet/)).toBeInTheDocument());
+    expect(await screen.findByRole("status")).toHaveTextContent("Recipe removed successfully.");
   });
 
   it("reloads after a revision conflict and keeps provider errors out of announcements", async () => {
@@ -333,7 +390,8 @@ describe("SetupRecipeEditor behavioural workflow", () => {
     });
     fetchMock
       .mockResolvedValueOnce(jsonResponse({ revision: 1, items: recipeItems(["child-a", "child-b"]) }))
-      .mockReturnValueOnce(pendingWrite);
+      .mockReturnValueOnce(pendingWrite)
+      .mockResolvedValueOnce(jsonResponse({ revision: 2, items: recipeItems(["child-a", "child-b"]) }));
     renderEditor();
     await screen.findByText("Child B");
 

@@ -37,12 +37,14 @@ type CreateRuntimeDependencies = (
   verifierContext?: Parameters<typeof createServerAdminCsrfProofRuntimeDependencies>[0]
 ) => ServerAdminCsrfProofRuntimeDependencies;
 
-type AdminSetupRecipeRouteDependencies = {
+export type AdminSetupRecipeRouteDependencies = {
   env?: AdminSetupRecipeRouteEnv;
   createRuntimeDependencies?: CreateRuntimeDependencies;
   resolveSessionWorkspaceBinding?: typeof resolveServerAdminCsrfProofSessionWorkspaceBinding;
   resolveRouteGate?: typeof resolveServerAdminRuntimeRouteGateAdapter;
   bindingDependencies?: ServerAdminCsrfProofSessionWorkspaceBindingDependencies;
+  readRecipe?: typeof readAdminSetupRecipe;
+  executeWrite?: typeof executeAdminSetupRecipeWrite;
 };
 
 function isObject(value: unknown): value is Record<string, unknown> {
@@ -246,7 +248,8 @@ export async function handleAdminSetupRecipeRoute(
       return safeJsonResponse({ error: "setup_product_id_required" }, 400);
     }
 
-    const readResult = await readAdminSetupRecipe(
+    const readRecipe = dependencies.readRecipe ?? readAdminSetupRecipe;
+    const readResult = await readRecipe(
       auth.workspaceId,
       setupProductId
     );
@@ -310,7 +313,8 @@ export async function handleAdminSetupRecipeRoute(
         items: []
       };
 
-      const result = await executeAdminSetupRecipeWrite(request);
+      const executeWrite = dependencies.executeWrite ?? executeAdminSetupRecipeWrite;
+      const result = await executeWrite(request);
 
       return mapWriteResult(result);
     }
@@ -375,7 +379,8 @@ export async function handleAdminSetupRecipeRoute(
       items: validItems
     };
 
-    const result = await executeAdminSetupRecipeWrite(request);
+    const executeWrite = dependencies.executeWrite ?? executeAdminSetupRecipeWrite;
+    const result = await executeWrite(request);
 
     return mapWriteResult(result);
   }
@@ -387,6 +392,7 @@ function mapWriteResult(result: AdminRecipeWriteResult): NextResponse {
   if (result.ok) {
     return safeJsonResponse(
       {
+        ok: true,
         operation: result.operation,
         setup_product_id: result.setupProductId,
         revision: result.revision,
@@ -400,7 +406,10 @@ function mapWriteResult(result: AdminRecipeWriteResult): NextResponse {
     ? 409
     : result.code === "unauthorized"
       ? 403
-      : result.code === "rpc-unavailable"
+      : result.code === "rpc-unavailable" ||
+          result.code === "rpc-failure" ||
+          result.code === "network-error" ||
+          result.code === "unknown-error"
         ? 503
         : 400;
 

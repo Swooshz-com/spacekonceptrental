@@ -10,6 +10,7 @@ const {
 const {
   validatePublicSecurityDefinerCatalog,
 } = require('./validate-production-security-readiness.cjs');
+const { waitForStablePostgres } = require('./wait-for-postgres-readiness.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const migrationsDir = path.join(repoRoot, 'supabase', 'migrations');
@@ -221,31 +222,46 @@ function listMigrationFiles() {
     .sort();
 }
 
-function waitForDatabase() {
-  const deadline = Date.now() + 60_000;
-  let lastError = '';
+function isPostgresInitializationComplete() {
+  const result = docker(
+    ['logs', '--tail', '200', containerName],
+    { check: false },
+  );
 
-  while (Date.now() < deadline) {
-    const result = docker(
-      ['exec', containerName, 'pg_isready', '-U', 'postgres', '-d', 'postgres'],
-      { check: false },
-    );
-
-    if (result.status === 0) {
-      const queryResult = psql('select 1;', { check: false });
-
-      if (queryResult.status === 0) {
-        return;
-      }
-
-      lastError = `${queryResult.stdout}${queryResult.stderr}`.trim();
-    } else {
-      lastError = `${result.stdout}${result.stderr}`.trim();
-    }
-    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 500);
+  if (result.status !== 0) {
+    return false;
   }
 
-  throw new Error(`Local test database did not become ready. ${lastError}`);
+  return `${result.stdout}\n${result.stderr}`.includes(
+    'PostgreSQL init process complete; ready for start up.',
+  );
+}
+
+function isPostgresFinalServerReady() {
+  const readinessResult = docker(
+    ['exec', containerName, 'pg_isready', '-U', 'postgres', '-d', 'postgres'],
+    { check: false },
+  );
+
+  if (readinessResult.status !== 0) {
+    return false;
+  }
+
+  const queryResult = psql('select 1;', { check: false });
+  return queryResult.status === 0;
+}
+
+function waitForDatabase() {
+  const result = waitForStablePostgres({
+    isInitializationComplete: isPostgresInitializationComplete,
+    probe: isPostgresFinalServerReady,
+  });
+
+  if (!result.ok) {
+    throw new Error(
+      'Local test database did not reach stable final-server readiness before setup.',
+    );
+  }
 }
 
 // Test-only Supabase auth shim. Production migrations must not define auth.uid().

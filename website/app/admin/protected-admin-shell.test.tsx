@@ -810,6 +810,16 @@ describe("protected admin shell", () => {
                   imageCount: 1
                 },
                 {
+                  id: "published-without-recipe",
+                  categoryId: "category-1",
+                  slug: "published-without-recipe",
+                  name: "Published Without Recipe",
+                  rentalUnit: "set",
+                  status: "published",
+                  sortOrder: 25,
+                  imageCount: 1
+                },
+                {
                   id: "published-child-a",
                   categoryId: "category-1",
                   slug: "published-child-a",
@@ -886,6 +896,9 @@ describe("protected admin shell", () => {
     expect(
       screen.getByRole("article", { name: /recipe editor for nested parent/i })
     ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("article", { name: /recipe editor for published without recipe/i })
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("article", { name: /recipe editor for archived parent/i })
     ).not.toBeInTheDocument();

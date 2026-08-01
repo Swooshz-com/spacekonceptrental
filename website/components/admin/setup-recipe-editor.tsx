@@ -33,6 +33,75 @@ type WriteResponse =
   | { ok: true; operation: string; revision: number }
   | { ok: false; code: string };
 
+function isValidReadItem(value: unknown): value is RecipeItem {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const item = value as Record<string, unknown>;
+  const position = item.position;
+  const baseQuantity = item.base_quantity;
+  return (
+    typeof item.included_product_id === "string" &&
+    item.included_product_id.trim().length > 0 &&
+    typeof position === "number" &&
+    Number.isSafeInteger(position) &&
+    typeof baseQuantity === "number" &&
+    Number.isSafeInteger(baseQuantity) &&
+    position >= 0 &&
+    baseQuantity >= 1 &&
+    baseQuantity <= 99
+  );
+}
+
+function parseReadResponse(value: unknown): { revision: number; items: RecipeItem[] } | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const data = value as Record<string, unknown>;
+  const revision = data.revision;
+  const rawItems = data.items;
+  const validItems = Array.isArray(rawItems) ? rawItems.filter(isValidReadItem) : [];
+
+  if (
+    typeof revision !== "number" ||
+    !Number.isSafeInteger(revision) ||
+    revision <= 0 ||
+    !Array.isArray(rawItems) ||
+    rawItems.length < 1 ||
+    validItems.length !== rawItems.length
+  ) {
+    return null;
+  }
+
+  const items = validItems.map((item) => ({
+    included_product_id: item.included_product_id,
+    position: item.position,
+    base_quantity: item.base_quantity
+  }));
+
+  const positions = new Set(items.map((item) => item.position));
+  if (
+    positions.size !== items.length ||
+    items.some((item, index) => item.position !== index)
+  ) {
+    return null;
+  }
+
+  return { revision, items };
+}
+
+function parseWriteResponse(value: unknown): Extract<WriteResponse, { ok: true }> | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const data = value as Record<string, unknown>;
+  return data.ok === true &&
+    typeof data.operation === "string" &&
+    typeof data.revision === "number" &&
+    Number.isSafeInteger(data.revision) &&
+    data.revision > 0
+    ? {
+        ok: true,
+        operation: data.operation,
+        revision: data.revision
+      }
+    : null;
+}
+
 function editorReducer(
   state: RecipeState,
   action: EditorAction
@@ -135,6 +204,7 @@ export function SetupRecipeEditor({
   const [state, dispatch] = useReducer(editorReducer, { status: "loading" } as RecipeState);
   const [actionState, setActionState] = useState<EditorActionState>("idle");
   const [actionError, setActionError] = useState<string>("");
+  const [actionSuccess, setActionSuccess] = useState<string>("");
   const [lastRevision, setLastRevision] = useState<number | null>(null);
   const [showProductPicker, setShowProductPicker] = useState(false);
   const [showRemoveConfirmation, setShowRemoveConfirmation] = useState(false);
@@ -143,7 +213,7 @@ export function SetupRecipeEditor({
   );
   const canStartRecipe = parentStatus === "draft" && firstEligibleChild !== undefined;
 
-  const loadRecipe = useCallback(async () => {
+  const loadRecipe = useCallback(async (): Promise<"loaded" | "not-found" | "error"> => {
     dispatch({ kind: "set-loading" });
     try {
       const res = await fetch("/api/admin/setup-recipe", {
@@ -155,24 +225,26 @@ export function SetupRecipeEditor({
         if (res.status === 404) {
           dispatch({ kind: "set-not-found" });
           setLastRevision(0);
+          return "not-found";
         } else {
           dispatch({ kind: "set-error", message: "Failed to load recipe." });
+          setLastRevision(null);
+          return "error";
         }
-        return;
       }
-      const data = await res.json();
-      const revision = Number(data.revision ?? 0);
-      const items: RecipeItem[] = (
-        Array.isArray(data.items) ? data.items : []
-      ).map((item: Record<string, unknown>) => ({
-        included_product_id: String(item.included_product_id ?? ""),
-        position: Number(item.position ?? 0),
-        base_quantity: Number(item.base_quantity ?? 1)
-      }));
-      dispatch({ kind: "set-recipe", revision, items });
-      setLastRevision(revision);
+      const parsed = parseReadResponse(await res.json());
+      if (!parsed) {
+        dispatch({ kind: "set-error", message: "Failed to load recipe." });
+        setLastRevision(null);
+        return "error";
+      }
+      dispatch({ kind: "set-recipe", revision: parsed.revision, items: parsed.items });
+      setLastRevision(parsed.revision);
+      return "loaded";
     } catch {
       dispatch({ kind: "set-error", message: "Network error loading recipe." });
+      setLastRevision(null);
+      return "error";
     }
   }, [setupProductId]);
 
@@ -188,8 +260,16 @@ export function SetupRecipeEditor({
         setActionError("Recipe creation is unavailable for this parent.");
         return;
       }
+      if (operation === "remove" && parentStatus === "published") {
+        setActionState("error");
+        setActionError(
+          "Published setup recipes cannot be removed. Edit the recipe in place or review its lifecycle status."
+        );
+        return;
+      }
       setActionState("saving");
       setActionError("");
+      setActionSuccess("");
       try {
         const body =
           operation === "remove"
@@ -230,18 +310,28 @@ export function SetupRecipeEditor({
           return;
         }
 
-        const data: WriteResponse = await res.json();
-        if (data.ok) {
-          setActionState("success");
-          setLastRevision(data.revision);
-          setTimeout(() => {
-            setActionState("idle");
-            loadRecipe();
-          }, 1000);
-        } else {
+        const data = parseWriteResponse(await res.json());
+        if (!data) {
           setActionState("error");
           setActionError("Recipe could not be saved. Check the items and try again.");
+          return;
         }
+
+        const reloadStatus = await loadRecipe();
+        if (reloadStatus === "error") {
+          setActionState("error");
+          setActionError(
+            "The recipe was changed, but the latest version could not be loaded. Retry before editing."
+          );
+          return;
+        }
+
+        setActionState("success");
+        setActionSuccess(
+          operation === "remove"
+            ? "Recipe removed successfully."
+            : "Recipe saved successfully."
+        );
       } catch {
         setActionState("error");
         setActionError("Network error.");
@@ -269,6 +359,7 @@ export function SetupRecipeEditor({
   const handleReload = useCallback(() => {
     setActionState("idle");
     setActionError("");
+    setActionSuccess("");
     loadRecipe();
   }, [loadRecipe]);
 
@@ -332,6 +423,9 @@ export function SetupRecipeEditor({
             Start Recipe
           </button>
         </div>
+        {actionState === "success" && (
+          <p className="skr-admin-success" role="status">{actionSuccess}</p>
+        )}
         {actionState === "error" && <p className="skr-admin-error" role="alert">{actionError}</p>}
         {actionState === "conflict" && (
           <p className="skr-admin-warning" role="alert">
@@ -457,14 +551,21 @@ export function SetupRecipeEditor({
         >
           {actionState === "saving" ? "Saving..." : "Save Recipe"}
         </button>
-        <button
-          type="button"
-          onClick={() => setShowRemoveConfirmation(true)}
-          disabled={actionState === "saving"}
-          className="skr-admin-button skr-admin-button--danger"
-        >
-          Remove Recipe
-        </button>
+        {parentStatus === "published" ? (
+          <p className="skr-admin-meta">
+            Published setup recipes remain in place for public catalogue authority. Edit and save
+            the recipe when the database permits it; removal is disabled during this lifecycle.
+          </p>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setShowRemoveConfirmation(true)}
+            disabled={actionState === "saving"}
+            className="skr-admin-button skr-admin-button--danger"
+          >
+            Remove Recipe
+          </button>
+        )}
         <button
           type="button"
           onClick={handleReload}
@@ -501,7 +602,7 @@ export function SetupRecipeEditor({
         </div>
       ) : null}
 
-      {actionState === "success" && <p className="skr-admin-success" role="status">Recipe saved successfully.</p>}
+      {actionState === "success" && <p className="skr-admin-success" role="status">{actionSuccess}</p>}
       {actionState === "error" && <p className="skr-admin-error" role="alert">{actionError}</p>}
       {actionState === "conflict" && (
         <p className="skr-admin-warning" role="alert">

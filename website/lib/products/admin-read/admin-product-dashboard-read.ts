@@ -17,6 +17,7 @@ type AdminProductDashboardReadFilter = {
     }
   ): AdminProductDashboardReadFilter;
   limit(count: number): Promise<QueryResult>;
+  range(from: number, to: number): Promise<QueryResult>;
 };
 
 export type AdminProductDashboardReadSupabaseClient = {
@@ -141,6 +142,7 @@ const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const productStatuses = new Set(["draft", "published", "archived"]);
 const productImageStatuses = new Set(["active", "archived"]);
+const setupRecipePageSize = 500;
 
 function unavailable(): AdminProductDashboardReadResult {
   return {
@@ -196,6 +198,32 @@ function requireRows(result: QueryResult) {
   }
 
   return result.data.every(isRecord) ? result.data : null;
+}
+
+async function readAllSetupRecipeRows(
+  client: AdminProductDashboardReadSupabaseClient,
+  workspaceId: string
+): Promise<Record<string, unknown>[] | null> {
+  const rows: Record<string, unknown>[] = [];
+
+  for (let from = 0; ; from += setupRecipePageSize) {
+    const result = await client
+      .from("setup_recipes")
+      .select("setup_product_id")
+      .eq("workspace_id", workspaceId)
+      .order("setup_product_id", { ascending: true })
+      .range(from, from + setupRecipePageSize - 1);
+    const page = requireRows(result);
+
+    if (!page) {
+      return null;
+    }
+
+    rows.push(...page);
+    if (page.length < setupRecipePageSize) {
+      return rows;
+    }
+  }
 }
 
 function toCategory(row: CategoryRow): AdminProductDashboardCategory | null {
@@ -385,7 +413,7 @@ export async function resolveAdminProductDashboardRead(
   }
 
   try {
-    const [categoryResult, productResult, imageResult, setupRecipeResult] = await Promise.all([
+    const [categoryResult, productResult, imageResult] = await Promise.all([
       supabase.client
         .from("categories")
         .select("id, slug, name, description, sort_order, is_published")
@@ -408,17 +436,14 @@ export async function resolveAdminProductDashboardRead(
         .eq("workspace_id", workspaceId)
         .order("sort_order", { ascending: true })
         .limit(1_000),
-      supabase.client
-        .from("setup_recipes")
-        .select("setup_product_id")
-        .eq("workspace_id", workspaceId)
-        .order("setup_product_id", { ascending: true })
-        .limit(500)
     ]);
+    const setupRecipeRows = await readAllSetupRecipeRows(
+      supabase.client,
+      workspaceId
+    );
     const categoryRows = requireRows(categoryResult);
     const productRows = requireRows(productResult);
     const imageRows = requireRows(imageResult);
-    const setupRecipeRows = requireRows(setupRecipeResult);
 
     if (!categoryRows || !productRows || !imageRows || !setupRecipeRows) {
       return unavailable();

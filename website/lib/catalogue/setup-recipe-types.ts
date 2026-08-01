@@ -48,6 +48,8 @@ export const SETUP_MAX_ITEMS = 20;
 export const SETUP_MIN_ITEMS = 1;
 export const SETUP_MIN_QUANTITY = 1;
 export const SETUP_MAX_QUANTITY = 99;
+export const SETUP_MAX_RECONSTRUCTED_QUANTITY =
+  SETUP_MAX_QUANTITY * SETUP_MAX_QUANTITY;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -60,8 +62,33 @@ function getString(value: unknown) {
 function getFiniteInteger(value: unknown): number | undefined {
   return typeof value === "number" &&
     Number.isFinite(value) &&
-    Number.isInteger(value)
+    Number.isSafeInteger(value)
     ? value
+    : undefined;
+}
+
+export function reconstructSetupQuantity(
+  parentQuantity: unknown,
+  baseQuantity: unknown
+): number | undefined {
+  const parent = getFiniteInteger(parentQuantity);
+  const base = getFiniteInteger(baseQuantity);
+
+  if (
+    parent === undefined ||
+    base === undefined ||
+    parent < SETUP_MIN_QUANTITY ||
+    parent > SETUP_MAX_QUANTITY ||
+    base < SETUP_MIN_QUANTITY ||
+    base > SETUP_MAX_QUANTITY
+  ) {
+    return undefined;
+  }
+
+  const reconstructed = parent * base;
+  return Number.isSafeInteger(reconstructed) &&
+    reconstructed <= SETUP_MAX_RECONSTRUCTED_QUANTITY
+    ? reconstructed
     : undefined;
 }
 
@@ -108,13 +135,13 @@ function normalizeCompositionItem(
   if (!id || !slug || !name) return undefined;
 
   const rawPosition = value.position;
-  if (typeof rawPosition !== "number" || !Number.isFinite(rawPosition) || !Number.isInteger(rawPosition)) {
+  if (typeof rawPosition !== "number" || !Number.isFinite(rawPosition) || !Number.isSafeInteger(rawPosition)) {
     return undefined;
   }
   const position = rawPosition;
 
   const rawQty = value.base_quantity;
-  if (typeof rawQty !== "number" || !Number.isFinite(rawQty) || !Number.isInteger(rawQty)) {
+  if (typeof rawQty !== "number" || !Number.isFinite(rawQty) || !Number.isSafeInteger(rawQty)) {
     return undefined;
   }
   const baseQuantity = rawQty;
@@ -364,5 +391,10 @@ export type AdminRecipeReadResult =
     }
   | {
       ok: false;
-      code: "not-found" | "rpc-unavailable" | "unauthorized" | "unknown-error";
+      code:
+        | "not-found"
+        | "rpc-unavailable"
+        | "unauthorized"
+        | "read-failure"
+        | "unknown-error";
     };

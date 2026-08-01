@@ -19,6 +19,7 @@ type QueryCall = {
     ascending: boolean;
   }>;
   limit?: number;
+  ranges?: Array<{ from: number; to: number }>;
 };
 
 function createMockSupabase(results: Record<string, QueryResult>) {
@@ -28,9 +29,17 @@ function createMockSupabase(results: Record<string, QueryResult>) {
       const call: QueryCall = {
         table,
         filters: [],
-        orders: []
+        orders: [],
+        ranges: []
       };
       calls.push(call);
+
+      function page(from: number, to: number) {
+        const result = results[table] ?? { data: [], error: null };
+        return Array.isArray(result.data)
+          ? { ...result, data: result.data.slice(from, to + 1) }
+          : result;
+      }
 
       const builder = {
         select(columns: string) {
@@ -50,12 +59,11 @@ function createMockSupabase(results: Record<string, QueryResult>) {
         },
         limit(count: number) {
           call.limit = count;
-          return Promise.resolve(
-            results[table] ?? {
-              data: [],
-              error: null
-            }
-          );
+          return Promise.resolve(page(0, count - 1));
+        },
+        range(from: number, to: number) {
+          call.ranges?.push({ from, to });
+          return Promise.resolve(page(from, to));
         }
       };
 
@@ -315,6 +323,42 @@ describe("admin product dashboard read boundary", () => {
       imageCount: 1
     });
     expect(archivedPrimary).not.toHaveProperty("primaryImageAltText");
+  });
+
+  it("discovers every recipe parent beyond the first 500 rows", async () => {
+    const recipeRows = Array.from({ length: 501 }, (_, index) => ({
+      setup_product_id: `22222222-2222-4222-8222-${String(index + 1).padStart(12, "0")}`
+    }));
+    const productRows = recipeRows.map((row, index) => ({
+      id: row.setup_product_id,
+      slug: `published-parent-${index}`,
+      name: `Published Parent ${index}`,
+      status: "published",
+      sort_order: index
+    }));
+    const { supabase, calls } = createMockSupabase({
+      categories: { data: [], error: null },
+      products: { data: productRows, error: null },
+      product_images: { data: [], error: null },
+      setup_recipes: { data: recipeRows, error: null }
+    });
+
+    const result = await resolveAdminProductDashboardRead({
+      supabase,
+      env: {
+        ADMIN_TRUSTED_WORKSPACE_ID:
+          "99999999-9999-4999-8999-999999999999"
+      }
+    });
+
+    expect(result.status).toBe("loaded");
+    if (result.status !== "loaded") return;
+    expect(result.data.setupRecipeProductIds).toHaveLength(501);
+    expect(result.data.setupRecipeProductIds.at(-1)).toBe(recipeRows.at(-1)?.setup_product_id);
+    expect(calls.filter((call) => call.table === "setup_recipes").flatMap((call) => call.ranges ?? [])).toEqual([
+      { from: 0, to: 499 },
+      { from: 500, to: 999 }
+    ]);
   });
 
   it("fails closed when the session-bound admin read client is unavailable", async () => {

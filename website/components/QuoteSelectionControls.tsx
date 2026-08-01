@@ -18,6 +18,12 @@ import {
   type QuoteSelectionRow,
   type QuoteSelectionStorageAdapter
 } from "../lib/quote/selection-model";
+import {
+  SETUP_MAX_QUANTITY,
+  SETUP_MAX_RECONSTRUCTED_QUANTITY,
+  SETUP_MIN_QUANTITY,
+  reconstructSetupQuantity
+} from "../lib/catalogue/setup-recipe-types";
 
 export type QuoteSelectionItem = {
   category?: string;
@@ -51,7 +57,7 @@ export type QuoteSelectionValidItem = {
 const quoteSelectionChangeEvent = "skr:quote-selection-change";
 const maxStoredQuoteItems = QUOTE_SELECTION_MAX_ROWS;
 const maxSelectedQuoteItemQuantity = QUOTE_SELECTION_MAX_QUANTITY;
-const maxIncludedQuoteItemQuantity = 999;
+const maxIncludedQuoteItemQuantity = SETUP_MAX_RECONSTRUCTED_QUANTITY;
 const maxQuoteIndicatorCount = 99;
 const publicSlugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const publicImageSrcPattern = /^(?:https?:\/\/|\/(?!\/))[^\s"'<>]+$/i;
@@ -66,6 +72,17 @@ function maxQuoteQuantityForKind(kind: NormalizedQuoteSelectionItem["kind"]) {
   return kind === "setup-included"
     ? maxIncludedQuoteItemQuantity
     : maxSelectedQuoteItemQuantity;
+}
+
+function isSafeBoundedQuantity(
+  value: unknown,
+  minimum: number,
+  maximum: number
+) {
+  return typeof value === "number" &&
+    Number.isSafeInteger(value) &&
+    value >= minimum &&
+    value <= maximum;
 }
 
 function clampQuoteQuantity(
@@ -99,15 +116,20 @@ function normalizeQuoteItem(
         : "rental";
   const imageSrc = item.imageSrc?.trim();
   const minimumQuantity = kind === "setup-included" ? 0 : 1;
-  const quantity = clampQuoteQuantity(kind, item.quantity, minimumQuantity);
-  const setupBaseQuantity =
-    typeof item.setupBaseQuantity === "number" &&
-    Number.isFinite(item.setupBaseQuantity)
-    ? Math.max(
-        0,
-        Math.min(maxIncludedQuoteItemQuantity, Math.floor(item.setupBaseQuantity))
-      )
-    : undefined;
+  const quantityMaximum = maxQuoteQuantityForKind(kind);
+  const quantity = kind === "setup" || kind === "setup-included"
+    ? isSafeBoundedQuantity(item.quantity, minimumQuantity, quantityMaximum)
+      ? item.quantity
+      : undefined
+    : clampQuoteQuantity(kind, item.quantity, minimumQuantity);
+  if (quantity === undefined) return undefined;
+  const setupBaseQuantity = item.setupBaseQuantity;
+  if (
+    setupBaseQuantity !== undefined &&
+    !isSafeBoundedQuantity(setupBaseQuantity, SETUP_MIN_QUANTITY, SETUP_MAX_QUANTITY)
+  ) {
+    return undefined;
+  }
   const includedItems =
     kind === "setup"
       ? normalizeIncludedItems({
@@ -116,6 +138,14 @@ function normalizeQuoteItem(
           slug
         })
       : [];
+
+  if (
+    kind === "setup" &&
+    item.includedItems !== undefined &&
+    includedItems.length !== item.includedItems.length
+  ) {
+    return undefined;
+  }
 
   if (
     !slug ||
@@ -675,18 +705,18 @@ function SetupSelectionGroup({
     ])
   );
   const setupQuantity = setupItem?.quantity ?? 1;
-  const normalizedIncludedItems = includedItems.map((includedItem) => ({
-    ...includedItem,
-    quantity:
-      setupItem
-        ? Math.min(
-            maxIncludedQuoteItemQuantity,
-            (recipeQuantityByKey.get(quoteSelectionItemKey(includedItem)) ??
-              includedItem.setupBaseQuantity ??
-              includedItem.quantity) * setupQuantity
-          )
-        : includedItem.quantity
-  }));
+  const normalizedIncludedItems = includedItems.flatMap((includedItem) => {
+    const quantity = setupItem
+      ? reconstructSetupQuantity(
+          setupQuantity,
+          recipeQuantityByKey.get(quoteSelectionItemKey(includedItem)) ??
+            includedItem.setupBaseQuantity ??
+            includedItem.quantity
+        )
+      : includedItem.quantity;
+
+    return quantity === undefined ? [] : [{ ...includedItem, quantity }];
+  });
   const recipeIncludedItems =
     setupItem?.includedItems?.length
       ? setupItem.includedItems.map((includedItem) => ({

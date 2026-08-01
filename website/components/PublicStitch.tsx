@@ -208,6 +208,31 @@ function quoteSelectionItem(
   };
 }
 
+function catalogueQuoteSelectionItem(
+  product: PublicCatalogueProduct,
+  imageSrc: string
+): QuoteSelectionItem | undefined {
+  if (
+    product.productKind === "rental" ||
+    (product.productKind === undefined && !isSetupCatalogueProduct(product))
+  ) {
+    return quoteSelectionItem(product, imageSrc, "rental");
+  }
+
+  if (product.productKind !== "setup" || !hasAuthoritativeSetupComposition(product)) {
+    return undefined;
+  }
+
+  return quoteSelectionItem(
+    product,
+    imageSrc,
+    "setup",
+    getSetupCompositionItems(product).map((item) =>
+      quoteSelectionIncludedItem(product, item)
+    )
+  );
+}
+
 function setupQuoteSelectionItem(setup: {
   image: StaticImageData | string;
   slug: string;
@@ -268,8 +293,8 @@ export function StitchItemCard({ product, detailBasePath = "/catalogue" }: { pro
   const image = "primaryImage" in product ? product.primaryImage : undefined;
   const alt = textOrUndefined(image?.altText) ?? `${product.name} furniture rental setup`;
   const imgSrc = image?.publicUrl ?? stitchImageSrc(fallbackProductImage(product));
-  const quoteItem = quoteSelectionItem(product, imgSrc);
-  return <article className="stitch-card stitch-product-card" aria-label={`Rental listing card for ${product.name}`}><Link className="stitch-card__image" href={`${detailBasePath}/${product.slug}`}><img alt={alt} src={imgSrc} /><QuoteSelectionBadge item={quoteItem} /></Link><div className="stitch-card__body"><p className="stitch-card__meta">{productCategory(product)}</p><h2>{product.name}</h2><p>{productSummary(product)}</p><div className="stitch-card__actions"><QuoteSelectionButton item={quoteItem} /><Link aria-label={`View details for ${product.name}`} className="stitch-link-button stitch-link-button--quiet" href={`${detailBasePath}/${product.slug}`}>View Details</Link></div></div></article>;
+  const quoteItem = catalogueQuoteSelectionItem(product, imgSrc);
+  return <article className="stitch-card stitch-product-card" aria-label={`Rental listing card for ${product.name}`}><Link className="stitch-card__image" href={`${detailBasePath}/${product.slug}`}><img alt={alt} src={imgSrc} />{quoteItem ? <QuoteSelectionBadge item={quoteItem} /> : null}</Link><div className="stitch-card__body"><p className="stitch-card__meta">{productCategory(product)}</p><h2>{product.name}</h2><p>{productSummary(product)}</p><div className="stitch-card__actions">{quoteItem ? <QuoteSelectionButton item={quoteItem} /> : <p role="status">Setup selection is unavailable until its current composition is confirmed.</p>}<Link aria-label={`View details for ${product.name}`} className="stitch-link-button stitch-link-button--quiet" href={`${detailBasePath}/${product.slug}`}>View Details</Link></div></div></article>;
 }
 
 export function StitchFeaturedPieces({ catalogue }: { catalogue: PublicCatalogue }) {
@@ -374,14 +399,9 @@ export function StitchDetail({
   const alt = textOrUndefined(image?.altText) ?? `${product.name} furniture rental setup`;
   const imgSrc = image?.publicUrl ?? stitchImageSrc(canonicalSetup ? galaImage : fallbackProductImage(product));
   const setupCarouselPieces: PublicCatalogueProduct[] = [];
-  const quoteItem = quoteSelectionItem(
-    product,
-    imgSrc,
-    canonicalSetup ? "setup" : "rental",
-    showComposition
-      ? compositionItems.map((item) => quoteSelectionIncludedItem(product, item))
-      : undefined
-  );
+  const quoteItem = canonicalSetup
+    ? catalogueQuoteSelectionItem(product, imgSrc)
+    : quoteSelectionItem(product, imgSrc, "rental");
   const catalogueImageMap = new Map<string, { alt: string; src: string }>();
   catalogueImageMap.set(imgSrc, { alt, src: imgSrc });
   for (const productImage of [...(product.images ?? [])].sort(
@@ -453,7 +473,7 @@ export function StitchDetail({
                   </dl>
                 </div>
                 <div className="stitch-detail-actions stitch-detail-actions--setup">
-                  <QuoteSelectionButton item={quoteItem} />
+                  {quoteItem ? <QuoteSelectionButton item={quoteItem} /> : <p role="status">Setup selection is unavailable until its current composition is confirmed.</p>}
                   <Link className="stitch-detail-button stitch-detail-button--back" href={backHref}>
                     {detailBackLabel}
                   </Link>
@@ -498,7 +518,7 @@ export function StitchDetail({
                 </dl>
               </div>
               <div className="stitch-detail-actions stitch-detail-actions--setup">
-                <QuoteSelectionButton item={quoteItem} />
+                {quoteItem ? <QuoteSelectionButton item={quoteItem} /> : <p role="status">Setup selection is unavailable until its current composition is confirmed.</p>}
                 <Link className="stitch-detail-button stitch-detail-button--back" href={backHref}>
                   {detailBackLabel}
                 </Link>
@@ -547,7 +567,7 @@ export function StitchDetail({
               </dl>
             </div>
             <div className="stitch-detail-actions stitch-detail-actions--setup">
-              <QuoteSelectionButton item={quoteItem} />
+              {quoteItem ? <QuoteSelectionButton item={quoteItem} /> : <p role="status">Setup selection is unavailable until its current composition is confirmed.</p>}
               <Link className="stitch-detail-button stitch-detail-button--back" href={backHref}>
                 {detailBackLabel}
               </Link>
