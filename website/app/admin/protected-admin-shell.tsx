@@ -6,6 +6,7 @@ import {
 } from "../../lib/admin/authorization/server-admin-runtime-route-gate-adapter";
 import {
   resolveAdminProductDashboardRead,
+  type AdminProductDashboardProduct,
   type AdminProductDashboardReadResult
 } from "../../lib/products/admin-read/admin-product-dashboard-read";
 import { getAdminRouteRuntimeConfig } from "../../lib/server-runtime-config";
@@ -326,7 +327,7 @@ function workspaceDescription(view: AdminShellView) {
     catalogue:
       "Manage rental catalogue items shown on the public site.",
     setups:
-      "Review setup-style presentation derived from published catalogue items.",
+      "Manage setup recipes for editable unpublished parents and existing recipe parents.",
     "enquiry-email": "Check the server-side n8n enquiry handoff status.",
     "delivery-log": "Review technical enquiry handoff delivery attempts."
   };
@@ -731,23 +732,41 @@ function AdminSetupsOperations({
   }
 
   const categoryById = new Map(
-    dashboard.data.categories.map((category) => [category.id, category.name])
+    dashboard.data.categories.map((category) => [category.id, category])
   );
-  const setupCandidates = dashboard.data.products.filter(
-    (product) => product.status === "published"
+  const existingSetupParentIds = new Set(dashboard.data.setupRecipeProductIds);
+  const parentEditorCandidates = dashboard.data.products.filter(
+    (product) =>
+      product.status !== "archived" &&
+      (product.status === "draft" || existingSetupParentIds.has(product.id))
   );
-  const excludedItems = dashboard.data.products.filter(
-    (product) => product.status !== "published"
-  ).length;
-  const needsImageReview = setupCandidates.filter(
-    (product) => product.imageCount === 0 || !hasText(product.primaryImageAltText)
+  const isPublicCatalogueProduct = (product: AdminProductDashboardProduct) =>
+    product.status === "published" &&
+    (!product.categoryId || categoryById.get(product.categoryId)?.isPublished === true);
+  const childCandidatesByParent = new Map(
+    parentEditorCandidates.map((parent) => [
+      parent.id,
+      dashboard.data.products
+        .filter((product) => product.id !== parent.id)
+        .filter((product) => !existingSetupParentIds.has(product.id))
+        .filter((product) => product.status !== "archived")
+        .filter(
+          (product) =>
+            parent.status !== "published" || isPublicCatalogueProduct(product)
+        )
+        .map((product) => ({ id: product.id, name: product.name }))
+    ])
+  );
+  const excludedItems = dashboard.data.products.length - parentEditorCandidates.length;
+  const needsImageReview = parentEditorCandidates.filter(
+    (product) =>
+      product.status === "published" &&
+      (product.imageCount === 0 || !hasText(product.primaryImageAltText))
   );
   const allCandidatesNeedImageReview =
-    setupCandidates.length > 0 &&
-    needsImageReview.length === setupCandidates.length;
-  const availableProducts = dashboard.data.products
-    .filter((p) => p.status === "published")
-    .map((p) => ({ id: p.id, name: p.name }));
+    parentEditorCandidates.some((product) => product.status === "published") &&
+    needsImageReview.length ===
+      parentEditorCandidates.filter((product) => product.status === "published").length;
 
   return (
     <section
@@ -780,14 +799,14 @@ function AdminSetupsOperations({
         aria-label="Derived setup overview"
       >
         <dl className={styles.metricCard}>
-          <dt>Available for setups</dt>
-          <dd>{setupCandidates.length}</dd>
-          <p>Published catalogue items available for public setup cards.</p>
+          <dt>Recipe parents</dt>
+          <dd>{parentEditorCandidates.length}</dd>
+          <p>Editable unpublished parents and existing recipe parents.</p>
         </dl>
         <dl className={styles.metricCard}>
           <dt>Excluded</dt>
           <dd>{excludedItems}</dd>
-          <p>Draft or hidden catalogue items excluded from public setups.</p>
+          <p>Catalogue items outside the setup-parent editor contract.</p>
         </dl>
         <dl
           className={`${styles.metricCard} ${
@@ -796,16 +815,16 @@ function AdminSetupsOperations({
         >
           <dt>Image review</dt>
           <dd>{needsImageReview.length}</dd>
-          <p>Published items missing image coverage or primary image alt text.</p>
+          <p>Published recipe parents missing image coverage or primary image alt text.</p>
         </dl>
       </section>
 
-      {setupCandidates.length === 0 ? (
+      {parentEditorCandidates.length === 0 ? (
         <section className={styles.emptyStatePanel}>
-          <h2>No public setup candidates yet</h2>
+          <h2>No setup parent editors available</h2>
           <p>
-            Published catalogue items will populate Setups. Add or publish a
-            public-ready catalogue item, then return here to manage its recipe.
+            Add an editable unpublished catalogue item or create a recipe for an
+            eligible parent, then return here to manage setup composition.
           </p>
           <a className={styles.primaryButton} href="/admin/catalogue">
             Manage catalogue
@@ -825,15 +844,15 @@ function AdminSetupsOperations({
 
           {allCandidatesNeedImageReview ? (
             <p className={styles.reviewNotice}>
-              Every published setup candidate needs image or alt-text review.
+              Every published recipe parent needs image or alt-text review.
               Fix image coverage in Catalogue before launch review.
             </p>
           ) : null}
 
           <div className={styles.setupCardGrid}>
-            {setupCandidates.map((product) => {
+            {parentEditorCandidates.map((product) => {
               const categoryName = product.categoryId
-                ? categoryById.get(product.categoryId) ?? "Unassigned category"
+                ? categoryById.get(product.categoryId)?.name ?? "Unassigned category"
                 : "Unassigned category";
               const imageReady =
                 product.imageCount > 0 && hasText(product.primaryImageAltText);
@@ -854,7 +873,8 @@ function AdminSetupsOperations({
                     workspaceId={workspaceId}
                     setupProductId={product.id}
                     setupProductName={product.name}
-                    availableProducts={availableProducts}
+                    parentStatus={product.status}
+                    availableProducts={childCandidatesByParent.get(product.id) ?? []}
                   />
                 </article>
               );

@@ -129,6 +129,14 @@ describe("admin product dashboard read boundary", () => {
           }
         ],
         error: null
+      },
+      setup_recipes: {
+        data: [
+          {
+            setup_product_id: "22222222-2222-4222-8222-222222222222"
+          }
+        ],
+        error: null
       }
     });
 
@@ -170,6 +178,9 @@ describe("admin product dashboard read boundary", () => {
             primaryImageAltText: "Lounge set"
           }
         ],
+        setupRecipeProductIds: [
+          "22222222-2222-4222-8222-222222222222"
+        ],
         images: [
           {
             id: "33333333-3333-4333-8333-333333333333",
@@ -203,7 +214,8 @@ describe("admin product dashboard read boundary", () => {
     expect(calls.map((call) => call.table)).toEqual([
       "categories",
       "products",
-      "product_images"
+      "product_images",
+      "setup_recipes"
     ]);
     for (const call of calls) {
       expect(call.filters).toContainEqual({

@@ -20,7 +20,7 @@ type AdminProductDashboardReadFilter = {
 };
 
 export type AdminProductDashboardReadSupabaseClient = {
-  from(table: "categories" | "products" | "product_images"): {
+  from(table: "categories" | "products" | "product_images" | "setup_recipes"): {
     select(columns: string): AdminProductDashboardReadFilter;
   };
 };
@@ -76,6 +76,7 @@ export type AdminProductDashboardImage = {
 export type AdminProductDashboardReadData = {
   categories: AdminProductDashboardCategory[];
   products: AdminProductDashboardProduct[];
+  setupRecipeProductIds: string[];
   images: AdminProductDashboardImage[];
   imageSummary: {
     totalImages: number;
@@ -130,6 +131,10 @@ type ProductImageRow = {
   sort_order?: unknown;
   is_primary?: unknown;
   status?: unknown;
+};
+
+type SetupRecipeRow = {
+  setup_product_id?: unknown;
 };
 
 const uuidPattern =
@@ -281,16 +286,21 @@ function toProductImage(row: ProductImageRow) {
 function mapDashboardData(
   categoryRows: Record<string, unknown>[],
   productRows: Record<string, unknown>[],
-  imageRows: Record<string, unknown>[]
+  imageRows: Record<string, unknown>[],
+  setupRecipeRows: Record<string, unknown>[]
 ): AdminProductDashboardReadData | null {
   const categories = categoryRows.map(toCategory);
   const products = productRows.map(toProduct);
   const images = imageRows.map(toProductImage);
+  const setupRecipeProductIds = setupRecipeRows.map((row: SetupRecipeRow) =>
+    isUuid(row.setup_product_id) ? row.setup_product_id.trim() : null
+  );
 
   if (
     categories.some((category) => !category) ||
     products.some((product) => !product) ||
-    images.some((image) => !image)
+    images.some((image) => !image) ||
+    setupRecipeProductIds.some((productId) => !productId)
   ) {
     return null;
   }
@@ -345,6 +355,7 @@ function mapDashboardData(
         ? first.name.localeCompare(second.name)
         : first.sortOrder - second.sortOrder
     ),
+    setupRecipeProductIds: setupRecipeProductIds as string[],
     images: mappedImages.sort((first, second) =>
       first.sortOrder === second.sortOrder
         ? first.storagePath.localeCompare(second.storagePath)
@@ -374,7 +385,7 @@ export async function resolveAdminProductDashboardRead(
   }
 
   try {
-    const [categoryResult, productResult, imageResult] = await Promise.all([
+    const [categoryResult, productResult, imageResult, setupRecipeResult] = await Promise.all([
       supabase.client
         .from("categories")
         .select("id, slug, name, description, sort_order, is_published")
@@ -396,17 +407,29 @@ export async function resolveAdminProductDashboardRead(
         )
         .eq("workspace_id", workspaceId)
         .order("sort_order", { ascending: true })
-        .limit(1_000)
+        .limit(1_000),
+      supabase.client
+        .from("setup_recipes")
+        .select("setup_product_id")
+        .eq("workspace_id", workspaceId)
+        .order("setup_product_id", { ascending: true })
+        .limit(500)
     ]);
     const categoryRows = requireRows(categoryResult);
     const productRows = requireRows(productResult);
     const imageRows = requireRows(imageResult);
+    const setupRecipeRows = requireRows(setupRecipeResult);
 
-    if (!categoryRows || !productRows || !imageRows) {
+    if (!categoryRows || !productRows || !imageRows || !setupRecipeRows) {
       return unavailable();
     }
 
-    const data = mapDashboardData(categoryRows, productRows, imageRows);
+    const data = mapDashboardData(
+      categoryRows,
+      productRows,
+      imageRows,
+      setupRecipeRows
+    );
 
     return data
       ? {

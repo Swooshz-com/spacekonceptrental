@@ -28,6 +28,7 @@ type EditorAction =
   | { kind: "clear-items" };
 
 type EditorActionState = "idle" | "saving" | "error" | "conflict" | "success";
+type ParentStatus = "draft" | "published" | "archived";
 type WriteResponse =
   | { ok: true; operation: string; revision: number }
   | { ok: false; code: string };
@@ -122,12 +123,14 @@ export function SetupRecipeEditor({
   workspaceId,
   setupProductId,
   setupProductName,
-  availableProducts
+  availableProducts,
+  parentStatus
 }: {
   workspaceId: string;
   setupProductId: string;
   setupProductName: string;
   availableProducts: Array<{ id: string; name: string }>;
+  parentStatus: ParentStatus;
 }) {
   const [state, dispatch] = useReducer(editorReducer, { status: "loading" } as RecipeState);
   const [actionState, setActionState] = useState<EditorActionState>("idle");
@@ -135,6 +138,10 @@ export function SetupRecipeEditor({
   const [lastRevision, setLastRevision] = useState<number | null>(null);
   const [showProductPicker, setShowProductPicker] = useState(false);
   const [showRemoveConfirmation, setShowRemoveConfirmation] = useState(false);
+  const firstEligibleChild = availableProducts.find(
+    (product) => product.id !== setupProductId
+  );
+  const canStartRecipe = parentStatus === "draft" && firstEligibleChild !== undefined;
 
   const loadRecipe = useCallback(async () => {
     dispatch({ kind: "set-loading" });
@@ -176,6 +183,11 @@ export function SetupRecipeEditor({
   const doWrite = useCallback(
     async (operation: "replace" | "remove", items: RecipeItem[]) => {
       if (lastRevision === null) return;
+      if (operation === "replace" && lastRevision === 0 && parentStatus !== "draft") {
+        setActionState("error");
+        setActionError("Recipe creation is unavailable for this parent.");
+        return;
+      }
       setActionState("saving");
       setActionError("");
       try {
@@ -235,7 +247,7 @@ export function SetupRecipeEditor({
         setActionError("Network error.");
       }
     },
-    [setupProductId, lastRevision, loadRecipe]
+    [lastRevision, parentStatus, setupProductId, loadRecipe]
   );
 
   const handleSave = useCallback(() => {
@@ -289,17 +301,31 @@ export function SetupRecipeEditor({
   }
 
   if (state.status === "not-found") {
+    const notFoundMessage =
+      parentStatus === "published"
+        ? "A recipe must be created before publication. Manage the product in Catalogue, then return here after it is eligible."
+        : parentStatus === "archived"
+          ? "This archived product is not eligible for recipe creation. Manage its catalogue status before returning here."
+          : firstEligibleChild
+            ? "No recipe exists yet. Add items to create a recipe for this setup."
+            : "At least one eligible rental child, different from the parent, is required before a recipe can be created.";
+
     return (
       <div className="skr-admin-panel" aria-label={`Setup recipe for ${setupProductName}`}>
         <h2>Recipe: {setupProductName}</h2>
-        <p>No recipe exists yet. Add items to create a recipe for this setup.</p>
+        <p>{notFoundMessage}</p>
+        {(parentStatus === "published" || parentStatus === "archived") && (
+          <p>
+            <a href="/admin/catalogue">Manage catalogue</a>
+          </p>
+        )}
         <div className="skr-admin-actions">
           <button
             className="skr-admin-button skr-admin-button--primary"
-            disabled={actionState === "saving"}
+            disabled={actionState === "saving" || !canStartRecipe}
             onClick={() => dispatch({
               kind: "replace-items",
-              productIds: availableProducts.slice(0, 1)
+              productIds: firstEligibleChild ? [firstEligibleChild] : []
             })}
             type="button"
           >

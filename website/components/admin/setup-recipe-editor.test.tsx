@@ -5,6 +5,7 @@ import { SetupRecipeEditor } from "./setup-recipe-editor";
 
 const setupProductId = "setup-1";
 const products = [
+  { id: setupProductId, name: "Botanical Wedding" },
   { id: "child-a", name: "Child A" },
   { id: "child-b", name: "Child B" },
   { id: "child-c", name: "Child C" },
@@ -27,10 +28,17 @@ function recipeItems(ids: string[], quantity = 1) {
   }));
 }
 
-function renderEditor() {
+function renderEditor({
+  availableProducts = products,
+  parentStatus = "draft" as const
+}: {
+  availableProducts?: Array<{ id: string; name: string }>;
+  parentStatus?: "draft" | "published" | "archived";
+} = {}) {
   return render(
     <SetupRecipeEditor
-      availableProducts={products}
+      availableProducts={availableProducts}
+      parentStatus={parentStatus}
       setupProductId={setupProductId}
       setupProductName="Botanical Wedding"
       workspaceId="workspace-1"
@@ -78,7 +86,7 @@ describe("SetupRecipeEditor behavioural workflow", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
-  it("renders the not-found state and starts a recipe from the first available product", async () => {
+  it("renders the not-found state and starts a recipe from the first eligible non-parent product", async () => {
     fetchMock.mockResolvedValueOnce(jsonResponse({ error: "not found" }, 404));
     renderEditor();
 
@@ -87,7 +95,61 @@ describe("SetupRecipeEditor behavioural workflow", () => {
 
     expect(screen.getByText(/Revision: 0 \| Items: 1/)).toBeInTheDocument();
     expect(screen.getByText("Child A")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Remove setup-1" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Save Recipe" })).toBeEnabled();
+  });
+
+  it("completes Start Recipe through Save and an authoritative reload", async () => {
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse({ error: "not found" }, 404))
+      .mockResolvedValueOnce(jsonResponse({ ok: true, operation: "replace", revision: 1 }))
+      .mockResolvedValueOnce(jsonResponse({ revision: 1, items: recipeItems(["child-a"], 2) }));
+
+    renderEditor();
+    expect(await screen.findByText(/No recipe exists yet/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Start Recipe" }));
+    expect(screen.getByRole("button", { name: "Remove child-a" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Remove setup-1" })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Save Recipe" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    expect(requestBody(fetchMock.mock.calls[1]!)).toEqual({
+      action: "write",
+      operation: "replace",
+      setupProductId,
+      expectedRevision: 0,
+      items: [{ included_product_id: "child-a", position: 0, base_quantity: 1 }]
+    });
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3), { timeout: 3000 });
+    expect(await screen.findByText("Child A")).toBeInTheDocument();
+    expect(screen.getByText("Revision: 1 | Items: 1")).toBeInTheDocument();
+  });
+
+  it("fails closed for a published parent without an existing recipe", async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse({ error: "not found" }, 404));
+    renderEditor({ parentStatus: "published" });
+
+    expect(await screen.findByText(/must be created before publication/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Start Recipe" })).toBeDisabled();
+    expect(screen.getByRole("link", { name: /manage catalogue/i })).toHaveAttribute(
+      "href",
+      "/admin/catalogue"
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Start Recipe" }));
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not create a self-referencing draft when the parent is the only product", async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse({ error: "not found" }, 404));
+    renderEditor({ availableProducts: [{ id: setupProductId, name: "Botanical Wedding" }] });
+
+    expect(await screen.findByText(/at least one eligible rental child/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Start Recipe" })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: "Save Recipe" })).not.toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it("adds and removes children through the product picker with native buttons", async () => {
@@ -155,7 +217,7 @@ describe("SetupRecipeEditor behavioural workflow", () => {
       jsonResponse({ revision: 1, items: [{ included_product_id: setupProductId, position: 0, base_quantity: 1 }] })
     );
     renderEditor();
-    await screen.findByText("setup-1");
+    await screen.findByText("Botanical Wedding");
     fireEvent.click(screen.getByRole("button", { name: "Save Recipe" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("cannot include itself");
     expect(fetchMock).toHaveBeenCalledTimes(1);
@@ -185,14 +247,9 @@ describe("SetupRecipeEditor behavioural workflow", () => {
     fetchMock.mockResolvedValueOnce(
       jsonResponse({ revision: 1, items: recipeItems(twenty.map((item) => item.id)) })
     );
-    render(
-      <SetupRecipeEditor
-        availableProducts={[...twenty, { id: "child-extra", name: "Extra Child" }]}
-        setupProductId={setupProductId}
-        setupProductName="Botanical Wedding"
-        workspaceId="workspace-1"
-      />
-    );
+    renderEditor({
+      availableProducts: [...twenty, { id: "child-extra", name: "Extra Child" }]
+    });
     await screen.findByText(/Revision: 1 \| Items: 20/);
 
     expect(screen.queryByRole("button", { name: "Add Product" })).not.toBeInTheDocument();
@@ -205,7 +262,7 @@ describe("SetupRecipeEditor behavioural workflow", () => {
       .mockResolvedValueOnce(jsonResponse({ ok: true, operation: "replace", revision: 4 }))
       .mockResolvedValueOnce(jsonResponse({ revision: 4, items: recipeItems(["child-b"], 5) }));
 
-    renderEditor();
+    renderEditor({ parentStatus: "published" });
     await screen.findByText("Child A");
     fireEvent.click(screen.getByRole("button", { name: "Save Recipe" }));
 
