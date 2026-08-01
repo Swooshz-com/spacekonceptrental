@@ -33,6 +33,10 @@ type WriteResponse =
   | { ok: true; operation: string; revision: number }
   | { ok: false; code: string };
 
+type SetupRecipeProtectedOperation =
+  | "admin.setupRecipe.read"
+  | "admin.setupRecipe.write";
+
 function isValidReadItem(value: unknown): value is RecipeItem {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
   const item = value as Record<string, unknown>;
@@ -188,19 +192,57 @@ function validateItems(items: RecipeItem[], setupProductId: string): string | nu
   return null;
 }
 
+async function requestSetupRecipeCsrfProof(
+  request: typeof fetch,
+  operation: SetupRecipeProtectedOperation
+): Promise<string> {
+  const response = await request("/api/admin/csrf-proof", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      requestedOperation: operation,
+      operation
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error("csrf-proof-unavailable");
+  }
+
+  const payload = await response.json();
+  if (
+    !payload ||
+    typeof payload !== "object" ||
+    Array.isArray(payload) ||
+    (payload as Record<string, unknown>).ok !== true ||
+    typeof (payload as Record<string, unknown>).csrfProof !== "string" ||
+    !(payload as Record<string, unknown>).csrfProof
+  ) {
+    throw new Error("csrf-proof-invalid");
+  }
+
+  return (payload as Record<string, unknown>).csrfProof as string;
+}
+
 export function SetupRecipeEditor({
   workspaceId,
   setupProductId,
   setupProductName,
   availableProducts,
-  parentStatus
+  parentStatus,
+  fetcher,
+  csrfProofFetcher
 }: {
   workspaceId: string;
   setupProductId: string;
   setupProductName: string;
   availableProducts: Array<{ id: string; name: string }>;
   parentStatus: ParentStatus;
+  fetcher?: typeof fetch;
+  csrfProofFetcher?: typeof fetch;
 }) {
+  const request = fetcher ?? fetch;
+  const requestCsrfProof = csrfProofFetcher ?? fetch;
   const [state, dispatch] = useReducer(editorReducer, { status: "loading" } as RecipeState);
   const [actionState, setActionState] = useState<EditorActionState>("idle");
   const [actionError, setActionError] = useState<string>("");
@@ -216,9 +258,16 @@ export function SetupRecipeEditor({
   const loadRecipe = useCallback(async (): Promise<"loaded" | "not-found" | "error"> => {
     dispatch({ kind: "set-loading" });
     try {
-      const res = await fetch("/api/admin/setup-recipe", {
+      const csrfProof = await requestSetupRecipeCsrfProof(
+        requestCsrfProof,
+        "admin.setupRecipe.read"
+      );
+      const res = await request("/api/admin/setup-recipe", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: {
+          "content-type": "application/json",
+          "x-csrf-proof": csrfProof
+        },
         body: JSON.stringify({ action: "read", setupProductId })
       });
       if (!res.ok) {
@@ -246,7 +295,7 @@ export function SetupRecipeEditor({
       setLastRevision(null);
       return "error";
     }
-  }, [setupProductId]);
+  }, [request, requestCsrfProof, setupProductId]);
 
   useEffect(() => {
     loadRecipe();
@@ -292,9 +341,16 @@ export function SetupRecipeEditor({
                 }))
               };
 
-        const res = await fetch("/api/admin/setup-recipe", {
+        const csrfProof = await requestSetupRecipeCsrfProof(
+          requestCsrfProof,
+          "admin.setupRecipe.write"
+        );
+        const res = await request("/api/admin/setup-recipe", {
           method: "POST",
-          headers: { "content-type": "application/json" },
+          headers: {
+            "content-type": "application/json",
+            "x-csrf-proof": csrfProof
+          },
           body: JSON.stringify(body)
         });
 
@@ -337,7 +393,7 @@ export function SetupRecipeEditor({
         setActionError("Network error.");
       }
     },
-    [lastRevision, parentStatus, setupProductId, loadRecipe]
+    [lastRevision, parentStatus, request, requestCsrfProof, setupProductId, loadRecipe]
   );
 
   const handleSave = useCallback(() => {

@@ -23,6 +23,7 @@ function mockSetupProduct(): PublicCatalogueProduct {
     categoryId: "cat-setups",
     categoryName: "Setups",
     source: "fallback",
+    productKind: "setup",
     primaryImage: {
       id: "img-1",
       storageBucket: "listing-media",

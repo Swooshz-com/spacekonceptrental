@@ -14,6 +14,7 @@ const chair = {
   slug: "lounge-chair",
   name: "Lounge Chair",
   category: "Seating",
+  kind: "rental" as const,
   quantity: 1
 };
 

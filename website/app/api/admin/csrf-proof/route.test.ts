@@ -296,7 +296,11 @@ describe("POST /api/admin/csrf-proof", () => {
     ["hero.write", "admin"],
     ["quote.write", "owner"],
     ["quote.write", "admin"],
-    ["membership.manage", "owner"]
+    ["membership.manage", "owner"],
+    ["admin.setupRecipe.read", "owner"],
+    ["admin.setupRecipe.read", "admin"],
+    ["admin.setupRecipe.write", "owner"],
+    ["admin.setupRecipe.write", "admin"]
   ] as const)(
     "issues a verifier-compatible proof for %s as %s",
     async (requestedOperation, role) => {

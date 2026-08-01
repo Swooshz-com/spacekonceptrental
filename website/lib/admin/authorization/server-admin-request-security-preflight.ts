@@ -1,7 +1,9 @@
 import "server-only";
 
 import {
+  isCsrfProtectedAdminOperation,
   isSupportedAdminOperation,
+  type AdminCsrfProtectedOperation,
   type AdminOperation
 } from "./admin-authorization-policy";
 
@@ -12,6 +14,8 @@ export type StateChangingAdminOperation =
   | "hero.write"
   | "quote.write"
   | "membership.manage";
+
+export type CsrfProtectedAdminOperation = AdminCsrfProtectedOperation;
 
 export type ServerAdminRequestSecurityPreflightInput = {
   requestedOperation?: AdminOperation | string | null;
@@ -30,7 +34,7 @@ export type ServerAdminCsrfProofFailureReason =
   | "csrf_proof_mismatched";
 
 export type ServerAdminCsrfProofVerifierInput = {
-  requestedOperation: StateChangingAdminOperation;
+  requestedOperation: CsrfProtectedAdminOperation;
   requestMethod: "POST";
   requestOrigin: string;
   requestHost: string;
@@ -79,15 +83,6 @@ export type ServerAdminRequestSecurityPreflightResult =
       reason: ServerAdminRequestSecurityPreflightDenyReason;
       statusCode: 400 | 403;
     };
-
-const stateChangingOperations = new Set<StateChangingAdminOperation>([
-  "product.write",
-  "category.write",
-  "productImage.write",
-  "hero.write",
-  "quote.write",
-  "membership.manage"
-]);
 
 const readOnlySafeMethods = new Set(["GET", "HEAD"]);
 
@@ -149,10 +144,10 @@ function getExpectedHost(input: ServerAdminRequestSecurityPreflightInput) {
   return expectedOrigin ? parseOrigin(expectedOrigin)?.host ?? null : null;
 }
 
-function isStateChangingOperation(
+function isCsrfProtectedOperation(
   operation: AdminOperation
-): operation is StateChangingAdminOperation {
-  return stateChangingOperations.has(operation as StateChangingAdminOperation);
+): operation is CsrfProtectedAdminOperation {
+  return isCsrfProtectedAdminOperation(operation);
 }
 
 function validateSameOrigin(
@@ -250,7 +245,7 @@ export async function validateServerAdminRequestSecurityPreflight(
     return deny("operation_not_supported", 400);
   }
 
-  if (!isStateChangingOperation(requestedOperation)) {
+  if (!isCsrfProtectedOperation(requestedOperation)) {
     if (requestedOperation === "admin.csrf.issue") {
       if (requestMethod !== "POST") {
         return deny("request_method_not_allowed", 403);

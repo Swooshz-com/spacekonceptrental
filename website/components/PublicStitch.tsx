@@ -39,7 +39,7 @@ export function quoteSelectionValidItemsForCatalogue(
   catalogue: PublicCatalogue
 ): QuoteSelectionValidItem[] {
   return catalogue.products.flatMap((product): QuoteSelectionValidItem[] => {
-    if (product.productKind === "rental") {
+    if (product.productKind === "rental" && isProductKindAvailable(product)) {
       return [{
         category: productCategory(product),
         imageSrc: product.primaryImage?.publicUrl,
@@ -72,10 +72,7 @@ export function quoteSelectionValidItemsForCatalogue(
 }
 
 export function isSetupCatalogueProduct(product: PublicCatalogueProduct): boolean {
-  if (product.productKind !== undefined) {
-    return product.productKind === "setup";
-  }
-  return productCategory(product).toLowerCase() === "setups";
+  return product.productKind === "setup";
 }
 
 export function hasAuthoritativeSetupComposition(product: PublicCatalogueProduct): boolean {
@@ -117,7 +114,14 @@ function quoteSelectionIncludedItem(
 }
 
 export function isProductKindAvailable(product: PublicCatalogueProduct): boolean {
-  return product.productKind !== undefined;
+  if (product.productKind === "rental") {
+    return (
+      product.safeSetupComposition === null ||
+      product.safeSetupComposition === undefined
+    );
+  }
+
+  return product.productKind === "setup" && hasAuthoritativeSetupComposition(product);
 }
 
 export function quoteCanonicalIdentities(
@@ -212,14 +216,11 @@ function catalogueQuoteSelectionItem(
   product: PublicCatalogueProduct,
   imageSrc: string
 ): QuoteSelectionItem | undefined {
-  if (
-    product.productKind === "rental" ||
-    (product.productKind === undefined && !isSetupCatalogueProduct(product))
-  ) {
+  if (product.productKind === "rental" && isProductKindAvailable(product)) {
     return quoteSelectionItem(product, imageSrc, "rental");
   }
 
-  if (product.productKind !== "setup" || !hasAuthoritativeSetupComposition(product)) {
+  if (!isProductKindAvailable(product) || product.productKind !== "setup") {
     return undefined;
   }
 
@@ -338,7 +339,7 @@ export function StitchCatalogueShell({ catalogue, detailBasePath = "/catalogue",
 }
 
 export function StitchSetupsPage({ catalogue, activeSetupSlug }: { catalogue: PublicCatalogue; activeSetupSlug?: string }) {
-  const realSetups = catalogue.products.filter(isSetupCatalogueProduct).map((product, index) => ({ slug: product.slug, title: product.name, image: fallbackProductImage(product), summary: productSummary(product), featured: index === 0 }));
+  const realSetups = catalogue.products.filter((product) => isSetupCatalogueProduct(product) && isProductKindAvailable(product)).map((product, index) => ({ slug: product.slug, title: product.name, image: fallbackProductImage(product), summary: productSummary(product), featured: index === 0 }));
   const setupCards = realSetups;
   const featuredSetup = setupCards[0];
   const setupFilters = [
@@ -399,9 +400,7 @@ export function StitchDetail({
   const alt = textOrUndefined(image?.altText) ?? `${product.name} furniture rental setup`;
   const imgSrc = image?.publicUrl ?? stitchImageSrc(canonicalSetup ? galaImage : fallbackProductImage(product));
   const setupCarouselPieces: PublicCatalogueProduct[] = [];
-  const quoteItem = canonicalSetup
-    ? catalogueQuoteSelectionItem(product, imgSrc)
-    : quoteSelectionItem(product, imgSrc, "rental");
+  const quoteItem = catalogueQuoteSelectionItem(product, imgSrc);
   const catalogueImageMap = new Map<string, { alt: string; src: string }>();
   catalogueImageMap.set(imgSrc, { alt, src: imgSrc });
   for (const productImage of [...(product.images ?? [])].sort(

@@ -30,14 +30,22 @@ function recipeItems(ids: string[], quantity = 1) {
 
 function renderEditor({
   availableProducts = products,
-  parentStatus = "draft" as const
+  parentStatus = "draft" as const,
+  csrfProofFetcher
 }: {
   availableProducts?: Array<{ id: string; name: string }>;
   parentStatus?: "draft" | "published" | "archived";
+  csrfProofFetcher?: typeof fetch;
 } = {}) {
+  const proofFetcher = csrfProofFetcher ?? (vi.fn(async () =>
+    jsonResponse({ ok: true, csrfProof: "test-csrf-proof" })
+  ) as unknown as typeof fetch);
+
   return render(
     <SetupRecipeEditor
       availableProducts={availableProducts}
+      csrfProofFetcher={proofFetcher}
+      fetcher={globalThis.fetch}
       parentStatus={parentStatus}
       setupProductId={setupProductId}
       setupProductName="Botanical Wedding"
@@ -103,6 +111,50 @@ describe("SetupRecipeEditor behavioural workflow", () => {
     expect(requestBody(fetchMock.mock.calls[0]!)).toMatchObject({ action: "read" });
   });
 
+  it("requests the exact operation proof and sends it on the protected recipe request", async () => {
+    const proofMock = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+      const body = JSON.parse(String(init?.body)) as Record<string, unknown>;
+      const operation = body.requestedOperation;
+      return jsonResponse({
+        ok: true,
+        csrfProof: operation === "admin.setupRecipe.write" ? "write-proof" : "read-proof"
+      });
+    });
+
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse({ revision: 3, items: recipeItems(["child-a"]) }))
+      .mockResolvedValueOnce(jsonResponse({ ok: true, operation: "replace", revision: 4 }))
+      .mockResolvedValueOnce(jsonResponse({ revision: 4, items: recipeItems(["child-a"]) }));
+
+    renderEditor({ csrfProofFetcher: proofMock as unknown as typeof fetch });
+    await screen.findByText("Child A");
+
+    expect(proofMock).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(String(proofMock.mock.calls[0]?.[1]?.body))).toMatchObject({
+      requestedOperation: "admin.setupRecipe.read",
+      operation: "admin.setupRecipe.read"
+    });
+    expect(
+      (fetchMock.mock.calls[0]?.[1] as RequestInit).headers
+    ).toMatchObject({ "x-csrf-proof": "read-proof" });
+
+    fireEvent.click(screen.getByRole("button", { name: "Save Recipe" }));
+    await screen.findByText("Recipe saved successfully.");
+
+    expect(
+      proofMock.mock.calls.some((call) =>
+        JSON.parse(String(call[1]?.body)).requestedOperation ===
+        "admin.setupRecipe.write"
+      )
+    ).toBe(true);
+    const writeCall = fetchMock.mock.calls.find(
+      (call) => requestBody(call).action === "write"
+    );
+    expect((writeCall?.[1] as RequestInit).headers).toMatchObject({
+      "x-csrf-proof": "write-proof"
+    });
+  });
+
   it("cannot overwrite an existing recipe after a later item-query failure", async () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse({ revision: 3, items: recipeItems(["child-a"]) }))
@@ -146,8 +198,15 @@ describe("SetupRecipeEditor behavioural workflow", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Save Recipe" }));
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
-    expect(requestBody(fetchMock.mock.calls[1]!)).toEqual({
+    await waitFor(() =>
+      expect(
+        fetchMock.mock.calls.some((call) => requestBody(call).action === "write")
+      ).toBe(true)
+    );
+    const writeCall = fetchMock.mock.calls.find(
+      (call) => requestBody(call).action === "write"
+    );
+    expect(requestBody(writeCall!)).toEqual({
       action: "write",
       operation: "replace",
       setupProductId,
@@ -355,8 +414,15 @@ describe("SetupRecipeEditor behavioural workflow", () => {
         name: "Confirm remove recipe"
       })
     );
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
-    expect(requestBody(fetchMock.mock.calls[1]!)).toEqual({
+    await waitFor(() =>
+      expect(
+        fetchMock.mock.calls.some((call) => requestBody(call).action === "write")
+      ).toBe(true)
+    );
+    const writeCall = fetchMock.mock.calls.find(
+      (call) => requestBody(call).action === "write"
+    );
+    expect(requestBody(writeCall!)).toEqual({
       action: "write",
       operation: "remove",
       setupProductId,

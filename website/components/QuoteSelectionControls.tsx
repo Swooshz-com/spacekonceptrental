@@ -111,9 +111,8 @@ function normalizeQuoteItem(
     item.kind === "setup-included" ||
     item.kind === "rental"
       ? item.kind
-      : category?.toLowerCase() === "setups"
-        ? "setup"
-        : "rental";
+      : undefined;
+  if (!kind) return undefined;
   const imageSrc = item.imageSrc?.trim();
   const minimumQuantity = kind === "setup-included" ? 0 : 1;
   const quantityMaximum = maxQuoteQuantityForKind(kind);
@@ -174,7 +173,7 @@ function normalizeQuoteItem(
 }
 
 function quoteSelectionItemKey(item: QuoteSelectionItem) {
-  return `${item.kind ?? "rental"}:${item.setupSlug ?? ""}:${item.slug}`;
+  return `${item.kind ?? "unknown"}:${item.setupSlug ?? ""}:${item.slug}`;
 }
 
 function normalizeQuoteSelectionItems(items: QuoteSelectionItem[]) {
@@ -531,7 +530,7 @@ function getGroupedSelectionItems(items: QuoteSelectionSummaryItem[]) {
   );
 
   return {
-    rentalItems: items.filter((item) => item.kind === "rental" || !item.kind),
+    rentalItems: items.filter((item) => item.kind === "rental"),
     setupGroups: [
       ...setupItems.map((setupItem) => ({
         includedItems: setupItem.includedItems?.length

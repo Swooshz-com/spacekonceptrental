@@ -734,6 +734,14 @@ describe("protected admin shell", () => {
 
   it("surfaces draft parents and existing published recipe maintenance with server-owned status", async () => {
     const fetchMock = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+      if (String(_input).includes("/api/admin/csrf-proof")) {
+        return {
+          ok: true,
+          status: 200,
+          json: vi.fn().mockResolvedValue({ ok: true, csrfProof: "test-csrf-proof" })
+        };
+      }
+
       const body = JSON.parse(String(init?.body)) as {
         action?: string;
         setupProductId?: string;
@@ -922,7 +930,9 @@ describe("protected admin shell", () => {
     expect(within(picker).queryByRole("button", { name: "Nested Parent" })).not.toBeInTheDocument();
     expect(within(picker).queryByRole("button", { name: "Draft Child" })).not.toBeInTheDocument();
     expect(within(picker).queryByRole("button", { name: "Published Parent" })).not.toBeInTheDocument();
-    expect(fetchMock).toHaveBeenCalledTimes(4);
+    expect(
+      fetchMock.mock.calls.filter(([input]) => !String(input).includes("/api/admin/csrf-proof"))
+    ).toHaveLength(4);
   });
 
   it("keeps Setups source derived and free of fake editor or storage path controls", () => {

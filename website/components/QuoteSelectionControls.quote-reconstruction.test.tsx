@@ -463,13 +463,12 @@ describe("production quote setup reconstruction", () => {
       )
     );
 
-    expect(validItems).toEqual([
-      expect.objectContaining({ kind: "rental", slug: "lounge-chair" })
-    ]);
-    expect(validItems[0]?.includedItems).toBeUndefined();
+    expect(validItems).toEqual([]);
 
     render(<QuoteSelectionSummary catalogueAvailable validItems={validItems} />);
-    await waitFor(() => expect(screen.getByText("Lounge Chair")).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByText("Unavailable selection: lounge-chair")).toBeInTheDocument()
+    );
     expect(screen.queryByText("Forged Child")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /show included pieces/i })).not.toBeInTheDocument();
   });

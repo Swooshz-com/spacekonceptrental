@@ -37,6 +37,10 @@ type CreateRuntimeDependencies = (
   verifierContext?: Parameters<typeof createServerAdminCsrfProofRuntimeDependencies>[0]
 ) => ServerAdminCsrfProofRuntimeDependencies;
 
+type AdminSetupRecipeOperation =
+  | "admin.setupRecipe.read"
+  | "admin.setupRecipe.write";
+
 export type AdminSetupRecipeRouteDependencies = {
   env?: AdminSetupRecipeRouteEnv;
   createRuntimeDependencies?: CreateRuntimeDependencies;
@@ -65,7 +69,8 @@ function getTimestampMs() {
 
 async function adminAuthCheck(
   request: NextRequest,
-  dependencies: AdminSetupRecipeRouteDependencies
+  dependencies: AdminSetupRecipeRouteDependencies,
+  requestedOperation: AdminSetupRecipeOperation
 ): Promise<{
   allowed: boolean;
   workspaceId: string;
@@ -102,7 +107,7 @@ async function adminAuthCheck(
   try {
     binding = await resolveSessionWorkspaceBinding(
       {
-        requestedOperation: "admin.setupRecipe.write"
+        requestedOperation
       },
       {
         ...(dependencies.bindingDependencies ?? {}),
@@ -149,7 +154,7 @@ async function adminAuthCheck(
   try {
     routeGate = await resolveRouteGate(
       {
-        requestedOperation: "admin.setupRecipe.write",
+        requestedOperation,
         requestMethod: request.method,
         request: { method: request.method },
         requiresMutationCapability: true
@@ -223,11 +228,6 @@ export async function handleAdminSetupRecipeRoute(
   request: NextRequest,
   dependencies: AdminSetupRecipeRouteDependencies = {}
 ): Promise<NextResponse> {
-  const auth = await adminAuthCheck(request, dependencies);
-  if (!auth.allowed) {
-    return auth.response!;
-  }
-
   let parsed = await readBoundedJsonBody(request, 65536);
 
   if (!parsed.ok) {
@@ -237,6 +237,26 @@ export async function handleAdminSetupRecipeRoute(
   const payload = parsed.body;
 
   const action = payload.action;
+
+  const requestedOperation =
+    action === "read"
+      ? "admin.setupRecipe.read"
+      : action === "write"
+        ? "admin.setupRecipe.write"
+        : null;
+
+  if (!requestedOperation) {
+    return safeJsonResponse({ error: "unknown_action" }, 400);
+  }
+
+  const auth = await adminAuthCheck(
+    request,
+    dependencies,
+    requestedOperation
+  );
+  if (!auth.allowed) {
+    return auth.response!;
+  }
 
   if (action === "read") {
     const setupProductId =

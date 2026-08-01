@@ -65,6 +65,7 @@ const sampleProduct: PublicCatalogueProduct = {
   sortOrder: 1,
   categoryId: "category-1",
   categoryName: "Lounge",
+  productKind: "rental",
   source: "fallback"
 };
 

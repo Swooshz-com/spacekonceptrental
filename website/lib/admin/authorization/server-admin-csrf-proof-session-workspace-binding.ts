@@ -3,6 +3,7 @@ import "server-only";
 import type { AdminWorkspaceResolutionInput } from "./admin-authorization-adapters";
 import type {
   AdminAuthorizationDenyReason,
+  AdminCsrfProtectedOperation,
   AdminMembershipState,
   AdminOperation,
   AdminRole,
@@ -10,6 +11,7 @@ import type {
 } from "./admin-authorization-policy";
 import {
   authorizeAdminOperation,
+  isCsrfProtectedAdminOperation,
   isSupportedAdminOperation
 } from "./admin-authorization-policy";
 import {
@@ -18,13 +20,7 @@ import {
   type ServerAdminAuthorizationAdapterSetResult
 } from "./server-admin-authorization-adapter-set";
 
-export type ServerAdminCsrfProofBindingOperation =
-  | "product.write"
-  | "category.write"
-  | "productImage.write"
-  | "hero.write"
-  | "quote.write"
-  | "membership.manage";
+export type ServerAdminCsrfProofBindingOperation = AdminCsrfProtectedOperation;
 
 export type ServerAdminCsrfProofSessionWorkspaceBindingInput = {
   requestedOperation?: AdminOperation | string | null;
@@ -81,17 +77,6 @@ export type ServerAdminCsrfProofSessionWorkspaceBindingResult =
       requestId?: string;
     };
 
-const csrfProofBindingOperations = new Set<ServerAdminCsrfProofBindingOperation>(
-  [
-    "product.write",
-    "category.write",
-    "productImage.write",
-    "hero.write",
-    "quote.write",
-    "membership.manage"
-  ]
-);
-
 function normalizeRequired(value: string | null | undefined) {
   const normalized = value?.trim();
 
@@ -101,9 +86,7 @@ function normalizeRequired(value: string | null | undefined) {
 function isCsrfProofBindingOperation(
   operation: AdminOperation
 ): operation is ServerAdminCsrfProofBindingOperation {
-  return csrfProofBindingOperations.has(
-    operation as ServerAdminCsrfProofBindingOperation
-  );
+  return isCsrfProtectedAdminOperation(operation);
 }
 
 function deny(

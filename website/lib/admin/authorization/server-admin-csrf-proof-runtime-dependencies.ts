@@ -1,6 +1,7 @@
 import "server-only";
 
 import * as crypto from "node:crypto";
+import { isCsrfProtectedAdminOperation } from "./admin-authorization-policy";
 import type {
   ServerAdminCsrfProofIssuerDependencies,
   ServerAdminCsrfProofSignerInput
@@ -16,16 +17,6 @@ import type {
 import { getAdminCsrfProofSecret } from "../../server-runtime-config";
 
 const bindingVersion = "csrf-session-binding-v1";
-const csrfProofBindingOperations = new Set<ServerAdminCsrfProofBindingOperation>(
-  [
-    "product.write",
-    "category.write",
-    "productImage.write",
-    "hero.write",
-    "quote.write",
-    "membership.manage"
-  ]
-);
 const csrfProofBindingRoles = new Set(["owner", "admin"]);
 
 export function generateServerAdminCsrfNonce(): string {
@@ -64,9 +55,7 @@ function normalizeRequiredString(value: unknown) {
 function isBindingOperation(
   value: string | null
 ): value is ServerAdminCsrfProofBindingOperation {
-  return csrfProofBindingOperations.has(
-    value as ServerAdminCsrfProofBindingOperation
-  );
+  return value ? isCsrfProtectedAdminOperation(value) : false;
 }
 
 function isBindingRole(value: string | null) {

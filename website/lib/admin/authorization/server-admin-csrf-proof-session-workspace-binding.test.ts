@@ -73,6 +73,38 @@ function createBindingDeriver(value = "opaque-session-workspace-binding") {
 }
 
 describe("resolveServerAdminCsrfProofSessionWorkspaceBinding", () => {
+  it.each([
+    "admin.setupRecipe.read",
+    "admin.setupRecipe.write"
+  ] as const)("binds %s to the authenticated workspace", async (requestedOperation) => {
+    const deriveSessionWorkspaceBinding = createBindingDeriver();
+
+    const result = await resolveServerAdminCsrfProofSessionWorkspaceBinding(
+      { requestedOperation },
+      {
+        createAdapterSet: createConfiguredAdapters(),
+        deriveSessionWorkspaceBinding
+      }
+    );
+
+    expect(result).toMatchObject({
+      bound: true,
+      sessionBinding: "opaque-session-workspace-binding",
+      adminContext: {
+        workspaceId: "workspace-1",
+        adminUserId: "admin-user-1",
+        resolution: "server-auth-membership"
+      }
+    });
+    expect(deriveSessionWorkspaceBinding).toHaveBeenCalledWith(
+      expect.objectContaining({
+        requestedOperation,
+        workspaceId: "workspace-1",
+        membershipRole: "admin"
+      })
+    );
+  });
+
   it.each<AdminRole>(["owner", "admin"])(
     "binds quote.write for %s sessions to the trusted workspace",
     async (role) => {

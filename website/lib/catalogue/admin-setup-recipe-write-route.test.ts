@@ -136,4 +136,41 @@ describe("admin setup recipe route write response contract", () => {
     expect(response.status).toBe(503);
     expect(await json(response)).toEqual({ error: "rpc-failure" });
   });
+
+  it("binds protected recipe reads to the read operation", async () => {
+    const dependencies = createDependencies(
+      vi.fn(async () => ({ ok: true as const, operation: "replace", setupProductId: "setup-1", revision: 4, itemCount: 1 }))
+    );
+    dependencies.readRecipe = vi.fn(async () => ({
+      ok: true as const,
+      revision: 3,
+      items: [
+        {
+          workspace_id: env.ADMIN_TRUSTED_WORKSPACE_ID,
+          setup_product_id: "44444444-4444-4444-8444-444444444444",
+          included_product_id: "55555555-5555-4555-8555-555555555555",
+          position: 0,
+          base_quantity: 1
+        }
+      ]
+    }));
+
+    const response = await handleAdminSetupRecipeRoute(
+      request({
+        action: "read",
+        setupProductId: "44444444-4444-4444-8444-444444444444"
+      }),
+      dependencies
+    );
+
+    expect(response.status).toBe(200);
+    expect(dependencies.resolveSessionWorkspaceBinding).toHaveBeenCalledWith(
+      expect.objectContaining({ requestedOperation: "admin.setupRecipe.read" }),
+      expect.anything()
+    );
+    expect(dependencies.resolveRouteGate).toHaveBeenCalledWith(
+      expect.objectContaining({ requestedOperation: "admin.setupRecipe.read" }),
+      expect.anything()
+    );
+  });
 });

@@ -1,7 +1,9 @@
 import "server-only";
 
 import {
+  isCsrfProtectedAdminOperation,
   isSupportedAdminOperation,
+  type AdminCsrfProtectedOperation,
   type AdminOperation
 } from "./admin-authorization-policy";
 
@@ -13,6 +15,8 @@ export type StateChangingAdminOperation =
   | "quote.write"
   | "membership.manage";
 
+export type ProtectedAdminOperation = AdminCsrfProtectedOperation;
+
 export type ServerAdminCsrfProofIssuerInput = {
   operation?: AdminOperation | string | null;
   sessionBinding?: string | null;
@@ -22,7 +26,7 @@ export type ServerAdminCsrfProofIssuerInput = {
 };
 
 export type ServerAdminCsrfProofIssuerPayload = {
-  operation: StateChangingAdminOperation;
+  operation: ProtectedAdminOperation;
   sessionBinding: string;
   nonce: string;
   issuedAt: number;
@@ -71,15 +75,6 @@ export type ServerAdminCsrfProofIssuerResult =
     };
 
 const base64UrlPattern = /^[A-Za-z0-9_-]+$/;
-const stateChangingOperations = new Set<StateChangingAdminOperation>([
-  "product.write",
-  "category.write",
-  "productImage.write",
-  "hero.write",
-  "quote.write",
-  "membership.manage"
-]);
-
 function notIssued(
   reason: ServerAdminCsrfProofIssuerFailureReason
 ): ServerAdminCsrfProofIssuerResult {
@@ -107,10 +102,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
-function isStateChangingOperation(
+function isCsrfProtectedOperation(
   operation: AdminOperation
-): operation is StateChangingAdminOperation {
-  return stateChangingOperations.has(operation as StateChangingAdminOperation);
+): operation is ProtectedAdminOperation {
+  return isCsrfProtectedAdminOperation(operation);
 }
 
 function encodeBase64Url(value: string) {
@@ -173,7 +168,7 @@ export async function issueServerAdminCsrfProof(
     return notIssued("operation_not_supported");
   }
 
-  if (!isStateChangingOperation(requestedOperation)) {
+  if (!isCsrfProtectedOperation(requestedOperation)) {
     return notIssued("operation_not_state_changing");
   }
 

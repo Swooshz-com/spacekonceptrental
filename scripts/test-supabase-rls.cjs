@@ -1251,8 +1251,13 @@ function assertNoRuntimeSupabaseUse() {
         );
         assert.match(
           content,
-          /createServerSupabaseClient/,
-          `${relativePath} must use the approved server Supabase wrapper.`,
+          /createSessionBoundSupabaseAdminReadClient/,
+          `${relativePath} must use the approved session-bound server Supabase wrapper.`,
+        );
+        assert.match(
+          content,
+          /resolveSupabaseAdminAuthIdentity/,
+          `${relativePath} must resolve the authenticated server session before database access.`,
         );
         assertNoMatches(filePath, content, serverBlockedPatterns);
         return;

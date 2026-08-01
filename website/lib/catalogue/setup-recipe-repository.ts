@@ -1,6 +1,13 @@
 import "server-only";
 
-import { createServerSupabaseClient } from "../supabase/server";
+import {
+  createSessionBoundSupabaseAdminReadClient,
+  resolveSupabaseAdminAuthIdentity,
+  type SupabaseAdminAuthIdentityDependencies,
+  type SupabaseAdminReadClientFactoryDependencies,
+  type SupabaseAdminAuthIdentityResult
+} from "../admin/authorization/supabase-admin-auth-identity-adapter";
+import type { SupabaseAdminReadClientResult } from "../admin/authorization/supabase-admin-profile-membership-adapters";
 import type {
   AdminRecipeWriteRequest,
   AdminRecipeWriteResult,
@@ -8,12 +15,89 @@ import type {
   AdminRecipeReadItem
 } from "./setup-recipe-types";
 
+type RecipeSupabaseQueryResult = {
+  data: unknown;
+  error: unknown;
+};
+
+type RecipeSupabaseQuery = {
+  select(columns: string): RecipeSupabaseQuery;
+  eq(column: string, value: string): RecipeSupabaseQuery;
+  single(): PromiseLike<RecipeSupabaseQueryResult>;
+  order(column: string): PromiseLike<RecipeSupabaseQueryResult>;
+};
+
+type RecipeSupabaseClient = {
+  rpc(
+    functionName: string,
+    args: Record<string, unknown>
+  ): PromiseLike<RecipeSupabaseQueryResult>;
+  from(table: string): RecipeSupabaseQuery;
+};
+
+export type SetupRecipeRepositoryDependencies = {
+  resolveAuthIdentity?: (
+    dependencies?: SupabaseAdminAuthIdentityDependencies
+  ) => Promise<SupabaseAdminAuthIdentityResult>;
+  createReadClient?: (
+    dependencies?: SupabaseAdminReadClientFactoryDependencies
+  ) => Promise<SupabaseAdminReadClientResult>;
+  auth?: SupabaseAdminAuthIdentityDependencies;
+  readClient?: SupabaseAdminReadClientFactoryDependencies;
+};
+
+type AuthenticatedRecipeClientResult =
+  | { ok: true; client: RecipeSupabaseClient }
+  | { ok: false; code: "not-authenticated" | "rpc-unavailable" };
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
 function getString(value: unknown) {
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
+async function getAuthenticatedRecipeClient(
+  dependencies: SetupRecipeRepositoryDependencies
+): Promise<AuthenticatedRecipeClientResult> {
+  const resolveAuthIdentity =
+    dependencies.resolveAuthIdentity ?? resolveSupabaseAdminAuthIdentity;
+  const createReadClient =
+    dependencies.createReadClient ?? createSessionBoundSupabaseAdminReadClient;
+
+  let identity: SupabaseAdminAuthIdentityResult;
+  try {
+    identity = await resolveAuthIdentity(dependencies.auth);
+  } catch {
+    return { ok: false, code: "not-authenticated" };
+  }
+
+  if (!identity.authenticated) {
+    return {
+      ok: false,
+      code:
+        identity.reason === "supabase_server_env_missing"
+          ? "rpc-unavailable"
+          : "not-authenticated"
+    };
+  }
+
+  let supabase: SupabaseAdminReadClientResult;
+  try {
+    supabase = await createReadClient(dependencies.readClient);
+  } catch {
+    return { ok: false, code: "rpc-unavailable" };
+  }
+
+  if (!supabase.configured) {
+    return { ok: false, code: "rpc-unavailable" };
+  }
+
+  return {
+    ok: true,
+    client: supabase.client as unknown as RecipeSupabaseClient
+  };
 }
 
 function rpcErrorCode(rawMessage: string): "conflict" | "unauthorized" | "validation-failure" | "rpc-failure" {
@@ -43,12 +127,13 @@ function rpcErrorCode(rawMessage: string): "conflict" | "unauthorized" | "valida
 }
 
 export async function executeAdminSetupRecipeWrite(
-  request: AdminRecipeWriteRequest
+  request: AdminRecipeWriteRequest,
+  dependencies: SetupRecipeRepositoryDependencies = {}
 ): Promise<AdminRecipeWriteResult> {
-  const supabase = createServerSupabaseClient();
+  const supabase = await getAuthenticatedRecipeClient(dependencies);
 
-  if (!supabase.configured) {
-    return { ok: false, code: "rpc-unavailable" };
+  if (!supabase.ok) {
+    return { ok: false, code: supabase.code };
   }
 
   try {
@@ -97,12 +182,16 @@ export async function executeAdminSetupRecipeWrite(
 
 export async function readAdminSetupRecipe(
   workspaceId: string,
-  setupProductId: string
+  setupProductId: string,
+  dependencies: SetupRecipeRepositoryDependencies = {}
 ): Promise<AdminRecipeReadResult> {
-  const supabase = createServerSupabaseClient();
+  const supabase = await getAuthenticatedRecipeClient(dependencies);
 
-  if (!supabase.configured) {
-    return { ok: false, code: "rpc-unavailable" };
+  if (!supabase.ok) {
+    return {
+      ok: false,
+      code: supabase.code === "not-authenticated" ? "unauthorized" : supabase.code
+    };
   }
 
   try {
@@ -162,9 +251,11 @@ export async function readAdminSetupRecipe(
         !includedProduct ||
         workspace !== workspaceId ||
         setupProduct !== setupProductId ||
+        typeof position !== "number" ||
         !Number.isSafeInteger(position) ||
         position < 0 ||
         position > 19 ||
+        typeof baseQuantity !== "number" ||
         !Number.isSafeInteger(baseQuantity) ||
         baseQuantity < 1 ||
         baseQuantity > 99

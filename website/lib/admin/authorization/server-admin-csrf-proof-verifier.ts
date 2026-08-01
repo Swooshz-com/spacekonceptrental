@@ -1,16 +1,17 @@
 import "server-only";
 
+import { isCsrfProtectedAdminOperation } from "./admin-authorization-policy";
 import type {
   ServerAdminCsrfProofVerifierInput,
   ServerAdminCsrfProofVerifierResult as PreflightCsrfProofVerifierResult,
-  StateChangingAdminOperation
+  CsrfProtectedAdminOperation
 } from "./server-admin-request-security-preflight";
 
 export type ServerAdminCsrfProofVerifierResult =
   PreflightCsrfProofVerifierResult;
 
 export type ServerAdminCsrfProofPayload = {
-  operation: StateChangingAdminOperation;
+  operation: CsrfProtectedAdminOperation;
   sessionBinding: string;
   nonce: string;
   issuedAt: number;
@@ -30,7 +31,7 @@ export type ServerAdminCsrfSignatureVerifierResult =
     };
 
 export type ServerAdminCsrfReplayCheckInput = {
-  operation: StateChangingAdminOperation;
+  operation: CsrfProtectedAdminOperation;
   sessionBinding: string;
   nonce: string;
   issuedAt: number;
@@ -167,6 +168,10 @@ function toPayload(
     return null;
   }
 
+  if (!isCsrfProtectedAdminOperation(payload.operation)) {
+    return null;
+  }
+
   const sessionBinding = normalizeRequired(payload.sessionBinding);
   const nonce = normalizeRequired(payload.nonce);
 
@@ -175,7 +180,7 @@ function toPayload(
   }
 
   return {
-    operation: payload.operation as StateChangingAdminOperation,
+    operation: payload.operation as CsrfProtectedAdminOperation,
     sessionBinding,
     nonce,
     issuedAt: payload.issuedAt,
