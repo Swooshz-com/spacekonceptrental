@@ -42,6 +42,7 @@ type NormalizedQuoteSelectionItem = QuoteSelectionItem & {
 export type QuoteSelectionValidItem = {
   category?: string;
   imageSrc?: string;
+  includedItems?: QuoteSelectionItem[];
   kind: "rental" | "setup";
   name?: string;
   slug: string;
@@ -390,6 +391,36 @@ function refreshStoredQuoteItem(
   setItems(nextItems);
 }
 
+function resolveCanonicalQuoteSelectionItem(
+  item: QuoteSelectionItem,
+  canonical: QuoteSelectionValidItem
+): QuoteSelectionItem {
+  const resolved = {
+    ...item,
+    category: canonical.category,
+    imageSrc: canonical.imageSrc,
+    kind: canonical.kind,
+    name: canonical.name ?? canonical.slug
+  };
+
+  if (canonical.kind === "setup") {
+    return {
+      ...resolved,
+      includedItems: canonical.includedItems ?? []
+    };
+  }
+
+  const {
+    includedItems: _includedItems,
+    setupBaseQuantity: _setupBaseQuantity,
+    setupName: _setupName,
+    setupSlug: _setupSlug,
+    ...rentalItem
+  } = resolved;
+
+  return rentalItem;
+}
+
 export function QuoteSelectionDataBoundary({
   validItems: _validItems
 }: {
@@ -473,9 +504,11 @@ function getGroupedSelectionItems(items: QuoteSelectionSummaryItem[]) {
     rentalItems: items.filter((item) => item.kind === "rental" || !item.kind),
     setupGroups: [
       ...setupItems.map((setupItem) => ({
-        includedItems: setupIncludedItems.filter(
-          (item) => item.setupSlug === setupItem.slug
-        ),
+        includedItems: setupItem.includedItems?.length
+          ? setupItem.includedItems
+          : setupIncludedItems.filter(
+              (item) => item.setupSlug === setupItem.slug
+            ),
         setupItem,
         setupName: undefined
       })),
@@ -814,42 +847,6 @@ export function QuoteSelectionSummary({
 
     return result;
   }
-  const resolvedItems = items.map((item) => {
-    if (item.kind === "manual") {
-      return item;
-    }
-
-    const canonical = validItems.find(
-      (candidate) => candidate.slug === item.slug && candidate.kind === item.kind
-    );
-
-    return canonical
-      ? {
-          ...item,
-          category: canonical.category,
-          imageSrc: canonical.imageSrc,
-          kind: canonical.kind,
-          name: canonical.name ?? canonical.slug
-        }
-      : {
-          ...item,
-          name: `Unavailable selection: ${item.slug}`,
-          unavailable: true
-        };
-  });
-
-  const manualItems = resolvedItems.filter((item) => item.kind === "manual");
-  const catalogueItems = resolvedItems.filter((item) => item.kind !== "manual");
-  const hasAnyItems = resolvedItems.length > 0;
-
-  const visibleItems: QuoteSelectionSummaryItem[] = catalogueItems.length
-    ? resolvedItems
-    : hasCompleteSelection
-      ? manualItems.length ? manualItems : []
-      : fallbackItems;
-  const hasDiscoveryContext = Boolean(requestedSlug || category || event || search);
-  const groupedItems = getGroupedSelectionItems(visibleItems);
-
   const canonicalFallbackIdentity = useMemo(() => {
     if (!requestedSlug) return undefined;
     const normalizedRequestedSlug = normalizePublicSlug(requestedSlug);
@@ -875,6 +872,38 @@ export function QuoteSelectionSummary({
     if (exactMatches.length !== 1) return undefined;
     return { reference: normalizedRequestedSlug, kind: exactMatches[0].kind };
   }, [requestedSlug, fallbackItems, validItems]);
+
+  const resolvedItems = items.map((item) => {
+    if (item.kind === "manual") {
+      return item;
+    }
+
+    const canonical = validItems.find(
+      (candidate) => candidate.slug === item.slug && candidate.kind === item.kind
+    );
+
+    return canonical
+      ? resolveCanonicalQuoteSelectionItem(item, canonical)
+      : {
+          ...item,
+          name: `Unavailable selection: ${item.slug}`,
+          unavailable: true
+        };
+  });
+
+  const manualItems = resolvedItems.filter((item) => item.kind === "manual");
+  const catalogueItems = resolvedItems.filter((item) => item.kind !== "manual");
+  const hasAnyItems = resolvedItems.length > 0;
+
+  const visibleItems: QuoteSelectionSummaryItem[] = catalogueItems.length
+    ? resolvedItems
+    : hasCompleteSelection
+      ? manualItems.length ? manualItems : []
+      : canonicalFallbackIdentity
+        ? fallbackItems
+        : [];
+  const hasDiscoveryContext = Boolean(requestedSlug || category || event || search);
+  const groupedItems = getGroupedSelectionItems(visibleItems);
 
   useEffect(() => {
     function syncSelection() {

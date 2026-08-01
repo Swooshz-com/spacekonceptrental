@@ -1,4 +1,8 @@
-import type { PublicCatalogueImage, PublicCatalogueProduct } from "./types";
+import type {
+  PublicCatalogueImage,
+  PublicCatalogueProduct,
+  SafeSetupComposition
+} from "./types";
 
 export type ProductKind = "rental" | "setup";
 
@@ -84,9 +88,18 @@ function toImages(value: unknown): PublicCatalogueImage[] {
 
 function normalizeCompositionItem(
   value: unknown,
-  index: number
+  _index: number
 ): SetupCompositionItem | undefined {
   if (!isRecord(value)) return undefined;
+
+  const allowedKeys = new Set([
+    "id", "slug", "name", "short_description", "rental_unit",
+    "product_images", "position", "base_quantity"
+  ]);
+
+  if (Object.keys(value).some((key) => !allowedKeys.has(key))) {
+    return undefined;
+  }
 
   const id = getString(value.id);
   const slug = getString(value.slug);
@@ -113,16 +126,6 @@ function normalizeCompositionItem(
   const rentalUnit = getString(value.rental_unit) ?? "item";
   const images = toImages(value.product_images);
 
-  const item: Record<string, unknown> = { id, slug, name, short_description: value.short_description, rental_unit: value.rental_unit, product_images: value.product_images, position: value.position, base_quantity: value.base_quantity };
-  const allowedKeys = new Set([
-    "id", "slug", "name", "short_description", "rental_unit",
-    "product_images", "position", "base_quantity"
-  ]);
-
-  for (const key of Object.keys(item)) {
-    if (!allowedKeys.has(key)) return undefined;
-  }
-
   return {
     id,
     slug,
@@ -133,6 +136,82 @@ function normalizeCompositionItem(
     position,
     baseQuantity
   };
+}
+
+function isSafeImage(value: unknown): value is PublicCatalogueImage {
+  if (!isRecord(value)) return false;
+
+  const allowedKeys = new Set([
+    "id", "storageBucket", "storagePath", "publicUrl", "altText",
+    "sortOrder", "isPrimary"
+  ]);
+
+  if (Object.keys(value).some((key) => !allowedKeys.has(key))) return false;
+
+  return (
+    getString(value.id) !== undefined &&
+    getString(value.storageBucket) !== undefined &&
+    getString(value.storagePath) !== undefined &&
+    (value.publicUrl === undefined || typeof value.publicUrl === "string") &&
+    (value.altText === undefined || typeof value.altText === "string") &&
+    getFiniteInteger(value.sortOrder) !== undefined &&
+    typeof value.isPrimary === "boolean"
+  );
+}
+
+export function isValidSafeSetupComposition(
+  value: unknown,
+  parentProductId?: string
+): value is SafeSetupComposition {
+  if (!Array.isArray(value) || value.length < SETUP_MIN_ITEMS || value.length > SETUP_MAX_ITEMS) {
+    return false;
+  }
+
+  const childIds = new Set<string>();
+
+  for (const [index, rawItem] of value.entries()) {
+    if (!isRecord(rawItem)) return false;
+
+    const allowedKeys = new Set([
+      "id", "slug", "name", "shortDescription", "rentalUnit", "images",
+      "position", "baseQuantity"
+    ]);
+    if (Object.keys(rawItem).some((key) => !allowedKeys.has(key))) return false;
+
+    const id = getString(rawItem.id);
+    const slug = getString(rawItem.slug);
+    const name = getString(rawItem.name);
+    const rentalUnit = getString(rawItem.rentalUnit);
+
+    if (!id || !slug || !name || !rentalUnit) return false;
+    if (parentProductId && id === parentProductId) return false;
+    if (childIds.has(id)) return false;
+    childIds.add(id);
+
+    if (
+      rawItem.shortDescription !== undefined &&
+      typeof rawItem.shortDescription !== "string"
+    ) {
+      return false;
+    }
+
+    if (!Array.isArray(rawItem.images) || !rawItem.images.every(isSafeImage)) {
+      return false;
+    }
+
+    if (rawItem.position !== index) return false;
+    const baseQuantity = getFiniteInteger(rawItem.baseQuantity);
+    if (
+      getFiniteInteger(rawItem.position) === undefined ||
+      baseQuantity === undefined ||
+      baseQuantity < SETUP_MIN_QUANTITY ||
+      baseQuantity > SETUP_MAX_QUANTITY
+    ) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 export function classifySetupComposition(
@@ -225,10 +304,9 @@ export function getSafeSetupComposition(
 ): SetupCompositionItem[] | null {
   if (!("safeSetupComposition" in product)) return null;
   const comp = (product as Record<string, unknown>).safeSetupComposition;
-  if (comp === undefined) return null;
-  if (comp === null) return null;
-  if (!Array.isArray(comp)) return null;
-  return comp as SetupCompositionItem[];
+  return isValidSafeSetupComposition(comp, product.id)
+    ? comp
+    : null;
 }
 
 export type AdminRecipeOperation = "replace" | "remove";

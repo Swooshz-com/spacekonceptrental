@@ -6,7 +6,11 @@ import corporateImage from "../assets/images/event_corporate.png";
 import galaImage from "../assets/images/event_gala.png";
 import exhibitionImage from "../assets/images/event_exhibition.png";
 import heroImage from "../assets/images/hero_homepage.png";
-import type { PublicCatalogue, PublicCatalogueProduct } from "../lib/catalogue/types";
+import type {
+  PublicCatalogue,
+  PublicCatalogueProduct,
+  SafeSetupCompositionItem
+} from "../lib/catalogue/types";
 import {
   DEFAULT_HOMEPAGE_HERO_CONTENT,
   type HomepageHeroContent
@@ -20,6 +24,7 @@ import {
   deriveCanonicalIdentitiesFromCatalogue,
   type CanonicalCatalogueIdentity
 } from "../lib/quote/selection-model";
+import { isValidSafeSetupComposition } from "../lib/catalogue/setup-recipe-types";
 import {
   QuoteSelectionBadge,
   QuoteSelectionButton,
@@ -33,12 +38,37 @@ export const stitchImages = { chairImage, sofaImage, corporateImage, galaImage, 
 export function quoteSelectionValidItemsForCatalogue(
   catalogue: PublicCatalogue
 ): QuoteSelectionValidItem[] {
-  return catalogue.products.map((product) => ({
-    category: productCategory(product),
-    kind: isSetupCatalogueProduct(product) ? "setup" as const : "rental" as const,
-    name: product.name,
-    slug: product.slug
-  }));
+  return catalogue.products.flatMap((product): QuoteSelectionValidItem[] => {
+    if (product.productKind === "rental") {
+      return [{
+        category: productCategory(product),
+        imageSrc: product.primaryImage?.publicUrl,
+        kind: "rental" as const,
+        name: product.name,
+        slug: product.slug
+      }];
+    }
+
+    if (
+      product.productKind !== "setup" ||
+      !hasAuthoritativeSetupComposition(product)
+    ) {
+      return [];
+    }
+
+    const includedItems = getSetupCompositionItems(product).map((item) =>
+      quoteSelectionIncludedItem(product, item)
+    );
+
+    return [{
+      category: productCategory(product),
+      imageSrc: product.primaryImage?.publicUrl,
+      kind: "setup" as const,
+      name: product.name,
+      slug: product.slug,
+      includedItems
+    }];
+  });
 }
 
 export function isSetupCatalogueProduct(product: PublicCatalogueProduct): boolean {
@@ -49,7 +79,8 @@ export function isSetupCatalogueProduct(product: PublicCatalogueProduct): boolea
 }
 
 export function hasAuthoritativeSetupComposition(product: PublicCatalogueProduct): boolean {
-  return product.productKind === "setup" && Array.isArray(product.safeSetupComposition) && product.safeSetupComposition.length > 0;
+  return product.productKind === "setup" &&
+    isValidSafeSetupComposition(product.safeSetupComposition, product.id);
 }
 
 export function getSetupCompositionItems(product: PublicCatalogueProduct) {
@@ -57,6 +88,32 @@ export function getSetupCompositionItems(product: PublicCatalogueProduct) {
     return [];
   }
   return product.safeSetupComposition;
+}
+
+function quoteSelectionIncludedItem(
+  setup: PublicCatalogueProduct,
+  item: SafeSetupCompositionItem
+): QuoteSelectionItem {
+  const fallbackProduct: PublicCatalogueProduct = {
+    id: item.id,
+    slug: item.slug,
+    name: item.name,
+    rentalUnit: item.rentalUnit,
+    sortOrder: item.position,
+    source: "supabase"
+  };
+
+  return {
+    slug: item.slug,
+    name: item.name,
+    category: item.rentalUnit,
+    kind: "setup-included",
+    imageSrc: item.images[0]?.publicUrl ?? stitchImageSrc(fallbackProductImage(fallbackProduct)),
+    quantity: item.baseQuantity,
+    setupBaseQuantity: item.baseQuantity,
+    setupName: setup.name,
+    setupSlug: setup.slug
+  };
 }
 
 export function isProductKindAvailable(product: PublicCatalogueProduct): boolean {
@@ -67,8 +124,8 @@ export function quoteCanonicalIdentities(
   catalogue: PublicCatalogue
 ): CanonicalCatalogueIdentity[] {
   return deriveCanonicalIdentitiesFromCatalogue(
-    catalogue.products,
-    isSetupCatalogueProduct
+    quoteSelectionValidItemsForCatalogue(catalogue),
+    (item) => item.kind === "setup"
   );
 }
 
@@ -321,15 +378,9 @@ export function StitchDetail({
     product,
     imgSrc,
     canonicalSetup ? "setup" : "rental",
-    showComposition ? compositionItems.map((ci) => ({
-      slug: ci.slug,
-      name: ci.name,
-      category: ci.rentalUnit,
-      kind: "setup-included" as const,
-      imageSrc: ci.images[0]?.publicUrl ?? stitchImageSrc(fallbackProductImage({ slug: ci.slug, name: ci.name, rentalUnit: ci.rentalUnit, sortOrder: 0, id: ci.id, source: "supabase" } as PublicCatalogueProduct)),
-      quantity: ci.baseQuantity,
-      setupBaseQuantity: ci.baseQuantity
-    })) : undefined
+    showComposition
+      ? compositionItems.map((item) => quoteSelectionIncludedItem(product, item))
+      : undefined
   );
   const catalogueImageMap = new Map<string, { alt: string; src: string }>();
   catalogueImageMap.set(imgSrc, { alt, src: imgSrc });

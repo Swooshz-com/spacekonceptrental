@@ -78,15 +78,19 @@ function editorReducer(
       return { ...state, items: reindexed };
     }
     case "replace-items": {
-      if (state.status !== "loaded") return state;
       if (action.productIds.length < 1 || action.productIds.length > 20) return state;
+      if (state.status !== "loaded" && state.status !== "not-found") return state;
       const newItems: RecipeItem[] = action.productIds.map((p, i) => ({
         included_product_id: p.id,
         position: i,
-        base_quantity: state.items[i]?.base_quantity ?? 1,
+        base_quantity: state.status === "loaded" ? state.items[i]?.base_quantity ?? 1 : 1,
         name: p.name
       }));
-      return { ...state, items: newItems };
+      return {
+        status: "loaded",
+        revision: state.status === "loaded" ? state.revision : 0,
+        items: newItems
+      };
     }
     case "clear-items": {
       if (state.status !== "loaded") return state;
@@ -130,6 +134,7 @@ export function SetupRecipeEditor({
   const [actionError, setActionError] = useState<string>("");
   const [lastRevision, setLastRevision] = useState<number | null>(null);
   const [showProductPicker, setShowProductPicker] = useState(false);
+  const [showRemoveConfirmation, setShowRemoveConfirmation] = useState(false);
 
   const loadRecipe = useCallback(async () => {
     dispatch({ kind: "set-loading" });
@@ -202,13 +207,13 @@ export function SetupRecipeEditor({
         });
 
         if (!res.ok) {
-          const errData = await res.json().catch(() => ({ error: "unknown" }));
+          await res.json().catch(() => undefined);
           if (res.status === 409) {
             setActionState("conflict");
             setActionError("Recipe was modified by another user. Reload and try again.");
           } else {
             setActionState("error");
-            setActionError(errData.error ?? "Write failed.");
+            setActionError("Recipe could not be saved. Check the items and try again.");
           }
           return;
         }
@@ -223,7 +228,7 @@ export function SetupRecipeEditor({
           }, 1000);
         } else {
           setActionState("error");
-          setActionError(data.code ?? "Write failed.");
+          setActionError("Recipe could not be saved. Check the items and try again.");
         }
       } catch {
         setActionState("error");
@@ -245,6 +250,7 @@ export function SetupRecipeEditor({
   }, [state, setupProductId, doWrite]);
 
   const handleRemove = useCallback(() => {
+    setShowRemoveConfirmation(false);
     doWrite("remove", []);
   }, [doWrite]);
 
@@ -253,6 +259,19 @@ export function SetupRecipeEditor({
     setActionError("");
     loadRecipe();
   }, [loadRecipe]);
+
+  useEffect(() => {
+    if (!showProductPicker && !showRemoveConfirmation) return;
+
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      setShowProductPicker(false);
+      setShowRemoveConfirmation(false);
+    }
+
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [showProductPicker, showRemoveConfirmation]);
 
   const quantityInputId = (index: number) => `setup-recipe-qty-${index}`;
 
@@ -324,6 +343,7 @@ export function SetupRecipeEditor({
                 min={1}
                 max={99}
                 value={item.base_quantity}
+                disabled={actionState === "saving"}
                 onChange={(e) => {
                   const v = parseInt(e.target.value, 10);
                   if (Number.isFinite(v) && v >= 1 && v <= 99) {
@@ -366,7 +386,12 @@ export function SetupRecipeEditor({
       )}
 
       {showProductPicker && (
-        <div className="skr-admin-product-picker" role="dialog" aria-label="Add product">
+        <div
+          aria-label="Add product"
+          aria-modal="true"
+          className="skr-admin-product-picker"
+          role="dialog"
+        >
           <h3>Add Product</h3>
           <ul>
             {availableForAdd.map((p) => (
@@ -408,7 +433,7 @@ export function SetupRecipeEditor({
         </button>
         <button
           type="button"
-          onClick={handleRemove}
+          onClick={() => setShowRemoveConfirmation(true)}
           disabled={actionState === "saving"}
           className="skr-admin-button skr-admin-button--danger"
         >
@@ -423,6 +448,32 @@ export function SetupRecipeEditor({
           Reload
         </button>
       </div>
+
+      {showRemoveConfirmation ? (
+        <div
+          aria-labelledby="setup-recipe-remove-title"
+          aria-modal="true"
+          className="skr-admin-confirmation-dialog"
+          role="dialog"
+        >
+          <h3 id="setup-recipe-remove-title">Remove recipe?</h3>
+          <p>This removes the current recipe from the setup.</p>
+          <div className="skr-admin-actions">
+            <button
+              onClick={handleRemove}
+              type="button"
+            >
+              Confirm remove recipe
+            </button>
+            <button
+              onClick={() => setShowRemoveConfirmation(false)}
+              type="button"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       {actionState === "success" && <p className="skr-admin-success" role="status">Recipe saved successfully.</p>}
       {actionState === "error" && <p className="skr-admin-error" role="alert">{actionError}</p>}

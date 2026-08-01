@@ -24,7 +24,7 @@ async function resolveQuoteListingContext(searchParams: QuotePageProps["searchPa
 function quoteProductImageSrc(product: PublicCatalogueProduct) { const image = product.images?.[0]?.publicUrl; return image ?? stitchImageSrc(fallbackProductImage(product)); }
 
 function SelectionPanel({ catalogueAvailable, product, quantity, requestedSlug, validItems }: { catalogueAvailable: boolean; product: PublicCatalogueProduct | null; quantity?: number; requestedSlug?: string; validItems: ReturnType<typeof quoteSelectionValidItemsForCatalogue> }) {
-  const fallbackItems = product && quantity ? [{ slug: product.slug, name: product.name, category: productCategory(product), quantity, imageSrc: quoteProductImageSrc(product) }] : [];
+  const fallbackItems = product && quantity ? [{ slug: product.slug, name: product.name, category: productCategory(product), kind: product.productKind === "setup" ? "setup" as const : "rental" as const, quantity, imageSrc: quoteProductImageSrc(product) }] : [];
   return <QuoteSelectionSummary catalogueAvailable={catalogueAvailable} fallbackItems={fallbackItems} requestedSlug={requestedSlug} validItems={validItems} />;
 }
 
