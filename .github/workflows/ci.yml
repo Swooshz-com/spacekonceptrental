@@ -76,13 +76,18 @@ jobs:
       - name: Test Run-53 joined bootstrap diagnostics
         run: npm run test:run-53-bootstrap
 
-      - name: Run Run-49 joined PostgreSQL/PostgREST integration
+      - name: Test Run-54 session/client/runner diagnostics
+        run: npm run test:run-54-session-client-runner
+
+      - name: Run Run-54 seven-case PostgreSQL/PostgREST integration
         run: npm run test:run-49-joined-postgres
 
       - name: Validate n8n workflow exports
+        if: always()
         run: npm run validate:n8n
 
       - name: Test n8n validation rules
+        if: always()
         run: npm run test:n8n-validation
 
   exact-head-production-audit:

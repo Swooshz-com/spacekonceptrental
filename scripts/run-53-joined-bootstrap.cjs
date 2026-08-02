@@ -1,5 +1,10 @@
 const fs = require('node:fs');
 const path = require('node:path');
+const {
+  SESSION_CLIENT_CATEGORIES,
+  SESSION_CLIENT_PHASES,
+  SESSION_CLIENT_PHASE_CATEGORY_MAP,
+} = require('./run-54-session-client-runner.cjs');
 
 const BOOTSTRAP_PHASES = Object.freeze([
   'process_launch',
@@ -50,13 +55,13 @@ const JOINED_TEST_CASE_NAMES = Object.freeze([
 ]);
 
 const JOINED_PHASE_BY_TEST_NAME = new Map([
-  [JOINED_TEST_CASE_NAMES[0], 'session_bound_client'],
-  [JOINED_TEST_CASE_NAMES[1], 'malformed_and_replay'],
-  [JOINED_TEST_CASE_NAMES[2], 'write_and_reload'],
-  [JOINED_TEST_CASE_NAMES[3], 'operation_mismatch'],
-  [JOINED_TEST_CASE_NAMES[4], 'concurrent_one_winner'],
-  [JOINED_TEST_CASE_NAMES[5], 'cross_process_replay'],
-  [JOINED_TEST_CASE_NAMES[6], 'direct_table_denial'],
+  [JOINED_TEST_CASE_NAMES[0], 'client_authentication'],
+  [JOINED_TEST_CASE_NAMES[1], 'case_execution'],
+  [JOINED_TEST_CASE_NAMES[2], 'case_execution'],
+  [JOINED_TEST_CASE_NAMES[3], 'case_execution'],
+  [JOINED_TEST_CASE_NAMES[4], 'case_execution'],
+  [JOINED_TEST_CASE_NAMES[5], 'case_execution'],
+  [JOINED_TEST_CASE_NAMES[6], 'case_execution'],
 ]);
 
 const ALLOWED_CHILD_ENVIRONMENT_KEYS = new Set([
@@ -109,19 +114,14 @@ const REQUIRED_DEPENDENCIES = Object.freeze([
 ]);
 
 const EXECUTION_PHASES = new Set([
-  'session_bound_client',
-  'direct_consume_rpc',
-  'malformed_and_replay',
-  'oversized_and_replacement',
-  'write_and_reload',
-  'operation_mismatch',
-  'concurrent_one_winner',
-  'cross_process_replay',
-  'direct_table_denial',
+  'client_authentication',
+  'case_execution',
 ]);
 
 const BOOTSTRAP_PHASE_SET = new Set(BOOTSTRAP_PHASES);
 const BOOTSTRAP_CATEGORY_SET = new Set(BOOTSTRAP_CATEGORIES);
+const SESSION_CLIENT_PHASE_SET = new Set(SESSION_CLIENT_PHASES);
+const SESSION_CLIENT_CATEGORY_SET = new Set(SESSION_CLIENT_CATEGORIES);
 
 function createBootstrapFailure(phase, category) {
   if (!BOOTSTRAP_PHASE_SET.has(phase) || !BOOTSTRAP_CATEGORY_SET.has(category)) {
@@ -411,13 +411,16 @@ function classifyTestRun({
   const seenNames = new Set();
   for (const testCase of testCases) {
     const phase = phaseForTestCase(testCase);
-    if (!phase || seenNames.has(phase)) {
+    const name = caseNameCandidates(testCase).find((candidate) =>
+      JOINED_PHASE_BY_TEST_NAME.has(candidate),
+    );
+    if (!phase || !name || seenNames.has(name)) {
       return {
         phase: 'test_collection',
         category: 'test_collection_failed',
       };
     }
-    seenNames.add(phase);
+    seenNames.add(name);
 
     let state;
     try {
@@ -444,9 +447,13 @@ function classifyTestRun({
     }
   });
   if (failedCase) {
+    const phase = phaseForTestCase(failedCase);
     return {
-      phase: phaseForTestCase(failedCase),
-      category: 'test_runner_failed',
+      phase,
+      category:
+        phase === 'client_authentication'
+          ? 'client_authentication_failed'
+          : 'case_execution_failed',
     };
   }
 
@@ -469,8 +476,8 @@ function classifyTestRun({
   }
 
   return {
-    phase: 'bootstrap_complete',
-    category: 'bootstrap_failed',
+    phase: 'final_receipt',
+    category: 'final_receipt_invalid',
   };
 }
 
@@ -481,6 +488,16 @@ function classifyChildFailure(error, fallbackPhase = 'process_launch') {
     BOOTSTRAP_PHASE_SET.has(error.phase) &&
     BOOTSTRAP_CATEGORY_SET.has(error.category) &&
     error.category !== 'none'
+  ) {
+    return { phase: error.phase, category: error.category };
+  }
+
+  if (
+    error &&
+    typeof error === 'object' &&
+    SESSION_CLIENT_PHASE_SET.has(error.phase) &&
+    SESSION_CLIENT_CATEGORY_SET.has(error.category) &&
+    SESSION_CLIENT_PHASE_CATEGORY_MAP.get(error.phase)?.has(error.category)
   ) {
     return { phase: error.phase, category: error.category };
   }
@@ -497,8 +514,8 @@ function classifyChildFailure(error, fallbackPhase = 'process_launch') {
     child_signaled: ['process_launch', 'bootstrap_signal'],
     child_stdout_overflow: ['process_launch', 'bootstrap_output_overflow'],
     child_stderr_overflow: ['process_launch', 'bootstrap_output_overflow'],
-    joined_receipt_invalid: ['reporter_load', 'receipt_invalid'],
-    child_stdout_invalid: ['reporter_load', 'receipt_invalid'],
+    joined_receipt_invalid: ['final_receipt', 'final_receipt_invalid'],
+    child_stdout_invalid: ['final_receipt', 'final_receipt_invalid'],
   };
   if (known[code]) {
     return { phase: known[code][0], category: known[code][1] };

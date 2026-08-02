@@ -47,11 +47,29 @@ function failedReceipt(phase, overrides = {}) {
     test_collection: 'test_collection_failed',
     bootstrap_complete: 'bootstrap_failed',
   };
+  const sessionClientCategoryByPhase = {
+    session_fixture: 'session_fixture_invalid',
+    identity_fixture: 'identity_fixture_failed',
+    session_issue: 'session_issue_failed',
+    session_transport: 'session_transport_invalid',
+    session_admission: 'session_admission_failed',
+    workspace_binding: 'workspace_binding_failed',
+    client_configuration: 'client_environment_invalid',
+    client_construction: 'client_construction_failed',
+    client_authentication: 'client_authentication_failed',
+    request_context: 'request_context_failed',
+    test_runner_setup: 'test_runner_setup_failed',
+    case_execution: 'case_execution_failed',
+    final_receipt: 'final_receipt_invalid',
+  };
   return {
     schema_version: 1,
     outcome: 'failed',
     phase,
-    category: bootstrapCategoryByPhase[phase] ?? 'test_runner_failed',
+    category:
+      bootstrapCategoryByPhase[phase] ??
+      sessionClientCategoryByPhase[phase] ??
+      'test_runner_failed',
     exit_code_class: 'nonzero',
     signal: false,
     timeout: false,
@@ -137,7 +155,12 @@ test('custom reporter maps each failed joined case to a safe phase only', () => 
     const parsed = parseJoinedReceiptOutput(writes[0]);
     assert.equal(parsed.outcome, 'failed');
     assert.equal(parsed.phase, phase);
-    assert.equal(parsed.category, 'test_runner_failed');
+    assert.equal(
+      parsed.category,
+      phase === 'client_authentication'
+        ? 'client_authentication_failed'
+        : 'case_execution_failed',
+    );
   }
 });
 
@@ -145,7 +168,11 @@ test('rejects missing, duplicate, conflicting, malformed and duplicate-key recei
   const passing = line(passingReceipt());
   assertInvalid('');
   assertInvalid(`${passing}${passing}`);
-  assertInvalid(`${passing}${line(failedReceipt('session_bound_client'))}`);
+  assertInvalid(`${passing}${line(failedReceipt('client_authentication'))}`);
+  assertInvalid(line({
+    ...failedReceipt('client_authentication'),
+    phase: 'session_bound_client',
+  }));
   assertInvalid(`${RECEIPT_PREFIX}{"schema_version":`);
   assertInvalid(
     `${RECEIPT_PREFIX}{"schema_version":1,"outcome":"passed","phase":"complete","category":"none","category":"none","exit_code_class":"zero","signal":false,"timeout":false,"stdout_overflow":false,"stderr_overflow":false}\n`,
@@ -211,7 +238,7 @@ test('process validation rejects nonzero pass and zero failure while accepting a
   assert.doesNotThrow(() => validateJoinedReceiptProcess(passed, { exitCode: 0, signal: null }));
   assert.throws(() => validateJoinedReceiptProcess(passed, { exitCode: 1, signal: null }));
 
-  const failed = parseJoinedReceiptOutput(line(failedReceipt('session_bound_client')));
+  const failed = parseJoinedReceiptOutput(line(failedReceipt('client_authentication')));
   assert.doesNotThrow(() => validateJoinedReceiptProcess(failed, { exitCode: 1, signal: null }));
   assert.throws(() => validateJoinedReceiptProcess(failed, { exitCode: 0, signal: null }));
 
@@ -222,7 +249,7 @@ test('process validation rejects nonzero pass and zero failure while accepting a
 });
 
 test('bounded child receipt transport returns only the parsed receipt and handles nonzero exit safely', async () => {
-  const failed = line(failedReceipt('direct_consume_rpc'));
+  const failed = line(failedReceipt('case_execution'));
   let child;
   const result = await runBoundedChildProcess(
     nodeExecutable,
@@ -241,7 +268,7 @@ test('bounded child receipt transport returns only the parsed receipt and handle
   );
 
   assert.equal(result.exitCode, 1);
-  assert.equal(result.stdoutValue.phase, 'direct_consume_rpc');
+  assert.equal(result.stdoutValue.phase, 'case_execution');
   assert.equal(Object.hasOwn(result, 'stdout'), false);
   assert.equal(Object.hasOwn(result, 'stderr'), false);
   assert.equal(child.listenerCount('close'), 0);
@@ -251,7 +278,7 @@ test('bounded child receipt transport returns only the parsed receipt and handle
 });
 
 test('bounded child transport reassembles a receipt split across stdout chunks', async () => {
-  const receipt = line(failedReceipt('session_bound_client'));
+  const receipt = line(failedReceipt('client_authentication'));
   const result = await runBoundedChildProcess(
     nodeExecutable,
     [
@@ -267,7 +294,7 @@ test('bounded child transport reassembles a receipt split across stdout chunks',
     },
   );
 
-  assert.equal(result.stdoutValue.phase, 'session_bound_client');
+  assert.equal(result.stdoutValue.phase, 'client_authentication');
   assert.doesNotThrow(() => validateJoinedReceiptProcess(result.stdoutValue, result));
 });
 
@@ -290,7 +317,7 @@ test('nonzero exit without a receipt becomes joined_receipt_invalid without raw 
 
 test('receipt pass with nonzero exit and receipt failure with zero exit are rejected', async () => {
   const passing = line(passingReceipt());
-  const failed = line(failedReceipt('write_and_reload'));
+  const failed = line(failedReceipt('case_execution'));
 
   const nonzeroPass = await runBoundedChildProcess(
     nodeExecutable,

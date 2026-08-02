@@ -25,6 +25,15 @@ const {
   validateReporterLoad,
   validateWorkingDirectory,
 } = require('./run-53-joined-bootstrap.cjs');
+const {
+  validateClientConfiguration,
+  validateIdentityFixture,
+  validateSessionAdmission,
+  validateSessionFixture,
+  validateSessionIssue,
+  validateSessionTransport,
+  validateWorkspaceBinding,
+} = require('./run-54-session-client-runner.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const websiteRoot = path.join(repoRoot, 'website');
@@ -238,7 +247,12 @@ function verifyJwt(token) {
   } catch {
     return null;
   }
-  if (parsedHeader?.alg !== 'HS256' || typeof parsedPayload?.sub !== 'string') return null;
+  if (
+    parsedHeader?.alg !== 'HS256' ||
+    typeof parsedPayload?.sub !== 'string' ||
+    parsedPayload?.iss !== 'run49-local' ||
+    parsedPayload?.aud !== 'authenticated'
+  ) return null;
   const expected = crypto
     .createHmac('sha256', jwtSecret)
     .update(`${header}.${payload}`)
@@ -330,6 +344,7 @@ function createRun49Jwt() {
   const payload = base64UrlJson({
     sub: ids.authUser,
     email: 'admin-a@example.test',
+    iss: 'run49-local',
     role: 'authenticated',
     aud: 'authenticated',
     iat: Math.floor(Date.now() / 1000),
@@ -337,6 +352,75 @@ function createRun49Jwt() {
   });
   const signature = crypto.createHmac('sha256', jwtSecret).update(`${header}.${payload}`).digest('base64url');
   return `${header}.${payload}.${signature}`;
+}
+
+function admitRun54SessionFixture({ accessToken, gatewayPort }) {
+  const identity = {
+    authUserId: ids.authUser,
+    email: 'admin-a@example.test',
+    provider: 'google',
+  };
+  const session = {
+    accessToken,
+    authUserId: ids.authUser,
+    issuer: 'run49-local',
+    audience: 'authenticated',
+    expiresAtMs: Date.now() + 900_000,
+  };
+  const cookieName = `sb-${new URL(`http://127.0.0.1:${gatewayPort}`).hostname.split('.')[0]}-auth-token`;
+  const sessionCookie = {
+    name: cookieName,
+    value: `base64-${base64UrlJson({
+      access_token: accessToken,
+      refresh_token: 'run49-local-refresh-token',
+      token_type: 'bearer',
+      expires_in: 900,
+      expires_at: Math.floor(session.expiresAtMs / 1000),
+    })}`,
+  };
+  const fixture = {
+    identity,
+    session,
+    workspace: {
+      id: ids.workspace,
+      memberships: [{
+        authUserId: ids.authUser,
+        workspaceId: ids.workspace,
+        role: 'owner',
+        status: 'active',
+      }],
+    },
+  };
+
+  validateSessionFixture(fixture);
+  validateIdentityFixture(identity);
+  validateSessionIssue(session);
+  validateSessionAdmission({ identity, session, authenticated: true });
+  validateSessionTransport({
+    adapter: { getAll: () => [sessionCookie] },
+    cookies: [sessionCookie],
+    headers: {
+      origin: 'https://admin.space.test',
+      host: 'admin.space.test',
+    },
+  });
+  validateWorkspaceBinding({
+    workspaceId: ids.workspace,
+    knownWorkspaceIds: [ids.workspace],
+    authUserId: ids.authUser,
+    memberships: fixture.workspace.memberships,
+  });
+
+  const claims = verifyJwt(accessToken);
+  if (!claims) {
+    const error = new Error('session_client_state_failed');
+    error.code = 'session_client_state_failed';
+    error.phase = 'session_issue';
+    error.category = 'session_issue_failed';
+    throw error;
+  }
+
+  return fixture;
 }
 
 async function main() {
@@ -402,6 +486,18 @@ async function main() {
       SUPABASE_ANON_KEY: 'run49-anon-key',
     });
 
+    admitRun54SessionFixture({
+      accessToken: childEnvironment.RUN49_ACCESS_TOKEN,
+      gatewayPort: gateway.port,
+    });
+    validateClientConfiguration({
+      endpointName: childEnvironment.RUN49_SUPABASE_URL,
+      publicClient: Object.hasOwn(childEnvironment, 'SUPABASE_ANON_KEY'),
+      privileged: Object.hasOwn(childEnvironment, 'SUPABASE_SERVICE_ROLE_KEY'),
+      browserOnly: false,
+      factoryAvailable: true,
+    });
+
     currentPhase = 'environment_admission';
     validateEnvironmentAdmission(childEnvironment);
 
@@ -447,9 +543,7 @@ async function main() {
 
 if (require.main === module) {
   main().catch((error) => {
-    console.error(
-      error instanceof Error ? error.message : 'Run-49 joined harness failed.',
-    );
+    console.error('Run-49 joined integration failed: final_receipt/final_receipt_invalid.');
     process.exitCode = 1;
   });
 }

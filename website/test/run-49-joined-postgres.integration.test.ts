@@ -43,13 +43,41 @@ function sessionCookie() {
   };
 }
 
+function sessionCookieHeader() {
+  const cookie = sessionCookie();
+  return `${cookie.name}=${cookie.value}`;
+}
+
+function authenticatedSessionRequest(
+  pathname: string,
+  init: {
+    method?: string;
+    headers?: Record<string, string>;
+    body?: string;
+  } = {}
+) {
+  return new NextRequest(`${expectedOrigin}${pathname}`, {
+    method: init.method ?? "GET",
+    headers: {
+      origin: expectedOrigin,
+      host: expectedHost,
+      cookie: sessionCookieHeader(),
+      ...init.headers
+    },
+    ...(init.body === undefined ? {} : { body: init.body })
+  });
+}
+
 function setRequestContext(request: NextRequest) {
   nextHeadersState.headers = request.headers;
-  nextHeadersState.cookies = [sessionCookie()];
+  nextHeadersState.cookies = request.cookies.getAll().map(({ name, value }) => ({
+    name,
+    value
+  }));
 }
 
 function setupRequest(proof: string, body: string) {
-  const request = new NextRequest(`${expectedOrigin}/api/admin/setup-recipe`, {
+  const request = authenticatedSessionRequest("/api/admin/setup-recipe", {
     method: "POST",
     headers: {
       "content-type": "application/json",
@@ -70,7 +98,7 @@ async function json(response: Response) {
 async function issueProof(
   operation: "admin.setupRecipe.read" | "admin.setupRecipe.write"
 ) {
-  const request = new NextRequest(`${expectedOrigin}/api/admin/csrf-proof`, {
+  const request = authenticatedSessionRequest("/api/admin/csrf-proof", {
     method: "POST",
     headers: {
       "content-type": "application/json",
@@ -93,6 +121,7 @@ function validReadBody() {
 
 describe.runIf(enabled)("Run-49 joined production Supabase/PostgreSQL integration", () => {
   beforeEach(() => {
+    setRequestContext(authenticatedSessionRequest("/api/admin/auth-check"));
     expect(accessToken).not.toBe("");
     expect(workspaceId).toMatch(/^[0-9a-f-]{36}$/);
     expect(setupProductId).toMatch(/^[0-9a-f-]{36}$/);

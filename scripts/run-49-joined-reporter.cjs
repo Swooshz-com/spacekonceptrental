@@ -33,7 +33,7 @@ class Run49JoinedReceiptReporter {
     try {
       result = classifyTestRun({ testModules, unhandledErrors, reason });
     } catch {
-      result = { phase: 'bootstrap_complete', category: 'bootstrap_failed' };
+      result = { phase: 'final_receipt', category: 'final_receipt_invalid' };
     }
 
     const finalReceipt =

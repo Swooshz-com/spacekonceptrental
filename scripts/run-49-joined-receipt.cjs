@@ -4,6 +4,11 @@ const {
   BOOTSTRAP_PHASES,
   EXECUTION_PHASES,
 } = require('./run-53-joined-bootstrap.cjs');
+const {
+  SESSION_CLIENT_CATEGORIES,
+  SESSION_CLIENT_PHASES,
+  SESSION_CLIENT_PHASE_CATEGORY_MAP,
+} = require('./run-54-session-client-runner.cjs');
 
 const RECEIPT_PREFIX = 'RUN49_JOINED_RECEIPT:';
 const MAX_RECEIPT_BYTES = 1024;
@@ -26,10 +31,12 @@ const ALLOWED_EXIT_CODE_CLASSES = new Set(['zero', 'nonzero']);
 const ALLOWED_PHASES = new Set([
   ...BOOTSTRAP_PHASES,
   ...EXECUTION_PHASES,
+  ...SESSION_CLIENT_PHASES,
   'complete',
 ]);
 const ALLOWED_CATEGORIES = new Set([
   ...BOOTSTRAP_CATEGORIES,
+  ...SESSION_CLIENT_CATEGORIES,
   'client_unconfigured',
   'transport_failed',
   'unexpected_status',
@@ -95,6 +102,10 @@ function validateReceiptShape(value) {
   const bootstrapCategories = ALLOWED_BOOTSTRAP_CATEGORIES_BY_PHASE.get(value.phase);
   if (bootstrapCategories && !bootstrapCategories.has(value.category)) invalidReceipt();
   if (value.phase === 'complete' && value.category !== 'none') invalidReceipt();
+  const sessionClientCategories = SESSION_CLIENT_PHASE_CATEGORY_MAP.get(value.phase);
+  if (sessionClientCategories && !sessionClientCategories.has(value.category)) {
+    invalidReceipt();
+  }
   for (const key of ['signal', 'timeout', 'stdout_overflow', 'stderr_overflow']) {
     if (typeof value[key] !== 'boolean') invalidReceipt();
   }

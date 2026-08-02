@@ -303,7 +303,7 @@ test('seven locked cases prove bootstrap completion and preserve the failing cas
       testModules: [makeModule(allCases('passed', failedName))],
       reason: 'failed',
     }),
-    { phase: 'concurrent_one_winner', category: 'test_runner_failed' },
+    { phase: 'case_execution', category: 'case_execution_failed' },
   );
   assert.notEqual(
     classifyTestRun({
@@ -317,7 +317,7 @@ test('seven locked cases prove bootstrap completion and preserve the failing cas
       testModules: [makeModule(allCases('passed'))],
       reason: 'failed',
     }),
-    { phase: 'bootstrap_complete', category: 'bootstrap_failed' },
+    { phase: 'final_receipt', category: 'final_receipt_invalid' },
   );
 
   const passed = captureReceipt(() => {
@@ -346,8 +346,8 @@ test('seven locked cases prove bootstrap completion and preserve the failing cas
       'failed',
     );
   });
-  assert.equal(failed.phase, 'concurrent_one_winner');
-  assert.equal(failed.category, 'test_runner_failed');
+  assert.equal(failed.phase, 'case_execution');
+  assert.equal(failed.category, 'case_execution_failed');
 });
 
 test('bootstrap failure and process posture remain fixed and public-safe', async () => {
@@ -369,7 +369,7 @@ test('bootstrap failure and process posture remain fixed and public-safe', async
   );
   assert.deepEqual(
     classifyChildFailure({ code: 'joined_receipt_invalid' }),
-    { phase: 'reporter_load', category: 'receipt_invalid' },
+    { phase: 'final_receipt', category: 'final_receipt_invalid' },
   );
   assert.deepEqual(
     classifyChildFailure(createBootstrapFailure('service_readiness', 'postgres_not_ready')),
