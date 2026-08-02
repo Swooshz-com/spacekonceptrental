@@ -67,6 +67,8 @@ function normalizePositiveInteger(value, fallback) {
 function runBoundedChildProcess(command, args, options = {}) {
   const cwd = options.cwd;
   const env = options.env ?? createMinimalChildEnvironment();
+  const allowNonZeroExit = options.allowNonZeroExit === true;
+  const stdoutValidator = options.stdoutValidator;
   const timeoutMs = normalizePositiveInteger(
     options.timeoutMs,
     defaultTimeoutMs,
@@ -90,6 +92,7 @@ function runBoundedChildProcess(command, args, options = {}) {
     let timeoutTimer = null;
     let stdoutBytes = 0;
     let stderrBytes = 0;
+    const stdoutChunks = stdoutValidator ? [] : null;
 
     const clearTimers = () => {
       if (timeoutTimer) {
@@ -142,18 +145,21 @@ function runBoundedChildProcess(command, args, options = {}) {
     };
 
     const onStdout = (chunk) => {
-      stdoutBytes += Buffer.isBuffer(chunk)
-        ? chunk.length
-        : Buffer.byteLength(String(chunk));
+      const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(String(chunk));
+      stdoutBytes += buffer.length;
+      if (stdoutChunks && stdoutBytes <= maxStdoutBytes) {
+        stdoutChunks.push(buffer);
+      } else if (stdoutChunks && stdoutBytes - buffer.length < maxStdoutBytes) {
+        stdoutChunks.push(buffer.subarray(0, maxStdoutBytes - (stdoutBytes - buffer.length)));
+      }
       if (stdoutBytes > maxStdoutBytes) {
         terminate('child_stdout_overflow');
       }
     };
 
     const onStderr = (chunk) => {
-      stderrBytes += Buffer.isBuffer(chunk)
-        ? chunk.length
-        : Buffer.byteLength(String(chunk));
+      const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(String(chunk));
+      stderrBytes += buffer.length;
       if (stderrBytes > maxStderrBytes) {
         terminate('child_stderr_overflow');
       }
@@ -188,18 +194,37 @@ function runBoundedChildProcess(command, args, options = {}) {
         return;
       }
 
-      if (exitCode !== 0) {
+      let stdoutValue;
+      if (stdoutValidator) {
+        try {
+          stdoutValue = stdoutValidator(Buffer.concat(stdoutChunks).toString('utf8'));
+        } catch (error) {
+          const code =
+            error && typeof error === 'object' && typeof error.code === 'string'
+              ? error.code
+              : 'child_stdout_invalid';
+          finish(() => reject(createChildFailure(code, {
+            terminationConfirmed: true,
+          })));
+          return;
+        }
+      }
+
+      if (exitCode !== 0 && !allowNonZeroExit) {
         finish(() => reject(createChildFailure('child_exit_nonzero', {
           terminationConfirmed: true,
         })));
         return;
       }
 
-      finish(() => resolve({
+      const result = {
         exitCode,
+        signal: signal ?? null,
         stdoutBytes,
         stderrBytes,
-      }));
+      };
+      if (stdoutValidator) result.stdoutValue = stdoutValue;
+      finish(() => resolve(result));
     };
 
     try {

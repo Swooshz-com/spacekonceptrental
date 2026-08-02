@@ -67,6 +67,9 @@ jobs:
       - name: Test Run-49 async child-process harness
         run: npm run test:run-49-child-process
 
+      - name: Test Run-49 joined receipt diagnostics
+        run: npm run test:run-49-receipt
+
       - name: Run Run-49 joined PostgreSQL/PostgREST integration
         run: npm run test:run-49-joined-postgres
 

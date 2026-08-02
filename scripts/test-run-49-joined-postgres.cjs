@@ -10,6 +10,11 @@ const {
   createMinimalChildEnvironment,
   runBoundedChildProcess,
 } = require('./run-bounded-child-process.cjs');
+const {
+  JOINED_STDOUT_LIMIT_BYTES,
+  parseJoinedReceiptOutput,
+  validateJoinedReceiptProcess,
+} = require('./run-49-joined-receipt.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const migrationsDir = path.join(repoRoot, 'supabase', 'migrations');
@@ -379,20 +384,40 @@ async function main() {
     try {
       const result = await runBoundedChildProcess(
         npmCommand,
-        ['test', '--', '--run', 'test/run-49-joined-postgres.integration.test.ts'],
+        [
+          'test',
+          '--',
+          '--run',
+          'test/run-49-joined-postgres.integration.test.ts',
+          '--reporter',
+          path.join(repoRoot, 'scripts', 'run-49-joined-reporter.cjs'),
+        ],
         {
           cwd: path.join(repoRoot, 'website'),
           env: childEnvironment,
+          allowNonZeroExit: true,
+          maxStdoutBytes: JOINED_STDOUT_LIMIT_BYTES,
+          stdoutValidator: parseJoinedReceiptOutput,
         },
       );
-      console.log(
-        `Run-49 joined integration completed (stdout_bytes=${result.stdoutBytes}, stderr_bytes=${result.stderrBytes}).`,
-      );
+      const joinedReceipt = validateJoinedReceiptProcess(result.stdoutValue, result);
+      if (joinedReceipt.outcome === 'passed') {
+        console.log('Run-49 joined integration completed.');
+      } else {
+        console.error(
+          `Run-49 joined integration failed: ${joinedReceipt.phase}/${joinedReceipt.category}.`,
+        );
+        process.exitCode = 1;
+      }
     } catch (error) {
-      const category =
+      const reportedCategory =
         error && typeof error === 'object' && 'code' in error
           ? String(error.code)
-          : 'child_failure';
+          : 'joined_receipt_invalid';
+      const category =
+        reportedCategory === 'child_stdout_invalid'
+          ? 'joined_receipt_invalid'
+          : reportedCategory;
       console.error(`Run-49 joined integration failed: ${category}.`);
       process.exitCode = 1;
     }
