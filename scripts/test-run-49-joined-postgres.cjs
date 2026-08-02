@@ -385,6 +385,7 @@ async function main() {
       const result = await runBoundedChildProcess(
         npmCommand,
         [
+          '--silent',
           'test',
           '--',
           '--run',

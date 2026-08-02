@@ -197,7 +197,7 @@ function runBoundedChildProcess(command, args, options = {}) {
       let stdoutValue;
       if (stdoutValidator) {
         try {
-          stdoutValue = stdoutValidator(Buffer.concat(stdoutChunks).toString('utf8'));
+          stdoutValue = stdoutValidator(Buffer.concat(stdoutChunks));
         } catch (error) {
           const code =
             error && typeof error === 'object' && typeof error.code === 'string'

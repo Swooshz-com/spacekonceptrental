@@ -136,6 +136,35 @@ test('rejects unknown properties, phases, categories, oversized, multiline, trai
   assertInvalid(`${line(passingReceipt())}${RECEIPT_PREFIX}`);
 });
 
+test('rejects missing keys, wrong key order and every unsafe primitive posture', () => {
+  const { stderr_overflow: _stderrOverflow, ...missingKey } = passingReceipt();
+  assertInvalid(line(missingKey));
+
+  const reordered = {
+    outcome: 'passed',
+    schema_version: 1,
+    phase: 'complete',
+    category: 'none',
+    exit_code_class: 'zero',
+    signal: false,
+    timeout: false,
+    stdout_overflow: false,
+    stderr_overflow: false,
+  };
+  assertInvalid(line(reordered));
+
+  assertInvalid(line({ ...passingReceipt(), outcome: 'unknown' }));
+  assertInvalid(line({ ...passingReceipt(), exit_code_class: 'unknown' }));
+  assertInvalid(line({ ...passingReceipt(), signal: 'false' }));
+  assertInvalid(line({ ...passingReceipt(), timeout: 0 }));
+  assertInvalid(line({ ...passingReceipt(), stdout_overflow: null }));
+  assertInvalid(line({ ...passingReceipt(), stderr_overflow: [] }));
+  assertInvalid(`leading-output${line(passingReceipt())}`);
+  assertInvalid(`\u001b[31m${line(passingReceipt())}`);
+  assertInvalid(`${line(passingReceipt())} `);
+  assertInvalid(`${RECEIPT_PREFIX}${JSON.stringify(passingReceipt())}\r\n`);
+});
+
 test('rejects secret-shaped, URI-like and raw assertion content without echoing it', () => {
   assertInvalid(line({ ...passingReceipt(), phase: 'https://example.invalid' }));
   assertInvalid(line({ ...passingReceipt(), category: 'postgresql://local.invalid' }));
@@ -192,6 +221,27 @@ test('bounded child receipt transport returns only the parsed receipt and handle
   assert.equal(child.listenerCount('close'), 0);
   assert.equal(child.stdout.listenerCount('data'), 0);
   assert.equal(child.stderr.listenerCount('data'), 0);
+  assert.doesNotThrow(() => validateJoinedReceiptProcess(result.stdoutValue, result));
+});
+
+test('bounded child transport reassembles a receipt split across stdout chunks', async () => {
+  const receipt = line(failedReceipt('session_bound_client'));
+  const result = await runBoundedChildProcess(
+    nodeExecutable,
+    [
+      '-e',
+      'const value=process.env.RUN49_RECEIPT; process.stdout.write(value.slice(0, 11)); setImmediate(() => { process.stdout.write(value.slice(11)); process.exit(1); });',
+    ],
+    {
+      env: { PATH: process.env.PATH ?? '', RUN49_RECEIPT: receipt },
+      allowNonZeroExit: true,
+      maxStdoutBytes: JOINED_STDOUT_LIMIT_BYTES,
+      stdoutValidator: parseJoinedReceiptOutput,
+      timeoutMs: 5_000,
+    },
+  );
+
+  assert.equal(result.stdoutValue.phase, 'session_bound_client');
   assert.doesNotThrow(() => validateJoinedReceiptProcess(result.stdoutValue, result));
 });
 
