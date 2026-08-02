@@ -1,4 +1,3 @@
-const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
 const fs = require('node:fs');
 const http = require('node:http');
@@ -15,8 +14,21 @@ const {
   parseJoinedReceiptOutput,
   validateJoinedReceiptProcess,
 } = require('./run-49-joined-receipt.cjs');
+const {
+  JOINED_REPORTER_PATH,
+  classifyChildFailure,
+  createBootstrapFailure,
+  expectedNpmInvocation,
+  validateCommandAdmission,
+  validateDependencyResolution,
+  validateEnvironmentAdmission,
+  validateReporterLoad,
+  validateWorkingDirectory,
+} = require('./run-53-joined-bootstrap.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
+const websiteRoot = path.join(repoRoot, 'website');
+const reporterPath = path.resolve(websiteRoot, JOINED_REPORTER_PATH);
 const migrationsDir = path.join(repoRoot, 'supabase', 'migrations');
 const dockerConfigDir = fs.mkdtempSync(
   path.join(os.tmpdir(), 'spacekonceptrental-run49-docker-config-'),
@@ -41,17 +53,6 @@ const ids = {
   childProduct: '50000000-0000-4000-8000-000000000002',
 };
 
-function commandForDisplay(command, args) {
-  return [command, ...args]
-    .map((value) =>
-      String(value).replace(
-        /(password|secret|token|uri)=\S+/gi,
-        '$1=<redacted>',
-      ),
-    )
-    .join(' ');
-}
-
 function docker(args, options = {}) {
   const result = spawnSync('docker', args, {
     cwd: repoRoot,
@@ -65,17 +66,15 @@ function docker(args, options = {}) {
     maxBuffer: 1024 * 1024 * 20,
   });
 
-  if (result.error) throw result.error;
+  if (result.error && options.check !== false) {
+    const error = new Error('disposable_docker_unavailable');
+    error.code = 'disposable_docker_unavailable';
+    throw error;
+  }
   if (options.check !== false && result.status !== 0) {
-    throw new Error(
-      [
-        `Command failed: ${commandForDisplay('docker', args)}`,
-        result.stdout.trim(),
-        result.stderr.trim(),
-      ]
-        .filter(Boolean)
-        .join('\n'),
-    );
+    const error = new Error('disposable_docker_command_failed');
+    error.code = 'disposable_docker_command_failed';
+    throw error;
   }
   return result;
 }
@@ -109,7 +108,7 @@ async function waitForPostgres() {
     }
     await sleep(500);
   }
-  throw new Error('Disposable PostgreSQL 17 did not become ready.');
+  throw createBootstrapFailure('service_readiness', 'postgres_not_ready');
 }
 
 async function waitForPostgrest(port) {
@@ -123,7 +122,7 @@ async function waitForPostgrest(port) {
     }
     await sleep(500);
   }
-  throw new Error('Disposable PostgREST did not become ready.');
+  throw createBootstrapFailure('service_readiness', 'postgrest_not_ready');
 }
 
 function setupCompatibility() {
@@ -320,7 +319,9 @@ function startPostgrest() {
   ]);
   const mapped = docker(['port', postgrestName, '3000/tcp']).stdout.trim();
   const match = mapped.match(/:(\d+)$/m);
-  assert.ok(match, 'PostgREST host port was not published.');
+  if (!match) {
+    throw createBootstrapFailure('service_readiness', 'postgrest_not_ready');
+  }
   return Number(match[1]);
 }
 
@@ -341,12 +342,16 @@ function createRun49Jwt() {
 async function main() {
   const readiness = ensureDockerRunning();
   if (!readiness.ok) {
+    console.error(
+      'Run-49 joined integration failed: service_readiness/service_readiness_failed.',
+    );
     fs.rmSync(dockerConfigDir, { recursive: true, force: true });
     process.exitCode = 1;
     return;
   }
 
   let gateway;
+  let currentPhase = 'service_readiness';
   try {
     docker(['network', 'create', '--label', 'spacekonceptrental.run49=true', networkName]);
     docker([
@@ -363,7 +368,23 @@ async function main() {
     await waitForPostgrest(postgrestPort);
     gateway = await startAuthAndPostgrestGateway(postgrestPort);
 
-    const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+    currentPhase = 'command_admission';
+    const invocation = expectedNpmInvocation();
+    validateCommandAdmission(invocation);
+
+    currentPhase = 'working_directory';
+    validateWorkingDirectory({
+      cwd: websiteRoot,
+      repoRoot,
+      websiteRoot,
+    });
+
+    currentPhase = 'dependency_resolution';
+    validateDependencyResolution({ websiteRoot });
+
+    currentPhase = 'reporter_load';
+    validateReporterLoad({ reporterPath });
+
     const childEnvironment = createMinimalChildEnvironment({
       ...process.env,
       RUN49_JOINED: '1',
@@ -381,47 +402,40 @@ async function main() {
       SUPABASE_ANON_KEY: 'run49-anon-key',
     });
 
-    try {
-      const result = await runBoundedChildProcess(
-        npmCommand,
-        [
-          '--silent',
-          'test',
-          '--',
-          '--run',
-          'test/run-49-joined-postgres.integration.test.ts',
-          '--reporter',
-          path.join(repoRoot, 'scripts', 'run-49-joined-reporter.cjs'),
-        ],
-        {
-          cwd: path.join(repoRoot, 'website'),
-          env: childEnvironment,
-          allowNonZeroExit: true,
-          maxStdoutBytes: JOINED_STDOUT_LIMIT_BYTES,
-          stdoutValidator: parseJoinedReceiptOutput,
-        },
+    currentPhase = 'environment_admission';
+    validateEnvironmentAdmission(childEnvironment);
+
+    currentPhase = 'process_launch';
+    const result = await runBoundedChildProcess(
+      invocation.command,
+      invocation.args,
+      {
+        cwd: websiteRoot,
+        env: childEnvironment,
+        allowNonZeroExit: true,
+        maxStdoutBytes: JOINED_STDOUT_LIMIT_BYTES,
+        stdoutValidator: parseJoinedReceiptOutput,
+      },
+    );
+    const joinedReceipt = validateJoinedReceiptProcess(result.stdoutValue, result);
+    if (joinedReceipt.outcome === 'passed') {
+      console.log('Run-49 joined integration completed.');
+    } else {
+      console.error(
+        `Run-49 joined integration failed: ${joinedReceipt.phase}/${joinedReceipt.category}.`,
       );
-      const joinedReceipt = validateJoinedReceiptProcess(result.stdoutValue, result);
-      if (joinedReceipt.outcome === 'passed') {
-        console.log('Run-49 joined integration completed.');
-      } else {
-        console.error(
-          `Run-49 joined integration failed: ${joinedReceipt.phase}/${joinedReceipt.category}.`,
-        );
-        process.exitCode = 1;
-      }
-    } catch (error) {
-      const reportedCategory =
-        error && typeof error === 'object' && 'code' in error
-          ? String(error.code)
-          : 'joined_receipt_invalid';
-      const category =
-        reportedCategory === 'child_stdout_invalid'
-          ? 'joined_receipt_invalid'
-          : reportedCategory;
-      console.error(`Run-49 joined integration failed: ${category}.`);
       process.exitCode = 1;
     }
+  } catch (error) {
+    const failure =
+      currentPhase === 'service_readiness' &&
+      !(error && typeof error === 'object' && error.phase && error.category)
+        ? { phase: 'service_readiness', category: 'service_readiness_failed' }
+        : classifyChildFailure(error, currentPhase);
+    console.error(
+      `Run-49 joined integration failed: ${failure.phase}/${failure.category}.`,
+    );
+    process.exitCode = 1;
   } finally {
     if (gateway) await new Promise((resolve) => gateway.server.close(resolve));
     docker(['rm', '-f', postgrestName], { check: false });

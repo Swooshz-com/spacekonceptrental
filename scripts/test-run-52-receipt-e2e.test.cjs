@@ -11,41 +11,15 @@ const {
   createMinimalChildEnvironment,
   runBoundedChildProcess,
 } = require('./run-bounded-child-process.cjs');
+const {
+  expectedNpmInvocation,
+} = require('./run-53-joined-bootstrap.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const websiteRoot = path.join(repoRoot, 'website');
-const joinedTestPath = 'test/run-49-joined-postgres.integration.test.ts';
-const reporterPath = path.join(repoRoot, 'scripts', 'run-49-joined-reporter.cjs');
 
 function joinedNpmInvocation({ silent }) {
-  const npmArgs = [
-    ...(silent ? ['--silent'] : []),
-    'test',
-    '--',
-    '--run',
-    joinedTestPath,
-    '--reporter',
-    reporterPath,
-  ];
-
-  if (process.platform !== 'win32') {
-    return { command: 'npm', args: npmArgs };
-  }
-
-  // Node on Windows cannot spawn npm.cmd with shell:false in this harness.
-  // An explicit cmd.exe invocation keeps the test on the same npm/Vitest path
-  // while preserving the bounded child's no-shell setting.
-  const commandLine = [
-    'npm',
-    ...npmArgs.map((value) => {
-      const text = String(value);
-      return /[\s"]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
-    }),
-  ].join(' ');
-  return {
-    command: process.env.ComSpec || 'cmd.exe',
-    args: ['/d', '/s', '/c', commandLine],
-  };
+  return expectedNpmInvocation({ silent });
 }
 
 function joinedEnvironment() {

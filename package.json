@@ -54,6 +54,7 @@
     "test:run-49-child-process": "node --test scripts/test-run-49-child-process.test.cjs",
     "test:run-49-receipt": "node --test scripts/test-run-49-receipt.test.cjs",
     "test:run-52-receipt-e2e": "node --test scripts/test-run-52-receipt-e2e.test.cjs",
+    "test:run-53-bootstrap": "node --test scripts/test-run-53-bootstrap.test.cjs",
     "test:run-49-joined-postgres": "node scripts/test-run-49-joined-postgres.cjs",
     "test:supabase-migrations": "node --test scripts/validate-supabase-migrations.test.cjs",
     "test:quote-email-runtime-readiness": "node --test scripts/validate-quote-email-runtime-readiness.test.cjs",

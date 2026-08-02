@@ -73,6 +73,9 @@ jobs:
       - name: Test Run-52 end-to-end joined receipt contract
         run: npm run test:run-52-receipt-e2e
 
+      - name: Test Run-53 joined bootstrap diagnostics
+        run: npm run test:run-53-bootstrap
+
       - name: Run Run-49 joined PostgreSQL/PostgREST integration
         run: npm run test:run-49-joined-postgres
 

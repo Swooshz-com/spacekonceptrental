@@ -65,6 +65,25 @@ function normalizePositiveInteger(value, fallback) {
 }
 
 function runBoundedChildProcess(command, args, options = {}) {
+  if (typeof command !== 'string' || command.trim() === '' || !Array.isArray(args)) {
+    return Promise.reject(createChildFailure('child_command_invalid', {
+      terminationConfirmed: true,
+    }));
+  }
+  if (
+    args.some((argument) => typeof argument !== 'string') ||
+    (options.cwd !== undefined &&
+      (typeof options.cwd !== 'string' || options.cwd.trim() === ''))
+  ) {
+    return Promise.reject(createChildFailure(
+      options.cwd !== undefined &&
+        (typeof options.cwd !== 'string' || options.cwd.trim() === '')
+        ? 'child_working_directory_invalid'
+        : 'child_command_invalid',
+      { terminationConfirmed: true },
+    ));
+  }
+
   const cwd = options.cwd;
   const env = options.env ?? createMinimalChildEnvironment();
   const allowNonZeroExit = options.allowNonZeroExit === true;
@@ -166,10 +185,10 @@ function runBoundedChildProcess(command, args, options = {}) {
     };
 
     const onError = () => {
-      if (child?.pid == null && !closeObserved) {
-        finish(() => reject(createChildFailure('child_spawn_failed', {
-          terminationConfirmed: true,
-        })));
+      if (closeObserved) return;
+
+      if (child?.pid == null) {
+        terminationReason = 'child_spawn_failed';
         return;
       }
 

@@ -14,6 +14,9 @@ const Run49JoinedReceiptReporter = require('./run-49-joined-reporter.cjs');
 const {
   runBoundedChildProcess,
 } = require('./run-bounded-child-process.cjs');
+const {
+  BOOTSTRAP_PHASES,
+} = require('./run-53-joined-bootstrap.cjs');
 
 const nodeExecutable = process.execPath;
 
@@ -32,11 +35,23 @@ function passingReceipt() {
 }
 
 function failedReceipt(phase, overrides = {}) {
+  const bootstrapCategoryByPhase = {
+    process_launch: 'spawn_failed',
+    command_admission: 'command_invalid',
+    working_directory: 'working_directory_invalid',
+    environment_admission: 'environment_missing',
+    dependency_resolution: 'dependency_missing',
+    module_resolution: 'module_resolution_failed',
+    reporter_load: 'reporter_load_failed',
+    service_readiness: 'service_readiness_failed',
+    test_collection: 'test_collection_failed',
+    bootstrap_complete: 'bootstrap_failed',
+  };
   return {
     schema_version: 1,
     outcome: 'failed',
     phase,
-    category: 'test_runner_failed',
+    category: bootstrapCategoryByPhase[phase] ?? 'test_runner_failed',
     exit_code_class: 'nonzero',
     signal: false,
     timeout: false,
@@ -60,8 +75,10 @@ function assertInvalid(value) {
 test('accepts one canonical passing receipt and one failure receipt per allowed phase', () => {
   assert.deepEqual(parseJoinedReceiptOutput(line(passingReceipt())), passingReceipt());
   for (const phase of ALLOWED_PHASES) {
+    if (phase === 'complete') continue;
     assert.deepEqual(parseJoinedReceiptOutput(line(failedReceipt(phase))).phase, phase);
   }
+  assert.equal(BOOTSTRAP_PHASES.length, 10);
 });
 
 test('custom reporter emits one bounded receipt and suppresses test titles', () => {
@@ -76,7 +93,9 @@ test('custom reporter emits one bounded receipt and suppresses test titles', () 
   try {
     const reporter = new Run49JoinedReceiptReporter();
     reporter.onTestRunEnd(
-      [{ allTests: () => testNames.map((name) => ({ name, result: () => ({ state: 'passed' }) })) }],
+      [{ children: {
+        allTests: () => testNames.map((name) => ({ name, result: () => ({ state: 'passed' }) })),
+      } }],
       [],
       'passed',
     );
@@ -101,7 +120,14 @@ test('custom reporter maps each failed joined case to a safe phase only', () => 
     };
     try {
       new Run49JoinedReceiptReporter().onTestRunEnd(
-        [{ allTests: () => [{ name, result: () => ({ state: 'failed' }) }] }],
+        [{
+          children: {
+            allTests: () => Array.from(Run49JoinedReceiptReporter.phaseByTestName.keys()).map((candidate) => ({
+              name: candidate,
+              result: () => ({ state: candidate === name ? 'failed' : 'passed' }),
+            })),
+          },
+        }],
         [],
         'failed',
       );
@@ -190,7 +216,7 @@ test('process validation rejects nonzero pass and zero failure while accepting a
   assert.throws(() => validateJoinedReceiptProcess(failed, { exitCode: 0, signal: null }));
 
   const signaled = parseJoinedReceiptOutput(
-    line(failedReceipt('child_bootstrap', { signal: true })),
+    line(failedReceipt('bootstrap_complete', { signal: true })),
   );
   assert.doesNotThrow(() => validateJoinedReceiptProcess(signaled, { exitCode: null, signal: 'SIGTERM' }));
 });

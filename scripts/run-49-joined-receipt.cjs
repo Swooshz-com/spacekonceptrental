@@ -1,4 +1,9 @@
 const { TextDecoder } = require('node:util');
+const {
+  BOOTSTRAP_CATEGORIES,
+  BOOTSTRAP_PHASES,
+  EXECUTION_PHASES,
+} = require('./run-53-joined-bootstrap.cjs');
 
 const RECEIPT_PREFIX = 'RUN49_JOINED_RECEIPT:';
 const MAX_RECEIPT_BYTES = 1024;
@@ -19,21 +24,12 @@ const RECEIPT_KEYS = Object.freeze([
 const ALLOWED_OUTCOMES = new Set(['passed', 'failed']);
 const ALLOWED_EXIT_CODE_CLASSES = new Set(['zero', 'nonzero']);
 const ALLOWED_PHASES = new Set([
-  'child_bootstrap',
-  'session_bound_client',
-  'direct_consume_rpc',
-  'malformed_and_replay',
-  'oversized_and_replacement',
-  'write_and_reload',
-  'operation_mismatch',
-  'concurrent_one_winner',
-  'cross_process_replay',
-  'direct_table_denial',
+  ...BOOTSTRAP_PHASES,
+  ...EXECUTION_PHASES,
   'complete',
 ]);
 const ALLOWED_CATEGORIES = new Set([
-  'none',
-  'bootstrap_failed',
+  ...BOOTSTRAP_CATEGORIES,
   'client_unconfigured',
   'transport_failed',
   'unexpected_status',
@@ -45,6 +41,29 @@ const ALLOWED_CATEGORIES = new Set([
   'direct_access_contract_failed',
   'test_runner_failed',
   'receipt_invalid',
+]);
+
+const ALLOWED_BOOTSTRAP_CATEGORIES_BY_PHASE = new Map([
+  ['process_launch', new Set([
+    'spawn_failed',
+    'bootstrap_timeout',
+    'bootstrap_signal',
+    'bootstrap_output_overflow',
+    'bootstrap_failed',
+  ])],
+  ['command_admission', new Set(['command_invalid'])],
+  ['working_directory', new Set(['working_directory_invalid'])],
+  ['environment_admission', new Set(['environment_missing', 'environment_invalid'])],
+  ['dependency_resolution', new Set(['dependency_missing', 'dependency_resolution_failed'])],
+  ['module_resolution', new Set(['module_resolution_failed'])],
+  ['reporter_load', new Set(['reporter_load_failed', 'receipt_invalid'])],
+  ['service_readiness', new Set([
+    'postgres_not_ready',
+    'postgrest_not_ready',
+    'service_readiness_failed',
+  ])],
+  ['test_collection', new Set(['test_collection_failed'])],
+  ['bootstrap_complete', new Set(['bootstrap_failed', 'receipt_invalid'])],
 ]);
 
 const unsafeContentPattern = /(?:https?:\/\/|postgres(?:ql)?:\/\/|\b(?:bearer|cookie|token|secret|password|api[_-]?key|connection|endpoint|proof|fingerprint)\b|\b(?:select|insert|update|delete)\b)/i;
@@ -73,6 +92,9 @@ function validateReceiptShape(value) {
   if (!ALLOWED_PHASES.has(value.phase)) invalidReceipt();
   if (!ALLOWED_CATEGORIES.has(value.category)) invalidReceipt();
   if (!ALLOWED_EXIT_CODE_CLASSES.has(value.exit_code_class)) invalidReceipt();
+  const bootstrapCategories = ALLOWED_BOOTSTRAP_CATEGORIES_BY_PHASE.get(value.phase);
+  if (bootstrapCategories && !bootstrapCategories.has(value.category)) invalidReceipt();
+  if (value.phase === 'complete' && value.category !== 'none') invalidReceipt();
   for (const key of ['signal', 'timeout', 'stdout_overflow', 'stderr_overflow']) {
     if (typeof value[key] !== 'boolean') invalidReceipt();
   }
