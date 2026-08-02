@@ -282,6 +282,16 @@ export async function handleAdminPublicPageMediaWriteRoute(
     return errorJson("request_method_not_allowed", 405);
   }
 
+  const gate = await verifyAdminWriteBoundary(
+    request,
+    requestMethod,
+    dependencies
+  );
+
+  if (!gate.ok) {
+    return gate.response;
+  }
+
   const body = await readBoundedJsonBody(request);
 
   if (!body.ok) {
@@ -296,16 +306,6 @@ export async function handleAdminPublicPageMediaWriteRoute(
 
   if (!validation.ok) {
     return errorJson(validation.error, 400);
-  }
-
-  const gate = await verifyAdminWriteBoundary(
-    request,
-    requestMethod,
-    dependencies
-  );
-
-  if (!gate.ok) {
-    return gate.response;
   }
 
   const persistence =

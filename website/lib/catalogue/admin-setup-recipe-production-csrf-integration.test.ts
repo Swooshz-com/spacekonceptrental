@@ -115,6 +115,19 @@ function request(proof: string, body: unknown) {
   });
 }
 
+function rawRequest(proof: string, body: string) {
+  return new NextRequest("https://admin.space.test/api/admin/setup-recipe", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      origin: env.ADMIN_EXPECTED_ORIGIN,
+      host: env.ADMIN_EXPECTED_HOST,
+      "x-csrf-proof": proof
+    },
+    body
+  });
+}
+
 function createDependencies(
   routeRequest: NextRequest,
   consumeCsrfProof: (input: ServerAdminCsrfReplayCheckInput) => Promise<unknown>,
@@ -298,6 +311,64 @@ describe("production-layer setup recipe CSRF integration", () => {
     );
 
     expect(first.status).toBe(503);
+    expect(retry.status).toBe(403);
+    expect(await responseJson(retry)).toEqual({ error: "csrf_proof_replayed" });
+  });
+
+  it.each([
+    ["malformed JSON", "{"],
+    ["empty malformed JSON", "   {   "],
+    ["oversized body", JSON.stringify({ action: "write", padding: "x".repeat(70_000) })]
+  ])("consumes before %s", async (_label, body) => {
+    const checker = createReplayChecker();
+    const proof = await issueProof("admin.setupRecipe.write");
+    const firstRequest = rawRequest(proof, body);
+    const first = await handleAdminSetupRecipeRoute(
+      firstRequest,
+      createDependencies(firstRequest, checker)
+    );
+    const retryRequest = request(proof, {
+      action: "write",
+      operation: "remove",
+      setupProductId,
+      expectedRevision: 0,
+      items: []
+    });
+    const retry = await handleAdminSetupRecipeRoute(
+      retryRequest,
+      createDependencies(retryRequest, checker)
+    );
+
+    expect(first.status).toBeGreaterThanOrEqual(400);
+    expect(retry.status).toBe(403);
+    expect(await responseJson(retry)).toEqual({ error: "csrf_proof_replayed" });
+  });
+
+  it("consumes before rejecting a body operation mismatch", async () => {
+    const checker = createReplayChecker();
+    const proof = await issueProof("admin.setupRecipe.write");
+    const mismatchedRequest = request(proof, {
+      action: "read",
+      setupProductId
+    });
+    const mismatched = await handleAdminSetupRecipeRoute(
+      mismatchedRequest,
+      createDependencies(mismatchedRequest, checker)
+    );
+    const retryRequest = request(proof, {
+      action: "write",
+      operation: "remove",
+      setupProductId,
+      expectedRevision: 0,
+      items: []
+    });
+    const retry = await handleAdminSetupRecipeRoute(
+      retryRequest,
+      createDependencies(retryRequest, checker)
+    );
+
+    expect(mismatched.status).toBe(403);
+    expect(await responseJson(mismatched)).toEqual({ error: "csrf_proof_mismatched" });
     expect(retry.status).toBe(403);
     expect(await responseJson(retry)).toEqual({ error: "csrf_proof_replayed" });
   });

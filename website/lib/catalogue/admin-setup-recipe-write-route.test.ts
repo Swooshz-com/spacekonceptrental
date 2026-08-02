@@ -21,14 +21,30 @@ const adminContext = {
   resolution: "server-auth-membership" as const
 };
 
-function request(body: unknown) {
+function proofFor(operation: "admin.setupRecipe.read" | "admin.setupRecipe.write") {
+  const payload = Buffer.from(JSON.stringify({
+    operation,
+    sessionBinding: "bound-session",
+    nonce: "nonce",
+    issuedAt: 1_700_000_000_000,
+    expiresAt: 1_700_000_300_000
+  })).toString("base64url");
+
+  return `${payload}.signature`;
+}
+
+function request(body: Record<string, unknown>) {
+  const operation = body.action === "read"
+    ? "admin.setupRecipe.read"
+    : "admin.setupRecipe.write";
+
   return new Request("https://admin.space.test/api/admin/setup-recipe", {
     method: "POST",
     headers: {
       "content-type": "application/json",
       origin: env.ADMIN_EXPECTED_ORIGIN,
       host: env.ADMIN_EXPECTED_HOST,
-      "x-csrf-proof": "proof"
+      "x-csrf-proof": proofFor(operation)
     },
     body: JSON.stringify(body)
   }) as NextRequest;

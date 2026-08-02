@@ -28,7 +28,7 @@ const productionBaselineMigration =
   '20260721090000_preproduction_security_remediation.sql';
 const platformRlsAutoEnableMigration =
   '20260721190000_platform_rls_auto_enable_privilege_hardening.sql';
-const dockerImage = process.env.SUPABASE_RLS_DB_IMAGE || 'postgres:16-alpine';
+const dockerImage = process.env.SUPABASE_RLS_DB_IMAGE || 'postgres:17-alpine';
 const containerName =
   process.env.SUPABASE_RLS_CONTAINER_NAME ||
   `spacekonceptrental-rls-test-${process.pid}-${Date.now()}`;
@@ -6308,6 +6308,7 @@ async function runChecks() {
     await item.fn();
     console.log(`PASS ${item.name}`);
   }
+  console.log(`PASS PostgreSQL/RLS checks=${checks.length} skips=0`);
 }
 
 async function main() {

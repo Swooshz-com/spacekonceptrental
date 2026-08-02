@@ -153,6 +153,26 @@ function parseProof(value: string | null | undefined) {
     : null;
 }
 
+/**
+ * Reads only the signed proof operation before a request body is consumed.
+ * The value is intentionally untrusted until verifyServerAdminCsrfProof has
+ * checked the signature; callers may use it only to select a closed route
+ * allowlist and must perform the full verifier call before any body work.
+ */
+export function readServerAdminCsrfProofOperation(
+  value: string | null | undefined
+): CsrfProtectedAdminOperation | null {
+  const parsedProof = parseProof(value);
+
+  if (!parsedProof) {
+    return null;
+  }
+
+  const payload = toPayload(parsedProof.payload);
+
+  return payload?.operation ?? null;
+}
+
 function toPayload(
   payload: Record<string, unknown>
 ): ServerAdminCsrfProofPayload | null {

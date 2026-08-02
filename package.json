@@ -51,6 +51,7 @@
     "test:hosted-contract-follow-up": "node --test scripts/smoke-production-readonly.test.cjs scripts/validate-deployment-contract-follow-up.test.cjs scripts/test-provenance-source-commit.cjs",
     "test:supabase-seed": "node scripts/test-supabase-seed.cjs",
     "test:supabase-rls": "node scripts/test-supabase-rls.cjs",
+    "test:run-49-joined-postgres": "node scripts/test-run-49-joined-postgres.cjs",
     "test:supabase-migrations": "node --test scripts/validate-supabase-migrations.test.cjs",
     "test:quote-email-runtime-readiness": "node --test scripts/validate-quote-email-runtime-readiness.test.cjs",
     "validate:supabase-migrations": "node scripts/validate-supabase-migrations.cjs",

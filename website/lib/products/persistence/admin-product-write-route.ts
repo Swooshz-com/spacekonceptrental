@@ -723,18 +723,6 @@ export async function handleAdminProductWriteRoute(
     return errorJson("request_payload_invalid", 400);
   }
 
-  const body = await readBoundedJsonBody(request);
-
-  if (!body.ok) {
-    return errorJson(body.error, body.status);
-  }
-
-  const payload = parsePayload(config, body.body);
-
-  if (!payload.ok) {
-    return errorJson("request_payload_invalid", 400);
-  }
-
   const mutationCapability = resolveServerAdminMutationCapability(
     {
       ADMIN_MUTATIONS_ENABLED:
@@ -831,6 +819,18 @@ export async function handleAdminProductWriteRoute(
 
   if (!routeGate.allowed) {
     return errorJson(routeGate.reason, routeGate.statusCode);
+  }
+
+  const body = await readBoundedJsonBody(request);
+
+  if (!body.ok) {
+    return errorJson(body.error, body.status);
+  }
+
+  const payload = parsePayload(config, body.body);
+
+  if (!payload.ok) {
+    return errorJson("request_payload_invalid", 400);
   }
 
   const persistence = dependencies.persistence ?? getProductPersistence();

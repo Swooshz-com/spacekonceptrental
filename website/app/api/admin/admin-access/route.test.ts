@@ -185,6 +185,7 @@ describe("POST /api/admin/admin-access", () => {
 
   it("rejects invalid emails before owner write boundaries are called", async () => {
     setAdminEnv();
+    allowOwnerGate();
 
     const response = await POST(
       createRequest({
@@ -193,8 +194,8 @@ describe("POST /api/admin/admin-access", () => {
       })
     );
 
-    expect(resolveServerAdminCsrfProofSessionWorkspaceBinding).not.toHaveBeenCalled();
-    expect(resolveServerAdminRuntimeRouteGateAdapter).not.toHaveBeenCalled();
+    expect(resolveServerAdminCsrfProofSessionWorkspaceBinding).toHaveBeenCalled();
+    expect(resolveServerAdminRuntimeRouteGateAdapter).toHaveBeenCalled();
     expect(executeAdminAccessMutation).not.toHaveBeenCalled();
     expect(response.status).toBe(400);
   });

@@ -60,6 +60,9 @@ jobs:
       - name: Run Supabase RLS/schema tests
         run: npm run test:supabase-rls
 
+      - name: Run Run-49 joined PostgreSQL/PostgREST integration
+        run: npm run test:run-49-joined-postgres
+
       - name: Validate n8n workflow exports
         run: npm run validate:n8n
 

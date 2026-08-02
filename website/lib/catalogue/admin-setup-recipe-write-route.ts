@@ -16,6 +16,7 @@ import {
   resolveServerAdminRuntimeRouteGateAdapter,
   type ServerAdminRuntimeRouteGateAdapterResult
 } from "../admin/authorization/server-admin-runtime-route-gate-adapter";
+import { readServerAdminCsrfProofOperation } from "../admin/authorization/server-admin-csrf-proof-verifier";
 import {
   executeAdminSetupRecipeWrite,
   readAdminSetupRecipe
@@ -78,8 +79,9 @@ async function adminAuthCheck(
   workspaceId: string;
   response?: NextResponse;
 }> {
+  const routeEnv = dependencies.env ?? process.env;
   const mutationCapability = resolveServerAdminMutationCapability(
-    dependencies.env ?? {}
+    { ADMIN_MUTATIONS_ENABLED: routeEnv.ADMIN_MUTATIONS_ENABLED }
   );
 
   if (!mutationCapability.enabled) {
@@ -94,7 +96,7 @@ async function adminAuthCheck(
   }
 
   const routeConfig = getAdminRouteRuntimeConfig(
-    dependencies.env ?? {}
+    routeEnv
   );
   const createRuntimeDependencies =
     dependencies.createRuntimeDependencies ??
@@ -115,7 +117,7 @@ async function adminAuthCheck(
         ...(dependencies.bindingDependencies ?? {}),
         workspace: {
           trustedServerWorkspaceId:
-            dependencies.env?.ADMIN_TRUSTED_WORKSPACE_ID ??
+            routeEnv.ADMIN_TRUSTED_WORKSPACE_ID ??
             routeConfig.trustedServerWorkspaceId
         },
         ...runtimeDependencies.sessionWorkspaceBindingDependencies
@@ -166,11 +168,9 @@ async function adminAuthCheck(
       {
         requestMetadata: {
           expectedOrigin:
-            dependencies.env?.ADMIN_EXPECTED_ORIGIN ??
-            routeConfig.expectedOrigin,
+            routeEnv.ADMIN_EXPECTED_ORIGIN ?? routeConfig.expectedOrigin,
           expectedHost:
-            dependencies.env?.ADMIN_EXPECTED_HOST ??
-            routeConfig.expectedHost
+            routeEnv.ADMIN_EXPECTED_HOST ?? routeConfig.expectedHost
         },
         gate: {
           csrfVerifier: {
@@ -180,7 +180,7 @@ async function adminAuthCheck(
           decision: {
             workspace: {
               trustedServerWorkspaceId:
-                dependencies.env?.ADMIN_TRUSTED_WORKSPACE_ID ??
+                routeEnv.ADMIN_TRUSTED_WORKSPACE_ID ??
                 routeConfig.trustedServerWorkspaceId
             }
           }
@@ -210,7 +210,7 @@ async function adminAuthCheck(
   }
 
   const workspaceId =
-    dependencies.env?.ADMIN_TRUSTED_WORKSPACE_ID ??
+    routeEnv.ADMIN_TRUSTED_WORKSPACE_ID ??
     routeConfig.trustedServerWorkspaceId ??
     "";
 
@@ -232,25 +232,17 @@ export async function handleAdminSetupRecipeRoute(
   request: NextRequest,
   dependencies: AdminSetupRecipeRouteDependencies = {}
 ): Promise<NextResponse> {
-  let parsed = await readBoundedJsonBody(request, 65536);
-
-  if (!parsed.ok) {
-    return safeJsonResponse({ error: parsed.error }, parsed.status);
-  }
-
-  const payload = parsed.body;
-
-  const action = payload.action;
-
-  const requestedOperation =
-    action === "read"
-      ? "admin.setupRecipe.read"
-      : action === "write"
-        ? "admin.setupRecipe.write"
-        : null;
+  const signedOperation = readServerAdminCsrfProofOperation(
+    request.headers.get("x-csrf-proof")
+  );
+  const requestedOperation: AdminSetupRecipeOperation | null =
+    signedOperation === "admin.setupRecipe.read" ||
+    signedOperation === "admin.setupRecipe.write"
+      ? signedOperation
+      : null;
 
   if (!requestedOperation) {
-    return safeJsonResponse({ error: "unknown_action" }, 400);
+    return safeJsonResponse({ error: "csrf_proof_invalid" }, 403);
   }
 
   const auth = await adminAuthCheck(
@@ -260,6 +252,29 @@ export async function handleAdminSetupRecipeRoute(
   );
   if (!auth.allowed) {
     return auth.response!;
+  }
+
+  const parsed = await readBoundedJsonBody(request, 65536);
+
+  if (!parsed.ok) {
+    return safeJsonResponse({ error: parsed.error }, parsed.status);
+  }
+
+  const payload = parsed.body;
+  const action = payload.action;
+  const bodyOperation =
+    action === "read"
+      ? "admin.setupRecipe.read"
+      : action === "write"
+        ? "admin.setupRecipe.write"
+        : null;
+
+  if (!bodyOperation) {
+    return safeJsonResponse({ error: "unknown_action" }, 400);
+  }
+
+  if (bodyOperation !== requestedOperation) {
+    return safeJsonResponse({ error: "csrf_proof_mismatched" }, 403);
   }
 
   if (action === "read") {
