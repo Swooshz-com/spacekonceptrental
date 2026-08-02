@@ -64,6 +64,9 @@ jobs:
         working-directory: website
         run: npm ci
 
+      - name: Test Run-49 async child-process harness
+        run: npm run test:run-49-child-process
+
       - name: Run Run-49 joined PostgreSQL/PostgREST integration
         run: npm run test:run-49-joined-postgres
 

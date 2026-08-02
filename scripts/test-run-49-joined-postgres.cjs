@@ -4,8 +4,12 @@ const fs = require('node:fs');
 const http = require('node:http');
 const os = require('node:os');
 const path = require('node:path');
-const { spawn, spawnSync } = require('node:child_process');
+const { spawnSync } = require('node:child_process');
 const { ensureDockerRunning } = require('./ensure-docker-running.cjs');
+const {
+  createMinimalChildEnvironment,
+  runBoundedChildProcess,
+} = require('./run-bounded-child-process.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const migrationsDir = path.join(repoRoot, 'supabase', 'migrations');
@@ -355,32 +359,43 @@ async function main() {
     gateway = await startAuthAndPostgrestGateway(postgrestPort);
 
     const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-    const result = spawnSync(
-      npmCommand,
-      ['test', '--', '--run', 'test/run-49-joined-postgres.integration.test.ts'],
-      {
-        cwd: path.join(repoRoot, 'website'),
-        stdio: 'inherit',
-        env: {
-          ...process.env,
-          RUN49_JOINED: '1',
-          RUN49_SUPABASE_URL: `http://127.0.0.1:${gateway.port}`,
-          RUN49_ACCESS_TOKEN: createRun49Jwt(),
-          RUN49_WORKSPACE_ID: ids.workspace,
-          RUN49_SETUP_PRODUCT_ID: ids.setupProduct,
-          RUN49_CHILD_PRODUCT_ID: ids.childProduct,
-          ADMIN_EXPECTED_ORIGIN: 'https://admin.space.test',
-          ADMIN_EXPECTED_HOST: 'admin.space.test',
-          ADMIN_TRUSTED_WORKSPACE_ID: ids.workspace,
-          ADMIN_MUTATIONS_ENABLED: 'true',
-          ADMIN_CSRF_PROOF_SECRET: 'run49-csrf-proof-secret',
-          SUPABASE_URL: `http://127.0.0.1:${gateway.port}`,
-          SUPABASE_ANON_KEY: 'run49-anon-key',
+    const childEnvironment = createMinimalChildEnvironment({
+      ...process.env,
+      RUN49_JOINED: '1',
+      RUN49_SUPABASE_URL: `http://127.0.0.1:${gateway.port}`,
+      RUN49_ACCESS_TOKEN: createRun49Jwt(),
+      RUN49_WORKSPACE_ID: ids.workspace,
+      RUN49_SETUP_PRODUCT_ID: ids.setupProduct,
+      RUN49_CHILD_PRODUCT_ID: ids.childProduct,
+      ADMIN_EXPECTED_ORIGIN: 'https://admin.space.test',
+      ADMIN_EXPECTED_HOST: 'admin.space.test',
+      ADMIN_TRUSTED_WORKSPACE_ID: ids.workspace,
+      ADMIN_MUTATIONS_ENABLED: 'true',
+      ADMIN_CSRF_PROOF_SECRET: 'run49-csrf-proof-secret',
+      SUPABASE_URL: `http://127.0.0.1:${gateway.port}`,
+      SUPABASE_ANON_KEY: 'run49-anon-key',
+    });
+
+    try {
+      const result = await runBoundedChildProcess(
+        npmCommand,
+        ['test', '--', '--run', 'test/run-49-joined-postgres.integration.test.ts'],
+        {
+          cwd: path.join(repoRoot, 'website'),
+          env: childEnvironment,
         },
-        windowsHide: true,
-      },
-    );
-    if (result.status !== 0) process.exitCode = result.status || 1;
+      );
+      console.log(
+        `Run-49 joined integration completed (stdout_bytes=${result.stdoutBytes}, stderr_bytes=${result.stderrBytes}).`,
+      );
+    } catch (error) {
+      const category =
+        error && typeof error === 'object' && 'code' in error
+          ? String(error.code)
+          : 'child_failure';
+      console.error(`Run-49 joined integration failed: ${category}.`);
+      process.exitCode = 1;
+    }
   } finally {
     if (gateway) await new Promise((resolve) => gateway.server.close(resolve));
     docker(['rm', '-f', postgrestName], { check: false });
@@ -390,7 +405,16 @@ async function main() {
   }
 }
 
-main().catch((error) => {
-  console.error(error instanceof Error ? error.message : 'Run-49 joined harness failed.');
-  process.exitCode = 1;
-});
+if (require.main === module) {
+  main().catch((error) => {
+    console.error(
+      error instanceof Error ? error.message : 'Run-49 joined harness failed.',
+    );
+    process.exitCode = 1;
+  });
+}
+
+module.exports = {
+  createMinimalChildEnvironment,
+  runBoundedChildProcess,
+};
