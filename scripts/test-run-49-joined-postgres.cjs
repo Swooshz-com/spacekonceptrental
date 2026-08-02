@@ -182,6 +182,7 @@ function applyMigrations() {
 
 function seedFixture() {
   psql(`
+    begin;
     insert into public.workspaces (id, slug, name)
     values ('${ids.workspace}', 'run49-workspace', 'Run 49 Workspace');
     insert into public.categories (id, workspace_id, slug, name, is_published, sort_order)
@@ -206,6 +207,7 @@ function seedFixture() {
     ) values (
       '${ids.workspace}', '${ids.setupProduct}', '${ids.childProduct}', 0, 2
     );
+    commit;
     grant anon to authenticator;
     grant authenticated to authenticator;
     grant connect on database postgres to authenticator;
