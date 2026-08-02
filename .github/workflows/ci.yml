@@ -60,6 +60,10 @@ jobs:
       - name: Run Supabase RLS/schema tests
         run: npm run test:supabase-rls
 
+      - name: Install website dependencies for Run-49 joined integration
+        working-directory: website
+        run: npm ci
+
       - name: Run Run-49 joined PostgreSQL/PostgREST integration
         run: npm run test:run-49-joined-postgres
 
