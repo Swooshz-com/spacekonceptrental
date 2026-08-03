@@ -448,3 +448,93 @@ export type AdminRecipeReadResult =
         | "read-failure"
         | "unknown-error";
     };
+
+const SETUP_WRITE_RPC_UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const SETUP_WRITE_RPC_KEYS = Object.freeze([
+  "operation",
+  "setup_product_id",
+  "revision",
+  "item_count"
+]);
+
+export type AdminRecipeWriteRpcResult = {
+  operation: AdminRecipeOperation;
+  setupProductId: string;
+  revision: number;
+  itemCount: number;
+};
+
+export type AdminRecipeWriteRpcResultParse =
+  | { ok: true; value: AdminRecipeWriteRpcResult }
+  | { ok: false; code: "rpc-failure" };
+
+export function parseAdminRecipeWriteRpcResult(
+  data: unknown,
+  expected: { operation: AdminRecipeOperation; setupProductId: string }
+): AdminRecipeWriteRpcResultParse {
+  if (!isRecord(data)) return { ok: false, code: "rpc-failure" };
+
+  const keys = Object.keys(data);
+  if (keys.length !== SETUP_WRITE_RPC_KEYS.length) {
+    return { ok: false, code: "rpc-failure" };
+  }
+  const keySet = new Set(keys);
+  if (SETUP_WRITE_RPC_KEYS.some((key) => !keySet.has(key))) {
+    return { ok: false, code: "rpc-failure" };
+  }
+
+  const operation = data.operation;
+  const setupProductId = data.setup_product_id;
+  const revision = data.revision;
+  const itemCount = data.item_count;
+
+  if (typeof operation !== "string" || typeof setupProductId !== "string") {
+    return { ok: false, code: "rpc-failure" };
+  }
+
+  const normalizedOperation = operation.trim();
+  const normalizedSetupProductId = setupProductId.trim();
+
+  if (
+    normalizedOperation !== "replace" &&
+    normalizedOperation !== "remove"
+  ) {
+    return { ok: false, code: "rpc-failure" };
+  }
+  if (normalizedOperation !== expected.operation) {
+    return { ok: false, code: "rpc-failure" };
+  }
+
+  if (
+    !normalizedSetupProductId ||
+    !SETUP_WRITE_RPC_UUID_PATTERN.test(normalizedSetupProductId)
+  ) {
+    return { ok: false, code: "rpc-failure" };
+  }
+  if (normalizedSetupProductId !== expected.setupProductId) {
+    return { ok: false, code: "rpc-failure" };
+  }
+
+  if (
+    typeof revision !== "number" ||
+    typeof itemCount !== "number" ||
+    !Number.isSafeInteger(revision) ||
+    !Number.isSafeInteger(itemCount) ||
+    revision < 1 ||
+    itemCount < 1 ||
+    itemCount > SETUP_MAX_ITEMS
+  ) {
+    return { ok: false, code: "rpc-failure" };
+  }
+
+  return {
+    ok: true,
+    value: {
+      operation: normalizedOperation,
+      setupProductId: normalizedSetupProductId,
+      revision,
+      itemCount
+    }
+  };
+}

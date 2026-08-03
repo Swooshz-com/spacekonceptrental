@@ -26,6 +26,13 @@ const {
   validateWorkingDirectory,
 } = require('./run-53-joined-bootstrap.cjs');
 const {
+  DIAGNOSTIC_CONTROL_ENV_KEY,
+  assertDiagnosticControlIdentity,
+  createDiagnosticControl,
+  readDiagnosticControl,
+  removeDiagnosticControl,
+} = require('./run-49-diagnostic-control.cjs');
+const {
   validateClientConfiguration,
   validateIdentityFixture,
   validateSessionAdmission,
@@ -60,6 +67,12 @@ const ids = {
   category: '40000000-0000-4000-8000-000000000001',
   setupProduct: '50000000-0000-4000-8000-000000000001',
   childProduct: '50000000-0000-4000-8000-000000000002',
+  otherWorkspace: '10000000-0000-4000-8000-000000000002',
+  otherCategory: '40000000-0000-4000-8000-000000000002',
+  otherSetupProduct: '50000000-0000-4000-8000-000000000003',
+  otherChildProduct: '50000000-0000-4000-8000-000000000004',
+  unauthorisedAuthUser: '60000000-0000-4000-8000-000000000001',
+  unauthorisedAuthUserEmail: 'unauthorised@example.test',
 };
 
 function docker(args, options = {}) {
@@ -229,6 +242,21 @@ function seedFixture() {
     ) values (
       '${ids.workspace}', '${ids.setupProduct}', '${ids.childProduct}', 0, 2
     );
+    insert into public.workspaces (id, slug, name)
+    values ('${ids.otherWorkspace}', 'run49-other-workspace', 'Run 49 Other Workspace');
+    insert into public.categories (id, workspace_id, slug, name, is_published, sort_order)
+    values ('${ids.otherCategory}', '${ids.otherWorkspace}', 'run49-other-category', 'Run 49 Other Category', false, 1);
+    insert into public.products (id, workspace_id, category_id, slug, name, status, sort_order)
+    values
+      ('${ids.otherSetupProduct}', '${ids.otherWorkspace}', '${ids.otherCategory}', 'run49-other-setup', 'Run 49 Other Setup', 'draft', 1),
+      ('${ids.otherChildProduct}', '${ids.otherWorkspace}', '${ids.otherCategory}', 'run49-other-child', 'Run 49 Other Child', 'draft', 2);
+    insert into public.setup_recipes (workspace_id, setup_product_id, revision)
+    values ('${ids.otherWorkspace}', '${ids.otherSetupProduct}', 1);
+    insert into public.setup_recipe_items (
+      workspace_id, setup_product_id, included_product_id, position, base_quantity
+    ) values (
+      '${ids.otherWorkspace}', '${ids.otherSetupProduct}', '${ids.otherChildProduct}', 0, 1
+    );
     commit;
     grant select on table public.admin_users, public.memberships to authenticated;
     grant anon to authenticator;
@@ -345,11 +373,11 @@ function startPostgrest() {
   return Number(match[1]);
 }
 
-function createRun49Jwt() {
+function createRun49Jwt({ sub, email } = {}) {
   const header = base64UrlJson({ alg: 'HS256', typ: 'JWT' });
   const payload = base64UrlJson({
-    sub: ids.authUser,
-    email: 'admin-a@example.test',
+    sub: sub ?? ids.authUser,
+    email: email ?? 'admin-a@example.test',
     iss: 'run49-local',
     role: 'authenticated',
     aud: 'authenticated',
@@ -441,6 +469,7 @@ async function main() {
   }
 
   let gateway;
+  let diagnosticControl = null;
   let currentPhase = 'service_readiness';
   try {
     docker(['network', 'create', '--label', 'spacekonceptrental.run49=true', networkName]);
@@ -475,14 +504,21 @@ async function main() {
     currentPhase = 'reporter_load';
     validateReporterLoad({ reporterPath });
 
+    diagnosticControl = createDiagnosticControl();
     const childEnvironment = createMinimalChildEnvironment({
       ...process.env,
       RUN49_JOINED: '1',
       RUN49_SUPABASE_URL: `http://127.0.0.1:${gateway.port}`,
       RUN49_ACCESS_TOKEN: createRun49Jwt(),
+      RUN49_JWT_SECRET: jwtSecret,
       RUN49_WORKSPACE_ID: ids.workspace,
       RUN49_SETUP_PRODUCT_ID: ids.setupProduct,
       RUN49_CHILD_PRODUCT_ID: ids.childProduct,
+      RUN49_OTHER_WORKSPACE_ID: ids.otherWorkspace,
+      RUN49_OTHER_SETUP_PRODUCT_ID: ids.otherSetupProduct,
+      RUN49_UNAUTHORISED_AUTH_USER_ID: ids.unauthorisedAuthUser,
+      RUN49_UNAUTHORISED_AUTH_USER_EMAIL: ids.unauthorisedAuthUserEmail,
+      [DIAGNOSTIC_CONTROL_ENV_KEY]: diagnosticControl.filePath,
       ADMIN_EXPECTED_ORIGIN: 'https://admin.space.test',
       ADMIN_EXPECTED_HOST: 'admin.space.test',
       ADMIN_TRUSTED_WORKSPACE_ID: ids.workspace,
@@ -520,13 +556,53 @@ async function main() {
       },
     );
     const joinedReceipt = validateJoinedReceiptProcess(result.stdoutValue, result);
+    assertDiagnosticControlIdentity({ filePath: diagnosticControl.filePath });
+    const diagnosticRecord = readDiagnosticControl({
+      filePath: diagnosticControl.filePath,
+      required: false,
+    });
+
+    const diagnosticPhases = new Set([
+      'session_cookie_recovery',
+      'auth_user_lookup',
+      'authorization_transport',
+      'postgrest_jwt_admission',
+      'authenticated_role_selection',
+      'rpc_execution',
+      'rpc_result',
+    ]);
+    const receiptCarriesDiagnostic = diagnosticPhases.has(joinedReceipt.phase);
     if (joinedReceipt.outcome === 'passed') {
-      console.log('Run-49 joined integration completed.');
+      if (diagnosticRecord) {
+        console.error(
+          'Run-49 joined integration failed: final_receipt/diagnostic_on_passed_run.',
+        );
+        process.exitCode = 1;
+      } else {
+        console.log('Run-49 joined integration completed.');
+      }
     } else {
-      console.error(
-        `Run-49 joined integration failed: ${joinedReceipt.phase}/${joinedReceipt.category}.`,
-      );
-      process.exitCode = 1;
+      if (receiptCarriesDiagnostic && diagnosticRecord) {
+        if (
+          diagnosticRecord.phase !== joinedReceipt.phase ||
+          diagnosticRecord.category !== joinedReceipt.category
+        ) {
+          console.error(
+            'Run-49 joined integration failed: final_receipt/diagnostic_conflict.',
+          );
+          process.exitCode = 1;
+        } else {
+          console.error(
+            `Run-49 joined integration failed: ${joinedReceipt.phase}/${joinedReceipt.category}.`,
+          );
+          process.exitCode = 1;
+        }
+      } else {
+        console.error(
+          `Run-49 joined integration failed: ${joinedReceipt.phase}/${joinedReceipt.category}.`,
+        );
+        process.exitCode = 1;
+      }
     }
   } catch (error) {
     const failure =
@@ -544,6 +620,9 @@ async function main() {
     docker(['rm', '-f', containerName], { check: false });
     docker(['network', 'rm', networkName], { check: false });
     fs.rmSync(dockerConfigDir, { recursive: true, force: true });
+    if (diagnosticControl) {
+      removeDiagnosticControl({ dir: diagnosticControl.dir });
+    }
   }
 }
 

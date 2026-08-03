@@ -51,6 +51,11 @@ test('minimal environment is explicit and excludes unrelated secrets', () => {
     PATH: 'path-value',
     RUN49_JOINED: '1',
     RUN49_ACCESS_TOKEN: 'token-value',
+    RUN49_JWT_SECRET: 'jwt-secret-value',
+    RUN49_DIAGNOSTIC_CONTROL_FILE: 'control-path',
+    RUN49_OTHER_WORKSPACE_ID: 'other-workspace',
+    RUN49_OTHER_SETUP_PRODUCT_ID: 'other-product',
+    RUN49_UNAUTHORISED_AUTH_USER_ID: 'unauthorised-user',
     SUPABASE_ANON_KEY: 'anon-value',
     SUPABASE_SERVICE_ROLE_KEY: 'must-not-pass',
     RANDOM_SECRET: 'must-not-pass',
@@ -59,6 +64,11 @@ test('minimal environment is explicit and excludes unrelated secrets', () => {
   assert.deepEqual(environment, {
     PATH: 'path-value',
     RUN49_ACCESS_TOKEN: 'token-value',
+    RUN49_JWT_SECRET: 'jwt-secret-value',
+    RUN49_DIAGNOSTIC_CONTROL_FILE: 'control-path',
+    RUN49_OTHER_WORKSPACE_ID: 'other-workspace',
+    RUN49_OTHER_SETUP_PRODUCT_ID: 'other-product',
+    RUN49_UNAUTHORISED_AUTH_USER_ID: 'unauthorised-user',
     RUN49_JOINED: '1',
     SUPABASE_ANON_KEY: 'anon-value',
   });

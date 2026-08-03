@@ -30,8 +30,17 @@ const {
   validateWorkingDirectory,
 } = require('./run-53-joined-bootstrap.cjs');
 const {
-  SESSION_CLIENT_DIAGNOSTIC_PREFIX,
+  SESSION_CLIENT_DIAGNOSTIC_STATES,
+  diagnosticMarkerFor,
 } = require('./run-54-session-client-runner.cjs');
+const {
+  DIAGNOSTIC_CONTROL_ENV_KEY,
+  assertDiagnosticControlIdentity,
+  createDiagnosticControl,
+  readDiagnosticControl,
+  removeDiagnosticControl,
+  writeSessionClientDiagnostic,
+} = require('./run-49-diagnostic-control.cjs');
 const {
   runBoundedChildProcess,
 } = require('./run-bounded-child-process.cjs');
@@ -95,6 +104,29 @@ function captureReceipt(callback) {
 
   assert.equal(writes.length, 1);
   return parseJoinedReceiptOutput(writes[0]);
+}
+
+function createDiagnosticFixture() {
+  const control = createDiagnosticControl();
+  return {
+    control,
+    filePath: control.filePath,
+    cleanup: () => removeDiagnosticControl({ dir: control.dir }),
+  };
+}
+
+function classifyWithControl(controlPath, testModules, reason = 'failed') {
+  const previous = process.env[DIAGNOSTIC_CONTROL_ENV_KEY];
+  process.env[DIAGNOSTIC_CONTROL_ENV_KEY] = controlPath;
+  try {
+    return classifyTestRun({ testModules, unhandledErrors: [], reason });
+  } finally {
+    if (previous === undefined) {
+      delete process.env[DIAGNOSTIC_CONTROL_ENV_KEY];
+    } else {
+      process.env[DIAGNOSTIC_CONTROL_ENV_KEY] = previous;
+    }
+  }
 }
 
 test('exact hosted command and repository working-directory admission are closed', () => {
@@ -252,7 +284,7 @@ test('dependency and reporter admission classify missing, invalid and unsupporte
   );
 });
 
-test('collection and module admission rejects every non-locked seven-case shape', () => {
+test('collection and module admission rejects every non-locked case shape', () => {
   assert.deepEqual(
     classifyTestRun({ testModules: [], unhandledErrors: [], reason: 'failed' }),
     { phase: 'test_collection', category: 'test_collection_failed' },
@@ -292,7 +324,7 @@ test('collection and module admission rejects every non-locked seven-case shape'
   );
 });
 
-test('seven locked cases prove bootstrap completion and preserve the failing case phase', () => {
+test('all locked cases prove bootstrap completion and preserve the failing case phase', () => {
   assert.deepEqual(
     classifyTestRun({
       testModules: [makeModule(allCases('passed'))],
@@ -354,36 +386,86 @@ test('seven locked cases prove bootstrap completion and preserve the failing cas
   assert.equal(failed.category, 'case_execution_failed');
 });
 
-test('the first joined authentication failure carries only a closed fixed diagnostic', () => {
-  const diagnosticMessage =
-    SESSION_CLIENT_DIAGNOSTIC_PREFIX + "rpc_execution:rpc_execution_denied";
-  const failedCase = makeTestCase(
-    JOINED_TEST_CASE_NAMES[0],
-    'failed',
-    [{ message: diagnosticMessage }],
-  );
-  assert.deepEqual(
-    readSessionClientDiagnostic(failedCase),
-    { phase: 'rpc_execution', category: 'rpc_execution_denied' },
-  );
-  assert.deepEqual(
-    classifyTestRun({
-      testModules: [makeModule([
-        failedCase,
-        ...allCases('passed').slice(1),
-      ])],
-      reason: 'failed',
-    }),
-    { phase: 'rpc_execution', category: 'rpc_execution_denied' },
-  );
-  assert.deepEqual(
-    readSessionClientDiagnostic(makeTestCase(
-      JOINED_TEST_CASE_NAMES[0],
-      'failed',
-      [{ message: SESSION_CLIENT_DIAGNOSTIC_PREFIX + "unknown:unknown" }],
-    )),
-    { phase: 'final_receipt', category: 'final_receipt_invalid' },
-  );
+test('genuine harness diagnostics are admitted only through the structured control file', () => {
+  for (const state of SESSION_CLIENT_DIAGNOSTIC_STATES) {
+    const fixture = createDiagnosticFixture();
+    try {
+      writeSessionClientDiagnostic(state, { filePath: fixture.filePath });
+      assert.deepEqual(
+        readSessionClientDiagnostic({ filePath: fixture.filePath }),
+        { phase: state.phase, category: state.category },
+      );
+      assert.deepEqual(
+        classifyWithControl(fixture.filePath, [
+          makeModule([
+            makeTestCase(JOINED_TEST_CASE_NAMES[0], 'failed'),
+            ...allCases('passed').slice(1),
+          ]),
+        ]),
+        { phase: state.phase, category: state.category },
+      );
+      assert.doesNotThrow(() =>
+        assertDiagnosticControlIdentity({ filePath: fixture.filePath }),
+      );
+    } finally {
+      fixture.cleanup();
+    }
+  }
+});
+
+test('a failed client-authentication case without a structured diagnostic is rejected', () => {
+  const fixture = createDiagnosticFixture();
+  try {
+    const failedCase = makeTestCase(JOINED_TEST_CASE_NAMES[0], 'failed');
+    assert.equal(readSessionClientDiagnostic({ filePath: fixture.filePath }), null);
+    assert.deepEqual(
+      classifyWithControl(fixture.filePath, [
+        makeModule([failedCase, ...allCases('passed').slice(1)]),
+      ]),
+      { phase: 'final_receipt', category: 'final_receipt_invalid' },
+    );
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test('ordinary assertion, thrown-message and output text cannot forge a diagnostic', () => {
+  for (const state of SESSION_CLIENT_DIAGNOSTIC_STATES) {
+    const marker = diagnosticMarkerFor(state);
+    const fixture = createDiagnosticFixture();
+    try {
+      const failedCase = makeTestCase(
+        JOINED_TEST_CASE_NAMES[0],
+        'failed',
+        [{ message: marker }],
+      );
+
+      assert.equal(readSessionClientDiagnostic({ filePath: fixture.filePath }), null);
+      assert.deepEqual(
+        classifyWithControl(fixture.filePath, [
+          makeModule([failedCase, ...allCases('passed').slice(1)]),
+        ]),
+        { phase: 'final_receipt', category: 'final_receipt_invalid' },
+      );
+
+      const unrelatedFile = path.join(
+        fixture.control.dir,
+        'unrelated-output.txt',
+      );
+      fs.writeFileSync(unrelatedFile, marker);
+      assert.equal(readSessionClientDiagnostic({ filePath: fixture.filePath }), null);
+
+      fs.writeFileSync(fixture.filePath, `${marker}\n`);
+      assert.throws(
+        () => readDiagnosticControl({ filePath: fixture.filePath, required: false }),
+        (error) =>
+          error.code === 'diagnostic_control_invalid' &&
+          error.message === 'diagnostic_control_invalid',
+      );
+    } finally {
+      fixture.cleanup();
+    }
+  }
 });
 
 test('bootstrap failure and process posture remain fixed and public-safe', async () => {

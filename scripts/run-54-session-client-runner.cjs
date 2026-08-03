@@ -123,12 +123,9 @@ const SESSION_CLIENT_DIAGNOSTIC_STATES = Object.freeze([
     category: 'rpc_result_invalid',
   }),
 ]);
-const SESSION_CLIENT_DIAGNOSTIC_BY_MESSAGE = new Map(
-  SESSION_CLIENT_DIAGNOSTIC_STATES.map((state) => [
-    `${SESSION_CLIENT_DIAGNOSTIC_PREFIX}${state.phase}:${state.category}`,
-    state,
-  ]),
-);
+function diagnosticMarkerFor(state) {
+  return `${SESSION_CLIENT_DIAGNOSTIC_PREFIX}${state.phase}:${state.category}`;
+}
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -480,10 +477,22 @@ function validateCaseResults({ collected, executed, expectedCaseCount } = {}) {
   return { admitted: true };
 }
 
-function validateFinalReceipt({ outcome, phase, category, collected, executed } = {}) {
+function validateFinalReceipt({
+  outcome,
+  phase,
+  category,
+  collected,
+  executed,
+  expectedCaseCount = 0,
+} = {}) {
   if (
     outcome === 'passed' &&
-    (phase !== 'complete' || category !== 'none' || collected !== 7 || executed !== 7)
+    (phase !== 'complete' ||
+      category !== 'none' ||
+      !Number.isSafeInteger(expectedCaseCount) ||
+      expectedCaseCount <= 0 ||
+      collected !== expectedCaseCount ||
+      executed !== expectedCaseCount)
   ) {
     fail('final_receipt', 'final_receipt_invalid');
   }
@@ -500,13 +509,13 @@ function validateFinalReceipt({ outcome, phase, category, collected, executed } 
 
 module.exports = {
   SESSION_CLIENT_CATEGORIES,
-  SESSION_CLIENT_DIAGNOSTIC_BY_MESSAGE,
   SESSION_CLIENT_DIAGNOSTIC_PREFIX,
   SESSION_CLIENT_DIAGNOSTIC_STATES,
   SESSION_CLIENT_PHASES,
   SESSION_CLIENT_PHASE_CATEGORY_MAP,
   assertSessionClientState,
   createSessionClientFailure,
+  diagnosticMarkerFor,
   validateCaseResults,
   validateClientConfiguration,
   validateClientConstruction,

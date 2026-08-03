@@ -14,6 +14,9 @@ import type {
   AdminRecipeReadResult,
   AdminRecipeReadItem
 } from "./setup-recipe-types";
+import {
+  parseAdminRecipeWriteRpcResult
+} from "./setup-recipe-types";
 
 type RecipeSupabaseQueryResult = {
   data: unknown;
@@ -162,13 +165,18 @@ export async function executeAdminSetupRecipeWrite(
       return { ok: false, code: "rpc-failure" };
     }
 
-    const data = result.data;
+    const parsed = parseAdminRecipeWriteRpcResult(result.data, {
+      operation: request.operation,
+      setupProductId: request.setupProductId
+    });
+
+    if (!parsed.ok) {
+      return { ok: false, code: "rpc-failure" };
+    }
+
     return {
       ok: true,
-      operation: String(data.operation ?? ""),
-      setupProductId: String(data.setup_product_id ?? ""),
-      revision: Number(data.revision ?? 0),
-      itemCount: Number(data.item_count ?? 0)
+      ...parsed.value
     };
   } catch (error: unknown) {
     const message =

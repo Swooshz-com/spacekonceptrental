@@ -93,10 +93,11 @@ describe("setup recipe repository read authority", () => {
   });
 
   it("allows an authenticated admin write through the session-bound server client", async () => {
+    const setupProductId = "50000000-0000-4000-8000-000000000001";
     const rpc = vi.fn(async () => ({
       data: {
         operation: "replace",
-        setup_product_id: "setup-1",
+        setup_product_id: setupProductId,
         revision: 4,
         item_count: 1
       },
@@ -111,7 +112,7 @@ describe("setup recipe repository read authority", () => {
       {
         operation: "replace",
         expectedWorkspaceId: "workspace-1",
-        setupProductId: "setup-1",
+        setupProductId,
         expectedRevision: 3,
         items: [
           {
@@ -129,9 +130,42 @@ describe("setup recipe repository read authority", () => {
       "execute_admin_setup_recipe_write",
       expect.objectContaining({
         p_expected_workspace_id: "workspace-1",
-        p_setup_product_id: "setup-1"
+        p_setup_product_id: setupProductId
       })
     );
+  });
+
+  it("rejects a coercively-shaped RPC result instead of repairing malformed authority", async () => {
+    const setupProductId = "50000000-0000-4000-8000-000000000001";
+    const rpc = vi.fn(async () => ({
+      data: {
+        operation: "replace",
+        setup_product_id: setupProductId,
+        revision: "4",
+        item_count: "1"
+      },
+      error: null
+    }));
+    const client = { rpc, from: vi.fn() };
+
+    const result = await executeAdminSetupRecipeWrite(
+      {
+        operation: "replace",
+        expectedWorkspaceId: "workspace-1",
+        setupProductId,
+        expectedRevision: 3,
+        items: [
+          {
+            included_product_id: "child-1",
+            position: 0,
+            base_quantity: 1
+          }
+        ]
+      },
+      authenticatedDependencies(client as never)
+    );
+
+    expect(result).toEqual({ ok: false, code: "rpc-failure" });
   });
 
   it("denies an anonymous write and never attempts the RPC", async () => {

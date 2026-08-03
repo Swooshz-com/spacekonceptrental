@@ -1,3 +1,5 @@
+import { createHmac } from "node:crypto";
+import { readFileSync, writeFileSync } from "node:fs";
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -16,24 +18,57 @@ vi.mock("next/headers", () => ({
 import { createSessionBoundSupabaseAdminReadClient } from "../lib/admin/authorization/supabase-admin-auth-identity-adapter";
 import { issueAdminCsrfProofRoute } from "../app/api/admin/csrf-proof/route";
 import { handleAdminSetupRecipeRoute } from "../lib/catalogue/admin-setup-recipe-write-route";
+import { signServerAdminCsrfProof } from "../lib/admin/authorization/server-admin-csrf-proof-runtime-dependencies";
+import type { ServerAdminCsrfProofSignerInput } from "../lib/admin/authorization/server-admin-csrf-proof-issuer";
 
 const enabled = process.env.RUN49_JOINED === "1";
 const supabaseUrl = process.env.RUN49_SUPABASE_URL ?? "http://127.0.0.1:9";
 const accessToken = process.env.RUN49_ACCESS_TOKEN ?? "";
+const jwtSecret = process.env.RUN49_JWT_SECRET ?? "";
 const workspaceId = process.env.RUN49_WORKSPACE_ID ?? "";
 const setupProductId = process.env.RUN49_SETUP_PRODUCT_ID ?? "";
 const childProductId = process.env.RUN49_CHILD_PRODUCT_ID ?? "";
+const otherSetupProductId = process.env.RUN49_OTHER_SETUP_PRODUCT_ID ?? "";
+const unauthorisedAuthUserId =
+  process.env.RUN49_UNAUTHORISED_AUTH_USER_ID ?? "";
+const unauthorisedAuthUserEmail =
+  process.env.RUN49_UNAUTHORISED_AUTH_USER_EMAIL ?? "";
 const expectedOrigin = process.env.ADMIN_EXPECTED_ORIGIN ?? "https://admin.space.test";
 const expectedHost = process.env.ADMIN_EXPECTED_HOST ?? "admin.space.test";
 
 const authCookieName = `sb-${new URL(supabaseUrl).hostname.split(".")[0]}-auth-token`;
-function recordSessionClientFailure(phase: string, category: string): never {
-  throw new Error(`run49_session_client_diagnostic:${phase}:${category}`);
+
+function genericSessionClientFailure(): never {
+  const error = new Error("session_client_state_failed");
+  error.name = "SessionClientStateError";
+  (error as Error & { code?: string }).code = "session_client_state_failed";
+  throw error;
 }
 
-function sessionCookie() {
+function recordSessionClientFailure(phase: string, category: string): never {
+  const controlFile = process.env.RUN49_DIAGNOSTIC_CONTROL_FILE;
+  if (!controlFile) return genericSessionClientFailure();
+
+  let existing = "";
+  try {
+    existing = readFileSync(controlFile, "utf8");
+  } catch {
+    return genericSessionClientFailure();
+  }
+  if (existing.trim() !== "") return genericSessionClientFailure();
+
+  const record = { schemaVersion: 1, phase, category };
+  try {
+    writeFileSync(controlFile, `${JSON.stringify(record)}\n`, { flag: "w" });
+  } catch {
+    return genericSessionClientFailure();
+  }
+  return genericSessionClientFailure();
+}
+
+function sessionCookieFor(sessionAccessToken: string) {
   const session = {
-    access_token: accessToken,
+    access_token: sessionAccessToken,
     refresh_token: "run49-local-refresh-token",
     token_type: "bearer",
     expires_in: 900,
@@ -46,9 +81,37 @@ function sessionCookie() {
   };
 }
 
-function sessionCookieHeader() {
-  const cookie = sessionCookie();
+function sessionCookie() {
+  return sessionCookieFor(accessToken);
+}
+
+function sessionCookieHeaderFor(cookie: { name: string; value: string }) {
   return `${cookie.name}=${cookie.value}`;
+}
+
+function sessionCookieHeader() {
+  return sessionCookieHeaderFor(sessionCookie());
+}
+
+function buildRequest(
+  pathname: string,
+  init: {
+    method?: string;
+    headers?: Record<string, string>;
+    body?: string;
+    cookie?: string;
+  } = {}
+) {
+  return new NextRequest(`${expectedOrigin}${pathname}`, {
+    method: init.method ?? "GET",
+    headers: {
+      origin: expectedOrigin,
+      host: expectedHost,
+      ...(init.cookie ? { cookie: init.cookie } : {}),
+      ...init.headers
+    },
+    ...(init.body === undefined ? {} : { body: init.body })
+  });
 }
 
 function authenticatedSessionRequest(
@@ -59,15 +122,11 @@ function authenticatedSessionRequest(
     body?: string;
   } = {}
 ) {
-  return new NextRequest(`${expectedOrigin}${pathname}`, {
+  return buildRequest(pathname, {
     method: init.method ?? "GET",
-    headers: {
-      origin: expectedOrigin,
-      host: expectedHost,
-      cookie: sessionCookieHeader(),
-      ...init.headers
-    },
-    ...(init.body === undefined ? {} : { body: init.body })
+    headers: init.headers,
+    body: init.body,
+    cookie: sessionCookieHeader()
   });
 }
 
@@ -146,15 +205,20 @@ function assertRpcResponse(
   }
 }
 
-function setupRequest(proof: string, body: string) {
-  const request = authenticatedSessionRequest("/api/admin/setup-recipe", {
+function setupRequest(
+  proof: string | null,
+  body: string,
+  options: { cookie?: string } = {}
+) {
+  const request = buildRequest("/api/admin/setup-recipe", {
     method: "POST",
     headers: {
       "content-type": "application/json",
       origin: expectedOrigin,
       host: expectedHost,
-      "x-csrf-proof": proof
+      ...(proof ? { "x-csrf-proof": proof } : {})
     },
+    cookie: options.cookie ?? sessionCookieHeader(),
     body
   });
   setRequestContext(request);
@@ -189,13 +253,69 @@ function validReadBody() {
   return JSON.stringify({ action: "read", setupProductId });
 }
 
+function base64UrlJson(value: unknown) {
+  return Buffer.from(JSON.stringify(value)).toString("base64url");
+}
+
+function unverifiedProof(operation: string) {
+  const payload = {
+    operation,
+    sessionBinding: "session-binding",
+    nonce: "nonce",
+    issuedAt: 1,
+    expiresAt: 2
+  };
+  return `${base64UrlJson(payload)}.${"a".repeat(43)}`;
+}
+
+function mintJwt(sub: string, email: string) {
+  const header = base64UrlJson({ alg: "HS256", typ: "JWT" });
+  const payload = base64UrlJson({
+    sub,
+    email,
+    iss: "run49-local",
+    role: "authenticated",
+    aud: "authenticated",
+    iat: Math.floor(Date.now() / 1000),
+    exp: Math.floor(Date.now() / 1000) + 900
+  });
+  const signature = createHmac("sha256", jwtSecret)
+    .update(`${header}.${payload}`)
+    .digest("base64url");
+  return `${header}.${payload}.${signature}`;
+}
+
+async function issueStaleProof(): Promise<string> {
+  const fresh = await issueProof("admin.setupRecipe.read");
+  const [payloadSegment] = fresh.split(".");
+  const payload = JSON.parse(
+    Buffer.from(payloadSegment, "base64url").toString("utf8")
+  ) as Record<string, unknown>;
+  const now = Date.now();
+  const stalePayload = {
+    ...payload,
+    issuedAt: now - 600_000,
+    expiresAt: now - 300_000
+  } as ServerAdminCsrfProofSignerInput["payload"];
+  const staleSegment = base64UrlJson(stalePayload);
+  const signature = signServerAdminCsrfProof({
+    payload: stalePayload,
+    payloadJson: JSON.stringify(stalePayload),
+    payloadSegment: staleSegment
+  });
+  return `${staleSegment}.${signature}`;
+}
+
 describe.runIf(enabled)("Run-49 joined production Supabase/PostgreSQL integration", () => {
   beforeEach(() => {
     setRequestContext(authenticatedSessionRequest("/api/admin/auth-check"));
     expect(accessToken).not.toBe("");
+    expect(jwtSecret).not.toBe("");
     expect(workspaceId).toMatch(/^[0-9a-f-]{36}$/);
     expect(setupProductId).toMatch(/^[0-9a-f-]{36}$/);
     expect(childProductId).toMatch(/^[0-9a-f-]{36}$/);
+    expect(otherSetupProductId).toMatch(/^[0-9a-f-]{36}$/);
+    expect(unauthorisedAuthUserId).toMatch(/^[0-9a-f-]{36}$/);
   });
 
   it("uses the real session-bound client and crosses the HTTP RPC transport", async () => {
@@ -266,24 +386,17 @@ describe.runIf(enabled)("Run-49 joined production Supabase/PostgreSQL integratio
     assertRpcResponse(duplicate, false);
   });
 
-  it("consumes before malformed and oversized bodies, then accepts only a fresh proof", async () => {
-    const malformedProof = await issueProof("admin.setupRecipe.read");
-    const malformedRequest = setupRequest(malformedProof, "{");
-    const malformed = await handleAdminSetupRecipeRoute(malformedRequest);
-    expect(malformed.status).toBe(400);
+  it("consumes before malformed JSON body failure, then denies the same proof and accepts a fresh proof", async () => {
+    const proof = await issueProof("admin.setupRecipe.read");
+    const failing = await handleAdminSetupRecipeRoute(setupRequest(proof, "{"));
+    expect(failing.status).toBe(400);
+    expect(await json(failing)).toEqual({ error: "request_body_malformed" });
 
-    const replayRequest = setupRequest(malformedProof, validReadBody());
-    const replay = await handleAdminSetupRecipeRoute(replayRequest);
+    const replay = await handleAdminSetupRecipeRoute(
+      setupRequest(proof, validReadBody())
+    );
     expect(replay.status).toBe(403);
     expect(await json(replay)).toEqual({ error: "csrf_proof_replayed" });
-
-    const oversizedProof = await issueProof("admin.setupRecipe.read");
-    const oversizedRequest = setupRequest(
-      oversizedProof,
-      JSON.stringify({ action: "read", setupProductId, padding: "x".repeat(70_000) })
-    );
-    const oversized = await handleAdminSetupRecipeRoute(oversizedRequest);
-    expect(oversized.status).toBe(413);
 
     const replacementProof = await issueProof("admin.setupRecipe.read");
     const replacement = await handleAdminSetupRecipeRoute(
@@ -300,7 +413,75 @@ describe.runIf(enabled)("Run-49 joined production Supabase/PostgreSQL integratio
     });
   });
 
-  it("persists a setup write through the production repository and reloads it authoritatively", async () => {
+  it("consumes before oversized body failure, then denies the same proof and accepts a fresh proof", async () => {
+    const proof = await issueProof("admin.setupRecipe.read");
+    const oversizedBody = JSON.stringify({
+      action: "read",
+      setupProductId,
+      padding: "x".repeat(70_000)
+    });
+    const failing = await handleAdminSetupRecipeRoute(
+      setupRequest(proof, oversizedBody)
+    );
+    expect(failing.status).toBe(413);
+    expect(await json(failing)).toEqual({ error: "request_body_too_large" });
+
+    const replay = await handleAdminSetupRecipeRoute(
+      setupRequest(proof, validReadBody())
+    );
+    expect(replay.status).toBe(403);
+    expect(await json(replay)).toEqual({ error: "csrf_proof_replayed" });
+
+    const replacementProof = await issueProof("admin.setupRecipe.read");
+    const replacement = await handleAdminSetupRecipeRoute(
+      setupRequest(replacementProof, validReadBody())
+    );
+    expect(replacement.status).toBe(200);
+  });
+
+  it("consumes before unknown-action failure, then denies the same proof and accepts a fresh proof", async () => {
+    const proof = await issueProof("admin.setupRecipe.read");
+    const failing = await handleAdminSetupRecipeRoute(
+      setupRequest(proof, JSON.stringify({ action: "bogus", setupProductId }))
+    );
+    expect(failing.status).toBe(400);
+    expect(await json(failing)).toEqual({ error: "unknown_action" });
+
+    const replay = await handleAdminSetupRecipeRoute(
+      setupRequest(proof, validReadBody())
+    );
+    expect(replay.status).toBe(403);
+    expect(await json(replay)).toEqual({ error: "csrf_proof_replayed" });
+
+    const replacementProof = await issueProof("admin.setupRecipe.read");
+    const replacement = await handleAdminSetupRecipeRoute(
+      setupRequest(replacementProof, validReadBody())
+    );
+    expect(replacement.status).toBe(200);
+  });
+
+  it("consumes before schema-rejection failure, then denies the same proof and accepts a fresh proof", async () => {
+    const proof = await issueProof("admin.setupRecipe.read");
+    const failing = await handleAdminSetupRecipeRoute(
+      setupRequest(proof, JSON.stringify({ action: "read" }))
+    );
+    expect(failing.status).toBe(400);
+    expect(await json(failing)).toEqual({ error: "setup_product_id_required" });
+
+    const replay = await handleAdminSetupRecipeRoute(
+      setupRequest(proof, validReadBody())
+    );
+    expect(replay.status).toBe(403);
+    expect(await json(replay)).toEqual({ error: "csrf_proof_replayed" });
+
+    const replacementProof = await issueProof("admin.setupRecipe.read");
+    const replacement = await handleAdminSetupRecipeRoute(
+      setupRequest(replacementProof, validReadBody())
+    );
+    expect(replacement.status).toBe(200);
+  });
+
+  it("accepts one valid authorised request through the durable joined authority", async () => {
     const writeProof = await issueProof("admin.setupRecipe.write");
     const write = await handleAdminSetupRecipeRoute(
       setupRequest(
@@ -342,7 +523,7 @@ describe.runIf(enabled)("Run-49 joined production Supabase/PostgreSQL integratio
     });
   });
 
-  it("rejects a mismatched action only after consuming the signed operation", async () => {
+  it("rejects a wrong-operation proof only after consuming the signed proof", async () => {
     const proof = await issueProof("admin.setupRecipe.write");
     const mismatched = await handleAdminSetupRecipeRoute(
       setupRequest(proof, JSON.stringify({ action: "read", setupProductId }))
@@ -459,5 +640,74 @@ describe.runIf(enabled)("Run-49 joined production Supabase/PostgreSQL integratio
       const response = await fetch(request);
       expect(response.ok).toBe(false);
     }
+  });
+
+  it("rejects a missing CSRF proof through the production route", async () => {
+    const request = setupRequest(null, validReadBody());
+    const response = await handleAdminSetupRecipeRoute(request);
+    expect(response.status).toBe(403);
+    expect(await json(response)).toEqual({ error: "csrf_proof_invalid" });
+  });
+
+  it("rejects a malformed CSRF proof through the production route", async () => {
+    const request = setupRequest("malformed-proof-value", validReadBody());
+    const response = await handleAdminSetupRecipeRoute(request);
+    expect(response.status).toBe(403);
+    expect(await json(response)).toEqual({ error: "csrf_proof_invalid" });
+  });
+
+  it("rejects a stale CSRF proof without consuming the durable nonce", async () => {
+    const staleProof = await issueStaleProof();
+    const first = await handleAdminSetupRecipeRoute(
+      setupRequest(staleProof, validReadBody())
+    );
+    expect(first.status).toBe(403);
+    expect(await json(first)).toEqual({ error: "csrf_proof_stale" });
+
+    const second = await handleAdminSetupRecipeRoute(
+      setupRequest(staleProof, validReadBody())
+    );
+    expect(second.status).toBe(403);
+    expect(await json(second)).toEqual({ error: "csrf_proof_stale" });
+  });
+
+  it("rejects an anonymous session through the production route", async () => {
+    const request = setupRequest(
+      unverifiedProof("admin.setupRecipe.read"),
+      validReadBody(),
+      { cookie: "" }
+    );
+    const response = await handleAdminSetupRecipeRoute(request);
+    expect(response.status).toBe(403);
+    expect(await json(response)).toEqual({ error: "submission_not_allowed" });
+  });
+
+  it("rejects an authenticated non-admin user through the production route", async () => {
+    const unauthorisedToken = mintJwt(
+      unauthorisedAuthUserId,
+      unauthorisedAuthUserEmail
+    );
+    const cookie = sessionCookieFor(unauthorisedToken);
+    const request = setupRequest(
+      unverifiedProof("admin.setupRecipe.read"),
+      validReadBody(),
+      { cookie: sessionCookieHeaderFor(cookie) }
+    );
+    const response = await handleAdminSetupRecipeRoute(request);
+    expect(response.status).toBe(403);
+    expect(await json(response)).toEqual({ error: "submission_not_allowed" });
+  });
+
+  it("rejects a cross-workspace record request through the production route", async () => {
+    const proof = await issueProof("admin.setupRecipe.read");
+    const foreignBody = JSON.stringify({
+      action: "read",
+      setupProductId: otherSetupProductId
+    });
+    const response = await handleAdminSetupRecipeRoute(
+      setupRequest(proof, foreignBody)
+    );
+    expect(response.status).toBe(404);
+    expect(await json(response)).toEqual({ error: "not-found" });
   });
 });

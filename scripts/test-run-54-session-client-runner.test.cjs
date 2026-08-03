@@ -484,14 +484,17 @@ test('Run-54 request context, runner setup, case counts and final receipt are cl
     'test_runner_setup_failed',
   );
 
-  assert.doesNotThrow(() => validateCaseResults({ collected: 7, executed: 7, expectedCaseCount: 7 }));
+  const expectedCaseCount = JOINED_TEST_CASE_NAMES.length;
+  assert.doesNotThrow(() =>
+    validateCaseResults({ collected: expectedCaseCount, executed: expectedCaseCount, expectedCaseCount }),
+  );
   assertFailure(
-    () => validateCaseResults({ collected: 6, executed: 7, expectedCaseCount: 7 }),
+    () => validateCaseResults({ collected: expectedCaseCount - 1, executed: expectedCaseCount, expectedCaseCount }),
     'case_execution',
     'case_result_invalid',
   );
   assertFailure(
-    () => validateCaseResults({ collected: 7, executed: 8, expectedCaseCount: 7 }),
+    () => validateCaseResults({ collected: expectedCaseCount, executed: expectedCaseCount + 1, expectedCaseCount }),
     'case_execution',
     'case_result_invalid',
   );
@@ -499,11 +502,12 @@ test('Run-54 request context, runner setup, case counts and final receipt are cl
     outcome: 'passed',
     phase: 'complete',
     category: 'none',
-    collected: 7,
-    executed: 7,
+    collected: expectedCaseCount,
+    executed: expectedCaseCount,
+    expectedCaseCount,
   }));
   assertFailure(
-    () => validateFinalReceipt({ outcome: 'passed', phase: 'complete', category: 'none', collected: 6, executed: 7 }),
+    () => validateFinalReceipt({ outcome: 'passed', phase: 'complete', category: 'none', collected: expectedCaseCount - 1, executed: expectedCaseCount, expectedCaseCount }),
     'final_receipt',
     'final_receipt_invalid',
   );

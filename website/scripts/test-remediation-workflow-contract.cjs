@@ -15,6 +15,18 @@ const REVIEW_SEQUENCE_PATH = path.join(
   "dependency-remediation-review-sequencing.json",
 );
 
+const REQUIRED_JOBS = [
+  "repo-validation",
+  "exact-head-production-audit",
+  "website-validation",
+  "tracked-file-safety",
+];
+
+const PR_HEAD_EXPRESSION =
+  "github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.event_name == 'push' && github.sha || ''";
+
+const EXPECTED_REVISION_EXPRESSION = "${{ " + PR_HEAD_EXPRESSION + " }}";
+
 function readWorkflow() {
   return fs.readFileSync(WORKFLOW_PATH, "utf8").replace(/\r\n/g, "\n");
 }
@@ -28,65 +40,156 @@ function extractJob(workflow, jobName) {
   return nextJob === -1 ? remainder : remainder.slice(0, nextJob);
 }
 
-test("pull-request product validation uses the default merge-result checkout", () => {
-  const job = extractJob(readWorkflow(), "website-validation");
-  const checkoutStep = job.slice(
-    job.indexOf("- name: Check out repository"),
-    job.indexOf("- name: Set up Node.js"),
-  );
-  assert.match(checkoutStep, /uses: actions\/checkout@v4/);
-  assert.doesNotMatch(checkoutStep, /\n\s+ref:/);
-  assert.match(job, /npm run test/);
-  assert.match(job, /npm run typecheck/);
-  assert.match(job, /npm run build/);
-  assert.match(job, /npm run test:sharp-native/);
-  assert.doesNotMatch(job, /validate-production-audit\.cjs/);
-});
+function extractStep(job, stepName) {
+  const startMarker = `- name: ${stepName}\n`;
+  const start = job.indexOf(startMarker);
+  assert.notEqual(start, -1, `Missing ${stepName} step in job`);
+  const remainder = job.slice(start + startMarker.length);
+  const nextStep = remainder.search(/^\s+- name: /m);
+  return nextStep === -1 ? remainder : remainder.slice(0, nextStep);
+}
 
-test("exact-head audit uses only the candidate head on pull requests", () => {
-  const job = extractJob(readWorkflow(), "exact-head-production-audit");
-  const exactAuthority =
-    "${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}";
-  assert.match(job, new RegExp(`ref: ${escapeRegExp(exactAuthority)}`));
-  assert.match(
-    job,
-    new RegExp(`EXPECTED_AUDIT_REVISION: ${escapeRegExp(exactAuthority)}`),
-  );
-  assert.match(job, /working-directory: website\n\s+run: npm ci/);
-  assert.match(job, /validate-production-audit\.cjs/);
-  assert.doesNotMatch(job, /npm run test\n/);
-  assert.doesNotMatch(job, /npm run typecheck/);
-  assert.doesNotMatch(job, /npm run build/);
-});
+function extractExpectedRevisionExpression(job) {
+  const marker = "EXPECTED_REVISION: ";
+  const start = job.indexOf(marker);
+  assert.notEqual(start, -1, "Missing EXPECTED_REVISION job env");
+  const lineEnd = job.indexOf("\n", start);
+  const line = job.slice(start, lineEnd === -1 ? undefined : lineEnd);
+  return line.slice(marker.length).trim();
+}
 
-test("push validation binds both authorities to github.sha", () => {
+function hasGithubShaFallbackOnPullRequest(job) {
+  const revision = extractExpectedRevisionExpression(job);
+  return revision.includes("pull_request.head.sha || github.sha");
+}
+
+test("every required job binds checkout to one literal event-derived revision", () => {
   const workflow = readWorkflow();
-  const product = extractJob(workflow, "website-validation");
-  const audit = extractJob(workflow, "exact-head-production-audit");
-  assert.doesNotMatch(
-    product.slice(
-      product.indexOf("- name: Check out repository"),
-      product.indexOf("- name: Set up Node.js"),
-    ),
-    /\n\s+ref:/,
-  );
-  assert.match(audit, /\|\| github\.sha/);
-  assert.equal((audit.match(/\|\| github\.sha/g) ?? []).length >= 2, true);
+  const revisions = new Set();
+
+  for (const jobName of REQUIRED_JOBS) {
+    const job = extractJob(workflow, jobName);
+    const checkout = extractStep(job, "Check out literal source revision");
+
+    assert.match(checkout, /uses: actions\/checkout@v4/);
+    assert.match(checkout, /\n\s+ref: \$\{\{ env\.EXPECTED_REVISION \}\}\n/);
+    assert.doesNotMatch(checkout, /ref: \$\{\{ github\.sha \}\}/);
+    assert.doesNotMatch(checkout, /ref: main/);
+    assert.doesNotMatch(checkout, /\n\s+ref: $/);
+
+    const revision = extractExpectedRevisionExpression(job);
+    assert.equal(revision, EXPECTED_REVISION_EXPRESSION);
+    revisions.add(revision);
+  }
+
+  assert.equal(revisions.size, 1, "required jobs must share one identical revision");
 });
 
-test("merge-result and exact-head authorities cannot silently substitute", () => {
+test("every required job asserts the literal exact head immediately after checkout", () => {
   const workflow = readWorkflow();
-  const product = extractJob(workflow, "website-validation");
-  const audit = extractJob(workflow, "exact-head-production-audit");
-  assert.match(product, /name: Website validation/);
-  assert.match(audit, /name: Exact-head production audit/);
-  assert.doesNotMatch(product, /pull_request\.head\.sha/);
-  assert.doesNotMatch(audit, /Run website tests|Run website typecheck|Build website/);
-  assert.match(product, /Run website tests/);
-  assert.match(audit, /Enforce zero production dependency vulnerabilities/);
+
+  for (const jobName of REQUIRED_JOBS) {
+    const job = extractJob(workflow, jobName);
+    const assertion = extractStep(job, "Assert literal exact-head checkout");
+
+    const checkout = extractStep(job, "Check out literal source revision");
+    assert.ok(
+      job.indexOf(checkout) < job.indexOf(assertion),
+      `${jobName} must assert after checkout`,
+    );
+
+    assert.match(assertion, /git rev-parse HEAD/);
+    assert.match(assertion, /\$EXPECTED_REVISION/);
+    assert.match(assertion, /test -n "\$EXPECTED_REVISION"/);
+    assert.doesNotMatch(assertion, /continue-on-error/);
+    assert.doesNotMatch(assertion, /\n\s+if: /);
+  }
 });
 
-test("audit evidence upload requires validator-owned admission proof", () => {
+test("PR events prove the checkout is not the synthetic merge commit", () => {
+  const workflow = readWorkflow();
+
+  for (const jobName of REQUIRED_JOBS) {
+    const job = extractJob(workflow, jobName);
+    const assertion = extractStep(job, "Assert literal exact-head checkout");
+
+    assert.match(assertion, /GITHUB_BASE_REF/);
+    assert.match(assertion, /!= "\$\{\{ github\.sha \}\}"/);
+  }
+});
+
+test("no required job uses synthetic github.sha as the pull-request authority", () => {
+  const workflow = readWorkflow();
+
+  for (const jobName of REQUIRED_JOBS) {
+    const job = extractJob(workflow, jobName);
+    assert.equal(hasGithubShaFallbackOnPullRequest(job), false);
+    assert.doesNotMatch(
+      job,
+      /EXPECTED_REVISION: \$\{\{ github\.sha \}\}/,
+    );
+  }
+});
+
+test("unsupported events receive an explicit empty revision that must fail the assertion", () => {
+  const workflow = readWorkflow();
+
+  for (const jobName of REQUIRED_JOBS) {
+    const job = extractJob(workflow, jobName);
+    const revision = extractExpectedRevisionExpression(job);
+    assert.ok(revision.endsWith("|| '' }}"), `${jobName} must reject unsupported events`);
+    assert.ok(revision.includes("github.event_name == 'pull_request'"));
+    assert.ok(revision.includes("github.event_name == 'push'"));
+  }
+});
+
+test("required jobs are not permissive or conditionally bypassable", () => {
+  const workflow = readWorkflow();
+
+  for (const jobName of REQUIRED_JOBS) {
+    const job = extractJob(workflow, jobName);
+    assert.doesNotMatch(job, /continue-on-error: true/);
+    assert.doesNotMatch(job, /\n    if: /);
+    assert.doesNotMatch(job, /\n  if: /);
+    assert.doesNotMatch(job, /needs:/);
+  }
+
+  const assertion = extractStep(
+    extractJob(workflow, "repo-validation"),
+    "Assert literal exact-head checkout",
+  );
+  assert.doesNotMatch(assertion, /\n\s+if: /);
+});
+
+test("no required job validates another commit through a different checkout", () => {
+  const workflow = readWorkflow();
+
+  for (const jobName of REQUIRED_JOBS) {
+    const job = extractJob(workflow, jobName);
+    const checkoutCount = (job.match(/actions\/checkout@v4/g) ?? []).length;
+    assert.equal(checkoutCount, 1, `${jobName} must use exactly one checkout`);
+    assert.doesNotMatch(job, /ref: \$\{\{ github\.sha \}\}/);
+  }
+});
+
+test("all required jobs stay in the required dependency graph without cross-job substitution", () => {
+  const workflow = readWorkflow();
+
+  for (const jobName of REQUIRED_JOBS) {
+    const job = extractJob(workflow, jobName);
+    assert.doesNotMatch(job, /needs:/);
+    assert.match(job, /name: .+/);
+  }
+
+  for (const jobName of [
+    "website-validation",
+    "exact-head-production-audit",
+  ]) {
+    assert.match(extractJob(workflow, jobName), /timeout-minutes: [1-9][0-9]*/);
+  }
+});
+
+test("exact-head audit preserves its validator-owned evidence and admission gates", () => {
   const audit = extractJob(readWorkflow(), "exact-head-production-audit");
   const enforceIndex = audit.indexOf(
     "- name: Enforce zero production dependency vulnerabilities",
@@ -136,6 +239,10 @@ test("audit evidence upload requires validator-owned admission proof", () => {
   assert.doesNotMatch(uploadStep, /if: always\(\)/);
   assert.match(
     audit,
+    /EXPECTED_AUDIT_REVISION: \$\{\{ env\.EXPECTED_REVISION \}\}/,
+  );
+  assert.match(
+    audit,
     /AUDIT_STATUS: \$\{\{ steps\.production-audit\.outputs\.status \}\}/,
   );
   assert.match(
@@ -145,14 +252,17 @@ test("audit evidence upload requires validator-owned admission proof", () => {
   assert.doesNotMatch(audit, /continue-on-error: true/);
 });
 
-test("both bounded jobs have workflow-level timeout defence", () => {
+test("audit evidence artifact name binds to the same literal revision", () => {
+  const audit = extractJob(readWorkflow(), "exact-head-production-audit");
+  assert.match(
+    audit,
+    /name: production-dependency-audit-\$\{\{ env\.EXPECTED_REVISION \}\}/,
+  );
+});
+
+test("the joined integration step names no longer claim a seven-case contract", () => {
   const workflow = readWorkflow();
-  for (const jobName of [
-    "website-validation",
-    "exact-head-production-audit",
-  ]) {
-    assert.match(extractJob(workflow, jobName), /timeout-minutes: [1-9][0-9]*/);
-  }
+  assert.doesNotMatch(workflow, /seven-case PostgreSQL/);
 });
 
 test("accepted dependency resolution remains exact", () => {

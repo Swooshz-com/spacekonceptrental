@@ -56,6 +56,7 @@
     "test:run-52-receipt-e2e": "node --test scripts/test-run-52-receipt-e2e.test.cjs",
     "test:run-53-bootstrap": "node --test scripts/test-run-53-bootstrap.test.cjs",
     "test:run-54-session-client-runner": "node --test scripts/test-run-54-session-client-runner.test.cjs",
+    "test:run-57-diagnostic-control": "node --test scripts/test-run-49-diagnostic-control.test.cjs",
     "test:run-49-joined-postgres": "node scripts/test-run-49-joined-postgres.cjs",
     "test:supabase-migrations": "node --test scripts/validate-supabase-migrations.test.cjs",
     "test:quote-email-runtime-readiness": "node --test scripts/validate-quote-email-runtime-readiness.test.cjs",

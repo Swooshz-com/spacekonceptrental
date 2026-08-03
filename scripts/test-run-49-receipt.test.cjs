@@ -161,13 +161,13 @@ test('custom reporter maps each failed joined case to a safe phase only', () => 
     }
     const parsed = parseJoinedReceiptOutput(writes[0]);
     assert.equal(parsed.outcome, 'failed');
-    assert.equal(parsed.phase, phase);
-    assert.equal(
-      parsed.category,
-      phase === 'client_authentication'
-        ? 'client_authentication_failed'
-        : 'case_execution_failed',
-    );
+    if (phase === 'client_authentication') {
+      assert.equal(parsed.phase, 'final_receipt');
+      assert.equal(parsed.category, 'final_receipt_invalid');
+    } else {
+      assert.equal(parsed.phase, phase);
+      assert.equal(parsed.category, 'case_execution_failed');
+    }
   }
 });
 

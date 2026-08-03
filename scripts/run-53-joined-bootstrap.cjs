@@ -1,13 +1,14 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const {
-  assertSessionClientState,
   SESSION_CLIENT_CATEGORIES,
-  SESSION_CLIENT_DIAGNOSTIC_BY_MESSAGE,
-  SESSION_CLIENT_DIAGNOSTIC_PREFIX,
   SESSION_CLIENT_PHASES,
   SESSION_CLIENT_PHASE_CATEGORY_MAP,
 } = require('./run-54-session-client-runner.cjs');
+const {
+  DIAGNOSTIC_CONTROL_ENV_KEY,
+  readDiagnosticControl,
+} = require('./run-49-diagnostic-control.cjs');
 
 const BOOTSTRAP_PHASES = Object.freeze([
   'process_launch',
@@ -49,23 +50,29 @@ const JOINED_REPORTER_PATH = '../scripts/run-49-joined-reporter.cjs';
 
 const JOINED_TEST_CASE_NAMES = Object.freeze([
   'uses the real session-bound client and crosses the HTTP RPC transport',
-  'consumes before malformed and oversized bodies, then accepts only a fresh proof',
-  'persists a setup write through the production repository and reloads it authoritatively',
-  'rejects a mismatched action only after consuming the signed operation',
+  'consumes before malformed JSON body failure, then denies the same proof and accepts a fresh proof',
+  'consumes before oversized body failure, then denies the same proof and accepts a fresh proof',
+  'consumes before unknown-action failure, then denies the same proof and accepts a fresh proof',
+  'consumes before schema-rejection failure, then denies the same proof and accepts a fresh proof',
+  'accepts one valid authorised request through the durable joined authority',
+  'rejects a wrong-operation proof only after consuming the signed proof',
   'allows exactly one concurrent identical route request through PostgreSQL',
   'retains replay denial across separate Node processes',
   'denies direct replay-table access for the authenticated client',
+  'rejects a missing CSRF proof through the production route',
+  'rejects a malformed CSRF proof through the production route',
+  'rejects a stale CSRF proof without consuming the durable nonce',
+  'rejects an anonymous session through the production route',
+  'rejects an authenticated non-admin user through the production route',
+  'rejects a cross-workspace record request through the production route',
 ]);
 
-const JOINED_PHASE_BY_TEST_NAME = new Map([
-  [JOINED_TEST_CASE_NAMES[0], 'client_authentication'],
-  [JOINED_TEST_CASE_NAMES[1], 'case_execution'],
-  [JOINED_TEST_CASE_NAMES[2], 'case_execution'],
-  [JOINED_TEST_CASE_NAMES[3], 'case_execution'],
-  [JOINED_TEST_CASE_NAMES[4], 'case_execution'],
-  [JOINED_TEST_CASE_NAMES[5], 'case_execution'],
-  [JOINED_TEST_CASE_NAMES[6], 'case_execution'],
-]);
+const JOINED_PHASE_BY_TEST_NAME = new Map(
+  JOINED_TEST_CASE_NAMES.map((name, index) => [
+    name,
+    index === 0 ? 'client_authentication' : 'case_execution',
+  ]),
+);
 
 const ALLOWED_CHILD_ENVIRONMENT_KEYS = new Set([
   'CI',
@@ -85,9 +92,15 @@ const ALLOWED_CHILD_ENVIRONMENT_KEYS = new Set([
   'ADMIN_TRUSTED_WORKSPACE_ID',
   'RUN49_ACCESS_TOKEN',
   'RUN49_CHILD_PRODUCT_ID',
+  'RUN49_DIAGNOSTIC_CONTROL_FILE',
   'RUN49_JOINED',
+  'RUN49_JWT_SECRET',
+  'RUN49_OTHER_SETUP_PRODUCT_ID',
+  'RUN49_OTHER_WORKSPACE_ID',
   'RUN49_SETUP_PRODUCT_ID',
   'RUN49_SUPABASE_URL',
+  'RUN49_UNAUTHORISED_AUTH_USER_EMAIL',
+  'RUN49_UNAUTHORISED_AUTH_USER_ID',
   'RUN49_WORKSPACE_ID',
   'SUPABASE_ANON_KEY',
   'SUPABASE_URL',
@@ -378,36 +391,13 @@ function phaseForTestCase(testCase) {
   return null;
 }
 
-function readSessionClientDiagnostic(testCase) {
-  let errors;
-  try {
-    errors = testCase?.result?.()?.errors;
-  } catch {
-    return { phase: 'final_receipt', category: 'final_receipt_invalid' };
-  }
-  if (!Array.isArray(errors)) return null;
+function readSessionClientDiagnostic(options = {}) {
+  const filePath =
+    typeof options.filePath === 'string'
+      ? options.filePath
+      : process.env[DIAGNOSTIC_CONTROL_ENV_KEY];
 
-  const diagnosticErrors = errors.filter((error) =>
-    typeof error?.message === 'string' &&
-    error.message.startsWith(SESSION_CLIENT_DIAGNOSTIC_PREFIX),
-  );
-  if (diagnosticErrors.length === 0) return null;
-  if (diagnosticErrors.length !== 1) {
-    return { phase: 'final_receipt', category: 'final_receipt_invalid' };
-  }
-
-  const diagnostic = SESSION_CLIENT_DIAGNOSTIC_BY_MESSAGE.get(
-    diagnosticErrors[0].message,
-  );
-  if (!diagnostic) {
-    return { phase: 'final_receipt', category: 'final_receipt_invalid' };
-  }
-
-  try {
-    return assertSessionClientState(diagnostic);
-  } catch {
-    return { phase: 'final_receipt', category: 'final_receipt_invalid' };
-  }
+  return readDiagnosticControl({ filePath, required: false });
 }
 
 function classifyTestRun({
@@ -484,8 +474,20 @@ function classifyTestRun({
   if (failedCase) {
     const phase = phaseForTestCase(failedCase);
     if (phase === 'client_authentication') {
-      const diagnostic = readSessionClientDiagnostic(failedCase);
+      let diagnostic;
+      try {
+        diagnostic = readSessionClientDiagnostic();
+      } catch {
+        return {
+          phase: 'final_receipt',
+          category: 'final_receipt_invalid',
+        };
+      }
       if (diagnostic) return diagnostic;
+      return {
+        phase: 'final_receipt',
+        category: 'final_receipt_invalid',
+      };
     }
     return {
       phase,
