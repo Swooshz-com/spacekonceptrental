@@ -8,6 +8,13 @@ const SESSION_CLIENT_PHASES = Object.freeze([
   'client_configuration',
   'client_construction',
   'client_authentication',
+  'session_cookie_recovery',
+  'auth_user_lookup',
+  'authorization_transport',
+  'postgrest_jwt_admission',
+  'authenticated_role_selection',
+  'rpc_execution',
+  'rpc_result',
   'request_context',
   'test_runner_setup',
   'case_execution',
@@ -29,6 +36,13 @@ const SESSION_CLIENT_CATEGORIES = Object.freeze([
   'client_environment_invalid',
   'client_construction_failed',
   'client_authentication_failed',
+  'session_cookie_recovery_failed',
+  'auth_user_lookup_failed',
+  'authorization_transport_failed',
+  'postgrest_jwt_admission_failed',
+  'authenticated_role_selection_failed',
+  'rpc_execution_denied',
+  'rpc_result_invalid',
   'request_context_failed',
   'test_runner_setup_failed',
   'case_execution_failed',
@@ -59,6 +73,13 @@ const SESSION_CLIENT_PHASE_CATEGORY_MAP = new Map([
   ])],
   ['client_construction', new Set(['client_construction_failed'])],
   ['client_authentication', new Set(['client_authentication_failed'])],
+  ['session_cookie_recovery', new Set(['session_cookie_recovery_failed'])],
+  ['auth_user_lookup', new Set(['auth_user_lookup_failed'])],
+  ['authorization_transport', new Set(['authorization_transport_failed'])],
+  ['postgrest_jwt_admission', new Set(['postgrest_jwt_admission_failed'])],
+  ['authenticated_role_selection', new Set(['authenticated_role_selection_failed'])],
+  ['rpc_execution', new Set(['rpc_execution_denied'])],
+  ['rpc_result', new Set(['rpc_result_invalid'])],
   ['request_context', new Set(['request_context_failed'])],
   ['test_runner_setup', new Set([
     'test_runner_setup_failed',
@@ -70,6 +91,44 @@ const SESSION_CLIENT_PHASE_CATEGORY_MAP = new Map([
   ])],
   ['final_receipt', new Set(['final_receipt_invalid'])],
 ]);
+
+const SESSION_CLIENT_DIAGNOSTIC_PREFIX = 'run49_session_client_diagnostic:';
+const SESSION_CLIENT_DIAGNOSTIC_STATES = Object.freeze([
+  Object.freeze({
+    phase: 'session_cookie_recovery',
+    category: 'session_cookie_recovery_failed',
+  }),
+  Object.freeze({
+    phase: 'auth_user_lookup',
+    category: 'auth_user_lookup_failed',
+  }),
+  Object.freeze({
+    phase: 'authorization_transport',
+    category: 'authorization_transport_failed',
+  }),
+  Object.freeze({
+    phase: 'postgrest_jwt_admission',
+    category: 'postgrest_jwt_admission_failed',
+  }),
+  Object.freeze({
+    phase: 'authenticated_role_selection',
+    category: 'authenticated_role_selection_failed',
+  }),
+  Object.freeze({
+    phase: 'rpc_execution',
+    category: 'rpc_execution_denied',
+  }),
+  Object.freeze({
+    phase: 'rpc_result',
+    category: 'rpc_result_invalid',
+  }),
+]);
+const SESSION_CLIENT_DIAGNOSTIC_BY_MESSAGE = new Map(
+  SESSION_CLIENT_DIAGNOSTIC_STATES.map((state) => [
+    `${SESSION_CLIENT_DIAGNOSTIC_PREFIX}${state.phase}:${state.category}`,
+    state,
+  ]),
+);
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -441,6 +500,9 @@ function validateFinalReceipt({ outcome, phase, category, collected, executed } 
 
 module.exports = {
   SESSION_CLIENT_CATEGORIES,
+  SESSION_CLIENT_DIAGNOSTIC_BY_MESSAGE,
+  SESSION_CLIENT_DIAGNOSTIC_PREFIX,
+  SESSION_CLIENT_DIAGNOSTIC_STATES,
   SESSION_CLIENT_PHASES,
   SESSION_CLIENT_PHASE_CATEGORY_MAP,
   assertSessionClientState,

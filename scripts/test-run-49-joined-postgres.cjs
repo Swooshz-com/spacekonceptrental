@@ -51,7 +51,7 @@ const postgrestImage =
   process.env.SUPABASE_POSTGREST_IMAGE || 'postgrest/postgrest:v12.2.12';
 const postgresPassword = 'run49-postgres-password';
 const authenticatorPassword = 'run49-authenticator-password';
-const jwtSecret = 'run49-local-jwt-secret';
+const jwtSecret = 'run49-local-jwt-secret-32-character-test-key';
 
 const ids = {
   workspace: '10000000-0000-4000-8000-000000000001',
@@ -177,7 +177,12 @@ function setupCompatibility() {
     );
     create or replace function auth.uid()
     returns uuid language sql stable
-    as $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
+    as $$
+      select coalesce(
+        nullif(current_setting('request.jwt.claims', true), '')::json->>'sub',
+        nullif(current_setting('request.jwt.claim.sub', true), '')
+      )::uuid;
+    $$;
     grant usage on schema auth to anon, authenticated;
     grant execute on function auth.uid() to anon, authenticated;
     grant usage on schema public to anon, authenticated, service_role;
@@ -225,6 +230,7 @@ function seedFixture() {
       '${ids.workspace}', '${ids.setupProduct}', '${ids.childProduct}', 0, 2
     );
     commit;
+    grant select on table public.admin_users, public.memberships to authenticated;
     grant anon to authenticator;
     grant authenticated to authenticator;
     grant connect on database postgres to authenticator;

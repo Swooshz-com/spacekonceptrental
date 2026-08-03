@@ -17,6 +17,7 @@ const {
   BOOTSTRAP_PHASES,
   JOINED_PHASE_BY_TEST_NAME,
   JOINED_TEST_CASE_NAMES,
+  readSessionClientDiagnostic,
   REQUIRED_JOINED_ENVIRONMENT_KEYS,
   classifyChildFailure,
   classifyTestRun,
@@ -28,6 +29,9 @@ const {
   validateReporterLoad,
   validateWorkingDirectory,
 } = require('./run-53-joined-bootstrap.cjs');
+const {
+  SESSION_CLIENT_DIAGNOSTIC_PREFIX,
+} = require('./run-54-session-client-runner.cjs');
 const {
   runBoundedChildProcess,
 } = require('./run-bounded-child-process.cjs');
@@ -51,11 +55,11 @@ function validEnvironment() {
   return environment;
 }
 
-function makeTestCase(name, state = 'passed') {
+function makeTestCase(name, state = 'passed', errors = []) {
   return {
     name,
-    fullName: `locked joined suite > ${name}`,
-    result: () => ({ state }),
+    fullName: "locked joined suite > " + name,
+    result: () => ({ state, ...(errors.length > 0 ? { errors } : {}) }),
   };
 }
 
@@ -348,6 +352,38 @@ test('seven locked cases prove bootstrap completion and preserve the failing cas
   });
   assert.equal(failed.phase, 'case_execution');
   assert.equal(failed.category, 'case_execution_failed');
+});
+
+test('the first joined authentication failure carries only a closed fixed diagnostic', () => {
+  const diagnosticMessage =
+    SESSION_CLIENT_DIAGNOSTIC_PREFIX + "rpc_execution:rpc_execution_denied";
+  const failedCase = makeTestCase(
+    JOINED_TEST_CASE_NAMES[0],
+    'failed',
+    [{ message: diagnosticMessage }],
+  );
+  assert.deepEqual(
+    readSessionClientDiagnostic(failedCase),
+    { phase: 'rpc_execution', category: 'rpc_execution_denied' },
+  );
+  assert.deepEqual(
+    classifyTestRun({
+      testModules: [makeModule([
+        failedCase,
+        ...allCases('passed').slice(1),
+      ])],
+      reason: 'failed',
+    }),
+    { phase: 'rpc_execution', category: 'rpc_execution_denied' },
+  );
+  assert.deepEqual(
+    readSessionClientDiagnostic(makeTestCase(
+      JOINED_TEST_CASE_NAMES[0],
+      'failed',
+      [{ message: SESSION_CLIENT_DIAGNOSTIC_PREFIX + "unknown:unknown" }],
+    )),
+    { phase: 'final_receipt', category: 'final_receipt_invalid' },
+  );
 });
 
 test('bootstrap failure and process posture remain fixed and public-safe', async () => {

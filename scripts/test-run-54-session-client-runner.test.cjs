@@ -109,6 +109,13 @@ test('Run-54 state machine and category pairs are closed and public-safe', () =>
     'client_configuration',
     'client_construction',
     'client_authentication',
+    'session_cookie_recovery',
+    'auth_user_lookup',
+    'authorization_transport',
+    'postgrest_jwt_admission',
+    'authenticated_role_selection',
+    'rpc_execution',
+    'rpc_result',
     'request_context',
     'test_runner_setup',
     'case_execution',
@@ -129,6 +136,13 @@ test('Run-54 state machine and category pairs are closed and public-safe', () =>
     'client_environment_invalid',
     'client_construction_failed',
     'client_authentication_failed',
+    'session_cookie_recovery_failed',
+    'auth_user_lookup_failed',
+    'authorization_transport_failed',
+    'postgrest_jwt_admission_failed',
+    'authenticated_role_selection_failed',
+    'rpc_execution_denied',
+    'rpc_result_invalid',
     'request_context_failed',
     'test_runner_setup_failed',
     'case_execution_failed',
@@ -147,6 +161,17 @@ test('Run-54 state machine and category pairs are closed and public-safe', () =>
       category: 'client_authentication_failed',
     },
   );
+  for (const [phase, category] of [
+    ['session_cookie_recovery', 'session_cookie_recovery_failed'],
+    ['auth_user_lookup', 'auth_user_lookup_failed'],
+    ['authorization_transport', 'authorization_transport_failed'],
+    ['postgrest_jwt_admission', 'postgrest_jwt_admission_failed'],
+    ['authenticated_role_selection', 'authenticated_role_selection_failed'],
+    ['rpc_execution', 'rpc_execution_denied'],
+    ['rpc_result', 'rpc_result_invalid'],
+  ]) {
+    assert.deepEqual(assertSessionClientState({ phase, category }), { phase, category });
+  }
   assert.throws(() => createSessionClientFailure('client_authentication', 'case_execution_failed'));
   assert.throws(() => assertSessionClientState({ phase: 'unknown', category: 'unknown' }));
   for (const [phase, categories] of SESSION_CLIENT_PHASE_CATEGORY_MAP) {

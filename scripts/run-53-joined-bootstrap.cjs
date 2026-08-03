@@ -1,7 +1,10 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const {
+  assertSessionClientState,
   SESSION_CLIENT_CATEGORIES,
+  SESSION_CLIENT_DIAGNOSTIC_BY_MESSAGE,
+  SESSION_CLIENT_DIAGNOSTIC_PREFIX,
   SESSION_CLIENT_PHASES,
   SESSION_CLIENT_PHASE_CATEGORY_MAP,
 } = require('./run-54-session-client-runner.cjs');
@@ -375,6 +378,38 @@ function phaseForTestCase(testCase) {
   return null;
 }
 
+function readSessionClientDiagnostic(testCase) {
+  let errors;
+  try {
+    errors = testCase?.result?.()?.errors;
+  } catch {
+    return { phase: 'final_receipt', category: 'final_receipt_invalid' };
+  }
+  if (!Array.isArray(errors)) return null;
+
+  const diagnosticErrors = errors.filter((error) =>
+    typeof error?.message === 'string' &&
+    error.message.startsWith(SESSION_CLIENT_DIAGNOSTIC_PREFIX),
+  );
+  if (diagnosticErrors.length === 0) return null;
+  if (diagnosticErrors.length !== 1) {
+    return { phase: 'final_receipt', category: 'final_receipt_invalid' };
+  }
+
+  const diagnostic = SESSION_CLIENT_DIAGNOSTIC_BY_MESSAGE.get(
+    diagnosticErrors[0].message,
+  );
+  if (!diagnostic) {
+    return { phase: 'final_receipt', category: 'final_receipt_invalid' };
+  }
+
+  try {
+    return assertSessionClientState(diagnostic);
+  } catch {
+    return { phase: 'final_receipt', category: 'final_receipt_invalid' };
+  }
+}
+
 function classifyTestRun({
   testModules,
   unhandledErrors = [],
@@ -448,6 +483,10 @@ function classifyTestRun({
   });
   if (failedCase) {
     const phase = phaseForTestCase(failedCase);
+    if (phase === 'client_authentication') {
+      const diagnostic = readSessionClientDiagnostic(failedCase);
+      if (diagnostic) return diagnostic;
+    }
     return {
       phase,
       category:
@@ -547,6 +586,7 @@ module.exports = {
   createBootstrapFailure,
   expectedNpmInvocation,
   phaseForTestCase,
+  readSessionClientDiagnostic,
   validateCommandAdmission,
   validateDependencyResolution,
   validateEnvironmentAdmission,

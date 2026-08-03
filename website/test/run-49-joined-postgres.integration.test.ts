@@ -27,6 +27,9 @@ const expectedOrigin = process.env.ADMIN_EXPECTED_ORIGIN ?? "https://admin.space
 const expectedHost = process.env.ADMIN_EXPECTED_HOST ?? "admin.space.test";
 
 const authCookieName = `sb-${new URL(supabaseUrl).hostname.split(".")[0]}-auth-token`;
+function recordSessionClientFailure(phase: string, category: string): never {
+  throw new Error(`run49_session_client_diagnostic:${phase}:${category}`);
+}
 
 function sessionCookie() {
   const session = {
@@ -74,6 +77,73 @@ function setRequestContext(request: NextRequest) {
     name,
     value
   }));
+}
+
+function assertRecoveredSessionCookie() {
+  const cookie = nextHeadersState.cookies.find(({ name }) => name === authCookieName);
+  if (!cookie) {
+    recordSessionClientFailure(
+      "session_cookie_recovery",
+      "session_cookie_recovery_failed"
+    );
+  }
+
+  try {
+    const value = cookie.value;
+    if (!value.startsWith("base64-")) throw new Error("invalid");
+    const session = JSON.parse(
+      Buffer.from(value.slice("base64-".length), "base64url").toString("utf8")
+    ) as { access_token?: unknown; refresh_token?: unknown };
+    if (
+      session.access_token !== accessToken ||
+      typeof session.refresh_token !== "string" ||
+      session.refresh_token.trim() === ""
+    ) {
+      throw new Error("invalid");
+    }
+  } catch {
+    recordSessionClientFailure(
+      "session_cookie_recovery",
+      "session_cookie_recovery_failed"
+    );
+  }
+}
+
+type JoinedRpcResponse = {
+  data: unknown;
+  error: { code?: unknown } | null;
+  status?: unknown;
+};
+
+function assertRpcResponse(
+  response: JoinedRpcResponse,
+  expected: boolean
+): asserts response is JoinedRpcResponse & { data: boolean; error: null } {
+  if (response.error !== null) {
+    if (response.status === 401) {
+      recordSessionClientFailure(
+        "postgrest_jwt_admission",
+        "postgrest_jwt_admission_failed"
+      );
+    }
+    if (response.status === 403) {
+      recordSessionClientFailure(
+        "authenticated_role_selection",
+        "authenticated_role_selection_failed"
+      );
+    }
+    if (response.status === 0) {
+      recordSessionClientFailure(
+        "authorization_transport",
+        "authorization_transport_failed"
+      );
+    }
+    recordSessionClientFailure("rpc_execution", "rpc_execution_denied");
+  }
+
+  if (response.data !== expected || typeof response.data !== "boolean") {
+    recordSessionClientFailure("rpc_result", "rpc_result_invalid");
+  }
 }
 
 function setupRequest(proof: string, body: string) {
@@ -129,6 +199,7 @@ describe.runIf(enabled)("Run-49 joined production Supabase/PostgreSQL integratio
   });
 
   it("uses the real session-bound client and crosses the HTTP RPC transport", async () => {
+    assertRecoveredSessionCookie();
     const clientResult = await createSessionBoundSupabaseAdminReadClient();
     expect(clientResult.configured).toBe(true);
 
@@ -136,32 +207,63 @@ describe.runIf(enabled)("Run-49 joined production Supabase/PostgreSQL integratio
       throw new Error("joined session-bound Supabase client was not configured");
     }
     const client = clientResult.client as unknown as {
-      rpc(functionName: string, args: Record<string, unknown>): Promise<{
-        data: unknown;
-        error: unknown;
-      }>;
+      auth: {
+        getUser(): Promise<{
+          data?: { user?: { id?: unknown; email?: unknown } | null } | null;
+          error?: unknown;
+        }>;
+      };
+      rpc(functionName: string, args: Record<string, unknown>): Promise<JoinedRpcResponse>;
     };
+    let userResult: {
+      data?: { user?: { id?: unknown; email?: unknown } | null } | null;
+      error?: unknown;
+    };
+    try {
+      userResult = await client.auth.getUser();
+    } catch {
+      recordSessionClientFailure(
+        "authorization_transport",
+        "authorization_transport_failed"
+      );
+    }
+    if (userResult.error !== undefined && userResult.error !== null) {
+      recordSessionClientFailure("auth_user_lookup", "auth_user_lookup_failed");
+    }
+    if (
+      userResult.data?.user?.id !== "20000000-0000-4000-8000-000000000001" ||
+      userResult.data.user.email !== "admin-a@example.test"
+    ) {
+      recordSessionClientFailure("auth_user_lookup", "auth_user_lookup_failed");
+    }
     const issuedAt = Date.now();
     const fingerprint = "a".repeat(64);
-    const first = await client.rpc("consume_admin_csrf_proof", {
-      p_operation: "product.write",
-      p_expected_workspace_id: workspaceId,
-      p_proof_fingerprint: fingerprint,
-      p_issued_at_ms: issuedAt,
-      p_expires_at_ms: issuedAt + 60_000
-    });
-    const duplicate = await client.rpc("consume_admin_csrf_proof", {
-      p_operation: "product.write",
-      p_expected_workspace_id: workspaceId,
-      p_proof_fingerprint: fingerprint,
-      p_issued_at_ms: issuedAt,
-      p_expires_at_ms: issuedAt + 60_000
-    });
+    let first: JoinedRpcResponse;
+    let duplicate: JoinedRpcResponse;
+    try {
+      first = await client.rpc("consume_admin_csrf_proof", {
+        p_operation: "product.write",
+        p_expected_workspace_id: workspaceId,
+        p_proof_fingerprint: fingerprint,
+        p_issued_at_ms: issuedAt,
+        p_expires_at_ms: issuedAt + 60_000
+      });
+      duplicate = await client.rpc("consume_admin_csrf_proof", {
+        p_operation: "product.write",
+        p_expected_workspace_id: workspaceId,
+        p_proof_fingerprint: fingerprint,
+        p_issued_at_ms: issuedAt,
+        p_expires_at_ms: issuedAt + 60_000
+      });
+    } catch {
+      recordSessionClientFailure(
+        "authorization_transport",
+        "authorization_transport_failed"
+      );
+    }
 
-    expect(first.error).toBeNull();
-    expect(first.data).toBe(true);
-    expect(duplicate.error).toBeNull();
-    expect(duplicate.data).toBe(false);
+    assertRpcResponse(first, true);
+    assertRpcResponse(duplicate, false);
   });
 
   it("consumes before malformed and oversized bodies, then accepts only a fresh proof", async () => {
@@ -267,7 +369,7 @@ describe.runIf(enabled)("Run-49 joined production Supabase/PostgreSQL integratio
       handleAdminSetupRecipeRoute(setupRequest(proof, validReadBody())),
       handleAdminSetupRecipeRoute(setupRequest(proof, validReadBody()))
     ]);
-    expect(responses.map((response) => response.status).sort()).toEqual([403, 200]);
+    expect(responses.map((response) => response.status).sort()).toEqual([200, 403]);
   });
 
   it("retains replay denial across separate Node processes", async () => {
