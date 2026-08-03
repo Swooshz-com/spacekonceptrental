@@ -496,4 +496,75 @@ describe("SetupRecipeEditor behavioural workflow", () => {
     expect(error).toHaveTextContent("Recipe could not be saved. Check the items and try again.");
     expect(error).not.toHaveTextContent("private SQL/provider failure");
   });
+
+  it("gives expired sessions a recoverable authentication message", async () => {
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse({ revision: 1, items: recipeItems(["child-a"]) }))
+      .mockResolvedValueOnce(jsonResponse({ error: "not-authenticated" }, 401));
+    renderEditor();
+    await screen.findByText("Child A");
+
+    fireEvent.click(screen.getByRole("button", { name: "Save Recipe" }));
+
+    const error = await screen.findByRole("alert");
+    expect(error).toHaveTextContent(/admin session expired/i);
+    expect(error).not.toHaveTextContent("Recipe could not be saved");
+  });
+
+  it("keeps quantity labels associated with unique stable controls across editors and reordering", async () => {
+    const proofMock = vi.fn(async () =>
+      jsonResponse({ ok: true, csrfProof: "test-csrf-proof" })
+    ) as unknown as typeof fetch;
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse({ revision: 1, items: recipeItems(["child-a", "child-b"]) }))
+      .mockResolvedValueOnce(jsonResponse({ revision: 1, items: recipeItems(["child-a", "child-b"]) }));
+
+    render(
+      <div>
+        <SetupRecipeEditor
+          availableProducts={products}
+          csrfProofFetcher={proofMock}
+          fetcher={fetchMock as unknown as typeof fetch}
+          parentStatus="draft"
+          setupProductId="setup-1"
+          setupProductName="Setup One"
+          workspaceId="workspace-1"
+        />
+        <SetupRecipeEditor
+          availableProducts={products}
+          csrfProofFetcher={proofMock}
+          fetcher={fetchMock as unknown as typeof fetch}
+          parentStatus="draft"
+          setupProductId="setup-2"
+          setupProductName="Setup Two"
+          workspaceId="workspace-1"
+        />
+      </div>
+    );
+
+    await screen.findAllByText("Child B");
+    const initialInputs = screen.getAllByRole("spinbutton");
+    const initialIds = initialInputs.map((input) => input.id);
+    expect(new Set(initialIds).size).toBe(initialIds.length);
+    expect(screen.getAllByRole("spinbutton", { name: "Quantity" })).toHaveLength(4);
+
+    for (const input of initialInputs) {
+      const label = Array.from(document.querySelectorAll("label")).find(
+        (candidate) => candidate.htmlFor === input.id
+      );
+      expect(label).toBeDefined();
+    }
+
+    fireEvent.change(initialInputs[0]!, { target: { value: "2" } });
+    expect(screen.getAllByRole("spinbutton").map((input) => input.id)).toEqual(
+      initialIds
+    );
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Move child-b up" })[0]!);
+    for (const row of screen.getAllByRole("listitem")) {
+      const input = within(row).getByRole("spinbutton");
+      const label = row.querySelector("label");
+      expect(label?.htmlFor).toBe(input.id);
+    }
+  });
 });

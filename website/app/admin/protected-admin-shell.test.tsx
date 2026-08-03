@@ -651,6 +651,12 @@ describe("protected admin shell", () => {
     expect(screen.getByText(/catalogue items outside the setup-parent editor contract/i)).toBeInTheDocument();
     expect(screen.getByText(/image review/i)).toBeInTheDocument();
 
+    const selector = screen.getByRole("combobox", {
+      name: /setup recipe parent/i
+    });
+    expect(selector).toHaveValue("product-1");
+    expect(screen.getAllByRole("option")).toHaveLength(3);
+
     const loungeCard = screen.getByRole("article", {
       name: /recipe editor for modular lounge/i
     });
@@ -658,17 +664,14 @@ describe("protected admin shell", () => {
     expect(loungeCard).toHaveTextContent(/lounge/i);
     expect(loungeCard).toHaveTextContent(/loading recipe/i);
 
-    const chairCard = screen.getByRole("article", {
-      name: /recipe editor for accent chair/i
-    });
-    expect(chairCard).toHaveTextContent(/loading recipe/i);
-    expect(chairCard).toHaveTextContent(/accent chair/i);
+    expect(
+      screen.queryByRole("article", { name: /recipe editor for accent chair/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("article", { name: /recipe editor for hidden plinth/i })
+    ).not.toBeInTheDocument();
+    expect(screen.getByText(/only the selected setup parent loads its recipe/i)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /manage catalogue/i })).toBeInTheDocument();
-    const draftCard = screen.getByRole("article", {
-      name: /recipe editor for hidden plinth/i
-    });
-    expect(draftCard).toHaveTextContent(/hidden plinth/i);
-    expect(draftCard).toHaveTextContent(/loading recipe/i);
     expect(screen.queryByRole("button", { name: /add setup|edit setup/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /add setup|edit setup/i })).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/image bucket|image path|raw url|url/i)).not.toBeInTheDocument();
@@ -678,6 +681,100 @@ describe("protected admin shell", () => {
       /\b(?:cart|checkout|order|payment|purchase|booking|reservation|inventory|stock|fulfilment|fulfillment|customer account|crm|pipeline)\b/i
     );
   }, 15000);
+
+  it("loads only the selected editor when many setup parents are available", async () => {
+    const products = Array.from({ length: 24 }, (_, index) => ({
+      id: `candidate-${index}`,
+      slug: `candidate-${index}`,
+      name: `Candidate ${index}`,
+      rentalUnit: "set" as const,
+      status: "draft" as const,
+      sortOrder: index,
+      imageCount: 0
+    }));
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      if (String(input).includes("/api/admin/csrf-proof")) {
+        return {
+          ok: true,
+          status: 200,
+          json: vi.fn().mockResolvedValue({ ok: true, csrfProof: "test-csrf-proof" })
+        };
+      }
+
+      const body = JSON.parse(String(init?.body)) as {
+        setupProductId?: string;
+      };
+      if (body.setupProductId === "candidate-17") {
+        return {
+          ok: true,
+          status: 200,
+          json: vi.fn().mockResolvedValue({
+            revision: 2,
+            items: [
+              {
+                included_product_id: "candidate-0",
+                position: 0,
+                base_quantity: 1
+              }
+            ]
+          })
+        };
+      }
+
+      return {
+        ok: false,
+        status: 404,
+        json: vi.fn().mockResolvedValue({ error: "not-found" })
+      };
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <AdminShellContent
+        view={{ kind: "setups" }}
+        state={{
+          status: "authorised_admin",
+          workspaceId: "99999999-9999-4999-8999-999999999999",
+          dashboard: {
+            status: "loaded",
+            data: {
+              categories: [],
+              products,
+              setupRecipeProductIds: [],
+              images: [],
+              imageSummary: {
+                totalImages: 0,
+                activeImages: 0,
+                primaryImages: 0
+              }
+            }
+          }
+        }}
+      />
+    );
+
+    expect(await screen.findByText(/No recipe exists yet/)).toBeInTheDocument();
+    expect(
+      fetchMock.mock.calls.filter(([input]) => String(input).includes("/api/admin/setup-recipe"))
+    ).toHaveLength(1);
+    expect(
+      fetchMock.mock.calls.filter(([input]) => String(input).includes("/api/admin/csrf-proof"))
+    ).toHaveLength(1);
+
+    const selector = screen.getByRole("combobox", { name: /setup recipe parent/i });
+    fireEvent.change(selector, { target: { value: "candidate-17" } });
+    expect(
+      await screen.findByRole("heading", { name: "Recipe: Candidate 17" })
+    ).toBeInTheDocument();
+    expect(await screen.findByText("Candidate 0")).toBeInTheDocument();
+    expect(screen.queryByText(/No recipe exists yet/)).not.toBeInTheDocument();
+    expect(
+      fetchMock.mock.calls.filter(([input]) => String(input).includes("/api/admin/setup-recipe"))
+    ).toHaveLength(2);
+    expect(
+      fetchMock.mock.calls.filter(([input]) => String(input).includes("/api/admin/csrf-proof"))
+    ).toHaveLength(2);
+  });
 
   it("renders a calm derived Setups empty state when no eligible recipe parents exist", () => {
     render(
@@ -899,26 +996,32 @@ describe("protected admin shell", () => {
       screen.getByRole("article", { name: /recipe editor for draft parent/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("article", { name: /recipe editor for published parent/i })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("article", { name: /recipe editor for nested parent/i })
-    ).toBeInTheDocument();
-    expect(
       screen.queryByRole("article", { name: /recipe editor for published without recipe/i })
     ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("article", { name: /recipe editor for archived parent/i })
     ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("article", { name: /recipe editor for published parent/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("article", { name: /recipe editor for nested parent/i })
+    ).not.toBeInTheDocument();
 
+    const selector = screen.getByRole("combobox", { name: /setup recipe parent/i });
+    expect(selector).toHaveValue("draft-parent");
     const draftCard = screen.getByRole("article", {
       name: /recipe editor for draft parent/i
     });
     expect(
       await within(draftCard).findByRole("button", { name: "Start Recipe" })
     ).toBeEnabled();
+    expect(
+      screen.queryByRole("article", { name: /recipe editor for published parent/i })
+    ).not.toBeInTheDocument();
 
-    const publishedCard = screen.getByRole("article", {
+    fireEvent.change(selector, { target: { value: "published-parent" } });
+    const publishedCard = await screen.findByRole("article", {
       name: /recipe editor for published parent/i
     });
     expect(
@@ -932,7 +1035,7 @@ describe("protected admin shell", () => {
     expect(within(picker).queryByRole("button", { name: "Published Parent" })).not.toBeInTheDocument();
     expect(
       fetchMock.mock.calls.filter(([input]) => !String(input).includes("/api/admin/csrf-proof"))
-    ).toHaveLength(4);
+    ).toHaveLength(2);
   });
 
   it("keeps Setups source derived and free of fake editor or storage path controls", () => {

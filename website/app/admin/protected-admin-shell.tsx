@@ -13,7 +13,10 @@ import { getAdminRouteRuntimeConfig } from "../../lib/server-runtime-config";
 import { CatalogueOwnerWorkflow } from "../../components/admin/catalogue-owner-workflow";
 import { AdminAccessManagementPanel } from "../../components/admin/admin-access-management-panel";
 import { HeroContentManagementPanel } from "../../components/admin/hero-content-management-panel";
-import { SetupRecipeEditor } from "../../components/admin/setup-recipe-editor";
+import {
+  SetupRecipeSelector,
+  type SetupRecipeEditorCandidate
+} from "../../components/admin/setup-recipe-selector";
 import {
   resolveAdminAccessDashboardRead,
   type AdminAccessDashboardReadResult
@@ -849,37 +852,20 @@ function AdminSetupsOperations({
             </p>
           ) : null}
 
-          <div className={styles.setupCardGrid}>
-            {parentEditorCandidates.map((product) => {
-              const categoryName = product.categoryId
+          <SetupRecipeSelector
+            workspaceId={workspaceId}
+            candidates={parentEditorCandidates.map<SetupRecipeEditorCandidate>((product) => ({
+              id: product.id,
+              name: product.name,
+              parentStatus: product.status,
+              categoryName: product.categoryId
                 ? categoryById.get(product.categoryId)?.name ?? "Unassigned category"
-                : "Unassigned category";
-              const imageReady =
-                product.imageCount > 0 && hasText(product.primaryImageAltText);
-
-              return (
-                <article
-                  className={styles.setupCard}
-                  key={product.id}
-                  aria-label={`Recipe editor for ${product.name}`}
-                >
-                  <div className={styles.setupCardHeader}>
-                    <div>
-                      <h3>{product.name}</h3>
-                      <p>{categoryName}</p>
-                    </div>
-                  </div>
-                  <SetupRecipeEditor
-                    workspaceId={workspaceId}
-                    setupProductId={product.id}
-                    setupProductName={product.name}
-                    parentStatus={product.status}
-                    availableProducts={childCandidatesByParent.get(product.id) ?? []}
-                  />
-                </article>
-              );
-            })}
-          </div>
+                : "Unassigned category",
+              imageReady:
+                product.imageCount > 0 && hasText(product.primaryImageAltText),
+              availableProducts: childCandidatesByParent.get(product.id) ?? []
+            }))}
+          />
         </section>
       )}
     </section>

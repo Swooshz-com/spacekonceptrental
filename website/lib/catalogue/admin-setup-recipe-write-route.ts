@@ -80,19 +80,21 @@ async function adminAuthCheck(
   response?: NextResponse;
 }> {
   const routeEnv = dependencies.env ?? process.env;
-  const mutationCapability = resolveServerAdminMutationCapability(
-    { ADMIN_MUTATIONS_ENABLED: routeEnv.ADMIN_MUTATIONS_ENABLED }
-  );
+  if (requestedOperation === "admin.setupRecipe.write") {
+    const mutationCapability = resolveServerAdminMutationCapability(
+      { ADMIN_MUTATIONS_ENABLED: routeEnv.ADMIN_MUTATIONS_ENABLED }
+    );
 
-  if (!mutationCapability.enabled) {
-    return {
-      allowed: false,
-      workspaceId: "",
-      response: safeJsonResponse(
-        { error: mutationCapability.reason },
-        mutationCapability.statusCode
-      )
-    };
+    if (!mutationCapability.enabled) {
+      return {
+        allowed: false,
+        workspaceId: "",
+        response: safeJsonResponse(
+          { error: mutationCapability.reason },
+          mutationCapability.statusCode
+        )
+      };
+    }
   }
 
   const routeConfig = getAdminRouteRuntimeConfig(
@@ -156,15 +158,24 @@ async function adminAuthCheck(
   };
   const verifierRuntimeDependencies = createRuntimeDependencies(verifierContext);
   let routeGate: ServerAdminRuntimeRouteGateAdapterResult;
+  const routeGateInput =
+    requestedOperation === "admin.setupRecipe.write"
+      ? {
+          requestedOperation,
+          requestMethod: request.method,
+          request: { method: request.method },
+          requiresMutationCapability: true as const
+        }
+      : {
+          requestedOperation,
+          requestMethod: request.method,
+          request: { method: request.method },
+          requiresMutationCapability: false as const
+        };
 
   try {
     routeGate = await resolveRouteGate(
-      {
-        requestedOperation,
-        requestMethod: request.method,
-        request: { method: request.method },
-        requiresMutationCapability: true
-      },
+      routeGateInput,
       {
         requestMetadata: {
           expectedOrigin:
@@ -443,14 +454,16 @@ function mapWriteResult(result: AdminRecipeWriteResult): NextResponse {
 
   const status = result.code === "conflict"
     ? 409
-    : result.code === "unauthorized"
-      ? 403
-      : result.code === "rpc-unavailable" ||
-          result.code === "rpc-failure" ||
-          result.code === "network-error" ||
-          result.code === "unknown-error"
-        ? 503
-        : 400;
+    : result.code === "not-authenticated"
+      ? 401
+      : result.code === "unauthorized"
+        ? 403
+        : result.code === "rpc-unavailable" ||
+            result.code === "rpc-failure" ||
+            result.code === "network-error" ||
+            result.code === "unknown-error"
+          ? 503
+          : 400;
 
   return safeJsonResponse({ error: result.code }, status);
 }

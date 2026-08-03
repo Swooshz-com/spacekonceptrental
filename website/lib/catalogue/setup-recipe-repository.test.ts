@@ -7,8 +7,8 @@ import {
 } from "./setup-recipe-repository";
 
 function createReadClient(
-  itemResult: { data: unknown; error: unknown },
-  headerResult: { data: unknown; error: unknown } = {
+  itemResult: { data: unknown; error: unknown; status?: number },
+  headerResult: { data: unknown; error: unknown; status?: number } = {
     data: { revision: 3 },
     error: null
   }
@@ -50,6 +50,120 @@ function authenticatedDependencies(
 }
 
 describe("setup recipe repository read authority", () => {
+  it("accepts only the provider's explicit zero-row response as recipe absence", async () => {
+    const result = await readAdminSetupRecipe(
+      "workspace-1",
+      "setup-1",
+      authenticatedDependencies(
+        createReadClient(
+          { data: null, error: null },
+          {
+            data: null,
+            status: 406,
+            error: {
+              code: "PGRST116",
+              details: "The result contains 0 rows",
+              hint: null,
+              message: "JSON object requested, multiple (or no) rows returned"
+            }
+          }
+        )
+      )
+    );
+
+    expect(result).toEqual({ ok: false, code: "not-found" });
+  });
+
+  it("preserves an authenticated recipe read", async () => {
+    const result = await readAdminSetupRecipe(
+      "workspace-1",
+      "setup-1",
+      authenticatedDependencies(
+        createReadClient({
+          data: [
+            {
+              workspace_id: "workspace-1",
+              setup_product_id: "setup-1",
+              included_product_id: "child-1",
+              position: 0,
+              base_quantity: 2
+            }
+          ],
+          error: null
+        })
+      )
+    );
+
+    expect(result).toMatchObject({ ok: true, revision: 3 });
+  });
+
+  it("preserves an expired provider session as an authentication failure", async () => {
+    const result = await readAdminSetupRecipe(
+      "workspace-1",
+      "setup-1",
+      authenticatedDependencies(
+        createReadClient(
+          { data: null, error: null },
+          {
+            data: null,
+            status: 401,
+            error: {
+              code: "PGRST301",
+              details: "",
+              hint: null,
+              message: "provider failure"
+            }
+          }
+        )
+      )
+    );
+
+    expect(result).toEqual({ ok: false, code: "unauthorized" });
+  });
+
+  it.each([
+    ["permission", { status: 403, code: "42501", message: "permission denied" }],
+    ["schema", { status: 404, code: "PGRST202", message: "schema cache failure" }],
+    ["timeout", { status: 504, code: "PGRST000", message: "provider timeout" }],
+    ["network", { status: 502, code: "PGRST000", message: "upstream network failure" }],
+    ["unknown", { status: 500, code: undefined, message: undefined }]
+  ] as const)("does not convert %s failures into recipe absence", async (_label, failure) => {
+    const result = await readAdminSetupRecipe(
+      "workspace-1",
+      "setup-1",
+      authenticatedDependencies(
+        createReadClient(
+          { data: null, error: null },
+          {
+            data: null,
+            status: failure.status,
+            error: {
+              ...(failure.code ? { code: failure.code } : {}),
+              ...(failure.message ? { message: failure.message } : {})
+            }
+          }
+        )
+      )
+    );
+
+    expect(result).toEqual({ ok: false, code: "read-failure" });
+  });
+
+  it("fails closed for a malformed successful header response", async () => {
+    const result = await readAdminSetupRecipe(
+      "workspace-1",
+      "setup-1",
+      authenticatedDependencies(
+        createReadClient(
+          { data: [], error: null },
+          { data: null, error: null }
+        )
+      )
+    );
+
+    expect(result).toEqual({ ok: false, code: "read-failure" });
+  });
+
   it("returns a typed read failure when the item query fails after the header succeeds", async () => {
     const result = await readAdminSetupRecipe(
       "workspace-1",
@@ -135,6 +249,60 @@ describe("setup recipe repository read authority", () => {
     );
   });
 
+  it("returns not-authenticated when the write RPC rejects an expired session", async () => {
+    const rpc = vi.fn(async () => ({
+      data: null,
+      status: 401,
+      error: {
+        code: "PGRST301",
+        details: "",
+        hint: null,
+        message: "provider failure"
+      }
+    }));
+    const client = { rpc, from: vi.fn() };
+
+    const result = await executeAdminSetupRecipeWrite(
+      {
+        operation: "remove",
+        expectedWorkspaceId: "workspace-1",
+        setupProductId: "setup-1",
+        expectedRevision: 3,
+        items: []
+      },
+      authenticatedDependencies(client as never)
+    );
+
+    expect(result).toEqual({ ok: false, code: "not-authenticated" });
+  });
+
+  it("keeps an authenticated database permission denial as unauthorized", async () => {
+    const rpc = vi.fn(async () => ({
+      data: null,
+      status: 403,
+      error: {
+        code: "42501",
+        details: "",
+        hint: null,
+        message: "permission denied"
+      }
+    }));
+    const client = { rpc, from: vi.fn() };
+
+    const result = await executeAdminSetupRecipeWrite(
+      {
+        operation: "remove",
+        expectedWorkspaceId: "workspace-1",
+        setupProductId: "setup-1",
+        expectedRevision: 3,
+        items: []
+      },
+      authenticatedDependencies(client as never)
+    );
+
+    expect(result).toEqual({ ok: false, code: "unauthorized" });
+  });
+
   it("rejects a coercively-shaped RPC result instead of repairing malformed authority", async () => {
     const setupProductId = "50000000-0000-4000-8000-000000000001";
     const rpc = vi.fn(async () => ({
@@ -202,7 +370,16 @@ describe("setup recipe repository read authority", () => {
       authenticatedDependencies(
         createReadClient(
           { data: [], error: null },
-          { data: null, error: { message: "row not found" } }
+          {
+            data: null,
+            status: 406,
+            error: {
+              code: "PGRST116",
+              details: "The result contains 0 rows",
+              hint: null,
+              message: "JSON object requested, multiple (or no) rows returned"
+            }
+          }
         )
       )
     );

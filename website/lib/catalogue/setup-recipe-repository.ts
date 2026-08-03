@@ -21,6 +21,8 @@ import {
 type RecipeSupabaseQueryResult = {
   data: unknown;
   error: unknown;
+  status?: number;
+  statusText?: string;
 };
 
 type RecipeSupabaseQuery = {
@@ -59,6 +61,49 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function getString(value: unknown) {
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
+const postgrestAuthenticationErrorCodes = new Set(["PGRST301", "PGRST302"]);
+
+function providerErrorCode(error: unknown): string | undefined {
+  if (!isRecord(error) || typeof error.code !== "string") return undefined;
+  return error.code;
+}
+
+function providerErrorStatus(
+  result: RecipeSupabaseQueryResult
+): number | undefined {
+  if (typeof result.status === "number") return result.status;
+  return isRecord(result.error) && typeof result.error.status === "number"
+    ? result.error.status
+    : undefined;
+}
+
+function isProviderAuthenticationFailure(
+  result: RecipeSupabaseQueryResult
+): boolean {
+  return (
+    providerErrorStatus(result) === 401 ||
+    postgrestAuthenticationErrorCodes.has(providerErrorCode(result.error) ?? "")
+  );
+}
+
+function isExplicitNoRowFailure(
+  result: RecipeSupabaseQueryResult
+): boolean {
+  return (
+    providerErrorCode(result.error) === "PGRST116" &&
+    isRecord(result.error) &&
+    result.error.details === "The result contains 0 rows"
+  );
+}
+
+function classifyRecipeReadError(
+  result: RecipeSupabaseQueryResult
+): "not-found" | "unauthorized" | "read-failure" {
+  if (isExplicitNoRowFailure(result)) return "not-found";
+  if (isProviderAuthenticationFailure(result)) return "unauthorized";
+  return "read-failure";
 }
 
 async function getAuthenticatedRecipeClient(
@@ -103,7 +148,9 @@ async function getAuthenticatedRecipeClient(
   };
 }
 
-function rpcErrorCode(rawMessage: string): "conflict" | "unauthorized" | "validation-failure" | "rpc-failure" {
+function rpcErrorCode(
+  rawMessage: string
+): "conflict" | "unauthorized" | "validation-failure" | "rpc-failure" {
   const message = rawMessage.toLowerCase();
   if (message.includes("revision_conflict")) return "conflict" as const;
   if (message.includes("unauthorized")) return "unauthorized" as const;
@@ -149,14 +196,21 @@ export async function executeAdminSetupRecipeWrite(
     });
 
     if (result.error) {
+      if (isProviderAuthenticationFailure(result)) {
+        return { ok: false, code: "not-authenticated" };
+      }
+
+      if (
+        providerErrorStatus(result) === 403 ||
+        providerErrorCode(result.error) === "42501"
+      ) {
+        return { ok: false, code: "unauthorized" };
+      }
+
       const rawMessage =
         typeof result.error === "object" && result.error !== null
           ? ((result.error as unknown as Record<string, unknown>).message as string) ?? ""
           : "";
-
-      if (rawMessage.includes("PGRST") || rawMessage.includes("JWT") || rawMessage.includes("session")) {
-        return { ok: false, code: "not-authenticated" };
-      }
 
       return { ok: false, code: rpcErrorCode(rawMessage) };
     }
@@ -211,19 +265,20 @@ export async function readAdminSetupRecipe(
       .single();
 
     if (headerResult.error) {
-      const errData = headerResult.error as unknown as { message?: string };
-      const msg = String(errData?.message ?? "").toLowerCase();
-      if (msg.includes("jwt") || msg.includes("session") || msg.includes("auth")) {
-        return { ok: false, code: "unauthorized" };
-      }
-      return { ok: false, code: "not-found" };
+      return { ok: false, code: classifyRecipeReadError(headerResult) };
     }
 
-    const revision = Number(
-      (headerResult.data as Record<string, unknown>)?.revision ?? 0
-    );
-    if (!Number.isSafeInteger(revision) || revision <= 0) {
-      return { ok: false, code: "not-found" };
+    if (!isRecord(headerResult.data)) {
+      return { ok: false, code: "read-failure" };
+    }
+
+    const revision = headerResult.data.revision;
+    if (
+      typeof revision !== "number" ||
+      !Number.isSafeInteger(revision) ||
+      revision <= 0
+    ) {
+      return { ok: false, code: "read-failure" };
     }
 
     const itemsResult = await supabase.client
@@ -292,6 +347,6 @@ export async function readAdminSetupRecipe(
 
     return { ok: true, revision, items };
   } catch {
-    return { ok: false, code: "unknown-error" };
+    return { ok: false, code: "read-failure" };
   }
 }

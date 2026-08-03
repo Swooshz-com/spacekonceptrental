@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useReducer, useState } from "react";
+import { useCallback, useEffect, useId, useReducer, useState } from "react";
 
 type RecipeItem = {
   included_product_id: string;
@@ -250,6 +250,7 @@ export function SetupRecipeEditor({
   const [lastRevision, setLastRevision] = useState<number | null>(null);
   const [showProductPicker, setShowProductPicker] = useState(false);
   const [showRemoveConfirmation, setShowRemoveConfirmation] = useState(false);
+  const editorInstanceId = useId().replace(/[^a-zA-Z0-9_-]/g, "") || "editor";
   const firstEligibleChild = availableProducts.find(
     (product) => product.id !== setupProductId
   );
@@ -359,6 +360,12 @@ export function SetupRecipeEditor({
           if (res.status === 409) {
             setActionState("conflict");
             setActionError("Recipe was modified by another user. Reload and try again.");
+          } else if (res.status === 401) {
+            setActionState("error");
+            setActionError("Your admin session expired. Sign in again, then retry.");
+          } else if (res.status === 403) {
+            setActionState("error");
+            setActionError("You are not authorised to change this recipe.");
           } else {
             setActionState("error");
             setActionError("Recipe could not be saved. Check the items and try again.");
@@ -432,7 +439,8 @@ export function SetupRecipeEditor({
     return () => document.removeEventListener("keydown", handleEscape);
   }, [showProductPicker, showRemoveConfirmation]);
 
-  const quantityInputId = (index: number) => `setup-recipe-qty-${index}`;
+  const quantityInputId = (index: number) =>
+    `setup-recipe-${editorInstanceId}-qty-${index}`;
 
   if (state.status === "loading") {
     return <div className="skr-admin-panel"><p aria-live="polite">Loading recipe...</p></div>;

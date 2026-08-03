@@ -197,6 +197,46 @@ describe("production-layer setup recipe CSRF integration", () => {
     }
   });
 
+  it("keeps the real protected read admission path available in Stage A", async () => {
+    const checker = createReplayChecker();
+    const proof = await issueProof("admin.setupRecipe.read");
+    const firstRequest = request(proof, { action: "read", setupProductId });
+    const first = await handleAdminSetupRecipeRoute(
+      firstRequest,
+      createDependencies(firstRequest, checker, {
+        env: { ...env, ADMIN_MUTATIONS_ENABLED: "false" }
+      })
+    );
+
+    expect(first.status).toBe(200);
+    expect(await responseJson(first)).toEqual({ revision: 1, items: [] });
+    expect(checker).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not enable a protected write in Stage A", async () => {
+    const checker = createReplayChecker();
+    const proof = await issueProof("admin.setupRecipe.write");
+    const writeRequest = request(proof, {
+      action: "write",
+      operation: "remove",
+      setupProductId,
+      expectedRevision: 1,
+      items: []
+    });
+    const response = await handleAdminSetupRecipeRoute(
+      writeRequest,
+      createDependencies(writeRequest, checker, {
+        env: { ...env, ADMIN_MUTATIONS_ENABLED: "false" }
+      })
+    );
+
+    expect(response.status).toBe(503);
+    expect(await responseJson(response)).toEqual({
+      error: "admin_mutations_disabled"
+    });
+    expect(checker).not.toHaveBeenCalled();
+  });
+
   it("joins issuer, binding, runtime factory, header preflight, authorization gate, and read route", async () => {
     const checker = createReplayChecker();
     const proof = await issueProof("admin.setupRecipe.read");
