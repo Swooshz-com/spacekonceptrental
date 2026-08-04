@@ -63,7 +63,44 @@ function getString(value: unknown) {
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
 }
 
-const postgrestAuthenticationErrorCodes = new Set(["PGRST301", "PGRST302"]);
+const reviewedAuthorizationErrorCodes = new Set(["42501"]);
+const reviewedAuthenticationErrorIdentifiers = new Set([
+  "PGRST301",
+  "PGRST302"
+]);
+const reviewedAuthorizationErrorIdentifiers = new Set([
+  "unauthorized_admin_action"
+]);
+const reviewedConflictErrorIdentifiers = new Set([
+  "setup_recipe_revision_conflict"
+]);
+const reviewedValidationErrorIdentifiers = new Set([
+  "setup_recipe_workspace_required",
+  "unsupported_setup_recipe_operation",
+  "setup_recipe_parent_required",
+  "setup_recipe_items_array_required",
+  "setup_recipe_parent_missing",
+  "setup_recipe_remove_items_must_be_empty",
+  "setup_recipe_not_found",
+  "setup_recipe_published_parent_remove",
+  "setup_recipe_empty_replacement",
+  "setup_recipe_item_count_invalid",
+  "setup_recipe_invalid_item",
+  "setup_recipe_self_reference",
+  "setup_recipe_position_invalid",
+  "setup_recipe_quantity_invalid",
+  "setup_recipe_duplicate_child",
+  "setup_recipe_duplicate_position",
+  "setup_recipe_positions_not_contiguous",
+  "setup_recipe_child_workspace_mismatch",
+  "setup_recipe_nested_setup",
+  "setup_recipe_published_parent_invalid",
+  "setup_recipe_published_child_invalid",
+  "setup_recipe_revision_exhausted",
+  "setup_recipe_creation_revision_required",
+  "setup_recipe_parent_published",
+  "setup_recipe_published_child_protected"
+]);
 
 function providerErrorCode(error: unknown): string | undefined {
   if (!isRecord(error) || typeof error.code !== "string") return undefined;
@@ -84,7 +121,10 @@ function isProviderAuthenticationFailure(
 ): boolean {
   return (
     providerErrorStatus(result) === 401 ||
-    postgrestAuthenticationErrorCodes.has(providerErrorCode(result.error) ?? "")
+    hasReviewedIdentifier(
+      providerErrorIdentifiers(result.error),
+      reviewedAuthenticationErrorIdentifiers
+    )
   );
 }
 
@@ -100,9 +140,9 @@ function isExplicitNoRowFailure(
 
 function classifyRecipeReadError(
   result: RecipeSupabaseQueryResult
-): "not-found" | "unauthorized" | "read-failure" {
+): "not-found" | "not-authenticated" | "unauthorized" | "read-failure" {
   if (isExplicitNoRowFailure(result)) return "not-found";
-  if (isProviderAuthenticationFailure(result)) return "unauthorized";
+  if (isProviderAuthenticationFailure(result)) return "not-authenticated";
   return "read-failure";
 }
 
@@ -148,31 +188,43 @@ async function getAuthenticatedRecipeClient(
   };
 }
 
+function providerErrorIdentifiers(error: unknown) {
+  if (!isRecord(error)) return [];
+
+  return [error.code, error.message].filter(
+    (value): value is string => typeof value === "string" && Boolean(value.trim())
+  ).map((value) => value.trim());
+}
+
+function hasReviewedIdentifier(identifiers: string[], reviewed: Set<string>) {
+  return identifiers.some((identifier) => reviewed.has(identifier));
+}
+
 function rpcErrorCode(
-  rawMessage: string
-): "conflict" | "unauthorized" | "validation-failure" | "rpc-failure" {
-  const message = rawMessage.toLowerCase();
-  if (message.includes("revision_conflict")) return "conflict" as const;
-  if (message.includes("unauthorized")) return "unauthorized" as const;
+  result: RecipeSupabaseQueryResult
+):
+  | "not-authenticated"
+  | "conflict"
+  | "unauthorized"
+  | "validation-failure"
+  | "rpc-failure" {
+  const identifiers = providerErrorIdentifiers(result.error);
+  if (hasReviewedIdentifier(identifiers, reviewedAuthenticationErrorIdentifiers)) {
+    return "not-authenticated";
+  }
   if (
-    message.includes("invalid") ||
-    message.includes("empty") ||
-    message.includes("self_reference") ||
-    message.includes("duplicate") ||
-    message.includes("nested") ||
-    message.includes("position") ||
-    message.includes("quantity") ||
-    message.includes("child") ||
-    message.includes("workspace_required") ||
-    message.includes("parent_required") ||
-    message.includes("parent_missing") ||
-    message.includes("parent_published") ||
-    message.includes("items_array") ||
-    message.includes("creation_revision") ||
-    message.includes("not_found") ||
-    message.includes("unsupported")
-  )
-    return "validation-failure" as const;
+    providerErrorStatus(result) === 403 ||
+    reviewedAuthorizationErrorCodes.has(providerErrorCode(result.error) ?? "") ||
+    hasReviewedIdentifier(identifiers, reviewedAuthorizationErrorIdentifiers)
+  ) {
+    return "unauthorized";
+  }
+  if (hasReviewedIdentifier(identifiers, reviewedConflictErrorIdentifiers)) {
+    return "conflict";
+  }
+  if (hasReviewedIdentifier(identifiers, reviewedValidationErrorIdentifiers)) {
+    return "validation-failure";
+  }
   return "rpc-failure" as const;
 }
 
@@ -207,12 +259,7 @@ export async function executeAdminSetupRecipeWrite(
         return { ok: false, code: "unauthorized" };
       }
 
-      const rawMessage =
-        typeof result.error === "object" && result.error !== null
-          ? ((result.error as unknown as Record<string, unknown>).message as string) ?? ""
-          : "";
-
-      return { ok: false, code: rpcErrorCode(rawMessage) };
+      return { ok: false, code: rpcErrorCode(result) };
     }
 
     if (!isRecord(result.data)) {
@@ -252,7 +299,7 @@ export async function readAdminSetupRecipe(
   if (!supabase.ok) {
     return {
       ok: false,
-      code: supabase.code === "not-authenticated" ? "unauthorized" : supabase.code
+      code: supabase.code
     };
   }
 
@@ -289,7 +336,12 @@ export async function readAdminSetupRecipe(
       .order("position");
 
     if (itemsResult.error) {
-      return { ok: false, code: "read-failure" };
+      return {
+        ok: false,
+        code: isProviderAuthenticationFailure(itemsResult)
+          ? "not-authenticated"
+          : "read-failure"
+      };
     }
 
     if (!Array.isArray(itemsResult.data) || itemsResult.data.length < 1) {

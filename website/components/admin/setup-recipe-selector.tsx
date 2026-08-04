@@ -3,13 +3,16 @@
 import { useEffect, useState } from "react";
 
 import styles from "../../app/admin/protected-admin-shell.module.css";
+import { compareAdminProductOrder } from "../../lib/products/admin-read/admin-product-ordering";
 import { SetupRecipeEditor } from "./setup-recipe-editor";
 
 type ParentStatus = "draft" | "published" | "archived";
 
 export type SetupRecipeEditorCandidate = {
   id: string;
+  slug: string;
   name: string;
+  sortOrder: number;
   parentStatus: ParentStatus;
   categoryName: string;
   imageReady: boolean;
@@ -23,20 +26,37 @@ export function SetupRecipeSelector({
   workspaceId: string;
   candidates: SetupRecipeEditorCandidate[];
 }) {
+  const orderedCandidates = [...candidates].sort(compareAdminProductOrder);
   const [selectedProductId, setSelectedProductId] = useState(
-    candidates[0]?.id ?? ""
+    orderedCandidates[0]?.id ?? ""
   );
   const selected =
-    candidates.find((candidate) => candidate.id === selectedProductId) ??
-    candidates[0];
+    orderedCandidates.find((candidate) => candidate.id === selectedProductId) ??
+    orderedCandidates[0];
 
   useEffect(() => {
-    if (selected && selected.id !== selectedProductId) {
-      setSelectedProductId(selected.id);
+    if (!orderedCandidates.some((candidate) => candidate.id === selectedProductId)) {
+      setSelectedProductId(orderedCandidates[0]?.id ?? "");
     }
-  }, [selected, selectedProductId]);
+  }, [candidates, orderedCandidates, selectedProductId]);
 
   if (!selected) return null;
+
+  const duplicateNames = new Set(
+    orderedCandidates
+      .map((candidate) => candidate.name.trim().toLocaleLowerCase("en-US"))
+      .filter(
+        (name, index, names) => names.indexOf(name) !== names.lastIndexOf(name)
+      )
+  );
+  const optionLabel = (candidate: SetupRecipeEditorCandidate) => {
+    const name = candidate.name.trim();
+    const normalizedName = name.toLocaleLowerCase("en-US");
+
+    return duplicateNames.has(normalizedName)
+      ? `${name} - ${candidate.categoryName} (${candidate.parentStatus}; ${candidate.slug})`
+      : `${name} (${candidate.parentStatus})`;
+  };
 
   return (
     <div className={styles.setupCardGrid}>
@@ -54,9 +74,9 @@ export function SetupRecipeSelector({
           onChange={(event) => setSelectedProductId(event.target.value)}
           aria-describedby="setup-recipe-parent-help"
         >
-          {candidates.map((candidate) => (
+          {orderedCandidates.map((candidate) => (
             <option key={candidate.id} value={candidate.id}>
-              {candidate.name} ({candidate.parentStatus})
+              {optionLabel(candidate)}
             </option>
           ))}
         </select>

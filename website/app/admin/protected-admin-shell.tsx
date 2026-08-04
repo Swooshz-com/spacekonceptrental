@@ -856,7 +856,9 @@ function AdminSetupsOperations({
             workspaceId={workspaceId}
             candidates={parentEditorCandidates.map<SetupRecipeEditorCandidate>((product) => ({
               id: product.id,
+              slug: product.slug,
               name: product.name,
+              sortOrder: product.sortOrder,
               parentStatus: product.status,
               categoryName: product.categoryId
                 ? categoryById.get(product.categoryId)?.name ?? "Unassigned category"

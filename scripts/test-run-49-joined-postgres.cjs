@@ -298,9 +298,95 @@ function verifyJwt(token) {
   return parsedPayload;
 }
 
-function startAuthAndPostgrestGateway(postgrestPort) {
+const consumeRpcSignature =
+  'public.consume_admin_csrf_proof(text,uuid,text,bigint,bigint)';
+
+function createConsumeRpcFailureController() {
+  let originalDefinition = null;
+
+  function reloadPostgrestSchema() {
+    psql("notify pgrst, 'reload schema';");
+  }
+
+  function enable() {
+    if (originalDefinition !== null) {
+      throw new Error('fixture_consume_rpc_already_intervened');
+    }
+
+    originalDefinition = psql(
+      `select pg_catalog.pg_get_functiondef('${consumeRpcSignature}'::pg_catalog.regprocedure);`,
+    );
+    psql(`
+      create or replace function public.consume_admin_csrf_proof(
+        p_operation text,
+        p_expected_workspace_id uuid,
+        p_proof_fingerprint text,
+        p_issued_at_ms bigint,
+        p_expires_at_ms bigint
+      )
+      returns boolean
+      language plpgsql
+      volatile
+      security definer
+      set search_path = pg_catalog
+      as $run62$
+      begin
+        raise exception 'run62_fixture_consume_rpc_operational_failure';
+      end;
+      $run62$;
+    `);
+    reloadPostgrestSchema();
+    return { ok: true, enabled: true };
+  }
+
+  function restore() {
+    if (originalDefinition === null) {
+      return { ok: true, restored: true };
+    }
+
+    const definition = originalDefinition;
+    psql(definition);
+    reloadPostgrestSchema();
+    const restoredDefinition = psql(
+      `select pg_catalog.pg_get_functiondef('${consumeRpcSignature}'::pg_catalog.regprocedure);`,
+    );
+    if (restoredDefinition !== definition) {
+      throw new Error('fixture_consume_rpc_restore_failed');
+    }
+    originalDefinition = null;
+    return { ok: true, restored: true };
+  }
+
+  return {
+    hasIntervention: () => originalDefinition !== null,
+    enable,
+    restore,
+  };
+}
+
+function startAuthAndPostgrestGateway(postgrestPort, fixtureController) {
   const server = http.createServer(async (request, response) => {
     try {
+      if (
+        request.method === 'POST' &&
+        request.url === '/__run49_fixture/consume-rpc-failure/enable'
+      ) {
+        const result = fixtureController.enable();
+        response.writeHead(200, { 'content-type': 'application/json' });
+        response.end(JSON.stringify(result));
+        return;
+      }
+
+      if (
+        request.method === 'POST' &&
+        request.url === '/__run49_fixture/consume-rpc-failure/restore'
+      ) {
+        const result = fixtureController.restore();
+        response.writeHead(200, { 'content-type': 'application/json' });
+        response.end(JSON.stringify(result));
+        return;
+      }
+
       if (request.url === '/auth/v1/user') {
         const token = String(request.headers.authorization || '').replace(/^Bearer\s+/i, '');
         const claims = verifyJwt(token);
@@ -469,6 +555,7 @@ async function main() {
   }
 
   let gateway;
+  let fixtureController;
   let diagnosticControl = null;
   let currentPhase = 'service_readiness';
   try {
@@ -485,7 +572,8 @@ async function main() {
     seedFixture();
     const postgrestPort = startPostgrest();
     await waitForPostgrest(postgrestPort);
-    gateway = await startAuthAndPostgrestGateway(postgrestPort);
+    fixtureController = createConsumeRpcFailureController();
+    gateway = await startAuthAndPostgrestGateway(postgrestPort, fixtureController);
 
     currentPhase = 'command_admission';
     const invocation = expectedNpmInvocation();
@@ -518,6 +606,7 @@ async function main() {
       RUN49_OTHER_SETUP_PRODUCT_ID: ids.otherSetupProduct,
       RUN49_UNAUTHORISED_AUTH_USER_ID: ids.unauthorisedAuthUser,
       RUN49_UNAUTHORISED_AUTH_USER_EMAIL: ids.unauthorisedAuthUserEmail,
+      RUN49_FIXTURE_CONTROL_URL: `http://127.0.0.1:${gateway.port}/__run49_fixture`,
       [DIAGNOSTIC_CONTROL_ENV_KEY]: diagnosticControl.filePath,
       ADMIN_EXPECTED_ORIGIN: 'https://admin.space.test',
       ADMIN_EXPECTED_HOST: 'admin.space.test',
@@ -598,8 +687,11 @@ async function main() {
           process.exitCode = 1;
         }
       } else {
+        const diagnosticSuffix = diagnosticRecord
+          ? `/${diagnosticRecord.phase}/${diagnosticRecord.category}`
+          : '';
         console.error(
-          `Run-49 joined integration failed: ${joinedReceipt.phase}/${joinedReceipt.category}.`,
+          `Run-49 joined integration failed: ${joinedReceipt.phase}/${joinedReceipt.category}${diagnosticSuffix}.`,
         );
         process.exitCode = 1;
       }
@@ -615,10 +707,30 @@ async function main() {
     );
     process.exitCode = 1;
   } finally {
+    if (fixtureController?.hasIntervention()) {
+      try {
+        fixtureController.restore();
+      } catch {
+        process.exitCode = 1;
+      }
+    }
     if (gateway) await new Promise((resolve) => gateway.server.close(resolve));
     docker(['rm', '-f', postgrestName], { check: false });
     docker(['rm', '-f', containerName], { check: false });
     docker(['network', 'rm', networkName], { check: false });
+    const remainingContainers = [containerName, postgrestName].flatMap((name) =>
+      docker(
+        ['ps', '-a', '--filter', `name=${name}`, '--format', '{{.Names}}'],
+        { check: false },
+      ).stdout.trim().split(/\r?\n/).filter(Boolean),
+    );
+    const remainingNetworks = docker(
+      ['network', 'ls', '--filter', `name=${networkName}`, '--format', '{{.Name}}'],
+      { check: false },
+    ).stdout.trim();
+    if (remainingContainers.length > 0 || remainingNetworks) {
+      process.exitCode = 1;
+    }
     fs.rmSync(dockerConfigDir, { recursive: true, force: true });
     if (diagnosticControl) {
       removeDiagnosticControl({ dir: diagnosticControl.dir });

@@ -2,6 +2,7 @@ import "server-only";
 
 import { getAdminTrustedWorkspaceId } from "../../server-runtime-config";
 import { createSessionBoundSupabaseAdminReadClient } from "../../admin/authorization/supabase-admin-auth-identity-adapter";
+import { compareAdminProductOrder } from "./admin-product-ordering";
 
 type QueryResult = {
   data: unknown;
@@ -378,11 +379,7 @@ function mapDashboardData(
         ? first.name.localeCompare(second.name)
         : first.sortOrder - second.sortOrder
     ),
-    products: mappedProducts.sort((first, second) =>
-      first.sortOrder === second.sortOrder
-        ? first.name.localeCompare(second.name)
-        : first.sortOrder - second.sortOrder
-    ),
+    products: mappedProducts.sort(compareAdminProductOrder),
     setupRecipeProductIds: setupRecipeProductIds as string[],
     images: mappedImages.sort((first, second) =>
       first.sortOrder === second.sortOrder
@@ -427,6 +424,9 @@ export async function resolveAdminProductDashboardRead(
         )
         .eq("workspace_id", workspaceId)
         .order("sort_order", { ascending: true })
+        .order("name", { ascending: true })
+        .order("slug", { ascending: true })
+        .order("id", { ascending: true })
         .limit(500),
       supabase.client
         .from("product_images")

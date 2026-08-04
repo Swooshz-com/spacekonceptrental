@@ -65,6 +65,7 @@ const JOINED_TEST_CASE_NAMES = Object.freeze([
   'rejects an anonymous session through the production route',
   'rejects an authenticated non-admin user through the production route',
   'rejects a cross-workspace record request through the production route',
+  'fails closed when the real consume RPC fails operationally, restores the fixture, and accepts a replacement proof',
 ]);
 
 const JOINED_PHASE_BY_TEST_NAME = new Map(
@@ -93,6 +94,7 @@ const ALLOWED_CHILD_ENVIRONMENT_KEYS = new Set([
   'RUN49_ACCESS_TOKEN',
   'RUN49_CHILD_PRODUCT_ID',
   'RUN49_DIAGNOSTIC_CONTROL_FILE',
+  'RUN49_FIXTURE_CONTROL_URL',
   'RUN49_JOINED',
   'RUN49_JWT_SECRET',
   'RUN49_OTHER_SETUP_PRODUCT_ID',

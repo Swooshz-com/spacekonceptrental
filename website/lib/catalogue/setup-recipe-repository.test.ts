@@ -118,7 +118,7 @@ describe("setup recipe repository read authority", () => {
       )
     );
 
-    expect(result).toEqual({ ok: false, code: "unauthorized" });
+    expect(result).toEqual({ ok: false, code: "not-authenticated" });
   });
 
   it.each([
@@ -177,6 +177,27 @@ describe("setup recipe repository read authority", () => {
     expect(result).not.toEqual({ ok: true, revision: 3, items: [] });
   });
 
+  it("preserves authentication loss during the item read as not-authenticated", async () => {
+    const result = await readAdminSetupRecipe(
+      "workspace-1",
+      "setup-1",
+      authenticatedDependencies(
+        createReadClient({
+          data: null,
+          status: 401,
+          error: {
+            code: "PGRST302",
+            details: "",
+            hint: null,
+            message: "JWT missing"
+          }
+        })
+      )
+    );
+
+    expect(result).toEqual({ ok: false, code: "not-authenticated" });
+  });
+
   it("does not treat a malformed item result as an authoritative empty recipe", async () => {
     await expect(
       readAdminSetupRecipe(
@@ -201,7 +222,7 @@ describe("setup recipe repository read authority", () => {
         })),
         createReadClient
       })
-    ).resolves.toEqual({ ok: false, code: "unauthorized" });
+    ).resolves.toEqual({ ok: false, code: "not-authenticated" });
 
     expect(createReadClient).not.toHaveBeenCalled();
   });
@@ -276,6 +297,32 @@ describe("setup recipe repository read authority", () => {
     expect(result).toEqual({ ok: false, code: "not-authenticated" });
   });
 
+  it("maps the reviewed missing-JWT provider code on writes to not-authenticated", async () => {
+    const rpc = vi.fn(async () => ({
+      data: null,
+      status: 401,
+      error: {
+        code: "PGRST302",
+        details: "",
+        hint: null,
+        message: "JWT missing"
+      }
+    }));
+
+    const result = await executeAdminSetupRecipeWrite(
+      {
+        operation: "remove",
+        expectedWorkspaceId: "workspace-1",
+        setupProductId: "setup-1",
+        expectedRevision: 3,
+        items: []
+      },
+      authenticatedDependencies({ rpc, from: vi.fn() } as never)
+    );
+
+    expect(result).toEqual({ ok: false, code: "not-authenticated" });
+  });
+
   it("keeps an authenticated database permission denial as unauthorized", async () => {
     const rpc = vi.fn(async () => ({
       data: null,
@@ -301,6 +348,153 @@ describe("setup recipe repository read authority", () => {
     );
 
     expect(result).toEqual({ ok: false, code: "unauthorized" });
+  });
+
+  it("maps the reviewed unauthorized RPC identifier to unauthorized", async () => {
+    const rpc = vi.fn(async () => ({
+      data: null,
+      status: 400,
+      error: {
+        code: "P0001",
+        details: "",
+        hint: null,
+        message: "unauthorized_admin_action"
+      }
+    }));
+
+    const result = await executeAdminSetupRecipeWrite(
+      {
+        operation: "remove",
+        expectedWorkspaceId: "workspace-1",
+        setupProductId: "setup-1",
+        expectedRevision: 3,
+        items: []
+      },
+      authenticatedDependencies({ rpc, from: vi.fn() } as never)
+    );
+
+    expect(result).toEqual({ ok: false, code: "unauthorized" });
+  });
+
+  it.each([
+    "setup_recipe_workspace_required",
+    "unsupported_setup_recipe_operation",
+    "setup_recipe_parent_required",
+    "setup_recipe_items_array_required",
+    "setup_recipe_parent_missing",
+    "setup_recipe_remove_items_must_be_empty",
+    "setup_recipe_not_found",
+    "setup_recipe_published_parent_remove",
+    "setup_recipe_empty_replacement",
+    "setup_recipe_item_count_invalid",
+    "setup_recipe_invalid_item",
+    "setup_recipe_self_reference",
+    "setup_recipe_position_invalid",
+    "setup_recipe_quantity_invalid",
+    "setup_recipe_duplicate_child",
+    "setup_recipe_duplicate_position",
+    "setup_recipe_positions_not_contiguous",
+    "setup_recipe_child_workspace_mismatch",
+    "setup_recipe_nested_setup",
+    "setup_recipe_published_parent_invalid",
+    "setup_recipe_published_child_invalid",
+    "setup_recipe_revision_exhausted",
+    "setup_recipe_creation_revision_required",
+    "setup_recipe_parent_published"
+  ] as const)("maps the reviewed validation identifier %s to validation-failure", async (identifier) => {
+    const rpc = vi.fn(async () => ({
+      data: null,
+      status: 400,
+      error: {
+        code: "P0001",
+        details: "",
+        hint: null,
+        message: identifier
+      }
+    }));
+
+    const result = await executeAdminSetupRecipeWrite(
+      {
+        operation: "replace",
+        expectedWorkspaceId: "workspace-1",
+        setupProductId: "setup-1",
+        expectedRevision: 3,
+        items: [{
+          included_product_id: "child-1",
+          position: 0,
+          base_quantity: 1
+        }]
+      },
+      authenticatedDependencies({ rpc, from: vi.fn() } as never)
+    );
+
+    expect(result).toEqual({ ok: false, code: "validation-failure" });
+  });
+
+  it("maps the reviewed revision conflict identifier to conflict", async () => {
+    const rpc = vi.fn(async () => ({
+      data: null,
+      status: 409,
+      error: {
+        code: "P0001",
+        details: "",
+        hint: null,
+        message: "setup_recipe_revision_conflict"
+      }
+    }));
+
+    const result = await executeAdminSetupRecipeWrite(
+      {
+        operation: "remove",
+        expectedWorkspaceId: "workspace-1",
+        setupProductId: "setup-1",
+        expectedRevision: 3,
+        items: []
+      },
+      authenticatedDependencies({ rpc, from: vi.fn() } as never)
+    );
+
+    expect(result).toEqual({ ok: false, code: "conflict" });
+  });
+
+  it.each([
+    {
+      code: "XX000",
+      message: "invalid position child"
+    },
+    {
+      code: "PGRST202",
+      message: "schema cache failure: invalid position child"
+    },
+    {
+      code: "PGRST000",
+      message: "provider unavailable"
+    }
+  ])("fails closed for unknown or operational provider error %j", async (failure) => {
+    const rpc = vi.fn(async () => ({
+      data: null,
+      status: 503,
+      error: {
+        code: failure.code,
+        details: "private provider details",
+        hint: null,
+        message: failure.message
+      }
+    }));
+
+    const result = await executeAdminSetupRecipeWrite(
+      {
+        operation: "remove",
+        expectedWorkspaceId: "workspace-1",
+        setupProductId: "setup-1",
+        expectedRevision: 3,
+        items: []
+      },
+      authenticatedDependencies({ rpc, from: vi.fn() } as never)
+    );
+
+    expect(result).toEqual({ ok: false, code: "rpc-failure" });
+    expect(JSON.stringify(result)).not.toContain("private provider details");
   });
 
   it("rejects a coercively-shaped RPC result instead of repairing malformed authority", async () => {

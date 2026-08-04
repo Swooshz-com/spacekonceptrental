@@ -443,6 +443,7 @@ export type AdminRecipeReadResult =
       ok: false;
       code:
         | "not-found"
+        | "not-authenticated"
         | "rpc-unavailable"
         | "unauthorized"
         | "read-failure"

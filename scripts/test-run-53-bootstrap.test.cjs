@@ -17,6 +17,7 @@ const {
   BOOTSTRAP_PHASES,
   JOINED_PHASE_BY_TEST_NAME,
   JOINED_TEST_CASE_NAMES,
+  JOINED_TEST_PATH,
   readSessionClientDiagnostic,
   REQUIRED_JOINED_ENVIRONMENT_KEYS,
   classifyChildFailure,
@@ -162,6 +163,25 @@ test('exact hosted command and repository working-directory admission are closed
       'working_directory_invalid',
     );
   }
+});
+
+test('the joined source contains exactly the locked canonical case inventory', () => {
+  const source = fs.readFileSync(path.join(repoRoot, 'website', JOINED_TEST_PATH), 'utf8');
+  const declaredNames = [...source.matchAll(/\bit\("([^"]+)"/g)].map((match) => match[1]);
+  assert.deepEqual(declaredNames, JOINED_TEST_CASE_NAMES);
+});
+
+test('the operational-failure fixture intervention is reversible and cleanup-bound', () => {
+  const source = fs.readFileSync(
+    path.join(repoRoot, 'scripts', 'test-run-49-joined-postgres.cjs'),
+    'utf8',
+  );
+  assert.match(source, /pg_get_functiondef/);
+  assert.match(source, /run62_fixture_consume_rpc_operational_failure/);
+  assert.match(source, /fixture_consume_rpc_restore_failed/);
+  assert.match(source, /remainingContainers/);
+  assert.match(source, /remainingNetworks/);
+  assert.match(source, /fs\.rmSync\(dockerConfigDir/);
 });
 
 test('environment admission requires only the fixed disposable contract', () => {

@@ -276,6 +276,20 @@ export function SetupRecipeEditor({
           dispatch({ kind: "set-not-found" });
           setLastRevision(0);
           return "not-found";
+        } else if (res.status === 401) {
+          dispatch({
+            kind: "set-error",
+            message: "Your admin session expired. Sign in again, then retry."
+          });
+          setLastRevision(null);
+          return "error";
+        } else if (res.status === 403) {
+          dispatch({
+            kind: "set-error",
+            message: "You are not authorised to view this recipe."
+          });
+          setLastRevision(null);
+          return "error";
         } else {
           dispatch({ kind: "set-error", message: "Failed to load recipe." });
           setLastRevision(null);
@@ -450,6 +464,9 @@ export function SetupRecipeEditor({
     return (
       <div className="skr-admin-panel" role="alert">
         <p>{state.message}</p>
+        {state.message.includes("Sign in again") ? (
+          <a href="/admin/login">Sign in again</a>
+        ) : null}
         <button onClick={handleReload} type="button">Retry</button>
       </div>
     );

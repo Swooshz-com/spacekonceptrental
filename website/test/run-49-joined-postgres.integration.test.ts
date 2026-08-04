@@ -23,6 +23,7 @@ import type { ServerAdminCsrfProofSignerInput } from "../lib/admin/authorization
 
 const enabled = process.env.RUN49_JOINED === "1";
 const supabaseUrl = process.env.RUN49_SUPABASE_URL ?? "http://127.0.0.1:9";
+const fixtureControlUrl = process.env.RUN49_FIXTURE_CONTROL_URL ?? "";
 const accessToken = process.env.RUN49_ACCESS_TOKEN ?? "";
 const jwtSecret = process.env.RUN49_JWT_SECRET ?? "";
 const workspaceId = process.env.RUN49_WORKSPACE_ID ?? "";
@@ -227,6 +228,17 @@ function setupRequest(
 
 async function json(response: Response) {
   return response.json() as Promise<Record<string, unknown>>;
+}
+
+async function fixtureControl(action: "enable" | "restore") {
+  if (!fixtureControlUrl) throw new Error("fixture control unavailable");
+  const response = await fetch(`${fixtureControlUrl}/consume-rpc-failure/${action}`, {
+    method: "POST"
+  });
+  if (response.status !== 200) {
+    recordSessionClientFailure("rpc_execution", "rpc_execution_denied");
+  }
+  return json(response);
 }
 
 async function issueProof(
@@ -678,7 +690,7 @@ describe.runIf(enabled)("Run-49 joined production Supabase/PostgreSQL integratio
       { cookie: "" }
     );
     const response = await handleAdminSetupRecipeRoute(request);
-    expect(response.status).toBe(403);
+    expect(response.status).toBe(401);
     expect(await json(response)).toEqual({ error: "submission_not_allowed" });
   });
 
@@ -709,5 +721,120 @@ describe.runIf(enabled)("Run-49 joined production Supabase/PostgreSQL integratio
     );
     expect(response.status).toBe(404);
     expect(await json(response)).toEqual({ error: "not-found" });
+  });
+
+  it("fails closed when the real consume RPC fails operationally, restores the fixture, and accepts a replacement proof", async () => {
+    const baselineProof = await issueProof("admin.setupRecipe.read");
+    const baseline = await handleAdminSetupRecipeRoute(
+      setupRequest(baselineProof, validReadBody())
+    );
+    const baselineBody = await json(baseline);
+    if (baseline.status !== 200) {
+      recordSessionClientFailure("rpc_result", "rpc_result_invalid");
+    }
+
+    let stage = "fixture_enable";
+    try {
+      await fixtureControl("enable");
+      stage = "durable_rpc";
+      try {
+      const clientResult = await createSessionBoundSupabaseAdminReadClient();
+      expect(clientResult.configured).toBe(true);
+      if (!clientResult.configured) throw new Error("joined client unavailable");
+
+      const client = clientResult.client as unknown as {
+        rpc(functionName: string, args: Record<string, unknown>): Promise<JoinedRpcResponse>;
+      };
+      const issuedAt = Date.now();
+      const rpcFailure = await client.rpc("consume_admin_csrf_proof", {
+        p_operation: "admin.setupRecipe.read",
+        p_expected_workspace_id: workspaceId,
+        p_proof_fingerprint: "d".repeat(64),
+        p_issued_at_ms: issuedAt,
+        p_expires_at_ms: issuedAt + 60_000
+      });
+      if (rpcFailure.error === null) {
+        recordSessionClientFailure("rpc_execution", "rpc_execution_denied");
+      }
+      expect(rpcFailure.error).not.toBeNull();
+
+      stage = "malformed_route";
+      const malformedProof = await issueProof("admin.setupRecipe.read");
+      const malformed = await handleAdminSetupRecipeRoute(
+        setupRequest(malformedProof, "{")
+      );
+      const malformedBody = await json(malformed);
+      if (
+        malformed.status !== 403 ||
+        malformedBody.error !== "csrf_proof_replayed"
+      ) {
+        recordSessionClientFailure("rpc_result", "rpc_result_invalid");
+      }
+
+      stage = "write_route";
+      const writeProof = await issueProof("admin.setupRecipe.write");
+      const write = await handleAdminSetupRecipeRoute(
+        setupRequest(
+          writeProof,
+          JSON.stringify({
+            action: "write",
+            operation: "replace",
+            setupProductId,
+            expectedRevision: 1,
+            items: [{
+              included_product_id: childProductId,
+              position: 0,
+              base_quantity: 9
+            }]
+          })
+        )
+      );
+      const writeBody = await json(write);
+      if (write.status !== 403 || writeBody.error !== "csrf_proof_replayed") {
+        recordSessionClientFailure("rpc_execution", "rpc_execution_denied");
+      }
+      stage = "restore";
+      } finally {
+      const restored = await fixtureControl("restore");
+      if (restored.ok !== true || restored.restored !== true) {
+        recordSessionClientFailure("authorization_transport", "authorization_transport_failed");
+      }
+    }
+
+    stage = "replacement_route";
+    const replacementProof = await issueProof("admin.setupRecipe.read");
+    const replacement = await handleAdminSetupRecipeRoute(
+      setupRequest(replacementProof, validReadBody())
+    );
+    const replacementBody = await json(replacement);
+    if (replacement.status !== 200) {
+      if (replacement.status === 403) {
+        recordSessionClientFailure("rpc_execution", "rpc_execution_denied");
+      }
+      if (replacement.status === 401) {
+        recordSessionClientFailure("postgrest_jwt_admission", "postgrest_jwt_admission_failed");
+      }
+      recordSessionClientFailure("rpc_result", "rpc_result_invalid");
+    }
+    if (JSON.stringify(replacementBody) !== JSON.stringify(baselineBody)) {
+      recordSessionClientFailure("rpc_result", "rpc_result_invalid");
+    }
+    } catch (error) {
+      const diagnosticByStage: Record<string, [string, string]> = {
+        fixture_enable: ["authorization_transport", "authorization_transport_failed"],
+        durable_rpc: ["rpc_execution", "rpc_execution_denied"],
+        malformed_route: ["rpc_result", "rpc_result_invalid"],
+        write_route: ["rpc_result", "rpc_result_invalid"],
+        restore: ["authorization_transport", "authorization_transport_failed"],
+        replacement_route: ["rpc_result", "rpc_result_invalid"]
+      };
+      try {
+        const [phase, category] = diagnosticByStage[stage] ?? diagnosticByStage.replacement_route;
+        recordSessionClientFailure(phase, category);
+      } catch {
+        // Keep the original bounded case failure; the control file carries only the allowlisted state.
+      }
+      throw error;
+    }
   });
 });

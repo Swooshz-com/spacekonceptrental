@@ -142,7 +142,7 @@ async function adminAuthCheck(
       workspaceId: "",
       response: safeJsonResponse(
         { error: "submission_not_allowed" },
-        403
+        binding.statusCode
       )
     };
   }
@@ -307,11 +307,13 @@ export async function handleAdminSetupRecipeRoute(
     if (!readResult.ok) {
       return safeJsonResponse(
         { error: readResult.code },
-        readResult.code === "unauthorized"
-          ? 403
-          : readResult.code === "not-found"
-            ? 404
-            : 503
+        readResult.code === "not-authenticated"
+          ? 401
+          : readResult.code === "unauthorized"
+            ? 403
+            : readResult.code === "not-found"
+              ? 404
+              : 503
       );
     }
 

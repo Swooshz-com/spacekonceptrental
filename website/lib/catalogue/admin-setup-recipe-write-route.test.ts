@@ -236,8 +236,24 @@ describe("admin setup recipe route write response contract", () => {
       dependencies
     );
 
-    expect(response.status).toBe(403);
+    expect(response.status).toBe(401);
     expect(await json(response)).toEqual({ error: "submission_not_allowed" });
+  });
+
+  it("maps a session expiry between route admission and recipe read to 401", async () => {
+    const dependencies = createDependencies(vi.fn());
+    dependencies.readRecipe = vi.fn(async () => ({
+      ok: false as const,
+      code: "not-authenticated" as const
+    }));
+
+    const response = await handleAdminSetupRecipeRoute(
+      request({ action: "read", setupProductId: "setup-1" }),
+      dependencies
+    );
+
+    expect(response.status).toBe(401);
+    expect(await json(response)).toEqual({ error: "not-authenticated" });
   });
 
   it("denies a wrong workspace through route admission even when reads are enabled", async () => {
@@ -290,6 +306,7 @@ describe("admin setup recipe route write response contract", () => {
 
   it.each([
     ["not-found", 404],
+    ["not-authenticated", 401],
     ["unauthorized", 403],
     ["read-failure", 503],
     ["rpc-unavailable", 503],

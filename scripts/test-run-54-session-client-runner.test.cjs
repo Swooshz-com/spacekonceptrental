@@ -422,6 +422,11 @@ test('Run-54 client construction and authentication reject privileged, stale and
 });
 
 test('Run-54 request context, runner setup, case counts and final receipt are closed', () => {
+  assert.equal(JOINED_TEST_CASE_NAMES.length, 17);
+  assert.equal(
+    JOINED_TEST_CASE_NAMES.at(-1),
+    'fails closed when the real consume RPC fails operationally, restores the fixture, and accepts a replacement proof',
+  );
   assert.doesNotThrow(() => validateRequestContext({
     headers,
     cookies: [cookie],

@@ -111,6 +111,33 @@ describe("SetupRecipeEditor behavioural workflow", () => {
     expect(requestBody(fetchMock.mock.calls[0]!)).toMatchObject({ action: "read" });
   });
 
+  it("gives read-side authentication expiry a sign-in recovery path", async () => {
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse({ error: "not-authenticated" }, 401)
+    );
+
+    renderEditor();
+
+    const error = await screen.findByRole("alert");
+    expect(error).toHaveTextContent(/admin session expired/i);
+    expect(within(error).getByRole("link", { name: "Sign in again" })).toHaveAttribute(
+      "href",
+      "/admin/login"
+    );
+  });
+
+  it("keeps read-side permission denial distinct from sign-in recovery", async () => {
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse({ error: "unauthorized" }, 403)
+    );
+
+    renderEditor();
+
+    const error = await screen.findByRole("alert");
+    expect(error).toHaveTextContent(/not authorised to view/i);
+    expect(within(error).queryByRole("link", { name: "Sign in again" })).not.toBeInTheDocument();
+  });
+
   it("requests the exact operation proof and sends it on the protected recipe request", async () => {
     const proofMock = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
       const body = JSON.parse(String(init?.body)) as Record<string, unknown>;
