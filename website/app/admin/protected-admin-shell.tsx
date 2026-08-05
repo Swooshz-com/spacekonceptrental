@@ -738,9 +738,11 @@ function AdminSetupsOperations({
     dashboard.data.categories.map((category) => [category.id, category])
   );
   const existingSetupParentIds = new Set(dashboard.data.setupRecipeProductIds);
+  const recipeChildIds = new Set(dashboard.data.setupRecipeChildProductIds);
   const parentEditorCandidates = dashboard.data.products.filter(
     (product) =>
       product.status !== "archived" &&
+      !recipeChildIds.has(product.id) &&
       (product.status === "draft" || existingSetupParentIds.has(product.id))
   );
   const isPublicCatalogueProduct = (product: AdminProductDashboardProduct) =>

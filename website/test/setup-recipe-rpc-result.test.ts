@@ -138,4 +138,23 @@ describe("Run-57 setup-write RPC exact result contract", () => {
       validResult({ operation: "remove", setup_product_id: setupProductId, revision: 1 }),
     );
   });
+
+  it("canonicalises mixed-case UUID identities before comparing", () => {
+    const upperSetupProductId = setupProductId.toUpperCase();
+
+    expect(
+      parseAdminRecipeWriteRpcResult(
+        validResult({ setup_product_id: upperSetupProductId }),
+        expected()
+      )
+    ).toEqual({
+      ok: true,
+      value: {
+        operation: "replace",
+        setupProductId,
+        revision: 2,
+        itemCount: 1
+      }
+    });
+  });
 });

@@ -2232,6 +2232,144 @@ check('setup recipe database authority enforces schema, RPC, RLS, publication, a
   }
 });
 
+check('atomic setup recipe read RPC returns one consistent snapshot and stays least privilege', async () => {
+  const parentA = '56000000-0000-4000-8000-000000000001';
+  const childA = '56000000-0000-4000-8000-000000000002';
+  const childB = '56000000-0000-4000-8000-000000000003';
+  const childC = '56000000-0000-4000-8000-000000000004';
+  const signature = 'public.read_admin_setup_recipe(uuid,uuid)';
+  const quoteJson = (value) => `'${JSON.stringify(value).replaceAll("'", "''")}'::jsonb`;
+  const recipeCall = (operation, workspaceId, productId, revision, value) => `
+    select public.execute_admin_setup_recipe_write(
+      '${operation}',
+      '${workspaceId}'::uuid,
+      '${productId}'::uuid,
+      ${revision === null ? 'null' : revision},
+      ${quoteJson(value)}
+    )
+  `;
+  const readCall = (workspaceId, productId) =>
+    `select public.read_admin_setup_recipe('${workspaceId}', '${productId}')::text`;
+
+  psql(`
+    begin;
+    set local session_replication_role = 'replica';
+    insert into public.products (
+      id, workspace_id, category_id, slug, name, status, sort_order
+    ) values
+      ('${parentA}', '${ids.workspaceA}', '${ids.categoryPublishedA}', 'atomic-parent', 'Atomic Parent', 'draft', 80),
+      ('${childA}', '${ids.workspaceA}', '${ids.categoryPublishedA}', 'atomic-child-a', 'Atomic Child A', 'draft', 81),
+      ('${childB}', '${ids.workspaceA}', '${ids.categoryPublishedA}', 'atomic-child-b', 'Atomic Child B', 'draft', 82),
+      ('${childC}', '${ids.workspaceA}', '${ids.categoryPublishedA}', 'atomic-child-c', 'Atomic Child C', 'draft', 83);
+    commit;
+  `);
+
+  try {
+    assert.equal(
+      psql(`select pg_catalog.pg_get_userbyid(proowner) from pg_catalog.pg_proc where oid = '${signature}'::pg_catalog.regprocedure`),
+      'postgres',
+      'atomic read RPC owner must be postgres',
+    );
+    assert.equal(
+      psql(`select prosecdef::text || ':' || pg_catalog.array_to_string(proconfig, ',') from pg_catalog.pg_proc where oid = '${signature}'::pg_catalog.regprocedure`),
+      'false:search_path=pg_catalog',
+      'atomic read RPC must be SECURITY INVOKER with fixed pg_catalog search_path',
+    );
+    assert.equal(
+      psql(`select pg_catalog.has_function_privilege('anon', '${signature}', 'EXECUTE')::text`),
+      'false',
+      'anon must not execute the atomic read RPC',
+    );
+    assert.equal(
+      psql(`select pg_catalog.has_function_privilege('authenticated', '${signature}', 'EXECUTE')::text`),
+      'true',
+      'authenticated must execute the atomic read RPC',
+    );
+    assert.equal(
+      psql(`select pg_catalog.has_function_privilege('service_role', '${signature}', 'EXECUTE')::text`),
+      'false',
+      'service_role must not execute the atomic read RPC',
+    );
+
+    queryCommittedAs(
+      'authenticated',
+      ids.authMemberA,
+      recipeCall('replace', ids.workspaceA, parentA, 0, [
+        { included_product_id: childA, position: 0, base_quantity: 2 },
+        { included_product_id: childB, position: 1, base_quantity: 3 },
+      ]),
+    );
+
+    const read = JSON.parse(
+      scalarAs('authenticated', ids.authMemberA, readCall(ids.workspaceA, parentA)),
+    );
+    assert.equal(read.revision, 1);
+    assert.deepEqual(
+      read.items.map((item) => item.included_product_id),
+      [childA, childB],
+      'atomic read must return revision and complete ordered items from one snapshot',
+    );
+
+    queryCommittedAs(
+      'authenticated',
+      ids.authMemberA,
+      recipeCall('replace', ids.workspaceA, parentA, 1, [
+        { included_product_id: childC, position: 0, base_quantity: 5 },
+      ]),
+    );
+
+    const after = JSON.parse(
+      scalarAs('authenticated', ids.authMemberA, readCall(ids.workspaceA, parentA)),
+    );
+    assert.equal(after.revision, 2);
+    assert.deepEqual(
+      after.items.map((item) => item.included_product_id),
+      [childC],
+      'atomic read must reflect the replacement revision and its items together',
+    );
+
+    statementFailsAs(
+      'authenticated',
+      ids.authViewerA,
+      readCall(ids.workspaceA, parentA),
+      /setup_recipe_not_found/i,
+      'viewer atomic read must fail closed',
+    );
+    statementFailsAs(
+      'authenticated',
+      ids.authNoMembership,
+      readCall(ids.workspaceA, parentA),
+      /setup_recipe_not_found/i,
+      'no-membership atomic read must fail closed',
+    );
+    statementFailsAs(
+      'authenticated',
+      ids.authMemberB,
+      readCall(ids.workspaceA, parentA),
+      /setup_recipe_not_found/i,
+      'wrong-workspace atomic read must fail closed',
+    );
+    statementFailsAs(
+      'authenticated',
+      ids.authMemberA,
+      readCall(ids.workspaceA, '99999999-9999-4999-8999-999999999999'),
+      /setup_recipe_not_found/i,
+      'missing recipe atomic read must fail closed',
+    );
+  } finally {
+    psql(`
+      begin;
+      set local session_replication_role = 'replica';
+      update public.products set status = 'draft' where id = '${parentA}' and workspace_id = '${ids.workspaceA}';
+      delete from public.setup_recipes where setup_product_id = '${parentA}' and workspace_id = '${ids.workspaceA}';
+      delete from public.search_index_documents where source_id in ('${parentA}', '${childA}', '${childB}', '${childC}');
+      delete from public.search_index_jobs where source_id in ('${parentA}', '${childA}', '${childB}', '${childC}');
+      delete from public.products where id in ('${parentA}', '${childA}', '${childB}', '${childC}');
+      commit;
+    `, { check: false });
+  }
+});
+
 check('durable admin CSRF replay authority is atomic, shared, bounded, and least privilege', async () => {
   const signature =
     'public.consume_admin_csrf_proof(text,uuid,text,bigint,bigint)';

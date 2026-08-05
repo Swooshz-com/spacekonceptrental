@@ -433,6 +433,125 @@ export type AdminRecipeReadItem = {
   base_quantity: number;
 };
 
+export function canonicalizeUuid(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+const SETUP_READ_RPC_KEYS = Object.freeze(["revision", "items"]);
+const SETUP_READ_RPC_ITEM_KEYS = Object.freeze([
+  "workspace_id",
+  "setup_product_id",
+  "included_product_id",
+  "position",
+  "base_quantity"
+]);
+
+export type AdminRecipeReadRpcResult = {
+  revision: number;
+  items: AdminRecipeReadItem[];
+};
+
+export type AdminRecipeReadRpcResultParse =
+  | { ok: true; value: AdminRecipeReadRpcResult }
+  | { ok: false; code: "rpc-failure" };
+
+function hasExactReadItemKeys(value: Record<string, unknown>): boolean {
+  const keys = Object.keys(value);
+  if (keys.length !== SETUP_READ_RPC_ITEM_KEYS.length) return false;
+  const keySet = new Set(keys);
+  return SETUP_READ_RPC_ITEM_KEYS.every((key) => keySet.has(key));
+}
+
+export function parseAdminRecipeReadRpcResult(
+  data: unknown,
+  expected: { workspaceId: string; setupProductId: string }
+): AdminRecipeReadRpcResultParse {
+  if (!isRecord(data)) return { ok: false, code: "rpc-failure" };
+
+  const keys = Object.keys(data);
+  if (keys.length !== SETUP_READ_RPC_KEYS.length) {
+    return { ok: false, code: "rpc-failure" };
+  }
+  const keySet = new Set(keys);
+  if (SETUP_READ_RPC_KEYS.some((key) => !keySet.has(key))) {
+    return { ok: false, code: "rpc-failure" };
+  }
+
+  const revision = data.revision;
+  const rawItems = data.items;
+
+  if (
+    typeof revision !== "number" ||
+    !Number.isSafeInteger(revision) ||
+    revision <= 0 ||
+    !Array.isArray(rawItems) ||
+    rawItems.length < SETUP_MIN_ITEMS ||
+    rawItems.length > SETUP_MAX_ITEMS
+  ) {
+    return { ok: false, code: "rpc-failure" };
+  }
+
+  const canonicalWorkspaceId = canonicalizeUuid(expected.workspaceId);
+  const canonicalSetupProductId = canonicalizeUuid(expected.setupProductId);
+
+  const items: AdminRecipeReadItem[] = [];
+  for (const row of rawItems) {
+    if (!isRecord(row) || !hasExactReadItemKeys(row)) {
+      return { ok: false, code: "rpc-failure" };
+    }
+
+    const workspace = getString(row.workspace_id);
+    const setupProduct = getString(row.setup_product_id);
+    const includedProduct = getString(row.included_product_id);
+    const position = row.position;
+    const baseQuantity = row.base_quantity;
+
+    if (
+      !workspace ||
+      !setupProduct ||
+      !includedProduct ||
+      canonicalizeUuid(workspace) !== canonicalWorkspaceId ||
+      canonicalizeUuid(setupProduct) !== canonicalSetupProductId ||
+      typeof position !== "number" ||
+      !Number.isSafeInteger(position) ||
+      position < 0 ||
+      position > 19 ||
+      typeof baseQuantity !== "number" ||
+      !Number.isSafeInteger(baseQuantity) ||
+      baseQuantity < SETUP_MIN_QUANTITY ||
+      baseQuantity > SETUP_MAX_QUANTITY
+    ) {
+      return { ok: false, code: "rpc-failure" };
+    }
+
+    items.push({
+      workspace_id: workspace,
+      setup_product_id: setupProduct,
+      included_product_id: includedProduct,
+      position,
+      base_quantity: baseQuantity
+    });
+  }
+
+  const positions = new Set(items.map((item) => item.position));
+  const childIds = new Set(items.map((item) => item.included_product_id));
+  if (
+    positions.size !== items.length ||
+    childIds.size !== items.length ||
+    items.some((item, index) => item.position !== index)
+  ) {
+    return { ok: false, code: "rpc-failure" };
+  }
+
+  return {
+    ok: true,
+    value: {
+      revision,
+      items
+    }
+  };
+}
+
 export type AdminRecipeReadResult =
   | {
       ok: true;
@@ -513,7 +632,7 @@ export function parseAdminRecipeWriteRpcResult(
   ) {
     return { ok: false, code: "rpc-failure" };
   }
-  if (normalizedSetupProductId !== expected.setupProductId) {
+  if (canonicalizeUuid(normalizedSetupProductId) !== canonicalizeUuid(expected.setupProductId)) {
     return { ok: false, code: "rpc-failure" };
   }
 

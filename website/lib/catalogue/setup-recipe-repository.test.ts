@@ -6,32 +6,20 @@ import {
   type SetupRecipeRepositoryDependencies
 } from "./setup-recipe-repository";
 
-function createReadClient(
-  itemResult: { data: unknown; error: unknown; status?: number },
-  headerResult: { data: unknown; error: unknown; status?: number } = {
-    data: { revision: 3 },
-    error: null
-  }
-) {
-  const headerBuilder = {
-    select: vi.fn(() => headerBuilder),
-    eq: vi.fn(() => headerBuilder),
-    single: vi.fn(async () => headerResult)
-  };
-  const itemBuilder = {
-    select: vi.fn(() => itemBuilder),
-    eq: vi.fn(() => itemBuilder),
-    order: vi.fn(async () => itemResult)
-  };
+function createReadClient(result: {
+  data: unknown;
+  error: unknown;
+  status?: number;
+}) {
+  const rpc = vi.fn(async () => result);
   const client = {
-    from: vi.fn((table: string) =>
-      table === "setup_recipes" ? headerBuilder : itemBuilder
-    )
+    rpc,
+    from: vi.fn()
   };
   return client;
 }
 
-function authenticatedDependencies(
+function createReadDependencies(
   client: ReturnType<typeof createReadClient>
 ): SetupRecipeRepositoryDependencies {
   return {
@@ -49,72 +37,77 @@ function authenticatedDependencies(
   };
 }
 
+const authenticatedDependencies = createReadDependencies;
+
 describe("setup recipe repository read authority", () => {
-  it("accepts only the provider's explicit zero-row response as recipe absence", async () => {
+  const workspaceId = "11111111-1111-4111-8111-111111111111";
+  const setupProductId = "22222222-2222-4222-8222-222222222222";
+  const childId = "33333333-3333-4333-8333-333333333333";
+
+  const validItems = [
+    {
+      workspace_id: workspaceId,
+      setup_product_id: setupProductId,
+      included_product_id: childId,
+      position: 0,
+      base_quantity: 2
+    }
+  ];
+
+  function successData(revision = 3, items = validItems) {
+    return { data: { revision, items }, error: null };
+  }
+
+  it("accepts the reviewed explicit no-recipe RPC identifier as recipe absence", async () => {
     const result = await readAdminSetupRecipe(
-      "workspace-1",
-      "setup-1",
-      authenticatedDependencies(
-        createReadClient(
-          { data: null, error: null },
-          {
-            data: null,
-            status: 406,
-            error: {
-              code: "PGRST116",
-              details: "The result contains 0 rows",
-              hint: null,
-              message: "JSON object requested, multiple (or no) rows returned"
-            }
+      workspaceId,
+      setupProductId,
+      createReadDependencies(
+        createReadClient({
+          data: null,
+          status: 400,
+          error: {
+            code: "P0001",
+            details: "",
+            hint: null,
+            message: "setup_recipe_not_found"
           }
-        )
+        })
       )
     );
 
     expect(result).toEqual({ ok: false, code: "not-found" });
   });
 
-  it("preserves an authenticated recipe read", async () => {
+  it("preserves an authenticated atomic recipe read", async () => {
     const result = await readAdminSetupRecipe(
-      "workspace-1",
-      "setup-1",
-      authenticatedDependencies(
-        createReadClient({
-          data: [
-            {
-              workspace_id: "workspace-1",
-              setup_product_id: "setup-1",
-              included_product_id: "child-1",
-              position: 0,
-              base_quantity: 2
-            }
-          ],
-          error: null
-        })
-      )
+      workspaceId,
+      setupProductId,
+      createReadDependencies(createReadClient(successData(3)))
     );
 
-    expect(result).toMatchObject({ ok: true, revision: 3 });
+    expect(result).toEqual({
+      ok: true,
+      revision: 3,
+      items: validItems
+    });
   });
 
   it("preserves an expired provider session as an authentication failure", async () => {
     const result = await readAdminSetupRecipe(
-      "workspace-1",
-      "setup-1",
-      authenticatedDependencies(
-        createReadClient(
-          { data: null, error: null },
-          {
-            data: null,
-            status: 401,
-            error: {
-              code: "PGRST301",
-              details: "",
-              hint: null,
-              message: "provider failure"
-            }
+      workspaceId,
+      setupProductId,
+      createReadDependencies(
+        createReadClient({
+          data: null,
+          status: 401,
+          error: {
+            code: "PGRST301",
+            details: "",
+            hint: null,
+            message: "provider failure"
           }
-        )
+        })
       )
     );
 
@@ -129,59 +122,132 @@ describe("setup recipe repository read authority", () => {
     ["unknown", { status: 500, code: undefined, message: undefined }]
   ] as const)("does not convert %s failures into recipe absence", async (_label, failure) => {
     const result = await readAdminSetupRecipe(
-      "workspace-1",
-      "setup-1",
-      authenticatedDependencies(
-        createReadClient(
-          { data: null, error: null },
-          {
-            data: null,
-            status: failure.status,
-            error: {
-              ...(failure.code ? { code: failure.code } : {}),
-              ...(failure.message ? { message: failure.message } : {})
-            }
+      workspaceId,
+      setupProductId,
+      createReadDependencies(
+        createReadClient({
+          data: null,
+          status: failure.status,
+          error: {
+            ...(failure.code ? { code: failure.code } : {}),
+            ...(failure.message ? { message: failure.message } : {})
           }
-        )
+        })
       )
     );
 
     expect(result).toEqual({ ok: false, code: "read-failure" });
   });
 
-  it("fails closed for a malformed successful header response", async () => {
+  it("fails closed for a malformed successful RPC result", async () => {
     const result = await readAdminSetupRecipe(
-      "workspace-1",
-      "setup-1",
-      authenticatedDependencies(
-        createReadClient(
-          { data: [], error: null },
-          { data: null, error: null }
-        )
+      workspaceId,
+      setupProductId,
+      createReadDependencies(createReadClient({ data: null, error: null }))
+    );
+
+    expect(result).toEqual({ ok: false, code: "read-failure" });
+  });
+
+  it("fails closed when the RPC returns a malformed revision", async () => {
+    const result = await readAdminSetupRecipe(
+      workspaceId,
+      setupProductId,
+      createReadDependencies(
+        createReadClient({ data: { revision: "3", items: validItems }, error: null })
       )
     );
 
     expect(result).toEqual({ ok: false, code: "read-failure" });
   });
 
-  it("returns a typed read failure when the item query fails after the header succeeds", async () => {
+  it("fails closed when the RPC returns a malformed item row", async () => {
     const result = await readAdminSetupRecipe(
-      "workspace-1",
-      "setup-1",
-      authenticatedDependencies(
-        createReadClient({ data: null, error: new Error("private provider detail") })
+      workspaceId,
+      setupProductId,
+      createReadDependencies(
+        createReadClient({
+          data: {
+            revision: 3,
+            items: [{ included_product_id: childId, position: 0, base_quantity: 2 }]
+          },
+          error: null
+        })
       )
     );
 
     expect(result).toEqual({ ok: false, code: "read-failure" });
-    expect(result).not.toEqual({ ok: true, revision: 3, items: [] });
   });
 
-  it("preserves authentication loss during the item read as not-authenticated", async () => {
+  it("fails closed for duplicate positions or duplicate children", async () => {
+    const duplicatePosition = await readAdminSetupRecipe(
+      workspaceId,
+      setupProductId,
+      createReadDependencies(
+        createReadClient({
+          data: {
+            revision: 3,
+            items: [
+              {
+                workspace_id: workspaceId,
+                setup_product_id: setupProductId,
+                included_product_id: "33333333-3333-4333-8333-333333333333",
+                position: 0,
+                base_quantity: 1
+              },
+              {
+                workspace_id: workspaceId,
+                setup_product_id: setupProductId,
+                included_product_id: "44444444-4444-4444-8444-444444444444",
+                position: 0,
+                base_quantity: 1
+              }
+            ]
+          },
+          error: null
+        })
+      )
+    );
+
+    expect(duplicatePosition).toEqual({ ok: false, code: "read-failure" });
+
+    const duplicateChild = await readAdminSetupRecipe(
+      workspaceId,
+      setupProductId,
+      createReadDependencies(
+        createReadClient({
+          data: {
+            revision: 3,
+            items: [
+              {
+                workspace_id: workspaceId,
+                setup_product_id: setupProductId,
+                included_product_id: childId,
+                position: 0,
+                base_quantity: 1
+              },
+              {
+                workspace_id: workspaceId,
+                setup_product_id: setupProductId,
+                included_product_id: childId,
+                position: 1,
+                base_quantity: 1
+              }
+            ]
+          },
+          error: null
+        })
+      )
+    );
+
+    expect(duplicateChild).toEqual({ ok: false, code: "read-failure" });
+  });
+
+  it("preserves authentication loss during the atomic read as not-authenticated", async () => {
     const result = await readAdminSetupRecipe(
-      "workspace-1",
-      "setup-1",
-      authenticatedDependencies(
+      workspaceId,
+      setupProductId,
+      createReadDependencies(
         createReadClient({
           data: null,
           status: 401,
@@ -198,23 +264,151 @@ describe("setup recipe repository read authority", () => {
     expect(result).toEqual({ ok: false, code: "not-authenticated" });
   });
 
-  it("does not treat a malformed item result as an authoritative empty recipe", async () => {
+  it("does not treat a malformed item array as an authoritative empty recipe", async () => {
     await expect(
       readAdminSetupRecipe(
-        "workspace-1",
-        "setup-1",
-        authenticatedDependencies(
-          createReadClient({ data: "not-an-array", error: null })
+        workspaceId,
+        setupProductId,
+        createReadDependencies(
+          createReadClient({ data: { revision: 3, items: "not-an-array" }, error: null })
         )
       )
     ).resolves.toEqual({ ok: false, code: "read-failure" });
+  });
+
+  it("keeps the ordered item positions contiguous in the parsed result", async () => {
+    const items = [
+      {
+        workspace_id: workspaceId,
+        setup_product_id: setupProductId,
+        included_product_id: "33333333-3333-4333-8333-333333333333",
+        position: 0,
+        base_quantity: 1
+      },
+      {
+        workspace_id: workspaceId,
+        setup_product_id: setupProductId,
+        included_product_id: "44444444-4444-4444-8444-444444444444",
+        position: 1,
+        base_quantity: 2
+      }
+    ];
+
+    const result = await readAdminSetupRecipe(
+      workspaceId,
+      setupProductId,
+      createReadDependencies(createReadClient(successData(5, items)))
+    );
+
+    expect(result).toEqual({ ok: true, revision: 5, items });
+  });
+
+  it("canonicalises uppercase accepted workspace and setup product UUIDs", async () => {
+    const upperWorkspace = workspaceId.toUpperCase();
+    const upperSetup = setupProductId.toUpperCase();
+    const items = [
+      {
+        workspace_id: workspaceId,
+        setup_product_id: setupProductId,
+        included_product_id: childId,
+        position: 0,
+        base_quantity: 1
+      }
+    ];
+
+    const result = await readAdminSetupRecipe(
+      upperWorkspace,
+      upperSetup,
+      createReadDependencies(createReadClient(successData(3, items)))
+    );
+
+    expect(result).toEqual({ ok: true, revision: 3, items });
+  });
+
+  it("canonicalises mixed-case database-returned UUID identities", async () => {
+    const items = [
+      {
+        workspace_id: workspaceId.toUpperCase(),
+        setup_product_id: setupProductId.toUpperCase(),
+        included_product_id: childId.toUpperCase(),
+        position: 0,
+        base_quantity: 1
+      }
+    ];
+
+    const result = await readAdminSetupRecipe(
+      workspaceId,
+      setupProductId,
+      createReadDependencies(createReadClient(successData(3, items)))
+    );
+
+    expect(result).toEqual({ ok: true, revision: 3, items: [
+      {
+        workspace_id: items[0].workspace_id,
+        setup_product_id: items[0].setup_product_id,
+        included_product_id: items[0].included_product_id,
+        position: 0,
+        base_quantity: 1
+      }
+    ] });
+  });
+
+  it("still rejects a genuinely different product identity after canonicalisation", async () => {
+    const items = [
+      {
+        workspace_id: workspaceId,
+        setup_product_id: "99999999-9999-4999-8999-999999999999",
+        included_product_id: childId,
+        position: 0,
+        base_quantity: 1
+      }
+    ];
+
+    const result = await readAdminSetupRecipe(
+      workspaceId,
+      setupProductId,
+      createReadDependencies(createReadClient(successData(3, items)))
+    );
+
+    expect(result).toEqual({ ok: false, code: "read-failure" });
+  });
+
+  it("fails closed for an invalid trusted workspace UUID input", async () => {
+    const result = await readAdminSetupRecipe(
+      "not-a-uuid",
+      setupProductId,
+      createReadDependencies(createReadClient(successData()))
+    );
+
+    expect(result).toEqual({ ok: false, code: "read-failure" });
+  });
+
+  it("keeps wrong-workspace reads fail-closed at the database boundary", async () => {
+    const result = await readAdminSetupRecipe(
+      "99999999-9999-4999-8999-999999999999",
+      setupProductId,
+      createReadDependencies(
+        createReadClient({
+          data: null,
+          status: 400,
+          error: {
+            code: "P0001",
+            details: "",
+            hint: null,
+            message: "setup_recipe_not_found"
+          }
+        })
+      )
+    );
+
+    expect(result).toEqual({ ok: false, code: "not-found" });
   });
 
   it("denies a missing session before invoking the authenticated read client", async () => {
     const createReadClient = vi.fn();
 
     await expect(
-      readAdminSetupRecipe("workspace-1", "setup-1", {
+      readAdminSetupRecipe(workspaceId, setupProductId, {
         resolveAuthIdentity: vi.fn(async () => ({
           authenticated: false as const,
           reason: "auth_session_missing" as const,
@@ -555,29 +749,5 @@ describe("setup recipe repository read authority", () => {
     expect(result).toEqual({ ok: false, code: "not-authenticated" });
     expect(createReadClient).not.toHaveBeenCalled();
     expect(rpc).not.toHaveBeenCalled();
-  });
-
-  it("keeps wrong-workspace reads fail-closed at the database boundary", async () => {
-    const result = await readAdminSetupRecipe(
-      "workspace-2",
-      "setup-1",
-      authenticatedDependencies(
-        createReadClient(
-          { data: [], error: null },
-          {
-            data: null,
-            status: 406,
-            error: {
-              code: "PGRST116",
-              details: "The result contains 0 rows",
-              hint: null,
-              message: "JSON object requested, multiple (or no) rows returned"
-            }
-          }
-        )
-      )
-    );
-
-    expect(result).toEqual({ ok: false, code: "not-found" });
   });
 });

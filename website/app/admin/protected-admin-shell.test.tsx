@@ -56,6 +56,7 @@ describe("protected admin shell", () => {
         categories: [],
         products: [],
         setupRecipeProductIds: [],
+        setupRecipeChildProductIds: [],
         images: [],
         imageSummary: {
           totalImages: 0,
@@ -109,6 +110,7 @@ describe("protected admin shell", () => {
           categories: [],
           products: [],
           setupRecipeProductIds: [],
+          setupRecipeChildProductIds: [],
           images: [],
           imageSummary: {
             totalImages: 0,
@@ -264,6 +266,7 @@ describe("protected admin shell", () => {
                 }
               ],
               setupRecipeProductIds: [],
+              setupRecipeChildProductIds: [],
               images: [
                 {
                   id: "image-1",
@@ -458,6 +461,7 @@ describe("protected admin shell", () => {
                 }
               ],
               setupRecipeProductIds: [],
+              setupRecipeChildProductIds: [],
               images: [
                 {
                   id: "image-1",
@@ -600,6 +604,7 @@ describe("protected admin shell", () => {
                 }
               ],
               setupRecipeProductIds: ["product-1", "product-2"],
+              setupRecipeChildProductIds: [],
               images: [
                 {
                   id: "image-1",
@@ -741,6 +746,7 @@ describe("protected admin shell", () => {
               categories: [],
               products,
               setupRecipeProductIds: [],
+              setupRecipeChildProductIds: [],
               images: [],
               imageSummary: {
                 totalImages: 0,
@@ -800,6 +806,7 @@ describe("protected admin shell", () => {
                 }
               ],
               setupRecipeProductIds: [],
+              setupRecipeChildProductIds: [],
               images: [],
               imageSummary: {
                 totalImages: 0,
@@ -980,6 +987,7 @@ describe("protected admin shell", () => {
                 "nested-parent",
                 "archived-parent"
               ],
+              setupRecipeChildProductIds: [],
               images: [],
               imageSummary: {
                 totalImages: 0,
@@ -1036,6 +1044,110 @@ describe("protected admin shell", () => {
     expect(
       fetchMock.mock.calls.filter(([input]) => !String(input).includes("/api/admin/csrf-proof"))
     ).toHaveLength(2);
+  });
+
+  it("excludes recipe children from setup-parent editor candidates", () => {
+    render(
+      <AdminShellContent
+        view={{ kind: "setups" }}
+        state={{
+          status: "authorised_admin",
+
+          workspaceId: "99999999-9999-4999-8999-999999999999",
+          dashboard: {
+            status: "loaded",
+            data: {
+              categories: [
+                {
+                  id: "category-1",
+                  slug: "lounge",
+                  name: "Lounge",
+                  sortOrder: 20,
+                  isPublished: true,
+                  productCount: 3,
+                  publishedProductCount: 2
+                }
+              ],
+              products: [
+                {
+                  id: "recipe-child",
+                  categoryId: "category-1",
+                  slug: "recipe-child",
+                  name: "Recipe Child",
+                  rentalUnit: "item",
+                  status: "draft",
+                  sortOrder: 10,
+                  imageCount: 1
+                },
+                {
+                  id: "recipe-parent",
+                  categoryId: "category-1",
+                  slug: "recipe-parent",
+                  name: "Recipe Parent",
+                  rentalUnit: "set",
+                  status: "published",
+                  sortOrder: 20,
+                  imageCount: 1,
+                  primaryImageAltText: "Recipe parent"
+                },
+                {
+                  id: "eligible-draft",
+                  categoryId: "category-1",
+                  slug: "eligible-draft",
+                  name: "Eligible Draft",
+                  rentalUnit: "set",
+                  status: "draft",
+                  sortOrder: 30,
+                  imageCount: 1
+                }
+              ],
+              setupRecipeProductIds: ["recipe-parent"],
+              setupRecipeChildProductIds: ["recipe-child"],
+              images: [],
+              imageSummary: {
+                totalImages: 0,
+                activeImages: 0,
+                primaryImages: 0
+              }
+            }
+          }
+        }}
+      />
+    );
+
+    const selector = screen.getByRole("combobox", {
+      name: /setup recipe parent/i
+    });
+    const optionTexts = screen
+      .getAllByRole("option")
+      .map((option) => (option.textContent ?? "").trim());
+
+    expect(optionTexts.some((text) => text.includes("Recipe Child"))).toBe(false);
+    expect(optionTexts.some((text) => text.includes("Recipe Parent"))).toBe(true);
+    expect(optionTexts.some((text) => text.includes("Eligible Draft"))).toBe(true);
+    expect(selector).toHaveValue("recipe-parent");
+  });
+
+  it("fails safely when authoritative recipe-child membership is unavailable", () => {
+    render(
+      <AdminShellContent
+        view={{ kind: "setups" }}
+        state={{
+          status: "authorised_admin",
+          workspaceId: "99999999-9999-4999-8999-999999999999",
+          dashboard: {
+            status: "unavailable"
+          }
+        }}
+      />
+    );
+
+    expect(
+      screen.getByRole("region", { name: /setups management unavailable/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/setup data is temporarily unavailable/i)
+    ).toBeInTheDocument();
   });
 
   it("keeps Setups source derived and free of fake editor or storage path controls", () => {
@@ -1106,6 +1218,7 @@ describe("protected admin shell", () => {
               categories: [],
               products: [],
               setupRecipeProductIds: [],
+              setupRecipeChildProductIds: [],
               images: [],
               imageSummary: {
                 totalImages: 0,
@@ -1298,6 +1411,7 @@ describe("protected admin shell", () => {
           categories: [],
           products: [],
           setupRecipeProductIds: [],
+          setupRecipeChildProductIds: [],
           images: [],
           imageSummary: {
             totalImages: 0,
@@ -1415,6 +1529,7 @@ describe("protected admin shell", () => {
               categories: [],
               products: [],
               setupRecipeProductIds: [],
+              setupRecipeChildProductIds: [],
               images: [],
               imageSummary: {
                 totalImages: 0,
@@ -1498,6 +1613,7 @@ describe("protected admin shell", () => {
               categories: [],
               products: [],
               setupRecipeProductIds: [],
+              setupRecipeChildProductIds: [],
               images: [],
               imageSummary: {
                 totalImages: 0,

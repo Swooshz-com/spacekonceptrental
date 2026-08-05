@@ -11,11 +11,12 @@ import type { SupabaseAdminReadClientResult } from "../admin/authorization/supab
 import type {
   AdminRecipeWriteRequest,
   AdminRecipeWriteResult,
-  AdminRecipeReadResult,
-  AdminRecipeReadItem
+  AdminRecipeReadResult
 } from "./setup-recipe-types";
 import {
-  parseAdminRecipeWriteRpcResult
+  parseAdminRecipeWriteRpcResult,
+  parseAdminRecipeReadRpcResult,
+  canonicalizeUuid
 } from "./setup-recipe-types";
 
 type RecipeSupabaseQueryResult = {
@@ -59,10 +60,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
-function getString(value: unknown) {
-  return typeof value === "string" && value.trim() ? value.trim() : undefined;
-}
-
 const reviewedAuthorizationErrorCodes = new Set(["42501"]);
 const reviewedAuthenticationErrorIdentifiers = new Set([
   "PGRST301",
@@ -70,6 +67,9 @@ const reviewedAuthenticationErrorIdentifiers = new Set([
 ]);
 const reviewedAuthorizationErrorIdentifiers = new Set([
   "unauthorized_admin_action"
+]);
+const readNotFoundIdentifiers = new Set([
+  "setup_recipe_not_found"
 ]);
 const reviewedConflictErrorIdentifiers = new Set([
   "setup_recipe_revision_conflict"
@@ -126,24 +126,6 @@ function isProviderAuthenticationFailure(
       reviewedAuthenticationErrorIdentifiers
     )
   );
-}
-
-function isExplicitNoRowFailure(
-  result: RecipeSupabaseQueryResult
-): boolean {
-  return (
-    providerErrorCode(result.error) === "PGRST116" &&
-    isRecord(result.error) &&
-    result.error.details === "The result contains 0 rows"
-  );
-}
-
-function classifyRecipeReadError(
-  result: RecipeSupabaseQueryResult
-): "not-found" | "not-authenticated" | "unauthorized" | "read-failure" {
-  if (isExplicitNoRowFailure(result)) return "not-found";
-  if (isProviderAuthenticationFailure(result)) return "not-authenticated";
-  return "read-failure";
 }
 
 async function getAuthenticatedRecipeClient(
@@ -304,100 +286,34 @@ export async function readAdminSetupRecipe(
   }
 
   try {
-    const headerResult = await supabase.client
-      .from("setup_recipes")
-      .select("revision")
-      .eq("workspace_id", workspaceId)
-      .eq("setup_product_id", setupProductId)
-      .single();
+    const result = await supabase.client.rpc("read_admin_setup_recipe", {
+      p_expected_workspace_id: workspaceId,
+      p_setup_product_id: setupProductId
+    });
 
-    if (headerResult.error) {
-      return { ok: false, code: classifyRecipeReadError(headerResult) };
-    }
-
-    if (!isRecord(headerResult.data)) {
-      return { ok: false, code: "read-failure" };
-    }
-
-    const revision = headerResult.data.revision;
-    if (
-      typeof revision !== "number" ||
-      !Number.isSafeInteger(revision) ||
-      revision <= 0
-    ) {
-      return { ok: false, code: "read-failure" };
-    }
-
-    const itemsResult = await supabase.client
-      .from("setup_recipe_items")
-      .select("workspace_id,setup_product_id,included_product_id,position,base_quantity")
-      .eq("workspace_id", workspaceId)
-      .eq("setup_product_id", setupProductId)
-      .order("position");
-
-    if (itemsResult.error) {
-      return {
-        ok: false,
-        code: isProviderAuthenticationFailure(itemsResult)
-          ? "not-authenticated"
-          : "read-failure"
-      };
-    }
-
-    if (!Array.isArray(itemsResult.data) || itemsResult.data.length < 1) {
-      return { ok: false, code: "read-failure" };
-    }
-
-    const items: AdminRecipeReadItem[] = [];
-    for (const row of itemsResult.data) {
-      if (!isRecord(row)) {
-        return { ok: false, code: "read-failure" };
+    if (result.error) {
+      if (isProviderAuthenticationFailure(result)) {
+        return { ok: false, code: "not-authenticated" };
       }
 
-      const workspace = getString(row.workspace_id);
-      const setupProduct = getString(row.setup_product_id);
-      const includedProduct = getString(row.included_product_id);
-      const position = row.position;
-      const baseQuantity = row.base_quantity;
-
-      if (
-        !workspace ||
-        !setupProduct ||
-        !includedProduct ||
-        workspace !== workspaceId ||
-        setupProduct !== setupProductId ||
-        typeof position !== "number" ||
-        !Number.isSafeInteger(position) ||
-        position < 0 ||
-        position > 19 ||
-        typeof baseQuantity !== "number" ||
-        !Number.isSafeInteger(baseQuantity) ||
-        baseQuantity < 1 ||
-        baseQuantity > 99
-      ) {
-        return { ok: false, code: "read-failure" };
+      const identifiers = providerErrorIdentifiers(result.error);
+      if (hasReviewedIdentifier(identifiers, readNotFoundIdentifiers)) {
+        return { ok: false, code: "not-found" };
       }
 
-      items.push({
-        workspace_id: workspace,
-        setup_product_id: setupProduct,
-        included_product_id: includedProduct,
-        position,
-        base_quantity: baseQuantity
-      });
-    }
-
-    const positions = new Set(items.map((item) => item.position));
-    const childIds = new Set(items.map((item) => item.included_product_id));
-    if (
-      positions.size !== items.length ||
-      childIds.size !== items.length ||
-      items.some((item, index) => item.position !== index)
-    ) {
       return { ok: false, code: "read-failure" };
     }
 
-    return { ok: true, revision, items };
+    const parsed = parseAdminRecipeReadRpcResult(result.data, {
+      workspaceId: canonicalizeUuid(workspaceId),
+      setupProductId: canonicalizeUuid(setupProductId)
+    });
+
+    if (!parsed.ok) {
+      return { ok: false, code: "read-failure" };
+    }
+
+    return { ok: true, revision: parsed.value.revision, items: parsed.value.items };
   } catch {
     return { ok: false, code: "read-failure" };
   }

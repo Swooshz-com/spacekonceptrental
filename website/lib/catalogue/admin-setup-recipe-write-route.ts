@@ -1,7 +1,9 @@
 import "server-only";
 
+import { randomUUID } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { getAdminRouteRuntimeConfig } from "../server-runtime-config";
+import { logApplicationError } from "../application-error-logging";
 import {
   createServerAdminCsrfProofRuntimeDependencies,
   type ServerAdminCsrfProofRuntimeDependencies
@@ -43,6 +45,9 @@ type AdminSetupRecipeOperation =
   | "admin.setupRecipe.write";
 
 const defaultProofMaxAgeMs = 5 * 60_000;
+const noStoreHeaders = {
+  "Cache-Control": "no-store"
+};
 
 export type AdminSetupRecipeRouteDependencies = {
   env?: AdminSetupRecipeRouteEnv;
@@ -52,6 +57,16 @@ export type AdminSetupRecipeRouteDependencies = {
   bindingDependencies?: ServerAdminCsrfProofSessionWorkspaceBindingDependencies;
   readRecipe?: typeof readAdminSetupRecipe;
   executeWrite?: typeof executeAdminSetupRecipeWrite;
+  createRequestReference?: () => string;
+  logEvent?: (
+    input: {
+      category: string;
+      reference: string;
+      request: NextRequest;
+      route: string;
+      statusCode: number;
+    }
+  ) => void;
 };
 
 function isObject(value: unknown): value is Record<string, unknown> {
@@ -62,7 +77,58 @@ function safeJsonResponse(
   body: Record<string, unknown>,
   status: number
 ): NextResponse {
-  return NextResponse.json(body, { status });
+  return NextResponse.json(body, { status, headers: noStoreHeaders });
+}
+
+function createRequestReference() {
+  return randomUUID();
+}
+
+function operationalErrorResponse(
+  request: NextRequest,
+  dependencies: AdminSetupRecipeRouteDependencies,
+  category: string,
+  error: string,
+  status: number
+): NextResponse {
+  const reference = (dependencies.createRequestReference ?? createRequestReference)();
+  const logEvent =
+    dependencies.logEvent ??
+    ((input: {
+      category: string;
+      reference: string;
+      request: NextRequest;
+      route: string;
+      statusCode: number;
+    }) =>
+      logApplicationError({
+        category: input.category,
+        reference: input.reference,
+        request: input.request,
+        route: input.route,
+        statusCode: input.statusCode
+      }));
+
+  logEvent({ category, reference, request, route: "POST /api/admin/setup-recipe", statusCode: status });
+
+  return safeJsonResponse({ error, reference }, status);
+}
+
+function isOperationalReadFailure(code: string): boolean {
+  return (
+    code === "read-failure" ||
+    code === "rpc-unavailable" ||
+    code === "unknown-error"
+  );
+}
+
+function isOperationalWriteFailure(code: string): boolean {
+  return (
+    code === "rpc-unavailable" ||
+    code === "rpc-failure" ||
+    code === "network-error" ||
+    code === "unknown-error"
+  );
 }
 
 function getTimestampMs() {
@@ -129,8 +195,11 @@ async function adminAuthCheck(
     return {
       allowed: false,
       workspaceId: "",
-      response: safeJsonResponse(
-        { error: "admin_csrf_session_workspace_binding_unavailable" },
+      response: operationalErrorResponse(
+        request,
+        dependencies,
+        "ADMIN_SETUP_RECIPE_BINDING_UNAVAILABLE",
+        "admin_csrf_session_workspace_binding_unavailable",
         503
       )
     };
@@ -202,8 +271,11 @@ async function adminAuthCheck(
     return {
       allowed: false,
       workspaceId: "",
-      response: safeJsonResponse(
-        { error: "admin_authorization_gate_unavailable" },
+      response: operationalErrorResponse(
+        request,
+        dependencies,
+        "ADMIN_SETUP_RECIPE_GATE_UNAVAILABLE",
+        "admin_authorization_gate_unavailable",
         503
       )
     };
@@ -305,6 +377,16 @@ export async function handleAdminSetupRecipeRoute(
     );
 
     if (!readResult.ok) {
+      if (isOperationalReadFailure(readResult.code)) {
+        return operationalErrorResponse(
+          request,
+          dependencies,
+          "ADMIN_SETUP_RECIPE_READ_FAILURE",
+          readResult.code,
+          503
+        );
+      }
+
       return safeJsonResponse(
         { error: readResult.code },
         readResult.code === "not-authenticated"
@@ -357,7 +439,7 @@ export async function handleAdminSetupRecipeRoute(
     const rawItems = payload.items;
 
     if (operation === "remove") {
-      const request: AdminRecipeWriteRequest = {
+      const writeRequest: AdminRecipeWriteRequest = {
         operation: "remove",
         expectedWorkspaceId: auth.workspaceId,
         setupProductId,
@@ -366,9 +448,9 @@ export async function handleAdminSetupRecipeRoute(
       };
 
       const executeWrite = dependencies.executeWrite ?? executeAdminSetupRecipeWrite;
-      const result = await executeWrite(request);
+      const result = await executeWrite(writeRequest);
 
-      return mapWriteResult(result);
+      return mapWriteResult(result, request, dependencies);
     }
 
     if (!Array.isArray(rawItems)) {
@@ -423,7 +505,7 @@ export async function handleAdminSetupRecipeRoute(
       }
     }
 
-    const request: AdminRecipeWriteRequest = {
+    const writeRequest: AdminRecipeWriteRequest = {
       operation: "replace",
       expectedWorkspaceId: auth.workspaceId,
       setupProductId,
@@ -432,15 +514,19 @@ export async function handleAdminSetupRecipeRoute(
     };
 
     const executeWrite = dependencies.executeWrite ?? executeAdminSetupRecipeWrite;
-    const result = await executeWrite(request);
+    const result = await executeWrite(writeRequest);
 
-    return mapWriteResult(result);
+    return mapWriteResult(result, request, dependencies);
   }
 
   return safeJsonResponse({ error: "unknown_action" }, 400);
 }
 
-function mapWriteResult(result: AdminRecipeWriteResult): NextResponse {
+function mapWriteResult(
+  result: AdminRecipeWriteResult,
+  request: NextRequest,
+  dependencies: AdminSetupRecipeRouteDependencies
+): NextResponse {
   if (result.ok) {
     return safeJsonResponse(
       {
@@ -454,18 +540,25 @@ function mapWriteResult(result: AdminRecipeWriteResult): NextResponse {
     );
   }
 
+  if (isOperationalWriteFailure(result.code)) {
+    return operationalErrorResponse(
+      request,
+      dependencies,
+      "ADMIN_SETUP_RECIPE_WRITE_FAILURE",
+      result.code,
+      503
+    );
+  }
+
   const status = result.code === "conflict"
     ? 409
     : result.code === "not-authenticated"
       ? 401
       : result.code === "unauthorized"
         ? 403
-        : result.code === "rpc-unavailable" ||
-            result.code === "rpc-failure" ||
-            result.code === "network-error" ||
-            result.code === "unknown-error"
-          ? 503
-          : 400;
+        : result.code === "validation-failure"
+          ? 400
+          : 503;
 
   return safeJsonResponse({ error: result.code }, status);
 }

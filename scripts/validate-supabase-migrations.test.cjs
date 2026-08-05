@@ -2422,7 +2422,7 @@ test('real migration directory passes static validation', () => {
   const result = runValidator(realMigrationsDir);
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.match(result.stdout, /checked 36 migration SQL file\(s\)/);
+  assert.match(result.stdout, /checked 37 migration SQL file\(s\)/);
   assert.match(
     result.stdout,
     /historical_dynamic_sql_exceptions=1, unapproved_procedural_dynamic_sql_occurrences=0/,
@@ -2824,6 +2824,31 @@ test('durable admin CSRF replay RPC is exact, bounded, atomic, and least privile
       new RegExp(`\\b${forbiddenColumn}\\b`),
     );
   }
+});
+
+test('additive atomic setup recipe read migration defines one single-statement RPC', () => {
+  const migration = readRealMigration('20260804100000_setup_recipe_atomic_read.sql');
+  const sql = normalizeSql(migration);
+
+  assert.match(
+    sql,
+    /create function public\.read_admin_setup_recipe\( p_expected_workspace_id uuid, p_setup_product_id uuid \) returns jsonb language plpgsql stable set search_path = pg_catalog/,
+  );
+  assert.match(sql, /select[\s\S]*r\.revision[\s\S]*jsonb_agg[\s\S]*order by i\.position/);
+  assert.match(sql, /raise exception 'setup_recipe_not_found'/);
+  assert.match(sql, /raise exception 'setup_recipe_read_failed'/);
+  assert.match(
+    sql,
+    /revoke all privileges on function public\.read_admin_setup_recipe\(uuid, uuid\) from public, anon, authenticated, service_role;/,
+  );
+  assert.match(
+    sql,
+    /grant execute on function public\.read_admin_setup_recipe\(uuid, uuid\) to authenticated;/,
+  );
+  assert.doesNotMatch(
+    sql,
+    /grant execute on function public\.read_admin_setup_recipe\([^;]+\) to (?:public|anon|service_role);/,
+  );
 });
 
 test('SECURITY DEFINER inventory documents setup recipe and durable CSRF replay authority', () => {

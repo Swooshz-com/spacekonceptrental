@@ -150,7 +150,10 @@ describe("admin setup recipe route write response contract", () => {
     );
 
     expect(response.status).toBe(503);
-    expect(await json(response)).toEqual({ error: "rpc-failure" });
+    expect(await json(response)).toMatchObject({
+      error: "rpc-failure",
+      reference: expect.any(String)
+    });
   });
 
   it("keeps protected reads available when mutation capability is disabled", async () => {
@@ -276,15 +279,15 @@ describe("admin setup recipe route write response contract", () => {
   });
 
   it.each([
-    ["not-authenticated", 401],
-    ["unauthorized", 403],
-    ["conflict", 409],
-    ["validation-failure", 400],
-    ["rpc-unavailable", 503],
-    ["rpc-failure", 503],
-    ["network-error", 503],
-    ["unknown-error", 503]
-  ] as const)("maps %s write results to the established status", async (code, status) => {
+    ["not-authenticated", 401, false],
+    ["unauthorized", 403, false],
+    ["conflict", 409, false],
+    ["validation-failure", 400, false],
+    ["rpc-unavailable", 503, true],
+    ["rpc-failure", 503, true],
+    ["network-error", 503, true],
+    ["unknown-error", 503, true]
+  ] as const)("maps %s write results to the established status", async (code, status, operational) => {
     const dependencies = createDependencies(
       vi.fn(async () => ({ ok: false as const, code }))
     );
@@ -301,17 +304,24 @@ describe("admin setup recipe route write response contract", () => {
     );
 
     expect(response.status).toBe(status);
-    expect(await json(response)).toEqual({ error: code });
+    if (operational) {
+      expect(await json(response)).toMatchObject({
+        error: code,
+        reference: expect.any(String)
+      });
+    } else {
+      expect(await json(response)).toEqual({ error: code });
+    }
   });
 
   it.each([
-    ["not-found", 404],
-    ["not-authenticated", 401],
-    ["unauthorized", 403],
-    ["read-failure", 503],
-    ["rpc-unavailable", 503],
-    ["unknown-error", 503]
-  ] as const)("maps %s read results to the established status", async (code, status) => {
+    ["not-found", 404, false],
+    ["not-authenticated", 401, false],
+    ["unauthorized", 403, false],
+    ["read-failure", 503, true],
+    ["rpc-unavailable", 503, true],
+    ["unknown-error", 503, true]
+  ] as const)("maps %s read results to the established status", async (code, status, operational) => {
     const dependencies = createDependencies(vi.fn());
     dependencies.readRecipe = vi.fn(async () => ({ ok: false as const, code }));
 
@@ -321,7 +331,14 @@ describe("admin setup recipe route write response contract", () => {
     );
 
     expect(response.status).toBe(status);
-    expect(await json(response)).toEqual({ error: code });
+    if (operational) {
+      expect(await json(response)).toMatchObject({
+        error: code,
+        reference: expect.any(String)
+      });
+    } else {
+      expect(await json(response)).toEqual({ error: code });
+    }
   });
 
   it("binds protected recipe reads to the read operation", async () => {
@@ -359,5 +376,179 @@ describe("admin setup recipe route write response contract", () => {
       expect.objectContaining({ requestedOperation: "admin.setupRecipe.read" }),
       expect.anything()
     );
+  });
+});
+
+describe("setup recipe route no-store and correlated failure references", () => {
+  it.each([
+    ["successful read", { action: "read", setupProductId: "44444444-4444-4444-8444-444444444444" }, 200, { ok: false }, { ok: true }],
+    ["successful write", { action: "write", operation: "remove", setupProductId: "44444444-4444-4444-8444-444444444444", expectedRevision: 1, items: [] }, 200, { ok: false }, { ok: false }],
+    ["validation failure", { action: "read", setupProductId: "" }, 400, { ok: false }, { ok: false }],
+    ["unknown action", { action: "explode" }, 400, { ok: false }, { ok: false }],
+    ["conflict write", { action: "write", operation: "remove", setupProductId: "44444444-4444-4444-8444-444444444444", expectedRevision: 1, items: [] }, 409, { ok: true, code: "conflict" }, { ok: false }],
+    ["operational failure", { action: "read", setupProductId: "44444444-4444-4444-8444-444444444444" }, 503, { ok: true, code: "read-failure" }, { ok: false, code: "read-failure" }]
+  ] as const)(
+    "marks %s responses as no-store",
+    async (label, body, status, outcome, readOutcome) => {
+      const executeWrite = vi.fn(async () =>
+        outcome.ok
+          ? { ok: false as const, code: outcome.code as "conflict" | "read-failure" }
+          : {
+              ok: true as const,
+              operation: "remove" as const,
+              setupProductId: "44444444-4444-4444-8444-444444444444",
+              revision: 2,
+              itemCount: 0
+            }
+      );
+      const dependencies = createDependencies(executeWrite);
+
+      if (body.action === "read") {
+        const readOutcomeAsWrite = readOutcome as {
+          ok: boolean;
+          code?: string;
+        };
+        dependencies.readRecipe = vi.fn(async () =>
+          readOutcomeAsWrite.ok
+            ? {
+                ok: true as const,
+                revision: 2,
+                items: [
+                  {
+                    workspace_id: env.ADMIN_TRUSTED_WORKSPACE_ID,
+                    setup_product_id: "44444444-4444-4444-8444-444444444444",
+                    included_product_id: "55555555-5555-4555-8555-555555555555",
+                    position: 0,
+                    base_quantity: 1
+                  }
+                ]
+              }
+            : {
+                ok: false as const,
+                code: (readOutcomeAsWrite.code ?? "read-failure") as "read-failure"
+              }
+        );
+      }
+
+      const response = await handleAdminSetupRecipeRoute(
+        request(body as Record<string, unknown>),
+        dependencies
+      );
+
+      expect(response.headers.get("cache-control")).toBe("no-store");
+      expect(response.status).toBe(status);
+    }
+  );
+
+  it("shares one support-safe reference between the response and the server event", async () => {
+    const logEvent = vi.fn();
+    const executeWrite = vi.fn(async () => ({
+      ok: false as const,
+      code: "rpc-failure" as const
+    }));
+    const dependencies = createDependencies(executeWrite);
+    dependencies.logEvent = logEvent;
+    dependencies.createRequestReference = () => "fixed-reference-1";
+
+    const response = await handleAdminSetupRecipeRoute(
+      request({
+        action: "write",
+        operation: "remove",
+        setupProductId: "44444444-4444-4444-8444-444444444444",
+        expectedRevision: 1,
+        items: []
+      }),
+      dependencies
+    );
+
+    expect(response.status).toBe(503);
+    expect(await json(response)).toEqual({
+      error: "rpc-failure",
+      reference: "fixed-reference-1"
+    });
+    expect(logEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        category: "ADMIN_SETUP_RECIPE_WRITE_FAILURE",
+        reference: "fixed-reference-1",
+        statusCode: 503
+      })
+    );
+    expect(JSON.stringify(logEvent.mock.calls[0][0])).toContain(
+      "fixed-reference-1"
+    );
+    expect(JSON.stringify(logEvent.mock.calls[0][0])).not.toContain(
+      "x-csrf-proof"
+    );
+  });
+
+  it("keeps client validation failures quiet without a reference or server event", async () => {
+    const logEvent = vi.fn();
+    const dependencies = createDependencies(vi.fn());
+    dependencies.logEvent = logEvent;
+
+    const response = await handleAdminSetupRecipeRoute(
+      request({ action: "read", setupProductId: "" }),
+      dependencies
+    );
+
+    expect(response.status).toBe(400);
+    expect(await json(response)).toEqual({ error: "setup_product_id_required" });
+    expect(logEvent).not.toHaveBeenCalled();
+  });
+
+  it("traces authorization-gate unavailability with a correlated reference", async () => {
+    const logEvent = vi.fn();
+    const dependencies = createDependencies(vi.fn());
+    dependencies.logEvent = logEvent;
+    dependencies.createRequestReference = () => "fixed-reference-gate";
+    dependencies.resolveRouteGate = vi.fn(async () => {
+      throw new Error("gate unavailable");
+    });
+
+    const response = await handleAdminSetupRecipeRoute(
+      request({ action: "read", setupProductId: "setup-1" }),
+      dependencies
+    );
+
+    expect(response.status).toBe(503);
+    expect(await json(response)).toEqual({
+      error: "admin_authorization_gate_unavailable",
+      reference: "fixed-reference-gate"
+    });
+    expect(logEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        category: "ADMIN_SETUP_RECIPE_GATE_UNAVAILABLE",
+        reference: "fixed-reference-gate",
+        statusCode: 503
+      })
+    );
+  });
+
+  it("does not emit a failure event for a successful request", async () => {
+    const logEvent = vi.fn();
+    const dependencies = createDependencies(
+      vi.fn(async () => ({
+        ok: true as const,
+        operation: "remove" as const,
+        setupProductId: "44444444-4444-4444-8444-444444444444",
+        revision: 2,
+        itemCount: 0
+      }))
+    );
+    dependencies.logEvent = logEvent;
+
+    const response = await handleAdminSetupRecipeRoute(
+      request({
+        action: "write",
+        operation: "remove",
+        setupProductId: "44444444-4444-4444-8444-444444444444",
+        expectedRevision: 1,
+        items: []
+      }),
+      dependencies
+    );
+
+    expect(response.status).toBe(200);
+    expect(logEvent).not.toHaveBeenCalled();
   });
 });

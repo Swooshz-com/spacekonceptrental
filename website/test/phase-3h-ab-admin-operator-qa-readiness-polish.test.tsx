@@ -63,6 +63,7 @@ const dashboardData = {
     }
   ],
   setupRecipeProductIds: [],
+  setupRecipeChildProductIds: [],
   images: [
     {
       id: "image-primary",

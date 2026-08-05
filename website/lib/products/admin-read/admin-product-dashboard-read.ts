@@ -22,7 +22,14 @@ type AdminProductDashboardReadFilter = {
 };
 
 export type AdminProductDashboardReadSupabaseClient = {
-  from(table: "categories" | "products" | "product_images" | "setup_recipes"): {
+  from(
+    table:
+      | "categories"
+      | "products"
+      | "product_images"
+      | "setup_recipes"
+      | "setup_recipe_items"
+  ): {
     select(columns: string): AdminProductDashboardReadFilter;
   };
 };
@@ -79,6 +86,7 @@ export type AdminProductDashboardReadData = {
   categories: AdminProductDashboardCategory[];
   products: AdminProductDashboardProduct[];
   setupRecipeProductIds: string[];
+  setupRecipeChildProductIds: string[];
   images: AdminProductDashboardImage[];
   imageSummary: {
     totalImages: number;
@@ -139,6 +147,10 @@ type SetupRecipeRow = {
   setup_product_id?: unknown;
 };
 
+type SetupRecipeItemRow = {
+  included_product_id?: unknown;
+};
+
 const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const productStatuses = new Set(["draft", "published", "archived"]);
@@ -157,6 +169,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isUuid(value: unknown): value is string {
   return typeof value === "string" && uuidPattern.test(value.trim());
+}
+
+function canonicalUuid(value: unknown): string | null {
+  return isUuid(value) ? value.trim().toLowerCase() : null;
 }
 
 function getString(value: unknown) {
@@ -227,8 +243,34 @@ async function readAllSetupRecipeRows(
   }
 }
 
+async function readAllSetupRecipeChildRows(
+  client: AdminProductDashboardReadSupabaseClient,
+  workspaceId: string
+): Promise<Record<string, unknown>[] | null> {
+  const rows: Record<string, unknown>[] = [];
+
+  for (let from = 0; ; from += setupRecipePageSize) {
+    const result = await client
+      .from("setup_recipe_items")
+      .select("included_product_id")
+      .eq("workspace_id", workspaceId)
+      .order("included_product_id", { ascending: true })
+      .range(from, from + setupRecipePageSize - 1);
+    const page = requireRows(result);
+
+    if (!page) {
+      return null;
+    }
+
+    rows.push(...page);
+    if (page.length < setupRecipePageSize) {
+      return rows;
+    }
+  }
+}
+
 function toCategory(row: CategoryRow): AdminProductDashboardCategory | null {
-  const id = isUuid(row.id) ? row.id.trim() : null;
+  const id = canonicalUuid(row.id);
   const slug = getString(row.slug);
   const name = getString(row.name);
   const sortOrder = getNumber(row.sort_order);
@@ -250,8 +292,8 @@ function toCategory(row: CategoryRow): AdminProductDashboardCategory | null {
 }
 
 function toProduct(row: ProductRow): AdminProductDashboardProduct | null {
-  const id = isUuid(row.id) ? row.id.trim() : null;
-  const categoryId = isUuid(row.category_id) ? row.category_id.trim() : undefined;
+  const id = canonicalUuid(row.id);
+  const categoryId = canonicalUuid(row.category_id) ?? undefined;
   const slug = getString(row.slug);
   const name = getString(row.name);
   const status =
@@ -279,8 +321,8 @@ function toProduct(row: ProductRow): AdminProductDashboardProduct | null {
 }
 
 function toProductImage(row: ProductImageRow) {
-  const id = isUuid(row.id) ? row.id.trim() : null;
-  const productId = isUuid(row.product_id) ? row.product_id.trim() : null;
+  const id = canonicalUuid(row.id);
+  const productId = canonicalUuid(row.product_id);
   const storageBucket = getString(row.storage_bucket);
   const storagePath = getString(row.storage_path);
   const status =
@@ -316,20 +358,25 @@ function mapDashboardData(
   categoryRows: Record<string, unknown>[],
   productRows: Record<string, unknown>[],
   imageRows: Record<string, unknown>[],
-  setupRecipeRows: Record<string, unknown>[]
+  setupRecipeRows: Record<string, unknown>[],
+  setupRecipeChildRows: Record<string, unknown>[]
 ): AdminProductDashboardReadData | null {
   const categories = categoryRows.map(toCategory);
   const products = productRows.map(toProduct);
   const images = imageRows.map(toProductImage);
   const setupRecipeProductIds = setupRecipeRows.map((row: SetupRecipeRow) =>
-    isUuid(row.setup_product_id) ? row.setup_product_id.trim() : null
+    canonicalUuid(row.setup_product_id)
+  );
+  const setupRecipeChildProductIds = setupRecipeChildRows.map(
+    (row: SetupRecipeItemRow) => canonicalUuid(row.included_product_id)
   );
 
   if (
     categories.some((category) => !category) ||
     products.some((product) => !product) ||
     images.some((image) => !image) ||
-    setupRecipeProductIds.some((productId) => !productId)
+    setupRecipeProductIds.some((productId) => !productId) ||
+    setupRecipeChildProductIds.some((productId) => !productId)
   ) {
     return null;
   }
@@ -381,6 +428,7 @@ function mapDashboardData(
     ),
     products: mappedProducts.sort(compareAdminProductOrder),
     setupRecipeProductIds: setupRecipeProductIds as string[],
+    setupRecipeChildProductIds: setupRecipeChildProductIds as string[],
     images: mappedImages.sort((first, second) =>
       first.sortOrder === second.sortOrder
         ? first.storagePath.localeCompare(second.storagePath)
@@ -441,11 +489,21 @@ export async function resolveAdminProductDashboardRead(
       supabase.client,
       workspaceId
     );
+    const setupRecipeChildRows = await readAllSetupRecipeChildRows(
+      supabase.client,
+      workspaceId
+    );
     const categoryRows = requireRows(categoryResult);
     const productRows = requireRows(productResult);
     const imageRows = requireRows(imageResult);
 
-    if (!categoryRows || !productRows || !imageRows || !setupRecipeRows) {
+    if (
+      !categoryRows ||
+      !productRows ||
+      !imageRows ||
+      !setupRecipeRows ||
+      !setupRecipeChildRows
+    ) {
       return unavailable();
     }
 
@@ -453,7 +511,8 @@ export async function resolveAdminProductDashboardRead(
       categoryRows,
       productRows,
       imageRows,
-      setupRecipeRows
+      setupRecipeRows,
+      setupRecipeChildRows
     );
 
     return data

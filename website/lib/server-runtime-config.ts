@@ -165,7 +165,7 @@ function normalizeHttpUrl(value: string) {
 }
 
 function normalizeUuid(value: string) {
-  return uuidPattern.test(value.trim()) ? value.trim() : null;
+  return uuidPattern.test(value.trim()) ? value.trim().toLowerCase() : null;
 }
 
 function normalizeHost(value: string) {

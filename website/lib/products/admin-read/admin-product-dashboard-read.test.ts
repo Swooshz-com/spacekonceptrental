@@ -145,6 +145,14 @@ describe("admin product dashboard read boundary", () => {
           }
         ],
         error: null
+      },
+      setup_recipe_items: {
+        data: [
+          {
+            included_product_id: "55555555-5555-4555-8555-555555555555"
+          }
+        ],
+        error: null
       }
     });
 
@@ -189,6 +197,9 @@ describe("admin product dashboard read boundary", () => {
         setupRecipeProductIds: [
           "22222222-2222-4222-8222-222222222222"
         ],
+        setupRecipeChildProductIds: [
+          "55555555-5555-4555-8555-555555555555"
+        ],
         images: [
           {
             id: "33333333-3333-4333-8333-333333333333",
@@ -223,7 +234,8 @@ describe("admin product dashboard read boundary", () => {
       "categories",
       "products",
       "product_images",
-      "setup_recipes"
+      "setup_recipes",
+      "setup_recipe_items"
     ]);
     for (const call of calls) {
       expect(call.filters).toContainEqual({
