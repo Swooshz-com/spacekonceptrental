@@ -31,7 +31,24 @@ export type PublicCatalogueProduct = {
   images?: PublicCatalogueImage[];
   primaryImage?: PublicCatalogueImage;
   source: PublicCatalogueSource;
+  productKind?: ProductKind;
+  safeSetupComposition?: SafeSetupComposition | null;
 };
+
+export type ProductKind = "rental" | "setup";
+
+export type SafeSetupCompositionItem = {
+  id: string;
+  slug: string;
+  name: string;
+  shortDescription?: string;
+  rentalUnit: string;
+  images: PublicCatalogueImage[];
+  position: number;
+  baseQuantity: number;
+};
+
+export type SafeSetupComposition = SafeSetupCompositionItem[];
 
 export type PublicCatalogue = {
   source: PublicCatalogueSource;

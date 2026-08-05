@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import QuoteRequestForm from "../../components/QuoteRequestForm";
 import { QuoteSelectionDataBoundary, QuoteSelectionSummary } from "../../components/QuoteSelectionControls";
-import { fallbackProductImage, productCategory, quoteCanonicalIdentities, quoteSelectionValidItemsForCatalogue, StitchPageIntro, stitchImageSrc } from "../../components/PublicStitch";
+import { fallbackProductImage, quoteCanonicalIdentities, quoteSelectionValidItemsForCatalogue, StitchPageIntro, stitchImageSrc } from "../../components/PublicStitch";
 import { getPublicCatalogue, getPublicProductBySlug } from "../../lib/catalogue/catalogue-repository";
 import { normalizePublicListingSlug, normalizePublicQuoteQuantity } from "../../lib/catalogue/quote-handoff";
 import type { PublicCatalogueProduct } from "../../lib/catalogue/types";
@@ -24,7 +24,20 @@ async function resolveQuoteListingContext(searchParams: QuotePageProps["searchPa
 function quoteProductImageSrc(product: PublicCatalogueProduct) { const image = product.images?.[0]?.publicUrl; return image ?? stitchImageSrc(fallbackProductImage(product)); }
 
 function SelectionPanel({ catalogueAvailable, product, quantity, requestedSlug, validItems }: { catalogueAvailable: boolean; product: PublicCatalogueProduct | null; quantity?: number; requestedSlug?: string; validItems: ReturnType<typeof quoteSelectionValidItemsForCatalogue> }) {
-  const fallbackItems = product && quantity ? [{ slug: product.slug, name: product.name, category: productCategory(product), quantity, imageSrc: quoteProductImageSrc(product) }] : [];
+  const canonicalProduct = product && quantity
+    ? validItems.find((item) => item.slug === product.slug)
+    : undefined;
+  const fallbackItems = canonicalProduct && product && quantity
+    ? [{
+        slug: canonicalProduct.slug,
+        name: canonicalProduct.name ?? product.name,
+        category: canonicalProduct.category,
+        kind: canonicalProduct.kind,
+        includedItems: canonicalProduct.includedItems,
+        quantity,
+        imageSrc: canonicalProduct.imageSrc ?? quoteProductImageSrc(product)
+      }]
+    : [];
   return <QuoteSelectionSummary catalogueAvailable={catalogueAvailable} fallbackItems={fallbackItems} requestedSlug={requestedSlug} validItems={validItems} />;
 }
 

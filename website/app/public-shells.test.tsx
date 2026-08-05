@@ -48,6 +48,7 @@ const modularLounge: PublicCatalogueProduct = {
   sortOrder: 10,
   categoryId: "category-published",
   categoryName: "Lounge Seating",
+  productKind: "rental",
   primaryImage: {
     id: "image-published",
     storageBucket: "sample-catalogue-public",
@@ -58,6 +59,18 @@ const modularLounge: PublicCatalogueProduct = {
   },
   source: "supabase"
 };
+
+const setupComposition = [
+  {
+    id: "setup-child",
+    slug: "setup-child",
+    name: "Setup Child",
+    rentalUnit: "item",
+    images: [],
+    position: 0,
+    baseQuantity: 1
+  }
+];
 
 const catalogueWithProduct: PublicCatalogue = {
   source: "supabase",
@@ -81,6 +94,8 @@ const metropolitanSetup: PublicCatalogueProduct = {
   shortDescription: "Tonal layering and sculptural surfaces for elevated evening event settings.",
   description: "Tonal layering and sculptural surfaces for elevated evening event settings.",
   rentalUnit: "setup",
+  productKind: "setup",
+  safeSetupComposition: setupComposition,
   sortOrder: 1,
   categoryId: "setups",
   categoryName: "Setups",
@@ -102,6 +117,8 @@ const botanicalSetup: PublicCatalogueProduct = {
   shortDescription: "Organic silhouettes and soft seating cues for daylight celebrations.",
   description: "Organic silhouettes and soft seating cues for daylight celebrations.",
   rentalUnit: "setup",
+  productKind: "setup",
+  safeSetupComposition: setupComposition,
   sortOrder: 2,
   categoryId: "setups",
   categoryName: "Setups",
@@ -123,6 +140,8 @@ const executiveSetup: PublicCatalogueProduct = {
   shortDescription: "Structured furniture groupings for focused sessions and networking areas.",
   description: "Structured furniture groupings for focused sessions and networking areas.",
   rentalUnit: "setup",
+  productKind: "setup",
+  safeSetupComposition: setupComposition,
   sortOrder: 3,
   categoryId: "setups",
   categoryName: "Setups",
@@ -570,7 +589,8 @@ describe("public page shells", () => {
       name: "The Metropolitan Gala",
       shortDescription:
         "Tonal layering, sculptural surfaces, and lounge pieces for elevated evening event settings.",
-      categoryName: "Setups"
+      categoryName: "Setups",
+      productKind: "setup"
     };
     const styles = readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8");
     const setupDetailBlock = styles.slice(
@@ -633,7 +653,8 @@ describe("public page shells", () => {
       slug: "the-metropolitan-gala",
       name: "The Metropolitan Gala",
       rentalUnit: "setup",
-      categoryName: "Setups"
+      categoryName: "Setups",
+      productKind: "setup"
     };
 
     render(
@@ -657,7 +678,8 @@ describe("public page shells", () => {
       slug: "orphan-setup",
       name: "Orphan Setup",
       rentalUnit: "setup",
-      categoryName: "Setups"
+      categoryName: "Setups",
+      productKind: "setup"
     };
 
     render(

@@ -24,6 +24,7 @@ const productWithImage: PublicCatalogueProduct = {
   sortOrder: 1,
   categoryId: "category-1",
   categoryName: "Lounge",
+  productKind: "rental",
   images: [
     {
       id: "image-1",

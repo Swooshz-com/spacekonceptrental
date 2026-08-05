@@ -41,6 +41,7 @@ const sampleCatalogue = {
       categoryId: "cat-lounge",
       categoryName: "Lounge",
       rentalUnit: "set",
+      productKind: "rental",
       imageAlt: "Modular Lounge Set furniture rental setup",
       imageUrl: "/assets/images/product_sofa.png"
     },
@@ -53,6 +54,18 @@ const sampleCatalogue = {
       categoryId: "cat-setups",
       categoryName: "Setups",
       rentalUnit: "set",
+      productKind: "setup",
+      safeSetupComposition: [
+        {
+          id: "prod-lounge",
+          slug: "modular-lounge-set",
+          name: "Modular Lounge Set",
+          rentalUnit: "set",
+          images: [],
+          position: 0,
+          baseQuantity: 1
+        }
+      ],
       imageAlt: "Curated Lounge Setup furniture rental setup",
       imageUrl: "/assets/images/product_sofa.png"
     }

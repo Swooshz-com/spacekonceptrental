@@ -1,16 +1,17 @@
 import "server-only";
 
+import { isCsrfProtectedAdminOperation } from "./admin-authorization-policy";
 import type {
   ServerAdminCsrfProofVerifierInput,
   ServerAdminCsrfProofVerifierResult as PreflightCsrfProofVerifierResult,
-  StateChangingAdminOperation
+  CsrfProtectedAdminOperation
 } from "./server-admin-request-security-preflight";
 
 export type ServerAdminCsrfProofVerifierResult =
   PreflightCsrfProofVerifierResult;
 
 export type ServerAdminCsrfProofPayload = {
-  operation: StateChangingAdminOperation;
+  operation: CsrfProtectedAdminOperation;
   sessionBinding: string;
   nonce: string;
   issuedAt: number;
@@ -30,21 +31,19 @@ export type ServerAdminCsrfSignatureVerifierResult =
     };
 
 export type ServerAdminCsrfReplayCheckInput = {
-  operation: StateChangingAdminOperation;
+  operation: CsrfProtectedAdminOperation;
+  expectedWorkspaceId: string;
   sessionBinding: string;
   nonce: string;
   issuedAt: number;
   expiresAt: number;
 };
 
-export type ServerAdminCsrfReplayCheckResult =
-  | boolean
-  | {
-      replayed: boolean;
-    };
+export type ServerAdminCsrfReplayCheckResult = unknown;
 
 export type ServerAdminCsrfProofVerifierDependencies = {
   expectedSessionBinding?: string | null;
+  expectedWorkspaceId?: string | null;
   expectedNonce?: string | null;
   currentTimestampMs?: number | null;
   maxProofAgeMs?: number | null;
@@ -103,7 +102,7 @@ function normalizeRequired(value: string | null | undefined) {
 }
 
 function isValidTimestamp(value: unknown): value is number {
-  return typeof value === "number" && Number.isFinite(value) && value >= 0;
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -154,6 +153,26 @@ function parseProof(value: string | null | undefined) {
     : null;
 }
 
+/**
+ * Reads only the signed proof operation before a request body is consumed.
+ * The value is intentionally untrusted until verifyServerAdminCsrfProof has
+ * checked the signature; callers may use it only to select a closed route
+ * allowlist and must perform the full verifier call before any body work.
+ */
+export function readServerAdminCsrfProofOperation(
+  value: string | null | undefined
+): CsrfProtectedAdminOperation | null {
+  const parsedProof = parseProof(value);
+
+  if (!parsedProof) {
+    return null;
+  }
+
+  const payload = toPayload(parsedProof.payload);
+
+  return payload?.operation ?? null;
+}
+
 function toPayload(
   payload: Record<string, unknown>
 ): ServerAdminCsrfProofPayload | null {
@@ -167,6 +186,10 @@ function toPayload(
     return null;
   }
 
+  if (!isCsrfProtectedAdminOperation(payload.operation)) {
+    return null;
+  }
+
   const sessionBinding = normalizeRequired(payload.sessionBinding);
   const nonce = normalizeRequired(payload.nonce);
 
@@ -175,7 +198,7 @@ function toPayload(
   }
 
   return {
-    operation: payload.operation as StateChangingAdminOperation,
+    operation: payload.operation as CsrfProtectedAdminOperation,
     sessionBinding,
     nonce,
     issuedAt: payload.issuedAt,
@@ -185,10 +208,6 @@ function toPayload(
 
 function signatureIsValid(result: ServerAdminCsrfSignatureVerifierResult) {
   return typeof result === "boolean" ? result : result.valid === true;
-}
-
-function replayCheckWasReplayed(result: ServerAdminCsrfReplayCheckResult) {
-  return typeof result === "boolean" ? result : result.replayed === true;
 }
 
 function getCurrentTimestampMs(
@@ -243,6 +262,14 @@ export async function verifyServerAdminCsrfProof(
     return mismatched();
   }
 
+  const expectedWorkspaceId = normalizeRequired(
+    dependencies.expectedWorkspaceId
+  );
+
+  if (!expectedWorkspaceId) {
+    return replayed();
+  }
+
   const expectedNonce = normalizeRequired(dependencies.expectedNonce);
 
   if (expectedNonce && payload.nonce !== expectedNonce) {
@@ -285,22 +312,25 @@ export async function verifyServerAdminCsrfProof(
     return invalid();
   }
 
-  if (dependencies.checkReplay) {
-    try {
-      const replayResult = await dependencies.checkReplay({
-        operation: payload.operation,
-        sessionBinding: payload.sessionBinding,
-        nonce: payload.nonce,
-        issuedAt: payload.issuedAt,
-        expiresAt: payload.expiresAt
-      });
+  if (!dependencies.checkReplay) {
+    return replayed();
+  }
 
-      if (replayCheckWasReplayed(replayResult)) {
-        return replayed();
-      }
-    } catch {
+  try {
+    const replayResult = await dependencies.checkReplay({
+      operation: payload.operation,
+      expectedWorkspaceId,
+      sessionBinding: payload.sessionBinding,
+      nonce: payload.nonce,
+      issuedAt: payload.issuedAt,
+      expiresAt: payload.expiresAt
+    });
+
+    if (replayResult !== true) {
       return replayed();
     }
+  } catch {
+    return replayed();
   }
 
   return valid();

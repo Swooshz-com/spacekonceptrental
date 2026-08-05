@@ -6,12 +6,17 @@ import {
 } from "../../lib/admin/authorization/server-admin-runtime-route-gate-adapter";
 import {
   resolveAdminProductDashboardRead,
+  type AdminProductDashboardProduct,
   type AdminProductDashboardReadResult
 } from "../../lib/products/admin-read/admin-product-dashboard-read";
 import { getAdminRouteRuntimeConfig } from "../../lib/server-runtime-config";
 import { CatalogueOwnerWorkflow } from "../../components/admin/catalogue-owner-workflow";
 import { AdminAccessManagementPanel } from "../../components/admin/admin-access-management-panel";
 import { HeroContentManagementPanel } from "../../components/admin/hero-content-management-panel";
+import {
+  SetupRecipeSelector,
+  type SetupRecipeEditorCandidate
+} from "../../components/admin/setup-recipe-selector";
 import {
   resolveAdminAccessDashboardRead,
   type AdminAccessDashboardReadResult
@@ -30,6 +35,7 @@ export type ProtectedAdminShellState =
     }
   | {
       status: "authorised_admin";
+      workspaceId: string;
       dashboard: AdminProductDashboardReadResult;
       adminAccess?: AdminAccessDashboardReadResult;
     }
@@ -295,6 +301,7 @@ export async function resolveProtectedAdminShellState(): Promise<ProtectedAdminS
 
     return {
       status: "authorised_admin",
+      workspaceId: trustedServerWorkspaceId ?? "",
       dashboard,
       adminAccess
     };
@@ -323,7 +330,7 @@ function workspaceDescription(view: AdminShellView) {
     catalogue:
       "Manage rental catalogue items shown on the public site.",
     setups:
-      "Review setup-style presentation derived from published catalogue items.",
+      "Manage setup recipes for editable unpublished parents and existing recipe parents.",
     "enquiry-email": "Check the server-side n8n enquiry handoff status.",
     "delivery-log": "Review technical enquiry handoff delivery attempts."
   };
@@ -712,9 +719,11 @@ function AdminCatalogueOperations({
 }
 
 function AdminSetupsOperations({
-  dashboard
+  dashboard,
+  workspaceId
 }: {
   dashboard: AdminProductDashboardReadResult;
+  workspaceId: string;
 }) {
   if (dashboard.status === "unavailable") {
     return (
@@ -726,33 +735,57 @@ function AdminSetupsOperations({
   }
 
   const categoryById = new Map(
-    dashboard.data.categories.map((category) => [category.id, category.name])
+    dashboard.data.categories.map((category) => [category.id, category])
   );
-  const setupCandidates = dashboard.data.products.filter(
-    (product) => product.status === "published"
+  const existingSetupParentIds = new Set(dashboard.data.setupRecipeProductIds);
+  const recipeChildIds = new Set(dashboard.data.setupRecipeChildProductIds);
+  const parentEditorCandidates = dashboard.data.products.filter(
+    (product) =>
+      product.status !== "archived" &&
+      !recipeChildIds.has(product.id) &&
+      (product.status === "draft" || existingSetupParentIds.has(product.id))
   );
-  const excludedItems = dashboard.data.products.filter(
-    (product) => product.status !== "published"
-  ).length;
-  const needsImageReview = setupCandidates.filter(
-    (product) => product.imageCount === 0 || !hasText(product.primaryImageAltText)
+  const isPublicCatalogueProduct = (product: AdminProductDashboardProduct) =>
+    product.status === "published" &&
+    (!product.categoryId || categoryById.get(product.categoryId)?.isPublished === true);
+  const childCandidatesByParent = new Map(
+    parentEditorCandidates.map((parent) => [
+      parent.id,
+      dashboard.data.products
+        .filter((product) => product.id !== parent.id)
+        .filter((product) => !existingSetupParentIds.has(product.id))
+        .filter((product) => product.status !== "archived")
+        .filter(
+          (product) =>
+            parent.status !== "published" || isPublicCatalogueProduct(product)
+        )
+        .map((product) => ({ id: product.id, name: product.name }))
+    ])
+  );
+  const excludedItems = dashboard.data.products.length - parentEditorCandidates.length;
+  const needsImageReview = parentEditorCandidates.filter(
+    (product) =>
+      product.status === "published" &&
+      (product.imageCount === 0 || !hasText(product.primaryImageAltText))
   );
   const allCandidatesNeedImageReview =
-    setupCandidates.length > 0 &&
-    needsImageReview.length === setupCandidates.length;
+    parentEditorCandidates.some((product) => product.status === "published") &&
+    needsImageReview.length ===
+      parentEditorCandidates.filter((product) => product.status === "published").length;
 
   return (
     <section
       className={styles.managementStack}
-      aria-label="Derived setup review workflow"
+      aria-label="Setup recipe management workflow"
     >
       <section className={styles.placeholderPanel}>
         <div className={styles.panelTitleRow}>
           <div>
-            <h2>Setup presentation review</h2>
+            <h2>Setup recipe management</h2>
             <p>
-              Setups are currently derived from published Catalogue items. To
-              change setup content for launch, edit the relevant Catalogue item.
+              Authoritative setup recipes define ordered rental pieces with base
+              quantities. Server-owned recipe data is used for public display and
+              quote reconstruction.
             </p>
           </div>
           <nav className={styles.inlineActions} aria-label="Setup actions">
@@ -764,11 +797,6 @@ function AdminSetupsOperations({
             </a>
           </nav>
         </div>
-        <p>
-          Only published, public-ready catalogue items should appear in the
-          public setup presentation. No setup-specific editor or records are
-          available in this launch slice.
-        </p>
       </section>
 
       <section
@@ -776,14 +804,14 @@ function AdminSetupsOperations({
         aria-label="Derived setup overview"
       >
         <dl className={styles.metricCard}>
-          <dt>Available for setups</dt>
-          <dd>{setupCandidates.length}</dd>
-          <p>Published catalogue items available for public setup cards.</p>
+          <dt>Recipe parents</dt>
+          <dd>{parentEditorCandidates.length}</dd>
+          <p>Editable unpublished parents and existing recipe parents.</p>
         </dl>
         <dl className={styles.metricCard}>
           <dt>Excluded</dt>
           <dd>{excludedItems}</dd>
-          <p>Draft or hidden catalogue items excluded from public setups.</p>
+          <p>Catalogue items outside the setup-parent editor contract.</p>
         </dl>
         <dl
           className={`${styles.metricCard} ${
@@ -792,16 +820,16 @@ function AdminSetupsOperations({
         >
           <dt>Image review</dt>
           <dd>{needsImageReview.length}</dd>
-          <p>Published items missing image coverage or primary image alt text.</p>
+          <p>Published recipe parents missing image coverage or primary image alt text.</p>
         </dl>
       </section>
 
-      {setupCandidates.length === 0 ? (
+      {parentEditorCandidates.length === 0 ? (
         <section className={styles.emptyStatePanel}>
-          <h2>No public setup candidates yet</h2>
+          <h2>No setup parent editors available</h2>
           <p>
-            Published catalogue items will populate Setups. Add or publish a
-            public-ready catalogue item, then return here to review it.
+            Add an editable unpublished catalogue item or create a recipe for an
+            eligible parent, then return here to manage setup composition.
           </p>
           <a className={styles.primaryButton} href="/admin/catalogue">
             Manage catalogue
@@ -811,76 +839,37 @@ function AdminSetupsOperations({
         <section className={styles.rowPanel}>
           <div className={styles.tableHeader}>
             <div>
-              <h2>Public setup candidates</h2>
+              <h2>Setup recipe editor</h2>
               <p>
-                Public-like setup cards sourced from existing Catalogue data.
+                Define ordered rental pieces for each setup using the authoritative
+                server-side recipe. Changes are atomic and versioned.
               </p>
             </div>
-            <span className={`${styles.statusPill} ${styles.statusPillMuted}`}>
-              Derived from Catalogue
-            </span>
           </div>
 
           {allCandidatesNeedImageReview ? (
             <p className={styles.reviewNotice}>
-              Every published setup candidate needs image or alt-text review.
+              Every published recipe parent needs image or alt-text review.
               Fix image coverage in Catalogue before launch review.
             </p>
           ) : null}
 
-          <div className={styles.setupCardGrid}>
-            {setupCandidates.map((product) => {
-              const categoryName = product.categoryId
-                ? categoryById.get(product.categoryId) ?? "Unassigned category"
-                : "Unassigned category";
-              const imageReady =
-                product.imageCount > 0 && hasText(product.primaryImageAltText);
-              const readinessLabel = imageReady
-                ? "Image ready"
-                : product.imageCount > 0
-                  ? "Needs image alt text"
-                  : "Needs image";
-
-              return (
-                <article
-                  className={styles.setupCard}
-                  key={product.id}
-                  aria-label={`Setup candidate ${product.name}`}
-                >
-                  <div className={styles.setupCardHeader}>
-                    <div>
-                      <h3>{product.name}</h3>
-                      <p>{categoryName}</p>
-                    </div>
-                    <span
-                      className={`${styles.statusTag} ${styles.statusTagPublished}`}
-                    >
-                      Published
-                    </span>
-                  </div>
-                  <p>
-                    {product.shortDescription ??
-                      "Catalogue item available for setup presentation and enquiry context."}
-                  </p>
-                  <div className={styles.setupCardMeta}>
-                    <span
-                      className={`${styles.statusTag} ${
-                        imageReady
-                          ? styles.statusTagPublished
-                          : styles.statusPillWarning
-                      }`}
-                    >
-                      {readinessLabel}
-                    </span>
-                    <span>{product.imageCount} image(s)</span>
-                  </div>
-                  <a className={styles.secondaryButton} href="/admin/catalogue">
-                    Edit in Catalogue
-                  </a>
-                </article>
-              );
-            })}
-          </div>
+          <SetupRecipeSelector
+            workspaceId={workspaceId}
+            candidates={parentEditorCandidates.map<SetupRecipeEditorCandidate>((product) => ({
+              id: product.id,
+              slug: product.slug,
+              name: product.name,
+              sortOrder: product.sortOrder,
+              parentStatus: product.status,
+              categoryName: product.categoryId
+                ? categoryById.get(product.categoryId)?.name ?? "Unassigned category"
+                : "Unassigned category",
+              imageReady:
+                product.imageCount > 0 && hasText(product.primaryImageAltText),
+              availableProducts: childCandidatesByParent.get(product.id) ?? []
+            }))}
+          />
         </section>
       )}
     </section>
@@ -1087,7 +1076,7 @@ function AdminOperationsView({
   }
 
   if (view.kind === "setups") {
-    return <AdminSetupsOperations dashboard={state.dashboard} />;
+    return <AdminSetupsOperations dashboard={state.dashboard} workspaceId={state.workspaceId} />;
   }
 
   if (view.kind === "enquiry-email") {

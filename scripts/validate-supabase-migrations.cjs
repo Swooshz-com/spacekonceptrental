@@ -39,6 +39,30 @@ const destructiveStatementAllowlist = [
         and i.setup_product_id = p_setup_product_id;
     `,
   },
+  // DL-SKR-319-CSRF-REPLAY-001 permits exactly one bounded cleanup DELETE.
+  // The deterministic candidate CTE caps each invocation at 128 expired rows;
+  // the primary-key insert remains the atomic replay boundary.
+  {
+    occurrenceId: 'admin-csrf-proof-expired-cleanup-delete',
+    fileName: '20260802013000_admin_csrf_proof_replay_authority.sql',
+    label: 'destructive SQL statement',
+    statementClass: 'DELETE',
+    target: 'public.admin_csrf_proof_consumptions',
+    statement: `
+      with expired_fingerprints as (
+        select consumption.proof_fingerprint
+        from public.admin_csrf_proof_consumptions consumption
+        where consumption.expires_at <= pg_catalog.statement_timestamp()
+        order by consumption.expires_at, consumption.proof_fingerprint
+        limit 128
+        for update skip locked
+      )
+      delete from public.admin_csrf_proof_consumptions consumption
+      using expired_fingerprints
+      where consumption.proof_fingerprint =
+        expired_fingerprints.proof_fingerprint;
+    `,
+  },
 ];
 
 const contentRules = [

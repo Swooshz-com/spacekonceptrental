@@ -56,6 +56,8 @@ const approvedAdminQuoteHubSpotManualImportOutcomeRouteBoundaryPath =
   "website/lib/quote/admin-read/admin-quote-request-hubspot-manual-import-outcome-route.ts";
 const approvedMediaUploadRouteBoundaryPath =
   "website/lib/products/media/admin-product-image-upload-route.ts";
+const approvedSetupRecipeWriteRouteBoundaryPath =
+  "website/lib/catalogue/admin-setup-recipe-write-route.ts";
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs"]);
 
 function readRepoFile(relativePath: string) {
@@ -230,7 +232,8 @@ describe("Phase 2B-AA first admin runtime route gate adapter usage boundary", ()
           filePath !== approvedAdminQuoteHubSpotImportCsvPreflightRouteBoundaryPath &&
           filePath !== approvedAdminQuoteHubSpotSyncDryRunContractRouteBoundaryPath &&
           filePath !== approvedAdminQuoteHubSpotManualImportOutcomeRouteBoundaryPath &&
-          filePath !== approvedMediaUploadRouteBoundaryPath &&
+           filePath !== approvedMediaUploadRouteBoundaryPath &&
+           filePath !== approvedSetupRecipeWriteRouteBoundaryPath &&
           filePath !== "website/app/api/admin/auth-check/route.ts" &&
           filePath !== "website/app/api/admin/login/route.ts" &&
           filePath !== "website/app/api/admin/csrf-proof/route.ts" &&
@@ -294,7 +297,8 @@ describe("Phase 2B-AA first admin runtime route gate adapter usage boundary", ()
       "website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-import-csv/route.ts",
       "website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-sync-dry-run-contract/route.ts",
       "website/app/api/admin/quote-requests/crm-handoff-packet/lifecycle-reconciliation/route.ts",
-      "website/app/api/admin/quote-requests/crm-handoff-packet/route.ts"
+      "website/app/api/admin/quote-requests/crm-handoff-packet/route.ts",
+      "website/app/api/admin/setup-recipe/route.ts"
     ]);
     expect(readTrackedFiles(["website/app/api/products"])).toEqual([]);
     expect(readTrackedFiles(["website/app/api/categories"])).toEqual([]);

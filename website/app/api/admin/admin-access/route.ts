@@ -89,19 +89,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return errorJson("request_method_not_allowed", 405);
   }
 
-  const body = await readBoundedJsonBody(request);
-
-  if (!body.ok || !isRecord(body.body)) {
-    return errorJson("request_payload_invalid", body.ok ? 400 : body.status);
-  }
-
-  const action = parseAdminAccessWriteAction(body.body.action);
-  const email = normalizeAdminAccessEmail(body.body.email);
-
-  if (!action || !email) {
-    return errorJson("request_payload_invalid", 400);
-  }
-
   const mutationCapability = resolveServerAdminMutationCapability({
     ADMIN_MUTATIONS_ENABLED: process.env.ADMIN_MUTATIONS_ENABLED
   });
@@ -145,6 +132,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   const verifierContext = {
     expectedSessionBinding: binding.sessionBinding,
+    expectedWorkspaceId: binding.adminContext.workspaceId,
     currentTimestampMs: timestampMs,
     maxProofAgeMs: defaultProofMaxAgeMs
   };
@@ -184,6 +172,19 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   if (!routeGate.allowed) {
     return errorJson(routeGate.reason, routeGate.statusCode);
+  }
+
+  const body = await readBoundedJsonBody(request);
+
+  if (!body.ok || !isRecord(body.body)) {
+    return errorJson("request_payload_invalid", body.ok ? 400 : body.status);
+  }
+
+  const action = parseAdminAccessWriteAction(body.body.action);
+  const email = normalizeAdminAccessEmail(body.body.email);
+
+  if (!action || !email) {
+    return errorJson("request_payload_invalid", 400);
   }
 
   const result = await executeAdminAccessMutation({

@@ -19,6 +19,7 @@ type QueryCall = {
     ascending: boolean;
   }>;
   limit?: number;
+  ranges?: Array<{ from: number; to: number }>;
 };
 
 function createMockSupabase(results: Record<string, QueryResult>) {
@@ -28,9 +29,17 @@ function createMockSupabase(results: Record<string, QueryResult>) {
       const call: QueryCall = {
         table,
         filters: [],
-        orders: []
+        orders: [],
+        ranges: []
       };
       calls.push(call);
+
+      function page(from: number, to: number) {
+        const result = results[table] ?? { data: [], error: null };
+        return Array.isArray(result.data)
+          ? { ...result, data: result.data.slice(from, to + 1) }
+          : result;
+      }
 
       const builder = {
         select(columns: string) {
@@ -50,12 +59,11 @@ function createMockSupabase(results: Record<string, QueryResult>) {
         },
         limit(count: number) {
           call.limit = count;
-          return Promise.resolve(
-            results[table] ?? {
-              data: [],
-              error: null
-            }
-          );
+          return Promise.resolve(page(0, count - 1));
+        },
+        range(from: number, to: number) {
+          call.ranges?.push({ from, to });
+          return Promise.resolve(page(from, to));
         }
       };
 
@@ -129,6 +137,22 @@ describe("admin product dashboard read boundary", () => {
           }
         ],
         error: null
+      },
+      setup_recipes: {
+        data: [
+          {
+            setup_product_id: "22222222-2222-4222-8222-222222222222"
+          }
+        ],
+        error: null
+      },
+      setup_recipe_items: {
+        data: [
+          {
+            included_product_id: "55555555-5555-4555-8555-555555555555"
+          }
+        ],
+        error: null
       }
     });
 
@@ -170,6 +194,12 @@ describe("admin product dashboard read boundary", () => {
             primaryImageAltText: "Lounge set"
           }
         ],
+        setupRecipeProductIds: [
+          "22222222-2222-4222-8222-222222222222"
+        ],
+        setupRecipeChildProductIds: [
+          "55555555-5555-4555-8555-555555555555"
+        ],
         images: [
           {
             id: "33333333-3333-4333-8333-333333333333",
@@ -203,7 +233,9 @@ describe("admin product dashboard read boundary", () => {
     expect(calls.map((call) => call.table)).toEqual([
       "categories",
       "products",
-      "product_images"
+      "product_images",
+      "setup_recipes",
+      "setup_recipe_items"
     ]);
     for (const call of calls) {
       expect(call.filters).toContainEqual({
@@ -303,6 +335,118 @@ describe("admin product dashboard read boundary", () => {
       imageCount: 1
     });
     expect(archivedPrimary).not.toHaveProperty("primaryImageAltText");
+  });
+
+  it("uses one deterministic total order for tied duplicate-name products", async () => {
+    const products = [
+      {
+        id: "55555555-5555-4555-8555-555555555555",
+        slug: "twin-z",
+        name: "Twin Name",
+        rental_unit: "item",
+        status: "draft",
+        sort_order: 10
+      },
+      {
+        id: "22222222-2222-4222-8222-222222222222",
+        slug: "twin-a",
+        name: " twin name ",
+        rental_unit: "item",
+        status: "draft",
+        sort_order: 10
+      }
+    ];
+
+    async function read(shuffledProducts: typeof products) {
+      const { supabase } = createMockSupabase({
+        categories: { data: [], error: null },
+        products: { data: shuffledProducts, error: null },
+        product_images: { data: [], error: null },
+        setup_recipes: { data: [], error: null }
+      });
+      const result = await resolveAdminProductDashboardRead({
+        supabase,
+        env: {
+          ADMIN_TRUSTED_WORKSPACE_ID:
+            "99999999-9999-4999-8999-999999999999"
+        }
+      });
+      if (result.status !== "loaded") throw new Error("dashboard unavailable");
+      return result.data.products.map((product) => product.slug);
+    }
+
+    await expect(read(products)).resolves.toEqual(["twin-a", "twin-z"]);
+    await expect(read([...products].reverse())).resolves.toEqual(["twin-a", "twin-z"]);
+  });
+
+  it("aligns the database query tie-breakers with the in-memory product order", async () => {
+    const { calls, supabase } = createMockSupabase({
+      categories: { data: [], error: null },
+      products: {
+        data: [{
+          id: "22222222-2222-4222-8222-222222222222",
+          slug: "one",
+          name: "One",
+          rental_unit: "item",
+          status: "draft",
+          sort_order: 10
+        }],
+        error: null
+      },
+      product_images: { data: [], error: null },
+      setup_recipes: { data: [], error: null }
+    });
+
+    await resolveAdminProductDashboardRead({
+      supabase,
+      env: {
+        ADMIN_TRUSTED_WORKSPACE_ID:
+          "99999999-9999-4999-8999-999999999999"
+      }
+    });
+
+    expect(calls.find((call) => call.table === "products")?.orders).toEqual([
+      { column: "sort_order", ascending: true },
+      { column: "name", ascending: true },
+      { column: "slug", ascending: true },
+      { column: "id", ascending: true }
+    ]);
+  });
+
+  it("discovers every recipe parent beyond the first 500 rows", async () => {
+    const recipeRows = Array.from({ length: 501 }, (_, index) => ({
+      setup_product_id: `22222222-2222-4222-8222-${String(index + 1).padStart(12, "0")}`
+    }));
+    const productRows = recipeRows.map((row, index) => ({
+      id: row.setup_product_id,
+      slug: `published-parent-${index}`,
+      name: `Published Parent ${index}`,
+      status: "published",
+      sort_order: index
+    }));
+    const { supabase, calls } = createMockSupabase({
+      categories: { data: [], error: null },
+      products: { data: productRows, error: null },
+      product_images: { data: [], error: null },
+      setup_recipes: { data: recipeRows, error: null }
+    });
+
+    const result = await resolveAdminProductDashboardRead({
+      supabase,
+      env: {
+        ADMIN_TRUSTED_WORKSPACE_ID:
+          "99999999-9999-4999-8999-999999999999"
+      }
+    });
+
+    expect(result.status).toBe("loaded");
+    if (result.status !== "loaded") return;
+    expect(result.data.setupRecipeProductIds).toHaveLength(501);
+    expect(result.data.setupRecipeProductIds.at(-1)).toBe(recipeRows.at(-1)?.setup_product_id);
+    expect(calls.filter((call) => call.table === "setup_recipes").flatMap((call) => call.ranges ?? [])).toEqual([
+      { from: 0, to: 499 },
+      { from: 500, to: 999 }
+    ]);
   });
 
   it("fails closed when the session-bound admin read client is unavailable", async () => {

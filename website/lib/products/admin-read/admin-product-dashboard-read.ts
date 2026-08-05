@@ -2,6 +2,7 @@ import "server-only";
 
 import { getAdminTrustedWorkspaceId } from "../../server-runtime-config";
 import { createSessionBoundSupabaseAdminReadClient } from "../../admin/authorization/supabase-admin-auth-identity-adapter";
+import { compareAdminProductOrder } from "./admin-product-ordering";
 
 type QueryResult = {
   data: unknown;
@@ -17,10 +18,18 @@ type AdminProductDashboardReadFilter = {
     }
   ): AdminProductDashboardReadFilter;
   limit(count: number): Promise<QueryResult>;
+  range(from: number, to: number): Promise<QueryResult>;
 };
 
 export type AdminProductDashboardReadSupabaseClient = {
-  from(table: "categories" | "products" | "product_images"): {
+  from(
+    table:
+      | "categories"
+      | "products"
+      | "product_images"
+      | "setup_recipes"
+      | "setup_recipe_items"
+  ): {
     select(columns: string): AdminProductDashboardReadFilter;
   };
 };
@@ -76,6 +85,8 @@ export type AdminProductDashboardImage = {
 export type AdminProductDashboardReadData = {
   categories: AdminProductDashboardCategory[];
   products: AdminProductDashboardProduct[];
+  setupRecipeProductIds: string[];
+  setupRecipeChildProductIds: string[];
   images: AdminProductDashboardImage[];
   imageSummary: {
     totalImages: number;
@@ -132,10 +143,19 @@ type ProductImageRow = {
   status?: unknown;
 };
 
+type SetupRecipeRow = {
+  setup_product_id?: unknown;
+};
+
+type SetupRecipeItemRow = {
+  included_product_id?: unknown;
+};
+
 const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const productStatuses = new Set(["draft", "published", "archived"]);
 const productImageStatuses = new Set(["active", "archived"]);
+const setupRecipePageSize = 500;
 
 function unavailable(): AdminProductDashboardReadResult {
   return {
@@ -149,6 +169,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isUuid(value: unknown): value is string {
   return typeof value === "string" && uuidPattern.test(value.trim());
+}
+
+function canonicalUuid(value: unknown): string | null {
+  return isUuid(value) ? value.trim().toLowerCase() : null;
 }
 
 function getString(value: unknown) {
@@ -193,8 +217,60 @@ function requireRows(result: QueryResult) {
   return result.data.every(isRecord) ? result.data : null;
 }
 
+async function readAllSetupRecipeRows(
+  client: AdminProductDashboardReadSupabaseClient,
+  workspaceId: string
+): Promise<Record<string, unknown>[] | null> {
+  const rows: Record<string, unknown>[] = [];
+
+  for (let from = 0; ; from += setupRecipePageSize) {
+    const result = await client
+      .from("setup_recipes")
+      .select("setup_product_id")
+      .eq("workspace_id", workspaceId)
+      .order("setup_product_id", { ascending: true })
+      .range(from, from + setupRecipePageSize - 1);
+    const page = requireRows(result);
+
+    if (!page) {
+      return null;
+    }
+
+    rows.push(...page);
+    if (page.length < setupRecipePageSize) {
+      return rows;
+    }
+  }
+}
+
+async function readAllSetupRecipeChildRows(
+  client: AdminProductDashboardReadSupabaseClient,
+  workspaceId: string
+): Promise<Record<string, unknown>[] | null> {
+  const rows: Record<string, unknown>[] = [];
+
+  for (let from = 0; ; from += setupRecipePageSize) {
+    const result = await client
+      .from("setup_recipe_items")
+      .select("included_product_id")
+      .eq("workspace_id", workspaceId)
+      .order("included_product_id", { ascending: true })
+      .range(from, from + setupRecipePageSize - 1);
+    const page = requireRows(result);
+
+    if (!page) {
+      return null;
+    }
+
+    rows.push(...page);
+    if (page.length < setupRecipePageSize) {
+      return rows;
+    }
+  }
+}
+
 function toCategory(row: CategoryRow): AdminProductDashboardCategory | null {
-  const id = isUuid(row.id) ? row.id.trim() : null;
+  const id = canonicalUuid(row.id);
   const slug = getString(row.slug);
   const name = getString(row.name);
   const sortOrder = getNumber(row.sort_order);
@@ -216,8 +292,8 @@ function toCategory(row: CategoryRow): AdminProductDashboardCategory | null {
 }
 
 function toProduct(row: ProductRow): AdminProductDashboardProduct | null {
-  const id = isUuid(row.id) ? row.id.trim() : null;
-  const categoryId = isUuid(row.category_id) ? row.category_id.trim() : undefined;
+  const id = canonicalUuid(row.id);
+  const categoryId = canonicalUuid(row.category_id) ?? undefined;
   const slug = getString(row.slug);
   const name = getString(row.name);
   const status =
@@ -245,8 +321,8 @@ function toProduct(row: ProductRow): AdminProductDashboardProduct | null {
 }
 
 function toProductImage(row: ProductImageRow) {
-  const id = isUuid(row.id) ? row.id.trim() : null;
-  const productId = isUuid(row.product_id) ? row.product_id.trim() : null;
+  const id = canonicalUuid(row.id);
+  const productId = canonicalUuid(row.product_id);
   const storageBucket = getString(row.storage_bucket);
   const storagePath = getString(row.storage_path);
   const status =
@@ -281,16 +357,26 @@ function toProductImage(row: ProductImageRow) {
 function mapDashboardData(
   categoryRows: Record<string, unknown>[],
   productRows: Record<string, unknown>[],
-  imageRows: Record<string, unknown>[]
+  imageRows: Record<string, unknown>[],
+  setupRecipeRows: Record<string, unknown>[],
+  setupRecipeChildRows: Record<string, unknown>[]
 ): AdminProductDashboardReadData | null {
   const categories = categoryRows.map(toCategory);
   const products = productRows.map(toProduct);
   const images = imageRows.map(toProductImage);
+  const setupRecipeProductIds = setupRecipeRows.map((row: SetupRecipeRow) =>
+    canonicalUuid(row.setup_product_id)
+  );
+  const setupRecipeChildProductIds = setupRecipeChildRows.map(
+    (row: SetupRecipeItemRow) => canonicalUuid(row.included_product_id)
+  );
 
   if (
     categories.some((category) => !category) ||
     products.some((product) => !product) ||
-    images.some((image) => !image)
+    images.some((image) => !image) ||
+    setupRecipeProductIds.some((productId) => !productId) ||
+    setupRecipeChildProductIds.some((productId) => !productId)
   ) {
     return null;
   }
@@ -340,11 +426,9 @@ function mapDashboardData(
         ? first.name.localeCompare(second.name)
         : first.sortOrder - second.sortOrder
     ),
-    products: mappedProducts.sort((first, second) =>
-      first.sortOrder === second.sortOrder
-        ? first.name.localeCompare(second.name)
-        : first.sortOrder - second.sortOrder
-    ),
+    products: mappedProducts.sort(compareAdminProductOrder),
+    setupRecipeProductIds: setupRecipeProductIds as string[],
+    setupRecipeChildProductIds: setupRecipeChildProductIds as string[],
     images: mappedImages.sort((first, second) =>
       first.sortOrder === second.sortOrder
         ? first.storagePath.localeCompare(second.storagePath)
@@ -388,6 +472,9 @@ export async function resolveAdminProductDashboardRead(
         )
         .eq("workspace_id", workspaceId)
         .order("sort_order", { ascending: true })
+        .order("name", { ascending: true })
+        .order("slug", { ascending: true })
+        .order("id", { ascending: true })
         .limit(500),
       supabase.client
         .from("product_images")
@@ -396,17 +483,37 @@ export async function resolveAdminProductDashboardRead(
         )
         .eq("workspace_id", workspaceId)
         .order("sort_order", { ascending: true })
-        .limit(1_000)
+        .limit(1_000),
     ]);
+    const setupRecipeRows = await readAllSetupRecipeRows(
+      supabase.client,
+      workspaceId
+    );
+    const setupRecipeChildRows = await readAllSetupRecipeChildRows(
+      supabase.client,
+      workspaceId
+    );
     const categoryRows = requireRows(categoryResult);
     const productRows = requireRows(productResult);
     const imageRows = requireRows(imageResult);
 
-    if (!categoryRows || !productRows || !imageRows) {
+    if (
+      !categoryRows ||
+      !productRows ||
+      !imageRows ||
+      !setupRecipeRows ||
+      !setupRecipeChildRows
+    ) {
       return unavailable();
     }
 
-    const data = mapDashboardData(categoryRows, productRows, imageRows);
+    const data = mapDashboardData(
+      categoryRows,
+      productRows,
+      imageRows,
+      setupRecipeRows,
+      setupRecipeChildRows
+    );
 
     return data
       ? {

@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { validateServerAdminRequestSecurityPreflight } from "./server-admin-request-security-preflight";
 import {
@@ -23,6 +23,7 @@ const validPayload = {
   issuedAt: now - 1_000,
   expiresAt: now + 60_000
 };
+const expectedWorkspaceId = "11111111-1111-4111-8111-111111111111";
 
 function readSource() {
   return readFileSync(sourcePath, "utf8");
@@ -56,12 +57,14 @@ function createDependencies(
 ): ServerAdminCsrfProofVerifierDependencies {
   return {
     expectedSessionBinding: "session-binding-1",
+    expectedWorkspaceId,
     expectedNonce: "nonce-1",
     currentTimestampMs: now,
     maxProofAgeMs: 5 * 60_000,
     verifySignature: async ({ payloadSegment, signatureSegment }) =>
       payloadSegment === createProof().split(".")[0] &&
       signatureSegment === createProof().split(".")[1],
+    checkReplay: async () => true,
     ...overrides
   };
 }
@@ -211,19 +214,63 @@ describe("server admin CSRF proof verifier", () => {
     expectRejected(result, "csrf_proof_stale");
   });
 
-  it("returns replayed when the injected replay checker reports replay", async () => {
+  it("passes the exact server-resolved workspace to durable replay consumption", async () => {
+    const checkReplay = vi.fn(async () => true);
+    const result = await verifyServerAdminCsrfProof(
+      createInput(),
+      createDependencies({ checkReplay })
+    );
+
+    expect(result).toEqual({ valid: true });
+    expect(checkReplay).toHaveBeenCalledWith({
+      operation: "product.write",
+      expectedWorkspaceId,
+      sessionBinding: "session-binding-1",
+      nonce: "nonce-1",
+      issuedAt: now - 1_000,
+      expiresAt: now + 60_000
+    });
+  });
+
+  it("returns replayed when durable replay consumption returns false", async () => {
     const result = await verifyServerAdminCsrfProof(
       createInput(),
       createDependencies({
-        checkReplay: async ({ nonce, sessionBinding }) => {
-          expect(nonce).toBe("nonce-1");
-          expect(sessionBinding).toBe("session-binding-1");
-
-          return {
-            replayed: true
-          };
-        }
+        checkReplay: async () => false
       })
+    );
+
+    expectRejected(result, "csrf_proof_replayed");
+  });
+
+  it.each([null, undefined, [], "true", 1, { replayed: false }])(
+    "returns replayed for malformed durable replay result %j",
+    async (malformedResult) => {
+      const result = await verifyServerAdminCsrfProof(
+        createInput(),
+        createDependencies({
+          checkReplay: async () => malformedResult as never
+        })
+      );
+
+      expectRejected(result, "csrf_proof_replayed");
+      expectSafeShape(result);
+    }
+  );
+
+  it("returns replayed when the durable replay checker dependency is missing", async () => {
+    const dependencies = createDependencies();
+    delete dependencies.checkReplay;
+
+    const result = await verifyServerAdminCsrfProof(createInput(), dependencies);
+
+    expectRejected(result, "csrf_proof_replayed");
+  });
+
+  it("returns replayed when the exact workspace context is missing", async () => {
+    const result = await verifyServerAdminCsrfProof(
+      createInput(),
+      createDependencies({ expectedWorkspaceId: " " })
     );
 
     expectRejected(result, "csrf_proof_replayed");
@@ -242,9 +289,11 @@ describe("server admin CSRF proof verifier", () => {
   it("returns invalid when the signature verifier dependency is missing", async () => {
     const result = await verifyServerAdminCsrfProof(createInput(), {
       expectedSessionBinding: "session-binding-1",
+      expectedWorkspaceId,
       expectedNonce: "nonce-1",
       currentTimestampMs: now,
-      maxProofAgeMs: 5 * 60_000
+      maxProofAgeMs: 5 * 60_000,
+      checkReplay: async () => true
     });
 
     expectRejected(result, "csrf_proof_invalid");

@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { resolveServerAdminRuntimeRouteGateAdapter } from "../../lib/admin/authorization/server-admin-runtime-route-gate-adapter";
@@ -30,6 +30,7 @@ function readAppFile(path: string) {
 describe("protected admin shell", () => {
   afterEach(() => {
     cleanup();
+    vi.unstubAllGlobals();
     vi.clearAllMocks();
     delete process.env.ADMIN_EXPECTED_ORIGIN;
     delete process.env.ADMIN_EXPECTED_HOST;
@@ -54,6 +55,8 @@ describe("protected admin shell", () => {
       data: {
         categories: [],
         products: [],
+        setupRecipeProductIds: [],
+        setupRecipeChildProductIds: [],
         images: [],
         imageSummary: {
           totalImages: 0,
@@ -82,6 +85,8 @@ describe("protected admin shell", () => {
 
     await expect(resolveProtectedAdminShellState()).resolves.toEqual({
       status: "authorised_admin",
+
+      workspaceId: "99999999-9999-4999-8999-999999999999",
       adminAccess: {
         status: "loaded",
         currentAdmin: {
@@ -104,6 +109,8 @@ describe("protected admin shell", () => {
         data: {
           categories: [],
           products: [],
+          setupRecipeProductIds: [],
+          setupRecipeChildProductIds: [],
           images: [],
           imageSummary: {
             totalImages: 0,
@@ -196,6 +203,8 @@ describe("protected admin shell", () => {
   });
 
   it("keeps authorised admins in a safe state when dashboard reads are unavailable", async () => {
+    process.env.ADMIN_TRUSTED_WORKSPACE_ID =
+      "99999999-9999-4999-8999-999999999999";
     vi.mocked(resolveServerAdminRuntimeRouteGateAdapter).mockResolvedValueOnce({
       allowed: true,
       reason: "allowed",
@@ -211,6 +220,8 @@ describe("protected admin shell", () => {
 
     await expect(resolveProtectedAdminShellState()).resolves.toEqual({
       status: "authorised_admin",
+
+      workspaceId: "99999999-9999-4999-8999-999999999999",
       adminAccess: {
         status: "unavailable"
       },
@@ -225,6 +236,8 @@ describe("protected admin shell", () => {
       <AdminShellContent
         state={{
           status: "authorised_admin",
+
+          workspaceId: "99999999-9999-4999-8999-999999999999",
           dashboard: {
             status: "loaded",
             data: {
@@ -252,6 +265,8 @@ describe("protected admin shell", () => {
                   primaryImageAltText: "Lounge set"
                 }
               ],
+              setupRecipeProductIds: [],
+              setupRecipeChildProductIds: [],
               images: [
                 {
                   id: "image-1",
@@ -416,6 +431,8 @@ describe("protected admin shell", () => {
         view={{ kind: "catalogue" }}
         state={{
           status: "authorised_admin",
+
+          workspaceId: "99999999-9999-4999-8999-999999999999",
           dashboard: {
             status: "loaded",
             data: {
@@ -443,6 +460,8 @@ describe("protected admin shell", () => {
                   primaryImageAltText: "Lounge set"
                 }
               ],
+              setupRecipeProductIds: [],
+              setupRecipeChildProductIds: [],
               images: [
                 {
                   id: "image-1",
@@ -534,6 +553,8 @@ describe("protected admin shell", () => {
         view={{ kind: "setups" }}
         state={{
           status: "authorised_admin",
+
+          workspaceId: "99999999-9999-4999-8999-999999999999",
           dashboard: {
             status: "loaded",
             data: {
@@ -582,6 +603,8 @@ describe("protected admin shell", () => {
                   imageCount: 0
                 }
               ],
+              setupRecipeProductIds: ["product-1", "product-2"],
+              setupRecipeChildProductIds: [],
               images: [
                 {
                   id: "image-1",
@@ -606,13 +629,13 @@ describe("protected admin shell", () => {
     );
 
     expect(
-      screen.getByRole("region", { name: /derived setup review workflow/i })
+      screen.getByRole("region", { name: /setup recipe management workflow/i })
     ).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: /^setups$/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/review setup-style presentation derived from published catalogue items/i)
+      screen.getByText(/authoritative setup recipes define ordered rental pieces with base quantities/i)
     ).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /manage catalogue/i })
@@ -621,35 +644,39 @@ describe("protected admin shell", () => {
       screen.getByRole("link", { name: /view public setups/i })
     ).toHaveAttribute("href", "/setups");
     expect(
-      screen.getByText(/setups are currently derived from published catalogue items/i)
+      screen.getByText(/authoritative setup recipes/i)
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/no setup-specific editor or records/i)
-    ).toBeInTheDocument();
+      screen.getAllByText(/define ordered rental pieces/i).length
+    ).toBeGreaterThan(0);
     expect(
       screen.getByRole("region", { name: /derived setup overview/i })
     ).toBeInTheDocument();
-    expect(screen.getByText(/available for setups/i)).toBeInTheDocument();
-    expect(screen.getByText(/draft or hidden catalogue items excluded/i)).toBeInTheDocument();
+    expect(screen.getByText("Recipe parents", { exact: true })).toBeInTheDocument();
+    expect(screen.getByText(/catalogue items outside the setup-parent editor contract/i)).toBeInTheDocument();
     expect(screen.getByText(/image review/i)).toBeInTheDocument();
 
+    const selector = screen.getByRole("combobox", {
+      name: /setup recipe parent/i
+    });
+    expect(selector).toHaveValue("product-1");
+    expect(screen.getAllByRole("option")).toHaveLength(3);
+
     const loungeCard = screen.getByRole("article", {
-      name: /setup candidate modular lounge/i
+      name: /recipe editor for modular lounge/i
     });
     expect(loungeCard).toHaveTextContent(/modular lounge/i);
     expect(loungeCard).toHaveTextContent(/lounge/i);
-    expect(loungeCard).toHaveTextContent(/published/i);
-    expect(loungeCard).toHaveTextContent(/image ready/i);
-    expect(loungeCard).toHaveTextContent(/soft lounge seating/i);
+    expect(loungeCard).toHaveTextContent(/loading recipe/i);
 
-    const chairCard = screen.getByRole("article", {
-      name: /setup candidate accent chair/i
-    });
-    expect(chairCard).toHaveTextContent(/needs image alt text/i);
     expect(
-      screen.getAllByRole("link", { name: /edit in catalogue/i }).length
-    ).toBe(2);
-    expect(screen.queryByText(/hidden plinth/i)).not.toBeInTheDocument();
+      screen.queryByRole("article", { name: /recipe editor for accent chair/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("article", { name: /recipe editor for hidden plinth/i })
+    ).not.toBeInTheDocument();
+    expect(screen.getByText(/only the selected setup parent loads its recipe/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /manage catalogue/i })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /add setup|edit setup/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /add setup|edit setup/i })).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/image bucket|image path|raw url|url/i)).not.toBeInTheDocument();
@@ -660,12 +687,109 @@ describe("protected admin shell", () => {
     );
   }, 15000);
 
-  it("renders a calm derived Setups empty state when no published catalogue items exist", () => {
+  it("loads only the selected editor when many setup parents are available", async () => {
+    const products = Array.from({ length: 24 }, (_, index) => ({
+      id: `candidate-${index}`,
+      slug: `candidate-${index}`,
+      name: `Candidate ${index}`,
+      rentalUnit: "set" as const,
+      status: "draft" as const,
+      sortOrder: index,
+      imageCount: 0
+    }));
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      if (String(input).includes("/api/admin/csrf-proof")) {
+        return {
+          ok: true,
+          status: 200,
+          json: vi.fn().mockResolvedValue({ ok: true, csrfProof: "test-csrf-proof" })
+        };
+      }
+
+      const body = JSON.parse(String(init?.body)) as {
+        setupProductId?: string;
+      };
+      if (body.setupProductId === "candidate-17") {
+        return {
+          ok: true,
+          status: 200,
+          json: vi.fn().mockResolvedValue({
+            revision: 2,
+            items: [
+              {
+                included_product_id: "candidate-0",
+                position: 0,
+                base_quantity: 1
+              }
+            ]
+          })
+        };
+      }
+
+      return {
+        ok: false,
+        status: 404,
+        json: vi.fn().mockResolvedValue({ error: "not-found" })
+      };
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
     render(
       <AdminShellContent
         view={{ kind: "setups" }}
         state={{
           status: "authorised_admin",
+          workspaceId: "99999999-9999-4999-8999-999999999999",
+          dashboard: {
+            status: "loaded",
+            data: {
+              categories: [],
+              products,
+              setupRecipeProductIds: [],
+              setupRecipeChildProductIds: [],
+              images: [],
+              imageSummary: {
+                totalImages: 0,
+                activeImages: 0,
+                primaryImages: 0
+              }
+            }
+          }
+        }}
+      />
+    );
+
+    expect(await screen.findByText(/No recipe exists yet/)).toBeInTheDocument();
+    expect(
+      fetchMock.mock.calls.filter(([input]) => String(input).includes("/api/admin/setup-recipe"))
+    ).toHaveLength(1);
+    expect(
+      fetchMock.mock.calls.filter(([input]) => String(input).includes("/api/admin/csrf-proof"))
+    ).toHaveLength(1);
+
+    const selector = screen.getByRole("combobox", { name: /setup recipe parent/i });
+    fireEvent.change(selector, { target: { value: "candidate-17" } });
+    expect(
+      await screen.findByRole("heading", { name: "Recipe: Candidate 17" })
+    ).toBeInTheDocument();
+    expect(await screen.findByText("Candidate 0")).toBeInTheDocument();
+    expect(screen.queryByText(/No recipe exists yet/)).not.toBeInTheDocument();
+    expect(
+      fetchMock.mock.calls.filter(([input]) => String(input).includes("/api/admin/setup-recipe"))
+    ).toHaveLength(2);
+    expect(
+      fetchMock.mock.calls.filter(([input]) => String(input).includes("/api/admin/csrf-proof"))
+    ).toHaveLength(2);
+  });
+
+  it("renders a calm derived Setups empty state when no eligible recipe parents exist", () => {
+    render(
+      <AdminShellContent
+        view={{ kind: "setups" }}
+        state={{
+          status: "authorised_admin",
+
+          workspaceId: "99999999-9999-4999-8999-999999999999",
           dashboard: {
             status: "loaded",
             data: {
@@ -673,14 +797,16 @@ describe("protected admin shell", () => {
               products: [
                 {
                   id: "product-1",
-                  slug: "draft-lounge",
-                  name: "Draft Lounge",
+                  slug: "archived-lounge",
+                  name: "Archived Lounge",
                   rentalUnit: "set",
-                  status: "draft",
+                  status: "archived",
                   sortOrder: 10,
                   imageCount: 0
                 }
               ],
+              setupRecipeProductIds: [],
+              setupRecipeChildProductIds: [],
               images: [],
               imageSummary: {
                 totalImages: 0,
@@ -694,10 +820,10 @@ describe("protected admin shell", () => {
     );
 
     expect(
-      screen.getByRole("heading", { name: /no public setup candidates yet/i })
+      screen.getByRole("heading", { name: /no setup parent editors available/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/published catalogue items will populate setups/i)
+      screen.getByText(/add an editable unpublished catalogue item/i)
     ).toBeInTheDocument();
     expect(
       screen.getAllByRole("link", { name: /manage catalogue/i })
@@ -710,10 +836,324 @@ describe("protected admin shell", () => {
     expect(screen.queryByRole("link", { name: /add setup|edit setup/i })).not.toBeInTheDocument();
   });
 
+  it("surfaces draft parents and existing published recipe maintenance with server-owned status", async () => {
+    const fetchMock = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+      if (String(_input).includes("/api/admin/csrf-proof")) {
+        return {
+          ok: true,
+          status: 200,
+          json: vi.fn().mockResolvedValue({ ok: true, csrfProof: "test-csrf-proof" })
+        };
+      }
+
+      const body = JSON.parse(String(init?.body)) as {
+        action?: string;
+        setupProductId?: string;
+      };
+
+      if (body.action !== "read") {
+        throw new Error("unexpected setup write");
+      }
+
+      if (body.setupProductId === "draft-parent") {
+        return {
+          ok: false,
+          status: 404,
+          json: vi.fn().mockResolvedValue({ error: "not-found" })
+        };
+      }
+
+      return {
+        ok: true,
+        status: 200,
+        json: vi.fn().mockResolvedValue({
+          revision: 4,
+          items: [
+            {
+              included_product_id: "published-child-a",
+              position: 0,
+              base_quantity: 1
+            }
+          ]
+        })
+      };
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <AdminShellContent
+        view={{ kind: "setups" }}
+        state={{
+          status: "authorised_admin",
+          workspaceId: "99999999-9999-4999-8999-999999999999",
+          dashboard: {
+            status: "loaded",
+            data: {
+              categories: [
+                {
+                  id: "category-1",
+                  slug: "lounge",
+                  name: "Lounge",
+                  sortOrder: 10,
+                  isPublished: true,
+                  productCount: 7,
+                  publishedProductCount: 5
+                }
+              ],
+              products: [
+                {
+                  id: "draft-parent",
+                  categoryId: "category-1",
+                  slug: "draft-parent",
+                  name: "Draft Parent",
+                  rentalUnit: "set",
+                  status: "draft",
+                  sortOrder: 10,
+                  imageCount: 0
+                },
+                {
+                  id: "published-parent",
+                  categoryId: "category-1",
+                  slug: "published-parent",
+                  name: "Published Parent",
+                  rentalUnit: "set",
+                  status: "published",
+                  sortOrder: 20,
+                  imageCount: 1
+                },
+                {
+                  id: "published-without-recipe",
+                  categoryId: "category-1",
+                  slug: "published-without-recipe",
+                  name: "Published Without Recipe",
+                  rentalUnit: "set",
+                  status: "published",
+                  sortOrder: 25,
+                  imageCount: 1
+                },
+                {
+                  id: "published-child-a",
+                  categoryId: "category-1",
+                  slug: "published-child-a",
+                  name: "Published Child A",
+                  rentalUnit: "item",
+                  status: "published",
+                  sortOrder: 30,
+                  imageCount: 1
+                },
+                {
+                  id: "published-child-b",
+                  categoryId: "category-1",
+                  slug: "published-child-b",
+                  name: "Published Child B",
+                  rentalUnit: "item",
+                  status: "published",
+                  sortOrder: 40,
+                  imageCount: 1
+                },
+                {
+                  id: "draft-child",
+                  categoryId: "category-1",
+                  slug: "draft-child",
+                  name: "Draft Child",
+                  rentalUnit: "item",
+                  status: "draft",
+                  sortOrder: 50,
+                  imageCount: 0
+                },
+                {
+                  id: "nested-parent",
+                  categoryId: "category-1",
+                  slug: "nested-parent",
+                  name: "Nested Parent",
+                  rentalUnit: "set",
+                  status: "published",
+                  sortOrder: 60,
+                  imageCount: 1
+                },
+                {
+                  id: "archived-parent",
+                  categoryId: "category-1",
+                  slug: "archived-parent",
+                  name: "Archived Parent",
+                  rentalUnit: "set",
+                  status: "archived",
+                  sortOrder: 70,
+                  imageCount: 1
+                }
+              ],
+              setupRecipeProductIds: [
+                "published-parent",
+                "nested-parent",
+                "archived-parent"
+              ],
+              setupRecipeChildProductIds: [],
+              images: [],
+              imageSummary: {
+                totalImages: 0,
+                activeImages: 0,
+                primaryImages: 0
+              }
+            }
+          }
+        }}
+      />
+    );
+
+    expect(
+      screen.getByRole("article", { name: /recipe editor for draft parent/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("article", { name: /recipe editor for published without recipe/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("article", { name: /recipe editor for archived parent/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("article", { name: /recipe editor for published parent/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("article", { name: /recipe editor for nested parent/i })
+    ).not.toBeInTheDocument();
+
+    const selector = screen.getByRole("combobox", { name: /setup recipe parent/i });
+    expect(selector).toHaveValue("draft-parent");
+    const draftCard = screen.getByRole("article", {
+      name: /recipe editor for draft parent/i
+    });
+    expect(
+      await within(draftCard).findByRole("button", { name: "Start Recipe" })
+    ).toBeEnabled();
+    expect(
+      screen.queryByRole("article", { name: /recipe editor for published parent/i })
+    ).not.toBeInTheDocument();
+
+    fireEvent.change(selector, { target: { value: "published-parent" } });
+    const publishedCard = await screen.findByRole("article", {
+      name: /recipe editor for published parent/i
+    });
+    expect(
+      await within(publishedCard).findByRole("button", { name: "Save Recipe" })
+    ).toBeEnabled();
+    fireEvent.click(within(publishedCard).getByRole("button", { name: "Add Product" }));
+    const picker = within(publishedCard).getByRole("dialog", { name: "Add product" });
+    expect(within(picker).getByRole("button", { name: "Published Child B" })).toBeInTheDocument();
+    expect(within(picker).queryByRole("button", { name: "Nested Parent" })).not.toBeInTheDocument();
+    expect(within(picker).queryByRole("button", { name: "Draft Child" })).not.toBeInTheDocument();
+    expect(within(picker).queryByRole("button", { name: "Published Parent" })).not.toBeInTheDocument();
+    expect(
+      fetchMock.mock.calls.filter(([input]) => !String(input).includes("/api/admin/csrf-proof"))
+    ).toHaveLength(2);
+  });
+
+  it("excludes recipe children from setup-parent editor candidates", () => {
+    render(
+      <AdminShellContent
+        view={{ kind: "setups" }}
+        state={{
+          status: "authorised_admin",
+
+          workspaceId: "99999999-9999-4999-8999-999999999999",
+          dashboard: {
+            status: "loaded",
+            data: {
+              categories: [
+                {
+                  id: "category-1",
+                  slug: "lounge",
+                  name: "Lounge",
+                  sortOrder: 20,
+                  isPublished: true,
+                  productCount: 3,
+                  publishedProductCount: 2
+                }
+              ],
+              products: [
+                {
+                  id: "recipe-child",
+                  categoryId: "category-1",
+                  slug: "recipe-child",
+                  name: "Recipe Child",
+                  rentalUnit: "item",
+                  status: "draft",
+                  sortOrder: 10,
+                  imageCount: 1
+                },
+                {
+                  id: "recipe-parent",
+                  categoryId: "category-1",
+                  slug: "recipe-parent",
+                  name: "Recipe Parent",
+                  rentalUnit: "set",
+                  status: "published",
+                  sortOrder: 20,
+                  imageCount: 1,
+                  primaryImageAltText: "Recipe parent"
+                },
+                {
+                  id: "eligible-draft",
+                  categoryId: "category-1",
+                  slug: "eligible-draft",
+                  name: "Eligible Draft",
+                  rentalUnit: "set",
+                  status: "draft",
+                  sortOrder: 30,
+                  imageCount: 1
+                }
+              ],
+              setupRecipeProductIds: ["recipe-parent"],
+              setupRecipeChildProductIds: ["recipe-child"],
+              images: [],
+              imageSummary: {
+                totalImages: 0,
+                activeImages: 0,
+                primaryImages: 0
+              }
+            }
+          }
+        }}
+      />
+    );
+
+    const selector = screen.getByRole("combobox", {
+      name: /setup recipe parent/i
+    });
+    const optionTexts = screen
+      .getAllByRole("option")
+      .map((option) => (option.textContent ?? "").trim());
+
+    expect(optionTexts.some((text) => text.includes("Recipe Child"))).toBe(false);
+    expect(optionTexts.some((text) => text.includes("Recipe Parent"))).toBe(true);
+    expect(optionTexts.some((text) => text.includes("Eligible Draft"))).toBe(true);
+    expect(selector).toHaveValue("recipe-parent");
+  });
+
+  it("fails safely when authoritative recipe-child membership is unavailable", () => {
+    render(
+      <AdminShellContent
+        view={{ kind: "setups" }}
+        state={{
+          status: "authorised_admin",
+          workspaceId: "99999999-9999-4999-8999-999999999999",
+          dashboard: {
+            status: "unavailable"
+          }
+        }}
+      />
+    );
+
+    expect(
+      screen.getByRole("region", { name: /setups management unavailable/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/setup data is temporarily unavailable/i)
+    ).toBeInTheDocument();
+  });
+
   it("keeps Setups source derived and free of fake editor or storage path controls", () => {
     const shellSource = readAppFile("app/admin/protected-admin-shell.tsx");
 
-    expect(shellSource).toContain("Derived setup review workflow");
+    expect(shellSource).toContain("Setup recipe management workflow");
     expect(shellSource).toContain('href="/setups"');
     expect(shellSource).toContain('href="/admin/catalogue"');
     expect(shellSource).toContain('product.status === "published"');
@@ -770,11 +1210,15 @@ describe("protected admin shell", () => {
         view={{ kind: "home" }}
         state={{
           status: "authorised_admin",
+
+          workspaceId: "99999999-9999-4999-8999-999999999999",
           dashboard: {
             status: "loaded",
             data: {
               categories: [],
               products: [],
+              setupRecipeProductIds: [],
+              setupRecipeChildProductIds: [],
               images: [],
               imageSummary: {
                 totalImages: 0,
@@ -887,6 +1331,8 @@ describe("protected admin shell", () => {
       },
       {
         status: "authorised_admin" as const,
+
+        workspaceId: "99999999-9999-4999-8999-999999999999",
         dashboard: {
           status: "unavailable" as const
         }
@@ -937,6 +1383,8 @@ describe("protected admin shell", () => {
       <AdminShellContent
         state={{
           status: "authorised_admin",
+
+          workspaceId: "99999999-9999-4999-8999-999999999999",
           dashboard: {
             status: "unavailable"
           }
@@ -955,11 +1403,15 @@ describe("protected admin shell", () => {
   it("renders a real hero-only form plus calm empty states for enquiry email and delivery log", () => {
     const baseState = {
       status: "authorised_admin" as const,
+
+      workspaceId: "99999999-9999-4999-8999-999999999999",
       dashboard: {
         status: "loaded" as const,
         data: {
           categories: [],
           products: [],
+          setupRecipeProductIds: [],
+          setupRecipeChildProductIds: [],
           images: [],
           imageSummary: {
             totalImages: 0,
@@ -1069,11 +1521,15 @@ describe("protected admin shell", () => {
       <AdminShellContent
         state={{
           status: "authorised_admin",
+
+          workspaceId: "99999999-9999-4999-8999-999999999999",
           dashboard: {
             status: "loaded",
             data: {
               categories: [],
               products: [],
+              setupRecipeProductIds: [],
+              setupRecipeChildProductIds: [],
               images: [],
               imageSummary: {
                 totalImages: 0,
@@ -1149,11 +1605,15 @@ describe("protected admin shell", () => {
       <AdminShellContent
         state={{
           status: "authorised_admin",
+
+          workspaceId: "99999999-9999-4999-8999-999999999999",
           dashboard: {
             status: "loaded",
             data: {
               categories: [],
               products: [],
+              setupRecipeProductIds: [],
+              setupRecipeChildProductIds: [],
               images: [],
               imageSummary: {
                 totalImages: 0,

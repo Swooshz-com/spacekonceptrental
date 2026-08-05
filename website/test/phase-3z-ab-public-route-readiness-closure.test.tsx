@@ -80,6 +80,7 @@ const sampleProduct = {
   rentalUnit: "set",
   sortOrder: 1,
   source: "fallback" as const,
+  productKind: "rental" as const,
   primaryImage: undefined,
   images: []
 };

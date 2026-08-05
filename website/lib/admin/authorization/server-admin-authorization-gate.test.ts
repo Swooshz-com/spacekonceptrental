@@ -69,12 +69,14 @@ function createCsrfVerifierDependencies(
 
   return {
     expectedSessionBinding: "session-binding-1",
+    expectedWorkspaceId: "workspace-1",
     expectedNonce: "nonce-1",
     currentTimestampMs: now,
     maxProofAgeMs: 5 * 60_000,
     verifySignature: async (input) =>
       input.payloadSegment === payloadSegment &&
       input.signatureSegment === signatureSegment,
+    checkReplay: async () => true,
     ...overrides
   };
 }

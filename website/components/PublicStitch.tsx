@@ -6,7 +6,11 @@ import corporateImage from "../assets/images/event_corporate.png";
 import galaImage from "../assets/images/event_gala.png";
 import exhibitionImage from "../assets/images/event_exhibition.png";
 import heroImage from "../assets/images/hero_homepage.png";
-import type { PublicCatalogue, PublicCatalogueProduct } from "../lib/catalogue/types";
+import type {
+  PublicCatalogue,
+  PublicCatalogueProduct,
+  SafeSetupCompositionItem
+} from "../lib/catalogue/types";
 import {
   DEFAULT_HOMEPAGE_HERO_CONTENT,
   type HomepageHeroContent
@@ -20,6 +24,7 @@ import {
   deriveCanonicalIdentitiesFromCatalogue,
   type CanonicalCatalogueIdentity
 } from "../lib/quote/selection-model";
+import { isValidSafeSetupComposition } from "../lib/catalogue/setup-recipe-types";
 import {
   QuoteSelectionBadge,
   QuoteSelectionButton,
@@ -33,24 +38,98 @@ export const stitchImages = { chairImage, sofaImage, corporateImage, galaImage, 
 export function quoteSelectionValidItemsForCatalogue(
   catalogue: PublicCatalogue
 ): QuoteSelectionValidItem[] {
-  return catalogue.products.map((product) => ({
-    category: productCategory(product),
-    kind: productCategory(product).toLowerCase() === "setups" ? "setup" as const : "rental" as const,
-    name: product.name,
-    slug: product.slug
-  }));
+  return catalogue.products.flatMap((product): QuoteSelectionValidItem[] => {
+    if (product.productKind === "rental" && isProductKindAvailable(product)) {
+      return [{
+        category: productCategory(product),
+        imageSrc: product.primaryImage?.publicUrl,
+        kind: "rental" as const,
+        name: product.name,
+        slug: product.slug
+      }];
+    }
+
+    if (
+      product.productKind !== "setup" ||
+      !hasAuthoritativeSetupComposition(product)
+    ) {
+      return [];
+    }
+
+    const includedItems = getSetupCompositionItems(product).map((item) =>
+      quoteSelectionIncludedItem(product, item)
+    );
+
+    return [{
+      category: productCategory(product),
+      imageSrc: product.primaryImage?.publicUrl,
+      kind: "setup" as const,
+      name: product.name,
+      slug: product.slug,
+      includedItems
+    }];
+  });
 }
 
 export function isSetupCatalogueProduct(product: PublicCatalogueProduct): boolean {
-  return productCategory(product).toLowerCase() === "setups";
+  return product.productKind === "setup";
+}
+
+export function hasAuthoritativeSetupComposition(product: PublicCatalogueProduct): boolean {
+  return product.productKind === "setup" &&
+    isValidSafeSetupComposition(product.safeSetupComposition, product.id);
+}
+
+export function getSetupCompositionItems(product: PublicCatalogueProduct) {
+  if (!hasAuthoritativeSetupComposition(product) || !product.safeSetupComposition) {
+    return [];
+  }
+  return product.safeSetupComposition;
+}
+
+function quoteSelectionIncludedItem(
+  setup: PublicCatalogueProduct,
+  item: SafeSetupCompositionItem
+): QuoteSelectionItem {
+  const fallbackProduct: PublicCatalogueProduct = {
+    id: item.id,
+    slug: item.slug,
+    name: item.name,
+    rentalUnit: item.rentalUnit,
+    sortOrder: item.position,
+    source: "supabase"
+  };
+
+  return {
+    slug: item.slug,
+    name: item.name,
+    category: item.rentalUnit,
+    kind: "setup-included",
+    imageSrc: item.images[0]?.publicUrl ?? stitchImageSrc(fallbackProductImage(fallbackProduct)),
+    quantity: item.baseQuantity,
+    setupBaseQuantity: item.baseQuantity,
+    setupName: setup.name,
+    setupSlug: setup.slug
+  };
+}
+
+export function isProductKindAvailable(product: PublicCatalogueProduct): boolean {
+  if (product.productKind === "rental") {
+    return (
+      product.safeSetupComposition === null ||
+      product.safeSetupComposition === undefined
+    );
+  }
+
+  return product.productKind === "setup" && hasAuthoritativeSetupComposition(product);
 }
 
 export function quoteCanonicalIdentities(
   catalogue: PublicCatalogue
 ): CanonicalCatalogueIdentity[] {
   return deriveCanonicalIdentitiesFromCatalogue(
-    catalogue.products,
-    isSetupCatalogueProduct
+    quoteSelectionValidItemsForCatalogue(catalogue),
+    (item) => item.kind === "setup"
   );
 }
 
@@ -133,6 +212,28 @@ function quoteSelectionItem(
   };
 }
 
+function catalogueQuoteSelectionItem(
+  product: PublicCatalogueProduct,
+  imageSrc: string
+): QuoteSelectionItem | undefined {
+  if (product.productKind === "rental" && isProductKindAvailable(product)) {
+    return quoteSelectionItem(product, imageSrc, "rental");
+  }
+
+  if (!isProductKindAvailable(product) || product.productKind !== "setup") {
+    return undefined;
+  }
+
+  return quoteSelectionItem(
+    product,
+    imageSrc,
+    "setup",
+    getSetupCompositionItems(product).map((item) =>
+      quoteSelectionIncludedItem(product, item)
+    )
+  );
+}
+
 function setupQuoteSelectionItem(setup: {
   image: StaticImageData | string;
   slug: string;
@@ -193,8 +294,8 @@ export function StitchItemCard({ product, detailBasePath = "/catalogue" }: { pro
   const image = "primaryImage" in product ? product.primaryImage : undefined;
   const alt = textOrUndefined(image?.altText) ?? `${product.name} furniture rental setup`;
   const imgSrc = image?.publicUrl ?? stitchImageSrc(fallbackProductImage(product));
-  const quoteItem = quoteSelectionItem(product, imgSrc);
-  return <article className="stitch-card stitch-product-card" aria-label={`Rental listing card for ${product.name}`}><Link className="stitch-card__image" href={`${detailBasePath}/${product.slug}`}><img alt={alt} src={imgSrc} /><QuoteSelectionBadge item={quoteItem} /></Link><div className="stitch-card__body"><p className="stitch-card__meta">{productCategory(product)}</p><h2>{product.name}</h2><p>{productSummary(product)}</p><div className="stitch-card__actions"><QuoteSelectionButton item={quoteItem} /><Link aria-label={`View details for ${product.name}`} className="stitch-link-button stitch-link-button--quiet" href={`${detailBasePath}/${product.slug}`}>View Details</Link></div></div></article>;
+  const quoteItem = catalogueQuoteSelectionItem(product, imgSrc);
+  return <article className="stitch-card stitch-product-card" aria-label={`Rental listing card for ${product.name}`}><Link className="stitch-card__image" href={`${detailBasePath}/${product.slug}`}><img alt={alt} src={imgSrc} />{quoteItem ? <QuoteSelectionBadge item={quoteItem} /> : null}</Link><div className="stitch-card__body"><p className="stitch-card__meta">{productCategory(product)}</p><h2>{product.name}</h2><p>{productSummary(product)}</p><div className="stitch-card__actions">{quoteItem ? <QuoteSelectionButton item={quoteItem} /> : <p role="status">Setup selection is unavailable until its current composition is confirmed.</p>}<Link aria-label={`View details for ${product.name}`} className="stitch-link-button stitch-link-button--quiet" href={`${detailBasePath}/${product.slug}`}>View Details</Link></div></div></article>;
 }
 
 export function StitchFeaturedPieces({ catalogue }: { catalogue: PublicCatalogue }) {
@@ -238,7 +339,7 @@ export function StitchCatalogueShell({ catalogue, detailBasePath = "/catalogue",
 }
 
 export function StitchSetupsPage({ catalogue, activeSetupSlug }: { catalogue: PublicCatalogue; activeSetupSlug?: string }) {
-  const realSetups = catalogue.products.filter(isSetupCatalogueProduct).map((product, index) => ({ slug: product.slug, title: product.name, image: fallbackProductImage(product), summary: productSummary(product), featured: index === 0 }));
+  const realSetups = catalogue.products.filter((product) => isSetupCatalogueProduct(product) && isProductKindAvailable(product)).map((product, index) => ({ slug: product.slug, title: product.name, image: fallbackProductImage(product), summary: productSummary(product), featured: index === 0 }));
   const setupCards = realSetups;
   const featuredSetup = setupCards[0];
   const setupFilters = [
@@ -292,15 +393,14 @@ export function StitchDetail({
   related?: PublicCatalogueProduct[];
 }) {
   const canonicalSetup = isSetupCatalogueProduct(product);
+  const hasAuthoritativeComposition = hasAuthoritativeSetupComposition(product);
+  const compositionItems = getSetupCompositionItems(product);
+  const showComposition = canonicalSetup && hasAuthoritativeComposition && compositionItems.length > 0;
   const image = product.primaryImage;
   const alt = textOrUndefined(image?.altText) ?? `${product.name} furniture rental setup`;
   const imgSrc = image?.publicUrl ?? stitchImageSrc(canonicalSetup ? galaImage : fallbackProductImage(product));
   const setupCarouselPieces: PublicCatalogueProduct[] = [];
-  const quoteItem = quoteSelectionItem(
-    product,
-    imgSrc,
-    canonicalSetup ? "setup" : "rental"
-  );
+  const quoteItem = catalogueQuoteSelectionItem(product, imgSrc);
   const catalogueImageMap = new Map<string, { alt: string; src: string }>();
   catalogueImageMap.set(imgSrc, { alt, src: imgSrc });
   for (const productImage of [...(product.images ?? [])].sort(
@@ -329,6 +429,64 @@ export function StitchDetail({
     : `Back to ${backLabel}`;
 
   if (canonicalSetup) {
+    if (showComposition) {
+      return (
+        <section className="stitch-detail-page stitch-detail-page--setup">
+          <div className="stitch-container">
+            <div className="stitch-detail-open-grid stitch-detail-open-grid--setup">
+              <div className="stitch-detail-open-media stitch-detail-open-media--carousel stitch-setup-media">
+                <SetupImageCarousel
+                  images={setupCarouselImages}
+                  label={`${product.name} setup images`}
+                  nextLabel="Next setup image"
+                  previousLabel="Previous setup image"
+                />
+              </div>
+              <div className="stitch-detail-open-copy stitch-setup-summary">
+                <p className="stitch-eyebrow">Setups / Direction</p>
+                <h2 className="stitch-detail-title">{product.name}</h2>
+                <p>{productSummary(product)}</p>
+                <div className="stitch-detail-spec-card stitch-detail-spec-card--setup">
+                  <h2>Setup details</h2>
+                  <dl>
+                    <div>
+                      <dt>Direction</dt>
+                      <dd>Styled setup</dd>
+                    </div>
+                    <div>
+                      <dt>Included rental pieces</dt>
+                      <dd>
+                        <ul className="stitch-setup-composition-list" aria-label="Setup composition">
+                          {compositionItems.map((item) => (
+                            <li key={item.id}>
+                              <Link href={`/catalogue/${item.slug}`} className="stitch-setup-composition-link">
+                                {item.name}
+                              </Link>
+                              <span className="stitch-setup-composition-qty">&times; {item.baseQuantity}</span>
+                              <span className="stitch-setup-composition-unit">{item.rentalUnit}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+                <div className="stitch-detail-actions stitch-detail-actions--setup">
+                  {quoteItem ? <QuoteSelectionButton item={quoteItem} /> : <p role="status">Setup selection is unavailable until its current composition is confirmed.</p>}
+                  <Link className="stitch-detail-button stitch-detail-button--back" href={backHref}>
+                    {detailBackLabel}
+                  </Link>
+                  <Link className="stitch-detail-button stitch-detail-button--request" href="/quote">
+                    Request Quote
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+    }
+
     return (
       <section className="stitch-detail-page stitch-detail-page--setup">
         <div className="stitch-container">
@@ -359,7 +517,7 @@ export function StitchDetail({
                 </dl>
               </div>
               <div className="stitch-detail-actions stitch-detail-actions--setup">
-                <QuoteSelectionButton item={quoteItem} />
+                {quoteItem ? <QuoteSelectionButton item={quoteItem} /> : <p role="status">Setup selection is unavailable until its current composition is confirmed.</p>}
                 <Link className="stitch-detail-button stitch-detail-button--back" href={backHref}>
                   {detailBackLabel}
                 </Link>
@@ -408,7 +566,7 @@ export function StitchDetail({
               </dl>
             </div>
             <div className="stitch-detail-actions stitch-detail-actions--setup">
-              <QuoteSelectionButton item={quoteItem} />
+              {quoteItem ? <QuoteSelectionButton item={quoteItem} /> : <p role="status">Setup selection is unavailable until its current composition is confirmed.</p>}
               <Link className="stitch-detail-button stitch-detail-button--back" href={backHref}>
                 {detailBackLabel}
               </Link>

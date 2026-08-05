@@ -14,9 +14,24 @@ jobs:
     name: Repo validation
     runs-on: ubuntu-latest
 
+    env:
+      EXPECTED_REVISION: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.event_name == 'push' && github.sha || '' }}
+
     steps:
-      - name: Check out repository
+      - name: Check out literal source revision
         uses: actions/checkout@v4
+        with:
+          ref: ${{ env.EXPECTED_REVISION }}
+
+      - name: Assert literal exact-head checkout
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$EXPECTED_REVISION"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_REVISION"
+          if [ -n "${GITHUB_BASE_REF:-}" ]; then
+            test "$(git rev-parse HEAD)" != "${{ github.sha }}"
+          fi
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -60,10 +75,37 @@ jobs:
       - name: Run Supabase RLS/schema tests
         run: npm run test:supabase-rls
 
+      - name: Install website dependencies for Run-49 joined integration
+        working-directory: website
+        run: npm ci
+
+      - name: Test Run-49 async child-process harness
+        run: npm run test:run-49-child-process
+
+      - name: Test Run-49 joined receipt diagnostics
+        run: npm run test:run-49-receipt
+
+      - name: Test Run-52 end-to-end joined receipt contract
+        run: npm run test:run-52-receipt-e2e
+
+      - name: Test Run-53 joined bootstrap diagnostics
+        run: npm run test:run-53-bootstrap
+
+      - name: Test Run-54 session/client/runner diagnostics
+        run: npm run test:run-54-session-client-runner
+
+      - name: Test Run-57 diagnostic control channel
+        run: npm run test:run-57-diagnostic-control
+
+      - name: Run Run-57 durable PostgreSQL/PostgREST integration
+        run: npm run test:run-49-joined-postgres
+
       - name: Validate n8n workflow exports
+        if: always()
         run: npm run validate:n8n
 
       - name: Test n8n validation rules
+        if: always()
         run: npm run test:n8n-validation
 
   exact-head-production-audit:
@@ -71,11 +113,24 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
+    env:
+      EXPECTED_REVISION: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.event_name == 'push' && github.sha || '' }}
+
     steps:
-      - name: Check out repository
+      - name: Check out literal source revision
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ env.EXPECTED_REVISION }}
+
+      - name: Assert literal exact-head checkout
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$EXPECTED_REVISION"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_REVISION"
+          if [ -n "${GITHUB_BASE_REF:-}" ]; then
+            test "$(git rev-parse HEAD)" != "${{ github.sha }}"
+          fi
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -120,7 +175,7 @@ jobs:
         working-directory: website
         shell: bash
         env:
-          EXPECTED_AUDIT_REVISION: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          EXPECTED_AUDIT_REVISION: ${{ env.EXPECTED_REVISION }}
         run: |
           set +e
           node scripts/validate-production-audit.cjs \
@@ -137,7 +192,7 @@ jobs:
         if: always()
         working-directory: website
         env:
-          EXPECTED_AUDIT_REVISION: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          EXPECTED_AUDIT_REVISION: ${{ env.EXPECTED_REVISION }}
         run: >-
           node scripts/validate-production-audit.cjs
           --verify-upload-admission
@@ -149,7 +204,7 @@ jobs:
         if: steps.audit-admission.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
-          name: production-dependency-audit-${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          name: production-dependency-audit-${{ env.EXPECTED_REVISION }}
           path: ${{ steps.audit-path.outputs.evidence }}
           if-no-files-found: error
           retention-days: 30
@@ -170,9 +225,24 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
+    env:
+      EXPECTED_REVISION: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.event_name == 'push' && github.sha || '' }}
+
     steps:
-      - name: Check out repository
+      - name: Check out literal source revision
         uses: actions/checkout@v4
+        with:
+          ref: ${{ env.EXPECTED_REVISION }}
+
+      - name: Assert literal exact-head checkout
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$EXPECTED_REVISION"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_REVISION"
+          if [ -n "${GITHUB_BASE_REF:-}" ]; then
+            test "$(git rev-parse HEAD)" != "${{ github.sha }}"
+          fi
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -209,11 +279,25 @@ jobs:
     name: Tracked file safety
     runs-on: ubuntu-latest
 
+    env:
+      EXPECTED_REVISION: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.event_name == 'push' && github.sha || '' }}
+
     steps:
-      - name: Check out repository
+      - name: Check out literal source revision
         uses: actions/checkout@v4
         with:
+          ref: ${{ env.EXPECTED_REVISION }}
           fetch-depth: 0
+
+      - name: Assert literal exact-head checkout
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$EXPECTED_REVISION"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_REVISION"
+          if [ -n "${GITHUB_BASE_REF:-}" ]; then
+            test "$(git rev-parse HEAD)" != "${{ github.sha }}"
+          fi
 
       - name: Check diff hygiene
         shell: bash

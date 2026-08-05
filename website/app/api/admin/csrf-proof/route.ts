@@ -3,13 +3,13 @@ import "server-only";
 import { NextResponse, type NextRequest } from "next/server";
 import {
   isSupportedAdminOperation,
+  type AdminCsrfProtectedOperation,
   type AdminOperation
 } from "../../../../lib/admin/authorization/admin-authorization-policy";
 import {
   issueServerAdminCsrfProof,
   type ServerAdminCsrfProofIssuerDependencies,
-  type ServerAdminCsrfProofIssuerFailureReason,
-  type StateChangingAdminOperation
+  type ServerAdminCsrfProofIssuerFailureReason
 } from "../../../../lib/admin/authorization/server-admin-csrf-proof-issuer";
 import { createServerAdminCsrfProofRuntimeDependencies } from "../../../../lib/admin/authorization/server-admin-csrf-proof-runtime-dependencies";
 import {
@@ -65,7 +65,7 @@ type AdminCsrfProofRouteError =
 type OperationParseResult =
   | {
       ok: true;
-      operation: StateChangingAdminOperation;
+      operation: AdminCsrfProtectedOperation;
     }
   | {
       ok: false;
@@ -86,13 +86,15 @@ type WorkspaceParseResult =
     };
 
 const defaultCsrfProofTtlMs = 5 * 60_000;
-const targetOperations = new Set<StateChangingAdminOperation>([
+const targetOperations = new Set<AdminCsrfProtectedOperation>([
   "product.write",
   "category.write",
   "productImage.write",
   "hero.write",
   "quote.write",
-  "membership.manage"
+  "membership.manage",
+  "admin.setupRecipe.read",
+  "admin.setupRecipe.write"
 ]);
 const noStoreHeaders = {
   "Cache-Control": "no-store"
@@ -110,8 +112,8 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isTargetOperation(
   operation: AdminOperation
-): operation is StateChangingAdminOperation {
-  return targetOperations.has(operation as StateChangingAdminOperation);
+): operation is AdminCsrfProtectedOperation {
+  return targetOperations.has(operation as AdminCsrfProtectedOperation);
 }
 
 function errorJson(

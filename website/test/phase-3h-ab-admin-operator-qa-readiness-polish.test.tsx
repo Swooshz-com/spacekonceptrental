@@ -62,6 +62,8 @@ const dashboardData = {
       imageCount: 0
     }
   ],
+  setupRecipeProductIds: [],
+  setupRecipeChildProductIds: [],
   images: [
     {
       id: "image-primary",
@@ -126,6 +128,7 @@ const quoteRequestReadyForFollowUp = {
 
 const authorisedState = {
   status: "authorised_admin" as const,
+  workspaceId: "test-workspace-id",
   dashboard: {
     status: "loaded" as const,
     data: dashboardData
@@ -249,6 +252,8 @@ describe("Phase 3H-A/B admin operator QA readiness polish", () => {
       <AdminShellContent
         state={{
           status: "authorised_admin",
+
+          workspaceId: "test-workspace-id",
           dashboard: { status: "unavailable" }
         }}
         view={{ kind: "catalogue" }}

@@ -185,8 +185,8 @@ test('all current protected admin mutation routes use the fail-closed capability
     (relativePath) => !nonMutatingAdminPostRoutes.has(relativePath),
   );
 
-  assert.equal(postRoutes.length, 23);
-  assert.equal(mutationRoutes.length, 18);
+  assert.equal(postRoutes.length, 24);
+  assert.equal(mutationRoutes.length, 19);
   assert.deepEqual(
     postRoutes.filter((relativePath) => !mutationRoutes.includes(relativePath)).sort(),
     [...nonMutatingAdminPostRoutes].sort(),
@@ -221,8 +221,8 @@ test('all protected mutation paths gate capability before provider-backed bindin
     }
   }
 
-  assert.equal(mutationRoutes.length, 18);
-  assert.equal(capabilityFiles.size, 10);
+  assert.equal(mutationRoutes.length, 19);
+  assert.equal(capabilityFiles.size, 11);
 
   for (const relativePath of capabilityFiles) {
     const source = read(relativePath);

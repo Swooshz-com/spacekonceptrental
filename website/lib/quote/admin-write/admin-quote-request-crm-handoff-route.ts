@@ -196,18 +196,6 @@ export async function handleAdminQuoteRequestCrmHandoffStatusUpdateRoute(
     return errorJson("quote_request_id_invalid", 400);
   }
 
-  const body = await readBoundedJsonBody(request);
-
-  if (!body.ok) {
-    return errorJson(body.error, body.status);
-  }
-
-  const payload = parsePayload(body.body);
-
-  if (!payload.ok) {
-    return errorJson("request_payload_invalid", 400);
-  }
-
   const mutationCapability = resolveServerAdminMutationCapability(
     {
       ADMIN_MUTATIONS_ENABLED:
@@ -265,6 +253,7 @@ export async function handleAdminQuoteRequestCrmHandoffStatusUpdateRoute(
     dependencies.resolveRouteGate ?? resolveServerAdminRuntimeRouteGateAdapter;
   const verifierContext = {
     expectedSessionBinding: binding.sessionBinding,
+    expectedWorkspaceId: binding.adminContext.workspaceId,
     currentTimestampMs: timestampMs,
     maxProofAgeMs: getProofMaxAgeMs(dependencies)
   };
@@ -304,6 +293,18 @@ export async function handleAdminQuoteRequestCrmHandoffStatusUpdateRoute(
 
   if (!routeGate.allowed) {
     return errorJson(routeGate.reason, routeGate.statusCode);
+  }
+
+  const body = await readBoundedJsonBody(request);
+
+  if (!body.ok) {
+    return errorJson(body.error, body.status);
+  }
+
+  const payload = parsePayload(body.body);
+
+  if (!payload.ok) {
+    return errorJson("request_payload_invalid", 400);
   }
 
   const persistence =

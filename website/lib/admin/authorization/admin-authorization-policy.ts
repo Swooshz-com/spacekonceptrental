@@ -12,7 +12,24 @@ export type AdminOperation =
   | "membership.manage"
   | "admin.shell.access"
   | "admin.auth.check"
-  | "admin.csrf.issue";
+  | "admin.csrf.issue"
+  | "admin.setupRecipe.read"
+  | "admin.setupRecipe.write";
+
+/**
+ * Operations that require an authenticated, session/workspace-bound CSRF
+ * proof on their protected POST request. Setup-recipe reads are deliberately
+ * included because the editor obtains them through a protected POST route.
+ */
+export type AdminCsrfProtectedOperation =
+  | "product.write"
+  | "category.write"
+  | "productImage.write"
+  | "hero.write"
+  | "quote.write"
+  | "membership.manage"
+  | "admin.setupRecipe.read"
+  | "admin.setupRecipe.write";
 
 export type AdminUserState = {
   id: string;
@@ -73,7 +90,9 @@ const roleOperationAccess: Record<AdminRole, Set<AdminOperation>> = {
     "membership.manage",
     "admin.shell.access",
     "admin.auth.check",
-    "admin.csrf.issue"
+    "admin.csrf.issue",
+    "admin.setupRecipe.read",
+    "admin.setupRecipe.write"
   ]),
   admin: new Set([
     "catalogue.read",
@@ -84,7 +103,9 @@ const roleOperationAccess: Record<AdminRole, Set<AdminOperation>> = {
     "quote.write",
     "admin.shell.access",
     "admin.auth.check",
-    "admin.csrf.issue"
+    "admin.csrf.issue",
+    "admin.setupRecipe.read",
+    "admin.setupRecipe.write"
   ]),
   viewer: new Set(["catalogue.read", "admin.auth.check"])
 };
@@ -99,7 +120,20 @@ const supportedOperations = new Set<AdminOperation>([
   "membership.manage",
   "admin.shell.access",
   "admin.auth.check",
-  "admin.csrf.issue"
+  "admin.csrf.issue",
+  "admin.setupRecipe.read",
+  "admin.setupRecipe.write"
+]);
+
+const csrfProtectedOperations = new Set<AdminCsrfProtectedOperation>([
+  "product.write",
+  "category.write",
+  "productImage.write",
+  "hero.write",
+  "quote.write",
+  "membership.manage",
+  "admin.setupRecipe.read",
+  "admin.setupRecipe.write"
 ]);
 
 function deny(
@@ -117,6 +151,12 @@ export function isSupportedAdminOperation(
   operation: string
 ): operation is AdminOperation {
   return supportedOperations.has(operation as AdminOperation);
+}
+
+export function isCsrfProtectedAdminOperation(
+  operation: string
+): operation is AdminCsrfProtectedOperation {
+  return csrfProtectedOperations.has(operation as AdminCsrfProtectedOperation);
 }
 
 export function authorizeAdminOperation(

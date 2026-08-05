@@ -18,6 +18,12 @@ import {
   type QuoteSelectionRow,
   type QuoteSelectionStorageAdapter
 } from "../lib/quote/selection-model";
+import {
+  SETUP_MAX_QUANTITY,
+  SETUP_MAX_RECONSTRUCTED_QUANTITY,
+  SETUP_MIN_QUANTITY,
+  reconstructSetupQuantity
+} from "../lib/catalogue/setup-recipe-types";
 
 export type QuoteSelectionItem = {
   category?: string;
@@ -42,6 +48,7 @@ type NormalizedQuoteSelectionItem = QuoteSelectionItem & {
 export type QuoteSelectionValidItem = {
   category?: string;
   imageSrc?: string;
+  includedItems?: QuoteSelectionItem[];
   kind: "rental" | "setup";
   name?: string;
   slug: string;
@@ -50,7 +57,7 @@ export type QuoteSelectionValidItem = {
 const quoteSelectionChangeEvent = "skr:quote-selection-change";
 const maxStoredQuoteItems = QUOTE_SELECTION_MAX_ROWS;
 const maxSelectedQuoteItemQuantity = QUOTE_SELECTION_MAX_QUANTITY;
-const maxIncludedQuoteItemQuantity = 999;
+const maxIncludedQuoteItemQuantity = SETUP_MAX_RECONSTRUCTED_QUANTITY;
 const maxQuoteIndicatorCount = 99;
 const publicSlugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const publicImageSrcPattern = /^(?:https?:\/\/|\/(?!\/))[^\s"'<>]+$/i;
@@ -65,6 +72,17 @@ function maxQuoteQuantityForKind(kind: NormalizedQuoteSelectionItem["kind"]) {
   return kind === "setup-included"
     ? maxIncludedQuoteItemQuantity
     : maxSelectedQuoteItemQuantity;
+}
+
+function isSafeBoundedQuantity(
+  value: unknown,
+  minimum: number,
+  maximum: number
+) {
+  return typeof value === "number" &&
+    Number.isSafeInteger(value) &&
+    value >= minimum &&
+    value <= maximum;
 }
 
 function clampQuoteQuantity(
@@ -93,20 +111,24 @@ function normalizeQuoteItem(
     item.kind === "setup-included" ||
     item.kind === "rental"
       ? item.kind
-      : category?.toLowerCase() === "setups"
-        ? "setup"
-        : "rental";
+      : undefined;
+  if (!kind) return undefined;
   const imageSrc = item.imageSrc?.trim();
   const minimumQuantity = kind === "setup-included" ? 0 : 1;
-  const quantity = clampQuoteQuantity(kind, item.quantity, minimumQuantity);
-  const setupBaseQuantity =
-    typeof item.setupBaseQuantity === "number" &&
-    Number.isFinite(item.setupBaseQuantity)
-    ? Math.max(
-        0,
-        Math.min(maxIncludedQuoteItemQuantity, Math.floor(item.setupBaseQuantity))
-      )
-    : undefined;
+  const quantityMaximum = maxQuoteQuantityForKind(kind);
+  const quantity = kind === "setup" || kind === "setup-included"
+    ? isSafeBoundedQuantity(item.quantity, minimumQuantity, quantityMaximum)
+      ? item.quantity
+      : undefined
+    : clampQuoteQuantity(kind, item.quantity, minimumQuantity);
+  if (quantity === undefined) return undefined;
+  const setupBaseQuantity = item.setupBaseQuantity;
+  if (
+    setupBaseQuantity !== undefined &&
+    !isSafeBoundedQuantity(setupBaseQuantity, SETUP_MIN_QUANTITY, SETUP_MAX_QUANTITY)
+  ) {
+    return undefined;
+  }
   const includedItems =
     kind === "setup"
       ? normalizeIncludedItems({
@@ -115,6 +137,14 @@ function normalizeQuoteItem(
           slug
         })
       : [];
+
+  if (
+    kind === "setup" &&
+    item.includedItems !== undefined &&
+    includedItems.length !== item.includedItems.length
+  ) {
+    return undefined;
+  }
 
   if (
     !slug ||
@@ -143,7 +173,7 @@ function normalizeQuoteItem(
 }
 
 function quoteSelectionItemKey(item: QuoteSelectionItem) {
-  return `${item.kind ?? "rental"}:${item.setupSlug ?? ""}:${item.slug}`;
+  return `${item.kind ?? "unknown"}:${item.setupSlug ?? ""}:${item.slug}`;
 }
 
 function normalizeQuoteSelectionItems(items: QuoteSelectionItem[]) {
@@ -390,6 +420,36 @@ function refreshStoredQuoteItem(
   setItems(nextItems);
 }
 
+function resolveCanonicalQuoteSelectionItem(
+  item: QuoteSelectionItem,
+  canonical: QuoteSelectionValidItem
+): QuoteSelectionItem {
+  const resolved = {
+    ...item,
+    category: canonical.category,
+    imageSrc: canonical.imageSrc,
+    kind: canonical.kind,
+    name: canonical.name ?? canonical.slug
+  };
+
+  if (canonical.kind === "setup") {
+    return {
+      ...resolved,
+      includedItems: canonical.includedItems ?? []
+    };
+  }
+
+  const {
+    includedItems: _includedItems,
+    setupBaseQuantity: _setupBaseQuantity,
+    setupName: _setupName,
+    setupSlug: _setupSlug,
+    ...rentalItem
+  } = resolved;
+
+  return rentalItem;
+}
+
 export function QuoteSelectionDataBoundary({
   validItems: _validItems
 }: {
@@ -470,12 +530,14 @@ function getGroupedSelectionItems(items: QuoteSelectionSummaryItem[]) {
   );
 
   return {
-    rentalItems: items.filter((item) => item.kind === "rental" || !item.kind),
+    rentalItems: items.filter((item) => item.kind === "rental"),
     setupGroups: [
       ...setupItems.map((setupItem) => ({
-        includedItems: setupIncludedItems.filter(
-          (item) => item.setupSlug === setupItem.slug
-        ),
+        includedItems: setupItem.includedItems?.length
+          ? setupItem.includedItems
+          : setupIncludedItems.filter(
+              (item) => item.setupSlug === setupItem.slug
+            ),
         setupItem,
         setupName: undefined
       })),
@@ -642,18 +704,18 @@ function SetupSelectionGroup({
     ])
   );
   const setupQuantity = setupItem?.quantity ?? 1;
-  const normalizedIncludedItems = includedItems.map((includedItem) => ({
-    ...includedItem,
-    quantity:
-      setupItem
-        ? Math.min(
-            maxIncludedQuoteItemQuantity,
-            (recipeQuantityByKey.get(quoteSelectionItemKey(includedItem)) ??
-              includedItem.setupBaseQuantity ??
-              includedItem.quantity) * setupQuantity
-          )
-        : includedItem.quantity
-  }));
+  const normalizedIncludedItems = includedItems.flatMap((includedItem) => {
+    const quantity = setupItem
+      ? reconstructSetupQuantity(
+          setupQuantity,
+          recipeQuantityByKey.get(quoteSelectionItemKey(includedItem)) ??
+            includedItem.setupBaseQuantity ??
+            includedItem.quantity
+        )
+      : includedItem.quantity;
+
+    return quantity === undefined ? [] : [{ ...includedItem, quantity }];
+  });
   const recipeIncludedItems =
     setupItem?.includedItems?.length
       ? setupItem.includedItems.map((includedItem) => ({
@@ -814,42 +876,6 @@ export function QuoteSelectionSummary({
 
     return result;
   }
-  const resolvedItems = items.map((item) => {
-    if (item.kind === "manual") {
-      return item;
-    }
-
-    const canonical = validItems.find(
-      (candidate) => candidate.slug === item.slug && candidate.kind === item.kind
-    );
-
-    return canonical
-      ? {
-          ...item,
-          category: canonical.category,
-          imageSrc: canonical.imageSrc,
-          kind: canonical.kind,
-          name: canonical.name ?? canonical.slug
-        }
-      : {
-          ...item,
-          name: `Unavailable selection: ${item.slug}`,
-          unavailable: true
-        };
-  });
-
-  const manualItems = resolvedItems.filter((item) => item.kind === "manual");
-  const catalogueItems = resolvedItems.filter((item) => item.kind !== "manual");
-  const hasAnyItems = resolvedItems.length > 0;
-
-  const visibleItems: QuoteSelectionSummaryItem[] = catalogueItems.length
-    ? resolvedItems
-    : hasCompleteSelection
-      ? manualItems.length ? manualItems : []
-      : fallbackItems;
-  const hasDiscoveryContext = Boolean(requestedSlug || category || event || search);
-  const groupedItems = getGroupedSelectionItems(visibleItems);
-
   const canonicalFallbackIdentity = useMemo(() => {
     if (!requestedSlug) return undefined;
     const normalizedRequestedSlug = normalizePublicSlug(requestedSlug);
@@ -875,6 +901,38 @@ export function QuoteSelectionSummary({
     if (exactMatches.length !== 1) return undefined;
     return { reference: normalizedRequestedSlug, kind: exactMatches[0].kind };
   }, [requestedSlug, fallbackItems, validItems]);
+
+  const resolvedItems = items.map((item) => {
+    if (item.kind === "manual") {
+      return item;
+    }
+
+    const canonical = validItems.find(
+      (candidate) => candidate.slug === item.slug && candidate.kind === item.kind
+    );
+
+    return canonical
+      ? resolveCanonicalQuoteSelectionItem(item, canonical)
+      : {
+          ...item,
+          name: `Unavailable selection: ${item.slug}`,
+          unavailable: true
+        };
+  });
+
+  const manualItems = resolvedItems.filter((item) => item.kind === "manual");
+  const catalogueItems = resolvedItems.filter((item) => item.kind !== "manual");
+  const hasAnyItems = resolvedItems.length > 0;
+
+  const visibleItems: QuoteSelectionSummaryItem[] = catalogueItems.length
+    ? resolvedItems
+    : hasCompleteSelection
+      ? manualItems.length ? manualItems : []
+      : canonicalFallbackIdentity
+        ? fallbackItems
+        : [];
+  const hasDiscoveryContext = Boolean(requestedSlug || category || event || search);
+  const groupedItems = getGroupedSelectionItems(visibleItems);
 
   useEffect(() => {
     function syncSelection() {

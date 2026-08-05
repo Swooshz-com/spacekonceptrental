@@ -150,7 +150,7 @@ describe("admin product write route helper", () => {
     [request({ slug: "valid", name: "Valid", isPublished: true, extra: "nope" }), "request_payload_invalid", 400],
     [request({ slug: "Bad Slug", name: "Valid", isPublished: true }), "request_payload_invalid", 400],
     [request({ slug: "valid", name: "", isPublished: true }), "request_payload_invalid", 400]
-  ])("rejects invalid category create requests before auth or persistence", async (
+  ])("rejects invalid category create requests after replay consumption", async (
     input,
     expectedError,
     expectedStatus
@@ -172,8 +172,8 @@ describe("admin product write route helper", () => {
       ok: false,
       error: expectedError
     });
-    expect(dependencies.resolveSessionWorkspaceBinding).not.toHaveBeenCalled();
-    expect(dependencies.resolveRouteGate).not.toHaveBeenCalled();
+    expect(dependencies.resolveSessionWorkspaceBinding).toHaveBeenCalled();
+    expect(dependencies.resolveRouteGate).toHaveBeenCalled();
   });
 
   it.each([

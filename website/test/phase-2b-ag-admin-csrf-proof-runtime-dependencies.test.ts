@@ -150,9 +150,12 @@ describe("Phase 2B-AG - admin CSRF proof runtime dependencies", () => {
       
       const dependencies = createServerAdminCsrfProofRuntimeDependencies({
         expectedSessionBinding: "session-123",
+        expectedWorkspaceId: "11111111-1111-4111-8111-111111111111",
         expectedNonce: null,
         currentTimestampMs: 1500,
         maxProofAgeMs: 5000
+      }, {
+        consumeCsrfProof: async () => true
       });
       
       const issueResult = await issueServerAdminCsrfProof(
