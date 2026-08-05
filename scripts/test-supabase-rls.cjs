@@ -46,6 +46,7 @@ const dockerConfigDir = fs.mkdtempSync(
 const expectedTables = [
   'admin_csrf_proof_consumptions',
   'admin_users',
+  'app_operation_events',
   'audit_logs',
   'catalogue_public_workspace_config',
   'categories',
@@ -492,6 +493,7 @@ function grantBrowserRoleSelects() {
     grant select on all tables in schema public to anon, authenticated;
     revoke all privileges on table public.setup_recipes, public.setup_recipe_items from anon;
     revoke all privileges on table public.admin_csrf_proof_consumptions from anon, authenticated;
+    revoke all privileges on table public.app_operation_events from anon;
   `);
 }
 
@@ -6439,6 +6441,409 @@ check('service-only tables expose no broad anonymous or authenticated client acc
 
 check('runtime website Supabase code stays server-only', () => {
   assertNoRuntimeSupabaseUse();
+});
+
+check('app operation event admission foundation enforces schema, RLS, HMAC proof, and idempotency', () => {
+  const writeSignature =
+    'public.record_app_operation_event(uuid,uuid,text,text,text,text,text,text,integer,bigint,text,bigint,text)';
+  const digestSignature =
+    'private.app_operation_event_payload_digest(uuid,uuid,text,text,text,text,text,text,integer,bigint)';
+  const configTable = 'private.app_operation_event_admission_config';
+  const admissionSecret =
+    'local-rls-app-operation-event-admission-secret-for-tests-only';
+
+  const nullOr = (value) => (value === null ? 'null' : `'${value}'`);
+
+  const baseEvent = (overrides = {}) => ({
+    eventId: 'c0000000-0000-4000-8000-000000000100',
+    workspaceId: ids.workspaceA,
+    category: 'quote.submission',
+    outcome: 'failed',
+    referenceType: 'request_id',
+    referenceValue: 'app-op-request-a',
+    errorCode: 'provider_unavailable',
+    routeKey: '/api/quote',
+    httpStatus: 502,
+    occurredAtMs: Math.floor(Date.now() / 1000) * 1000,
+    ...overrides,
+  });
+
+  const digestFor = (base) => psql(`
+    select private.app_operation_event_payload_digest(
+      '${base.eventId}', '${base.workspaceId}', '${base.category}', '${base.outcome}',
+      '${base.referenceType}', ${nullOr(base.referenceValue)}, ${nullOr(base.errorCode)},
+      '${base.routeKey}', ${base.httpStatus === null ? 'null' : base.httpStatus}, ${base.occurredAtMs}
+    )
+  `);
+
+  const proofFor = (base, expiresOffsetSeconds = 60) => {
+    const output = psql(`
+      with material as (
+        select
+          private.app_operation_event_payload_digest(
+            '${base.eventId}', '${base.workspaceId}', '${base.category}', '${base.outcome}',
+            '${base.referenceType}', ${nullOr(base.referenceValue)}, ${nullOr(base.errorCode)},
+            '${base.routeKey}', ${base.httpStatus === null ? 'null' : base.httpStatus}, ${base.occurredAtMs}
+          ) as digest,
+          floor(extract(epoch from clock_timestamp()))::bigint + ${expiresOffsetSeconds} as expires_at
+      )
+      select digest || '|' || expires_at::text || '|' ||
+        encode(
+          extensions.hmac(
+            convert_to(
+              concat_ws(
+                E'\\n', 'skr.app_operation_event.v1', '${base.workspaceId}',
+                '${base.eventId}', digest, expires_at::text
+              ),
+              'UTF8'
+            ),
+            convert_to('${admissionSecret}', 'UTF8'),
+            'sha256'
+          ),
+          'hex'
+        )
+      from material
+    `);
+    const [digest, expiresAt, signature] = output.split('|');
+    return { digest, expiresAt, signature };
+  };
+
+  const writeCall = (base, proof) => `
+    select public.record_app_operation_event(
+      '${base.eventId}', '${base.workspaceId}', '${base.category}', '${base.outcome}',
+      '${base.referenceType}', ${nullOr(base.referenceValue)}, ${nullOr(base.errorCode)},
+      '${base.routeKey}', ${base.httpStatus === null ? 'null' : base.httpStatus}, ${base.occurredAtMs},
+      '${proof.digest}', ${proof.expiresAt}, '${proof.signature}'
+    )::text
+  `;
+
+  assert.equal(
+    psql(`select pg_catalog.pg_get_userbyid(proowner) from pg_catalog.pg_proc where oid = '${writeSignature}'::pg_catalog.regprocedure`),
+    'postgres',
+    'app operation event write RPC owner must be postgres',
+  );
+  assert.equal(
+    psql(`select prosecdef::text || ':' || pg_catalog.array_to_string(proconfig, ',') from pg_catalog.pg_proc where oid = '${writeSignature}'::pg_catalog.regprocedure`),
+    'true:search_path=""',
+    'app operation event write RPC must be SECURITY DEFINER with an empty fixed search_path',
+  );
+  assert.equal(
+    psql(`select pg_catalog.pg_get_userbyid(proowner) from pg_catalog.pg_proc where oid = '${digestSignature}'::pg_catalog.regprocedure`),
+    'postgres',
+    'app operation event digest helper owner must be postgres',
+  );
+  assert.equal(
+    psql(`select prosecdef::text || ':' || pg_catalog.array_to_string(proconfig, ',') from pg_catalog.pg_proc where oid = '${digestSignature}'::pg_catalog.regprocedure`),
+    'false:search_path=""',
+    'app operation event digest helper must be SECURITY INVOKER with an empty fixed search_path',
+  );
+
+  for (const role of ['anon', 'authenticated']) {
+    assert.equal(
+      psql(`select pg_catalog.has_function_privilege('${role}', '${writeSignature}', 'EXECUTE')::text`),
+      'true',
+      `${role} must execute the app operation event write RPC`,
+    );
+  }
+  assert.equal(
+    psql(`select pg_catalog.has_function_privilege('service_role', '${writeSignature}', 'EXECUTE')::text`),
+    'false',
+    'service_role must not execute the app operation event write RPC',
+  );
+  assert.equal(
+    psql(`
+      select exists (
+        select 1
+        from pg_catalog.pg_proc proc
+        cross join lateral pg_catalog.aclexplode(
+          coalesce(proc.proacl, pg_catalog.acldefault('f', proc.proowner))
+        ) acl
+        where proc.oid = '${writeSignature}'::pg_catalog.regprocedure
+          and acl.grantee = 0
+          and acl.privilege_type = 'EXECUTE'
+      )::text
+    `),
+    'false',
+    'PUBLIC must not inherit app operation event write RPC execution',
+  );
+
+  assert.equal(
+    psql(`select relrowsecurity::text from pg_catalog.pg_class where oid = 'public.app_operation_events'::pg_catalog.regclass`),
+    'true',
+    'app_operation_events must have RLS enabled',
+  );
+  assert.equal(
+    psql(`select pg_catalog.string_agg(attname, ',' order by attnum) from pg_catalog.pg_attribute where attrelid = 'public.app_operation_events'::pg_catalog.regclass and attnum > 0 and not attisdropped`),
+    'event_id,workspace_id,category,outcome,reference_type,reference_value,error_code,route_key,http_status,actor_admin_user_id,occurred_at,created_at,retention_eligible_at',
+    'app_operation_events must contain only the reviewed privacy-minimized columns',
+  );
+  assert.equal(
+    psql(`select count(*)::text from pg_catalog.pg_constraint where conrelid = 'public.app_operation_events'::pg_catalog.regclass`),
+    '11',
+    'app_operation_events must retain the primary key, two foreign keys, and eight checks',
+  );
+  assert.equal(
+    psql(`select count(*)::text from pg_catalog.pg_indexes where schemaname = 'public' and tablename = 'app_operation_events'`),
+    '2',
+    'app_operation_events must have exactly the primary-key and workspace-occurrence indexes',
+  );
+
+  for (const role of ['anon', 'service_role']) {
+    for (const privilege of ['SELECT', 'INSERT', 'UPDATE', 'DELETE']) {
+      assert.equal(
+        psql(`select pg_catalog.has_table_privilege('${role}', 'public.app_operation_events', '${privilege}')::text`),
+        'false',
+        `${role} must not have direct app_operation_events ${privilege}`,
+      );
+    }
+  }
+  assert.equal(
+    psql(`select pg_catalog.has_table_privilege('authenticated', 'public.app_operation_events', 'SELECT')::text`),
+    'true',
+    'authenticated must retain reviewed app_operation_events SELECT',
+  );
+  for (const privilege of ['INSERT', 'UPDATE', 'DELETE']) {
+    assert.equal(
+      psql(`select pg_catalog.has_table_privilege('authenticated', 'public.app_operation_events', '${privilege}')::text`),
+      'false',
+      `authenticated must not have direct app_operation_events ${privilege}`,
+    );
+  }
+
+  assert.equal(
+    psql(`select relrowsecurity::text from pg_catalog.pg_class where oid = '${configTable}'::pg_catalog.regclass`),
+    'true',
+    'admission config table must have RLS enabled',
+  );
+  for (const role of ['anon', 'authenticated', 'service_role']) {
+    for (const privilege of ['SELECT', 'INSERT', 'UPDATE', 'DELETE']) {
+      assert.equal(
+        psql(`select pg_catalog.has_table_privilege('${role}', '${configTable}', '${privilege}')::text`),
+        'false',
+        `${role} must not have direct admission config ${privilege}`,
+      );
+    }
+  }
+  const explicitConfigRead = psql(`
+    begin;
+    grant select on table ${configTable} to authenticated;
+    set local role authenticated;
+    set local "request.jwt.claim.role" = 'authenticated';
+    set local "request.jwt.claim.sub" = '${ids.authMemberA}';
+    select count(*) from ${configTable};
+    rollback;
+  `);
+  assert.equal(
+    explicitConfigRead,
+    '0',
+    'no-policy RLS must expose zero admission config rows even under a rolled-back disposable direct grant',
+  );
+  assert.equal(
+    psql(`select count(*)::text from ${configTable}`),
+    '0',
+    'the admission config must start with no seeded secret row',
+  );
+
+  const unconfiguredBase = baseEvent();
+  const unconfiguredProof = proofFor(unconfiguredBase);
+  statementFailsAs(
+    'anon',
+    null,
+    writeCall(unconfiguredBase, unconfiguredProof),
+    /app operation event admission is not configured/i,
+  );
+
+  psql(`
+    insert into ${configTable} (hmac_secret)
+    values ('${admissionSecret}');
+  `);
+  assert.equal(
+    psql(`select count(*)::text from ${configTable}`),
+    '1',
+    'the local disposable fixture must configure exactly one admission secret',
+  );
+
+  const directDmlStatements = [
+    `insert into public.app_operation_events (event_id, workspace_id, category, outcome, reference_type, route_key) values ('c0000000-0000-4000-8000-000000000001', '${ids.workspaceA}', 'admin.auth', 'denied', 'none', '/api/admin')`,
+    `update public.app_operation_events set outcome = 'failed'`,
+    `delete from public.app_operation_events`,
+  ];
+  for (const role of ['anon', 'authenticated']) {
+    for (const statement of directDmlStatements) {
+      statementFailsAs(
+        role,
+        role === 'authenticated' ? ids.authMemberA : null,
+        statement,
+        /permission denied|row-level security/i,
+      );
+    }
+  }
+
+  const invalidProofBases = [
+    ['malformed digest', baseEvent(), { ...proofFor(baseEvent()), digest: 'malformed' }],
+    ['wrong signature', baseEvent(), { ...proofFor(baseEvent()), signature: '0'.repeat(64) }],
+    ['stale expiry', baseEvent(), proofFor(baseEvent(), -60)],
+    ['overlong expiry', baseEvent(), proofFor(baseEvent(), 300)],
+    ['payload mismatch', baseEvent({ category: 'admin.auth' }), proofFor(baseEvent())],
+  ];
+  for (const [label, eventOverride, proof] of invalidProofBases) {
+    statementFailsAs(
+      'anon',
+      null,
+      writeCall(eventOverride, proof),
+      /app operation event admission proof is invalid/i,
+    );
+  }
+  statementFailsAs(
+    'anon',
+    null,
+    writeCall(baseEvent(), { digest: '0'.repeat(64), expiresAt: unconfiguredProof.expiresAt, signature: '0'.repeat(64) }),
+    /app operation event admission proof is invalid/i,
+    'forged proof must fail closed',
+  );
+
+  for (const [label, base] of [
+    [
+      'invalid category',
+      baseEvent({ category: 'quote.submission.created' }),
+    ],
+    ['invalid outcome', baseEvent({ outcome: 'succeeded' })],
+    ['invalid reference type', baseEvent({ referenceType: 'quote_id' })],
+    [
+      'reference none with value',
+      baseEvent({ referenceType: 'none', referenceValue: 'must-not-be-set' }),
+    ],
+    ['missing reference value', baseEvent({ referenceValue: null })],
+    [
+      'overlong reference value',
+      baseEvent({ referenceValue: 'r'.repeat(129) }),
+    ],
+    [
+      'unsafe reference value',
+      baseEvent({ referenceValue: 'bad value with space' }),
+    ],
+    ['empty route key', baseEvent({ routeKey: '' })],
+    ['overlong route key', baseEvent({ routeKey: '/'.repeat(161) })],
+    ['url route key', baseEvent({ routeKey: 'https://example.test/admin' })],
+    ['unsafe error code', baseEvent({ errorCode: 'Bad Code!' })],
+    ['overlong error code', baseEvent({ errorCode: 'e'.repeat(81) })],
+    ['http status too low', baseEvent({ httpStatus: 99 })],
+    ['http status too high', baseEvent({ httpStatus: 600 })],
+    ['zero occurred_at', baseEvent({ occurredAtMs: 0 })],
+  ]) {
+    statementFailsAs(
+      'anon',
+      null,
+      writeCall(base, proofFor(base)),
+      /invalid app operation event/i,
+    );
+  }
+  statementFailsAs(
+    'anon',
+    null,
+    writeCall(
+      baseEvent({ occurredAtMs: Math.floor(Date.now() / 1000) * 1000 + 600000 }),
+      proofFor(baseEvent({ occurredAtMs: Math.floor(Date.now() / 1000) * 1000 + 600000 })),
+    ),
+    /invalid app operation event occurrence/i,
+    'far-future occurrence must fail closed',
+  );
+  statementFailsAs(
+    'anon',
+    null,
+    writeCall(
+      baseEvent({ occurredAtMs: Math.floor(Date.now() / 1000) * 1000 - 40 * 24 * 3600 * 1000 }),
+      proofFor(baseEvent({ occurredAtMs: Math.floor(Date.now() / 1000) * 1000 - 40 * 24 * 3600 * 1000 })),
+    ),
+    /invalid app operation event occurrence/i,
+    'far-past occurrence must fail closed',
+  );
+
+  const anonymousBase = baseEvent();
+  const anonymousProof = proofFor(anonymousBase);
+  assert.equal(
+    queryCommittedAs('anon', null, writeCall(anonymousBase, anonymousProof)),
+    'true',
+    'a valid anonymous admission proof must append one event',
+  );
+  assert.equal(
+    queryCommittedAs('anon', null, writeCall(anonymousBase, proofFor(anonymousBase))),
+    'false',
+    'a duplicate event_id must be idempotent and must not insert a second row',
+  );
+  assert.equal(
+    psql(`select count(*)::text from public.app_operation_events where event_id = '${anonymousBase.eventId}'`),
+    '1',
+    'duplicate event_id idempotency must preserve exactly one row',
+  );
+  assert.equal(
+    psql(`select (actor_admin_user_id is null)::text from public.app_operation_events where event_id = '${anonymousBase.eventId}'`),
+    'true',
+    'anonymous writes must derive a null actor from the database identity',
+  );
+  assert.equal(
+    psql(`select (retention_eligible_at = created_at + interval '90 days')::text from public.app_operation_events where event_id = '${anonymousBase.eventId}'`),
+    'true',
+    'retention_eligible_at must default to 90 days after creation',
+  );
+
+  const authenticatedBase = baseEvent({
+    eventId: 'c0000000-0000-4000-8000-000000000101',
+    category: 'admin.auth',
+    outcome: 'denied',
+    referenceType: 'none',
+    referenceValue: null,
+    errorCode: null,
+    httpStatus: 403,
+  });
+  assert.equal(
+    queryCommittedAs('authenticated', ids.authMemberA, writeCall(authenticatedBase, proofFor(authenticatedBase))),
+    'true',
+    'an authenticated owner/admin admission proof must append one event',
+  );
+  assert.equal(
+    psql(`select actor_admin_user_id::text from public.app_operation_events where event_id = '${authenticatedBase.eventId}'`),
+    ids.adminA,
+    'the actor must be derived from the authenticated database identity, not the caller',
+  );
+  assert.equal(
+    psql(`select (actor_admin_user_id is null)::text from public.app_operation_events where event_id = '${anonymousBase.eventId}'`),
+    'true',
+    'the anonymous event must still have a null database-derived actor',
+  );
+
+  statementFailsAs(
+    'anon',
+    null,
+    `select count(*)::text from public.app_operation_events`,
+    /permission denied|row-level security/i,
+    'anonymous direct app_operation_events reads must be denied',
+  );
+  assert.equal(
+    scalarAs('authenticated', ids.authViewerA, `select count(*)::text from public.app_operation_events`),
+    '0',
+    'workspace viewers must not read app operation events',
+  );
+  assert.equal(
+    scalarAs('authenticated', ids.authNoMembership, `select count(*)::text from public.app_operation_events`),
+    '0',
+    'authenticated users without membership must not read app operation events',
+  );
+  assert.equal(
+    scalarAs('authenticated', ids.authMemberA, `select count(*)::text from public.app_operation_events`),
+    '2',
+    'owner/admin must read same-workspace app operation events',
+  );
+  assert.equal(
+    scalarAs('authenticated', ids.authMemberA, `select count(*)::text from public.app_operation_events where workspace_id = '${ids.workspaceB}'`),
+    '0',
+    'owner/admin must not read cross-workspace app operation events',
+  );
+  assert.equal(
+    scalarAs('authenticated', ids.authMemberB, `select count(*)::text from public.app_operation_events`),
+    '0',
+    'another-workspace owner/admin must not read these app operation events',
+  );
 });
 
 async function runChecks() {
