@@ -19,8 +19,8 @@ inventory as complete.
 ## Ownership Classes
 
 - **Repository-owned application functions:** created by the ordered migration
-  chain, reviewed by exact signature, and granted only to the six anonymous or
-  twelve authenticated application RPC allowlists below.
+  chain, reviewed by exact signature, and granted only to the seven anonymous or
+  thirteen authenticated application RPC allowlists below.
 - **Supabase/platform-managed functions:** may exist only in managed
   environments. They require an explicit reviewed contract before any
   API/client execution is allowed.
@@ -37,15 +37,18 @@ Anonymous execution is limited to these exact signatures:
 - `public.get_public_homepage_hero(uuid)`
 - `public.get_public_page_media(uuid,text)`
 - `public.get_public_quote_submission_digest(uuid,uuid,text,text,text,text,text,date,text,text,text,text,jsonb,uuid)`
+- `public.record_app_operation_event(uuid,uuid,text,text,text,text,text,text,integer,bigint,text,bigint,text)`
 - `public.submit_public_quote_request(uuid,uuid,text,text,text,text,text,date,text,text,text,text,jsonb,uuid,text,bigint,text)`
 
-Twelve authenticated RPC signatures are allowlisted. All twelve have website call sites. No public-schema `SECURITY
-DEFINER` function requires `service_role` execution: current server runtime
+Thirteen authenticated RPC signatures are allowlisted. Twelve have website
+call sites; the app-operation-event write RPC is M1 admission-foundation only
+and has no runtime call site yet. No public-schema `SECURITY DEFINER` function
+requires `service_role` execution: current server runtime
 uses either the server-only anon client for public flows or the session-bound
 authenticated client for admin flows. `PUBLIC` receives no execution grant.
 
-The intentional application access remains exactly six anonymous public RPCs
-and twelve authenticated public RPCs. These grants must not be removed merely to
+The intentional application access remains exactly seven anonymous public RPCs
+and thirteen authenticated public RPCs. These grants must not be removed merely to
 silence a generic advisor warning.
 
 The "prior SQL" column describes the explicit grant/revoke intent in the
@@ -188,6 +191,58 @@ for any of these functions.
   it receives no raw proof, nonce, session binding, cookie, token, signature,
   secret, request body, or customer data.
 
+## App Operation Event SECURITY DEFINER RPC
+
+### `public.record_app_operation_event(uuid,uuid,text,text,text,text,text,text,integer,bigint,text,bigint,text)`
+
+- Owner: `postgres` (migration/database owner).
+- SECURITY DEFINER: yes.
+- Fixed `search_path`: empty (`search_path = ''`), with every object reference
+  schema-qualified.
+- Admission dependency: `private.app_operation_event_payload_digest(...)` and
+  `private.app_operation_event_admission_config`; unconfigured, malformed,
+  stale, overlong, mismatched, and forged proofs fail closed.
+- Actor dependency: `private.current_quote_admin_user_id(expected_workspace_id)`
+  derives the actor from the authenticated database identity only; the caller
+  cannot nominate an actor.
+- Storage dependency: `public.app_operation_events`, with RLS enabled, no
+  direct write policy, and no direct `insert`/`update`/`delete` grant for
+  `PUBLIC`, `anon`, `authenticated`, or `service_role`.
+- Append-only and idempotent: repeating the same `event_id` through a fresh
+  valid proof is `on conflict (event_id) do nothing` and returns `false`
+  without updating the existing row.
+- Direct EXECUTE: denied for `PUBLIC` and `service_role`; granted only to
+  `anon` and `authenticated` after an explicit all-role revoke. The admission
+  proof remains mandatory for every role, so browser possession of an
+  `anon`/`authenticated` token cannot forge an event.
+- Server call site: none yet. This is M1 schema/admission foundation only; the
+  runtime sink (`logApplicationError`) is separate later work.
+- Privacy: PostgreSQL receives only the bounded caller-controlled event fields,
+  one typed safe reference, safe route/status/code values, the database-derived
+  actor, timestamps, and a lowercase hexadecimal HMAC proof. It receives no
+  payload JSON, raw quote/enquiry content, contact values, prompts/responses,
+  provider bodies, headers, cookies, tokens, credentials, internal notes, or
+  arbitrary metadata.
+
+### `private.app_operation_event_payload_digest(uuid,uuid,text,text,text,text,text,text,integer,bigint)`
+
+- Owner: `postgres` (migration/database owner).
+- SECURITY INVOKER: yes (not definer), with empty fixed `search_path`.
+- Purpose: deterministic canonical digest over every caller-controlled event
+  field, used to bind the admission proof to the complete event.
+- Direct EXECUTE: denied for `PUBLIC`, `anon`, `authenticated`, and
+  `service_role`; it is callable only by the reviewed owner-executed
+  SECURITY DEFINER write RPC and by owner-maintained tooling.
+
+### Private admission configuration
+
+`private.app_operation_event_admission_config` is a singleton table holding the
+purpose-separated HMAC secret. It is RLS-enabled, has no client policy, receives
+no `PUBLIC`, `anon`, `authenticated`, or `service_role` table privilege, and is
+created with zero rows. The database is unconfigured until an operator inserts
+the secret through an approved channel; unconfigured admission fails closed.
+No secret value is ever seeded, printed, or stored outside this private table.
+
 ## Supabase/Platform-Managed Event-Trigger Contract
 
 | Exact signature | Ownership class | Operational dependency | Final execution contract |
@@ -232,6 +287,7 @@ Moved originals:
 | `private.is_workspace_quote_manager(uuid)` | No | Execute | No | No |
 | `private.quote_submission_payload_digest(uuid,uuid,text,text,text,text,text,date,text,text,text,text,jsonb,uuid)` | No | No | No | No |
 | `private.submit_public_quote_request_unadmitted(uuid,uuid,text,text,text,text,text,date,text,text,text,text,jsonb,uuid)` | No | No | No | No |
+| `private.app_operation_event_payload_digest(uuid,uuid,text,text,text,text,text,text,integer,bigint)` | No | No | No | No |
 
 The migration owner retains inherent management rights for every function. The
 two owner-only internal functions remain callable only through their reviewed
@@ -280,6 +336,11 @@ production configuration.
   invokes every non-allowlisted public definer as `anon`, enumerates every
   private function and its effective role privileges, checks private policy
   dependencies, and preserves the admission/handoff/admin behavior tests.
+- `scripts/test-supabase-rls.cjs` adds the app operation event admission
+  foundation check: exact table columns/constraints/indexes, RLS and policy
+  shape, private-config isolation, direct DML denial, HMAC proof failure modes,
+  valid insertion, `event_id` idempotency, database-derived actor, and the
+  owner/admin same-workspace read matrix.
 - `scripts/production-security-definer-catalog.sql` is the read-only live
   preflight enumerator. It has no exact-signature filter and returns every live
   public `SECURITY DEFINER` function with safe metadata and effective execution

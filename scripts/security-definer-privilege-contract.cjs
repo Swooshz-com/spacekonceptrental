@@ -57,10 +57,15 @@ const csrfReplayPublicSecurityDefinerSignatures = Object.freeze([
   'public.consume_admin_csrf_proof(text,uuid,text,bigint,bigint)',
 ]);
 
+const appOperationEventPublicSecurityDefinerSignatures = Object.freeze([
+  'public.record_app_operation_event(uuid,uuid,text,text,text,text,text,text,integer,bigint,text,bigint,text)',
+]);
+
 const finalPublicSecurityDefinerSignatures = Object.freeze([
   ...preRecipePublicSecurityDefinerSignatures,
   ...setupRecipePublicSecurityDefinerSignatures,
   ...csrfReplayPublicSecurityDefinerSignatures,
+  ...appOperationEventPublicSecurityDefinerSignatures,
 ]);
 
 const platformManagedPublicSecurityDefinerSignatures = Object.freeze([
@@ -78,6 +83,7 @@ const anonymousPublicSecurityDefinerAllowlist = Object.freeze([
   'public.get_public_homepage_hero(uuid)',
   'public.get_public_page_media(uuid,text)',
   'public.get_public_quote_submission_digest(uuid,uuid,text,text,text,text,text,date,text,text,text,text,jsonb,uuid)',
+  'public.record_app_operation_event(uuid,uuid,text,text,text,text,text,text,integer,bigint,text,bigint,text)',
   'public.submit_public_quote_request(uuid,uuid,text,text,text,text,text,date,text,text,text,text,jsonb,uuid,text,bigint,text)',
 ]);
 
@@ -93,6 +99,7 @@ const authenticatedPublicSecurityDefinerAllowlist = Object.freeze([
   'public.execute_admin_quote_workflow(uuid,uuid,text,text)',
   'public.get_admin_access_membership(uuid,uuid)',
   'public.list_admin_access_records(uuid)',
+  'public.record_app_operation_event(uuid,uuid,text,text,text,text,text,text,integer,bigint,text,bigint,text)',
   'public.consume_admin_csrf_proof(text,uuid,text,bigint,bigint)',
 ]);
 
@@ -109,6 +116,7 @@ const finalPrivateFunctionSignatures = Object.freeze([
   'private.is_workspace_quote_manager(uuid)',
   'private.quote_submission_payload_digest(uuid,uuid,text,text,text,text,text,date,text,text,text,text,jsonb,uuid)',
   'private.submit_public_quote_request_unadmitted(uuid,uuid,text,text,text,text,text,date,text,text,text,text,jsonb,uuid)',
+  'private.app_operation_event_payload_digest(uuid,uuid,text,text,text,text,text,text,integer,bigint)',
 ]);
 
 const privatePolicyHelperGrants = Object.freeze({
@@ -128,6 +136,7 @@ const privatePolicyHelperGrants = Object.freeze({
 
 module.exports = {
   anonymousPublicSecurityDefinerAllowlist,
+  appOperationEventPublicSecurityDefinerSignatures,
   authenticatedPublicSecurityDefinerAllowlist,
   csrfReplayPublicSecurityDefinerSignatures,
   finalPrivateFunctionSignatures,

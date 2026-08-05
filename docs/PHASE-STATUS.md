@@ -1,3 +1,31 @@
+## App Operation Event Observability Foundation (#307 M1)
+
+References: `docs/architecture/OBSERVABILITY-FOUNDATION.md`, `supabase/migrations/20260805141500_app_operation_events_foundation.sql`, `scripts/validate-supabase-migrations.cjs`, `scripts/validate-supabase-migrations.test.cjs`, `scripts/test-supabase-rls.cjs`, `scripts/security-definer-privilege-contract.cjs`, `scripts/security-remediation-rls-checks.cjs`, `docs/SUPABASE-MVP-SCHEMA.md`, `docs/SUPABASE-RLS-STRATEGY.md`, and `docs/SUPABASE-SECURITY-DEFINER-PRIVILEGE-INVENTORY.md`.
+
+The M1 schema/RLS/admission foundation for durable application operation
+events is implemented under Design Lock `DL-307-OBS-001`. One append-only
+`public.app_operation_events` table records bounded failure/denial/disabled/
+pending edge outcomes for `quote.submission`, `quote.handoff`, `admin.auth`,
+and `rate.limit`. `private.app_operation_event_admission_config` is a private
+singleton HMAC configuration with no seeded secret, and every write through
+the single fixed-search-path SECURITY DEFINER RPC
+(`public.record_app_operation_event(...)`) requires a short-lived server-issued
+HMAC admission proof bound to every canonical caller-controlled event field.
+The actor is database-derived; direct `insert`/`update`/`delete` are revoked
+from `PUBLIC`, `anon`, `authenticated`, and `service_role`; authenticated
+owner/admin reads use the narrowest existing admin-access predicate
+(`private.is_workspace_admin_access_member(workspace_id)`); duplicate
+`event_id` is idempotent and never updates the existing row. No payload,
+message, contact, prompt, provider, credential, or arbitrary metadata is
+stored. `retention_eligible_at` defaults to 90 days after creation as
+eligibility metadata only; no deletion or cleanup job is implemented.
+
+This is M1 schema/admission foundation only. It releases no runtime sink
+(`logApplicationError`), admin operations page or read module, quote-handoff
+retry, chat events, alerting, retention/deletion execution, backup/restore,
+n8n, or deployment/live configuration authority. A fresh independent exact-head
+Gate 4 is mandatory before any merge.
+
 ## Structured Quote UX Review Boundary
 
 References: `docs/architecture/STRUCTURED-QUOTE-UX.md`,

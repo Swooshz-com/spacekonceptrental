@@ -1,3 +1,35 @@
+## App Operation Event Observability Foundation (#307 M1)
+
+Decision: Add one internal-alpha append-only `public.app_operation_events`
+table with bounded failure/denial/disabled/pending edge outcome metadata,
+private singleton HMAC admission configuration, one fixed-search-path
+SECURITY DEFINER write RPC, and exact RLS/privilege contracts.
+
+Reference: `docs/architecture/OBSERVABILITY-FOUNDATION.md`,
+`supabase/migrations/20260805141500_app_operation_events_foundation.sql`,
+`docs/SUPABASE-SECURITY-DEFINER-PRIVILEGE-INVENTORY.md`.
+
+Every write, including authenticated/admin-originated writes, requires a
+short-lived server-issued HMAC admission proof bound to every canonical
+caller-controlled event field and verified against a secret stored only in
+`private.app_operation_event_admission_config`; unconfigured, malformed,
+stale, future-invalid, mismatched, and forged proofs fail closed. The actor is
+database-derived; direct `insert`/`update`/`delete` are revoked from
+`PUBLIC`, `anon`, `authenticated`, and `service_role`; authenticated
+owner/admin reads use the narrowest existing admin-access predicate
+(`private.is_workspace_admin_access_member(workspace_id)`); duplicate
+`event_id` is idempotent and never updates the existing row. No payload,
+message, contact, prompt, provider, credential, or arbitrary metadata is
+stored, and `retention_eligible_at` defaults to 90 days after creation as
+eligibility metadata only.
+
+The first implementation run is schema/RLS/admission foundation only. It does
+not wire `logApplicationError`, add an admin operations page/read module,
+implement quote-handoff retry, add chat events, alert, delete, back up or
+restore data, change n8n, or touch live configuration. No Supabase Cloud,
+provider, credential, customer-data, content, deployment, or browser-login
+access occurred.
+
 ## Protected Admin HubSpot Sync Dry-Run Contract Foundation
 
 Decision: Admin users can run a protected local HubSpot sync dry-run contract

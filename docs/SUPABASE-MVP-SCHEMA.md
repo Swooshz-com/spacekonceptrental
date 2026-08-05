@@ -371,6 +371,44 @@ Deferred: credentials, OAuth tokens, webhook secrets, refresh tokens, live n8n
 credential bindings, and runtime payloads. Secrets must stay in the approved
 secret manager or provider credential store, not this table.
 
+### `app_operation_events` (#307 observability foundation)
+
+Purpose: durable internal-alpha application operation events for failure,
+denial, disabled and pending edge outcomes across `quote.submission`,
+`quote.handoff`, `admin.auth`, and `rate.limit`. Generic success traffic and
+`quote.submission.created` are intentionally not recorded; `quote_requests`,
+the handoff outbox, and the delivery log already hold that truth.
+
+Key fields: `event_id` (caller-generated UUID idempotency key, primary key),
+`workspace_id`, bounded `category` and `outcome`, one typed safe reference
+(`none`, `request_id`, or `public_reference`) with a bounded `reference_value`,
+bounded public-safe `error_code`, bounded `route_key` (never an arbitrary URL),
+nullable `http_status` constrained to `100..599`, nullable database-derived
+`actor_admin_user_id`, bounded `occurred_at`, `created_at`, and
+`retention_eligible_at` defaulting to 90 days after creation.
+
+Ownership / tenant boundary: every event belongs to one workspace through a
+foreign key to `workspaces.id`. The actor is derived by the database from the
+authenticated identity; the caller cannot nominate an actor.
+
+Access: append-only. Direct `insert`/`update`/`delete` are revoked from
+`PUBLIC`, `anon`, `authenticated`, and `service_role`. Authenticated
+owner/admin reads are restricted by RLS to the narrowest existing admin-access
+predicate (`private.is_workspace_admin_access_member(workspace_id)`);
+anonymous, unauthorised-member, and cross-workspace reads are denied. All
+writes pass through one fixed-search-path SECURITY DEFINER RPC
+(`public.record_app_operation_event(...)`) that requires a short-lived
+server-issued HMAC admission proof bound to every caller-controlled field and
+verified against `private.app_operation_event_admission_config`.
+
+Privacy: no payload JSON, raw quote/enquiry content, contact values,
+prompts/responses, provider bodies, headers, cookies, tokens, credentials,
+internal notes, or arbitrary metadata may be stored.
+
+Deferred: runtime sink integration (`logApplicationError`), the protected
+admin operations read module, quote-handoff retry, chat events, alerting,
+retention/deletion execution, and backup/restore.
+
 ## Migration Sequencing
 
 Future Supabase work should land in this order:

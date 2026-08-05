@@ -682,7 +682,7 @@ function registerSecurityRemediationRlsChecks({
             or coalesce(with_check, '') like '%private.%'
           )
       `),
-      '27',
+      '28',
       'All policy dependencies must follow the moved helper OIDs.',
     );
     assert.equal(

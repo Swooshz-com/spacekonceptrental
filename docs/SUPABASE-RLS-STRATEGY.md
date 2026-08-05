@@ -113,6 +113,38 @@ an active membership in the row workspace:
 Future admin policies should scope reads and writes through membership checks,
 not through client-provided role claims alone.
 
+## App Operation Event Observability Foundation (#307)
+
+`public.app_operation_events` is an internal-alpha append-only observability
+table. It stores only bounded failure/denial/disabled/pending edge outcome
+metadata for `quote.submission`, `quote.handoff`, `admin.auth`, and
+`rate.limit`; it stores no payload, message, contact, prompt, provider,
+credential, or arbitrary metadata.
+
+- The table is RLS-enabled. Direct `insert`, `update`, and `delete` are revoked
+  from `PUBLIC`, `anon`, `authenticated`, and `service_role`. Only
+  `authenticated` retains a reviewed `SELECT` grant, and reads are restricted
+  to the narrowest existing owner/admin predicate
+  (`private.is_workspace_admin_access_member(workspace_id)`). Anonymous,
+  unauthorised-member, and cross-workspace reads are denied.
+- All writes pass through exactly one SECURITY DEFINER RPC
+  (`public.record_app_operation_event(...)`) with an empty fixed `search_path`
+  and complete schema qualification. Every write, including authenticated and
+  admin-originated writes, requires a short-lived server-issued HMAC admission
+  proof bound to every canonical caller-controlled event field, valid for at
+  most 120 seconds, and verified against a secret stored only in the private
+  singleton `private.app_operation_event_admission_config`. Unconfigured,
+  malformed, stale, future-invalid, mismatched, and forged proofs fail closed.
+- The actor is derived by the database from the authenticated identity
+  (`private.current_quote_admin_user_id(...)`); the caller cannot nominate an
+  actor. Repeating the same `event_id` is idempotent and never updates the
+  existing row.
+- `retention_eligible_at` is eligibility metadata only (defaults to 90 days
+  after creation); no deletion or cleanup job is implemented by the foundation.
+- The first implementation run is schema/RLS/admission foundation only. No
+  runtime sink, protected admin read module, quote-handoff retry, chat event,
+  alerting, retention execution, or backup/restore work is included.
+
 ## Product/Admin Write Boundary
 
 Product-management writes are trusted-admin operations only. No anonymous

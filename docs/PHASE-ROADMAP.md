@@ -1,3 +1,28 @@
+## App Operation Event Observability Foundation (#307 M1)
+
+Reference: `docs/architecture/OBSERVABILITY-FOUNDATION.md`.
+
+Internal-alpha M1 schema/RLS/admission foundation for durable application
+operation events. One append-only `public.app_operation_events` table records
+bounded failure/denial/disabled/pending edge outcomes for `quote.submission`,
+`quote.handoff`, `admin.auth`, and `rate.limit`. A private singleton HMAC
+admission configuration stores no seeded secret, and every write through the
+single fixed-search-path SECURITY DEFINER RPC
+(`public.record_app_operation_event(...)`) requires a short-lived server-issued
+HMAC admission proof bound to every canonical caller-controlled event field.
+The actor is database-derived; direct `insert`/`update`/`delete` are revoked
+from `PUBLIC`, `anon`, `authenticated`, and `service_role`; authenticated
+owner/admin reads use the narrowest existing admin-access predicate
+(`private.is_workspace_admin_access_member(workspace_id)`); duplicate
+`event_id` is idempotent and never updates the existing row. No payload,
+message, contact, prompt, provider, credential, or arbitrary metadata is
+stored. This is schema/RLS/admission foundation only: no runtime sink, admin
+operations read module, quote-handoff retry, chat events, alerting,
+retention/deletion execution, backup/restore, n8n, or deployment/live
+configuration authority is released. Later internal-alpha work (runtime sink,
+protected operations read surface, handoff recovery before quote-submission
+enablement) and production-only additions remain separately authorised.
+
 ## Protected Admin HubSpot Sync Dry-Run Contract Foundation
 
 Reference: `docs/architecture/PROTECTED-ADMIN-HUBSPOT-SYNC-DRY-RUN-CONTRACT-FOUNDATION.md`.

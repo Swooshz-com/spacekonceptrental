@@ -2422,7 +2422,7 @@ test('real migration directory passes static validation', () => {
   const result = runValidator(realMigrationsDir);
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.match(result.stdout, /checked 37 migration SQL file\(s\)/);
+  assert.match(result.stdout, /checked 38 migration SQL file\(s\)/);
   assert.match(
     result.stdout,
     /historical_dynamic_sql_exceptions=1, unapproved_procedural_dynamic_sql_occurrences=0/,
@@ -2851,17 +2851,25 @@ test('additive atomic setup recipe read migration defines one single-statement R
   );
 });
 
-test('SECURITY DEFINER inventory documents setup recipe and durable CSRF replay authority', () => {
+test('SECURITY DEFINER inventory documents setup recipe, durable CSRF replay, and app operation event authority', () => {
   const inventory = fs.readFileSync(
     path.join(repoRoot, 'docs', 'SUPABASE-SECURITY-DEFINER-PRIVILEGE-INVENTORY.md'),
     'utf8',
   );
 
-  assert.match(inventory, /Twelve authenticated RPC signatures are allowlisted/);
-  assert.match(inventory, /All twelve have website call sites/);
+  assert.match(inventory, /Thirteen authenticated RPC signatures are allowlisted/);
+  assert.match(inventory, /Twelve have website\s*call sites/);
   assert.match(
     inventory,
     /public\.consume_admin_csrf_proof\(text,uuid,text,bigint,bigint\)/,
+  );
+  assert.match(
+    inventory,
+    /public\.record_app_operation_event\(uuid,uuid,text,text,text,text,text,text,integer,bigint,text,bigint,text\)/,
+  );
+  assert.match(
+    inventory,
+    /private\.app_operation_event_payload_digest\(uuid,uuid,text,text,text,text,text,text,integer,bigint\)/,
   );
 
   for (const functionName of [
@@ -4795,4 +4803,269 @@ test('real RLS policy migration does not add seed data, destructive SQL, or secr
   assert.doesNotMatch(content, /\.env/i);
   assert.doesNotMatch(content, /SUPABASE_SERVICE_ROLE_KEY/i);
   assert.doesNotMatch(content, /NEXT_PUBLIC_/i);
+});
+
+const appOperationEventMigrationFileName =
+  '20260805141500_app_operation_events_foundation.sql';
+const appOperationEventWriteSignature =
+  'public.record_app_operation_event(uuid,uuid,text,text,text,text,text,text,integer,bigint,text,bigint,text)';
+const appOperationEventDigestSignature =
+  'private.app_operation_event_payload_digest(uuid,uuid,text,text,text,text,text,text,integer,bigint)';
+
+function readAppOperationEventMigration() {
+  return readRealMigration(appOperationEventMigrationFileName);
+}
+
+test('app operation event migration defines the exact append-only table contract', () => {
+  const sql = normalizeSql(readAppOperationEventMigration());
+
+  assert.match(sql, /create table public\.app_operation_events \(/);
+  for (const column of [
+    'event_id uuid primary key',
+    'workspace_id uuid not null',
+    'category text not null',
+    'outcome text not null',
+    'reference_type text not null',
+    'reference_value text',
+    'error_code text',
+    'route_key text not null',
+    'http_status integer',
+    'actor_admin_user_id uuid',
+    'occurred_at timestamptz not null',
+    'created_at timestamptz not null default now()',
+    'retention_eligible_at timestamptz not null default now() + interval \'90 days\'',
+  ]) {
+    assert.ok(sql.includes(column), `Missing app operation event column: ${column}`);
+  }
+  assert.match(
+    sql,
+    /constraint app_operation_events_workspace_id_fkey foreign key \(workspace_id\) references public\.workspaces \(id\) on delete restrict/,
+  );
+  assert.match(
+    sql,
+    /constraint app_operation_events_actor_admin_user_id_fkey foreign key \(actor_admin_user_id\) references public\.admin_users \(id\) on delete restrict/,
+  );
+  assert.match(sql, /constraint app_operation_events_category_check check/);
+  assert.match(sql, /'quote\.submission'/);
+  assert.match(sql, /'quote\.handoff'/);
+  assert.match(sql, /'admin\.auth'/);
+  assert.match(sql, /'rate\.limit'/);
+  assert.match(sql, /constraint app_operation_events_outcome_check check/);
+  assert.match(sql, /'failed'/);
+  assert.match(sql, /'denied'/);
+  assert.match(sql, /'disabled'/);
+  assert.match(sql, /'pending'/);
+  assert.match(sql, /constraint app_operation_events_reference_type_check check/);
+  assert.match(sql, /'none'/);
+  assert.match(sql, /'request_id'/);
+  assert.match(sql, /'public_reference'/);
+  assert.match(sql, /constraint app_operation_events_reference_value_check check/);
+  assert.match(sql, /reference_type = 'none' and reference_value is null/);
+  assert.match(sql, /char_length\(reference_value\) between 1 and 128/);
+  assert.match(sql, /reference_value ~ '\^\[a-za-z0-9\._:\-\]\+\$'/);
+  assert.match(sql, /constraint app_operation_events_error_code_check check/);
+  assert.match(sql, /char_length\(error_code\) between 1 and 80/);
+  assert.match(sql, /error_code ~ '\^\[a-z0-9_:\-\]\+\$'/);
+  assert.match(sql, /constraint app_operation_events_route_key_check check/);
+  assert.match(sql, /char_length\(route_key\) between 1 and 160/);
+  assert.match(sql, /route_key ~ '\^\[a-za-z0-9_\.\/\-\]\+\$'/);
+  assert.match(sql, /route_key !~ 'https\?:\/\/'/);
+  assert.match(sql, /constraint app_operation_events_http_status_check check/);
+  assert.match(sql, /http_status between 100 and 599/);
+  assert.match(sql, /constraint app_operation_events_retention_eligible_check check/);
+  assert.match(sql, /retention_eligible_at >= created_at/);
+  assert.match(
+    sql,
+    /create index app_operation_events_workspace_occurred_idx on public\.app_operation_events \(workspace_id, occurred_at\);/,
+  );
+});
+
+test('app operation event migration stores no payload, message, contact, or arbitrary metadata', () => {
+  const migration = readAppOperationEventMigration();
+  const sql = normalizeSql(migration);
+  const tableDefinition = sql.match(
+    /create table public\.app_operation_events \(([\s\S]*?)\); alter table public\.app_operation_events enable row level security/,
+  )?.[1] ?? '';
+
+  assert.ok(tableDefinition, 'app_operation_events table definition must be present');
+  for (const forbiddenColumn of [
+    'payload',
+    'payload_json',
+    'message',
+    'message_details',
+    'raw_payload',
+    'provider_payload',
+    'debug_payload',
+    'metadata',
+    'metadata jsonb',
+    'internal_notes',
+    'notes text',
+    'request_body',
+    'headers json',
+    'headers jsonb',
+    'cookies json',
+    'cookies jsonb',
+    'raw_headers',
+    'session_id',
+    'access_token',
+    'refresh_token',
+    'hmac_secret',
+    'signature',
+    'authorization',
+  ]) {
+    assert.doesNotMatch(
+      tableDefinition,
+      new RegExp(`\\b${forbiddenColumn}\\b`),
+      `${forbiddenColumn} must not be stored as an app operation event column`,
+    );
+  }
+  assert.doesNotMatch(
+    tableDefinition,
+    /\bjsonb\b|\bjson\b|\bbytea\b/,
+    'app_operation_events must not store arbitrary JSON, JSONB, or bytea columns',
+  );
+});
+
+test('app operation event migration is append-only with owner/admin reads and direct DML denial', () => {
+  const migration = readAppOperationEventMigration();
+  const sql = normalizeSql(migration);
+
+  assert.match(sql, /alter table public\.app_operation_events enable row level security;/);
+  assert.match(
+    sql,
+    /revoke all privileges on table public\.app_operation_events from public, anon, authenticated, service_role;/,
+  );
+  assert.match(
+    sql,
+    /grant select on table public\.app_operation_events to authenticated;/,
+  );
+  assert.doesNotMatch(
+    sql,
+    /grant\s+(insert|update|delete|all)[\s\S]*on (?:table )?public\.app_operation_events to (?:public|anon|authenticated|service_role);/,
+  );
+  assert.match(
+    sql,
+    /create policy app_operation_events_admin_read on public\.app_operation_events for select to authenticated using \(private\.is_workspace_admin_access_member\(workspace_id\)\);/,
+  );
+  assert.doesNotMatch(
+    sql,
+    /create policy [^;]+ on public\.app_operation_events for (insert|update|delete|all)/,
+  );
+  assert.doesNotMatch(
+    migration,
+    /\bdelete\s+from\s+public\.app_operation_events\b/i,
+  );
+  assert.doesNotMatch(
+    migration,
+    /\bupdate\s+public\.app_operation_events\b/i,
+  );
+});
+
+test('app operation event migration defines the private admission config with no seeded secret', () => {
+  const migration = readAppOperationEventMigration();
+  const sql = normalizeSql(migration);
+
+  assert.match(sql, /create table private\.app_operation_event_admission_config \(/);
+  assert.match(sql, /id boolean primary key default true/);
+  assert.match(sql, /hmac_secret text not null/);
+  assert.match(sql, /constraint app_operation_event_admission_config_singleton_check check \(id\)/);
+  assert.match(sql, /constraint app_operation_event_admission_config_secret_check check \(octet_length\(hmac_secret\) >= 32\)/);
+  assert.match(sql, /alter table private\.app_operation_event_admission_config enable row level security;/);
+  assert.match(
+    sql,
+    /revoke all privileges on table private\.app_operation_event_admission_config from public, anon, authenticated, service_role;/,
+  );
+  assert.doesNotMatch(
+    sql,
+    /grant\s+(select|insert|update|delete|all)\s*(?:\([^)]*\))?\s+on\s+(?:table\s+)?private\.app_operation_event_admission_config/,
+  );
+  assert.doesNotMatch(migration, /insert into private\.app_operation_event_admission_config/i);
+  assert.doesNotMatch(migration, /values\s*\(\s*'[0-9a-f]{64}'/i);
+});
+
+test('app operation event digest helper is private, exact-signature, and deny-by-default', () => {
+  const sql = normalizeSql(readAppOperationEventMigration());
+
+  assert.match(
+    sql,
+    /create or replace function private\.app_operation_event_payload_digest\( p_event_id uuid, p_workspace_id uuid, p_category text, p_outcome text, p_reference_type text, p_reference_value text, p_error_code text, p_route_key text, p_http_status integer, p_occurred_at_ms bigint \)/,
+  );
+  assert.match(sql, /returns text language sql immutable set search_path = '' as/);
+  assert.match(sql, /extensions\.digest\(/);
+  assert.match(sql, /'event_id', p_event_id/);
+  assert.match(sql, /'occurred_at_ms', p_occurred_at_ms/);
+  assert.match(
+    sql,
+    /revoke all privileges on function private\.app_operation_event_payload_digest\( uuid, uuid, text, text, text, text, text, text, integer, bigint \) from public, anon, authenticated, service_role;/,
+  );
+  assert.doesNotMatch(
+    sql,
+    /grant execute on function private\.app_operation_event_payload_digest\([^;]+\) to (?:anon|authenticated|service_role)/,
+  );
+});
+
+test('app operation event write RPC is exact, bounded, HMAC-admitted, and least privilege', () => {
+  const migration = readAppOperationEventMigration();
+  const sql = normalizeSql(migration);
+
+  assert.match(
+    sql,
+    /create or replace function public\.record_app_operation_event\( p_event_id uuid, p_workspace_id uuid, p_category text, p_outcome text, p_reference_type text, p_reference_value text, p_error_code text, p_route_key text, p_http_status integer, p_occurred_at_ms bigint, p_admission_payload_digest text, p_admission_expires_at bigint, p_admission_signature text \)/,
+  );
+  assert.match(sql, /returns boolean language plpgsql security definer set search_path = '' as/);
+  assert.match(sql, /p_category not in \('quote\.submission', 'quote\.handoff', 'admin\.auth', 'rate\.limit'\)/);
+  assert.match(sql, /p_outcome not in \('failed', 'denied', 'disabled', 'pending'\)/);
+  assert.match(sql, /p_reference_type not in \('none', 'request_id', 'public_reference'\)/);
+  assert.match(sql, /invalid app operation event/);
+  assert.match(sql, /p_occurred_at_ms > 9007199254740991/);
+  assert.match(sql, /app operation event workspace is not available/);
+  assert.match(sql, /interval '5 minutes'/);
+  assert.match(sql, /interval '30 days'/);
+  assert.match(sql, /invalid app operation event occurrence/);
+  assert.match(sql, /p_admission_payload_digest !~ '\^\[a-f0-9\]\{64\}\$'/);
+  assert.match(sql, /p_admission_expires_at < v_now_epoch/);
+  assert.match(sql, /p_admission_expires_at > v_now_epoch \+ 120/);
+  assert.match(sql, /app operation event admission proof is invalid/);
+  assert.match(sql, /from private\.app_operation_event_admission_config cfg where cfg\.id = true/);
+  assert.match(sql, /app operation event admission is not configured/);
+  assert.match(sql, /v_actual_digest := private\.app_operation_event_payload_digest\(/);
+  assert.match(sql, /'skr\.app_operation_event\.v1'/);
+  assert.match(sql, /extensions\.hmac\(/);
+  assert.match(sql, /v_actor_admin_user_id := private\.current_quote_admin_user_id\(p_workspace_id\);/);
+  assert.match(
+    sql,
+    /insert into public\.app_operation_events \( event_id, workspace_id, category, outcome, reference_type, reference_value, error_code, route_key, http_status, actor_admin_user_id, occurred_at \)/,
+  );
+  assert.match(sql, /on conflict \(event_id\) do nothing/);
+  assert.match(sql, /return found;/);
+  assert.match(
+    sql,
+    /revoke all privileges on function public\.record_app_operation_event\( uuid, uuid, text, text, text, text, text, text, integer, bigint, text, bigint, text \) from public, anon, authenticated, service_role;/,
+  );
+  assert.match(
+    sql,
+    /grant execute on function public\.record_app_operation_event\( uuid, uuid, text, text, text, text, text, text, integer, bigint, text, bigint, text \) to anon, authenticated;/,
+  );
+  assert.doesNotMatch(
+    sql,
+    /grant execute on function public\.record_app_operation_event\([^;]+\) to (?:public|service_role)/,
+  );
+  assert.doesNotMatch(
+    sql,
+    /grant\s+[^;]*\bservice_role\b/,
+  );
+  assert.doesNotMatch(migration, /execute\s+format|execute\s+command|return\s+query\s+execute/i);
+  assert.doesNotMatch(migration, /NEXT_PUBLIC|chat-config/i);
+});
+
+test('app operation event signatures enter the reviewed SECURITY DEFINER contract', () => {
+  const contract = fs.readFileSync(
+    path.join(repoRoot, 'scripts', 'security-definer-privilege-contract.cjs'),
+    'utf8',
+  );
+  const escapeRegex = (value) =>
+    value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+  assert.match(contract, new RegExp(escapeRegex(appOperationEventWriteSignature)));
+  assert.match(contract, new RegExp(escapeRegex(appOperationEventDigestSignature)));
 });
