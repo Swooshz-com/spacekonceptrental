@@ -5,7 +5,8 @@ import {
   handleQuotePost as handleDisabledQuotePost,
   handleQuotePostEnabledForTests as handleQuotePost,
   POST,
-  resetQuoteRouteStateForTests
+  resetQuoteRouteStateForTests,
+  type AppOperationEventRouteEmitters
 } from "./route";
 
 const envKeys = [
@@ -852,3 +853,540 @@ describe("POST /api/quote", () => {
 
     errorSpy.mockRestore();
   });
+describe("POST /api/quote app operation event emissions", () => {
+  afterEach(() => {
+    resetQuoteRouteStateForTests();
+    const originalClientIpHeader = originalEnv.get(
+      "QUOTE_TRUSTED_CLIENT_IP_HEADER"
+    );
+
+    if (originalClientIpHeader === undefined) {
+      delete process.env.QUOTE_TRUSTED_CLIENT_IP_HEADER;
+    } else {
+      process.env.QUOTE_TRUSTED_CLIENT_IP_HEADER = originalClientIpHeader;
+    }
+  });
+
+  function eventEmitters(
+    overrides: Partial<AppOperationEventRouteEmitters> = {}
+  ) {
+    const emitters: AppOperationEventRouteEmitters = {
+      quoteSubmissionDisabled: vi.fn(async () => ({ kind: "emitted" })),
+      quoteSubmissionValidationDenied: vi.fn(async () => ({ kind: "emitted" })),
+      quoteSubmissionPersistenceFailed: vi.fn(async () => ({ kind: "emitted" })),
+      quoteHandoffPending: vi.fn(async () => ({ kind: "emitted" })),
+      quoteHandoffExceptionFailed: vi.fn(async () => ({ kind: "emitted" })),
+      quoteHandoffFinalizationFailed: vi.fn(async () => ({ kind: "emitted" })),
+      quoteHandoffDisabled: vi.fn(async () => ({ kind: "emitted" })),
+      quoteRateLimitDenied: vi.fn(async () => ({ kind: "emitted" }))
+    };
+
+    return { ...emitters, ...overrides };
+  }
+
+  function claimedRepository() {
+    return vi.fn(async () => ({
+      ok: true as const,
+      quoteRequestId: "70000000-0000-4000-8000-000000000001",
+      publicReference: "QR-20260527-ABC12345",
+      itemPersistenceStatus: "complete" as const,
+      wasCreated: true,
+      handoffClaimStatus: "claimed" as const,
+      handoffClaimToken: "71000000-0000-4000-8000-000000000001"
+    }));
+  }
+
+  it("emits the disabled submission event on the live disabled path", async () => {
+    const emitters = eventEmitters();
+    const response = await handleDisabledQuotePost(
+      postRaw("{malformed"),
+      vi.fn(),
+      vi.fn(),
+      vi.fn(),
+      emitters
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(503);
+    expect(body.error.code).toBe("QUOTE_SUBMISSION_DISABLED");
+    expect(emitters.quoteSubmissionDisabled).toHaveBeenCalledTimes(1);
+    for (const emitter of Object.values(emitters)) {
+      if (emitter !== emitters.quoteSubmissionDisabled) {
+        expect(emitter).not.toHaveBeenCalled();
+      }
+    }
+  });
+
+  it("emits the validation denial event with the server request ID", async () => {
+    const emitters = eventEmitters();
+    const response = await handleQuotePost(
+      postJson({ ...validPayload, requestId: "" }),
+      vi.fn(),
+      vi.fn(),
+      vi.fn(),
+      emitters
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error.code).toBe("VALIDATION_FAILED");
+    expect(emitters.quoteSubmissionValidationDenied).toHaveBeenCalledTimes(1);
+    expect(emitters.quoteSubmissionValidationDenied).toHaveBeenCalledWith(
+      body.requestId
+    );
+    expect(body.requestId).toEqual(expect.any(String));
+  });
+
+  it("emits the persistence failure event without changing the 503 response", async () => {
+    const emitters = eventEmitters();
+    const failingRepository: Parameters<typeof handleQuotePost>[1] =
+      vi.fn(async () => ({
+        ok: false as const,
+        code: "QUOTE_PERSISTENCE_FAILED" as const
+      }));
+    const response = await handleQuotePost(
+      postJson(validPayload),
+      failingRepository,
+      vi.fn(),
+      vi.fn(),
+      emitters
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(503);
+    expect(body.error.code).toBe("QUOTE_PERSISTENCE_UNAVAILABLE");
+    expect(emitters.quoteSubmissionPersistenceFailed).toHaveBeenCalledTimes(1);
+    expect(emitters.quoteSubmissionPersistenceFailed).toHaveBeenCalledWith(
+      body.requestId
+    );
+  });
+
+  it("emits the handoff pending event on an in-progress claim", async () => {
+    const emitters = eventEmitters();
+    const repository = vi.fn(async () => ({
+      ok: true as const,
+      quoteRequestId: "70000000-0000-4000-8000-000000000001",
+      publicReference: "QR-20260527-ABC12345",
+      itemPersistenceStatus: "complete" as const,
+      wasCreated: true,
+      handoffClaimStatus: "in_progress" as const,
+      handoffClaimToken: null
+    }));
+    const response = await handleQuotePost(
+      postJson(validPayload),
+      repository,
+      vi.fn(),
+      vi.fn(),
+      emitters
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(503);
+    expect(body.error.code).toBe("QUOTE_HANDOFF_PENDING");
+    expect(emitters.quoteHandoffPending).toHaveBeenCalledTimes(1);
+    expect(emitters.quoteHandoffPending).toHaveBeenCalledWith(body.requestId);
+  });
+
+  it("emits the handoff exception event when the provider throws", async () => {
+    const emitters = eventEmitters();
+    const emailHandoff = vi.fn(async () => {
+      throw new Error("provider exploded");
+    });
+    const response = await handleQuotePost(
+      postJson(validPayload),
+      claimedRepository(),
+      emailHandoff,
+      successfulHandoffFinalizer(),
+      emitters
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(503);
+    expect(body.error.code).toBe("QUOTE_HANDOFF_PENDING");
+    expect(emitters.quoteHandoffExceptionFailed).toHaveBeenCalledTimes(1);
+    expect(emitters.quoteHandoffExceptionFailed).toHaveBeenCalledWith(
+      body.requestId
+    );
+  });
+
+  it("emits the handoff disabled event when the provider is not configured", async () => {
+    const emitters = eventEmitters();
+    const emailHandoff = vi.fn(async () => ({
+      ok: false as const,
+      status: "not_configured" as const,
+      provider: "n8n" as const,
+      code: "n8n_handoff_not_configured",
+      idempotencyKey: "quote-enquiry:70000000-0000-4000-8000-000000000001"
+    }));
+    const response = await handleQuotePost(
+      postJson(validPayload),
+      claimedRepository(),
+      emailHandoff,
+      successfulHandoffFinalizer(),
+      emitters
+    );
+
+    expect(response.status).toBe(503);
+    expect(emitters.quoteHandoffDisabled).toHaveBeenCalledTimes(1);
+    expect(emitters.quoteHandoffFinalizationFailed).not.toHaveBeenCalled();
+  });
+
+  it("emits the handoff finalisation failure event for other provider failures", async () => {
+    const emitters = eventEmitters();
+    const emailHandoff = vi.fn(async () => ({
+      ok: false as const,
+      status: "failed" as const,
+      provider: "n8n" as const,
+      code: "n8n_rejected",
+      idempotencyKey: "quote-enquiry:70000000-0000-4000-8000-000000000001"
+    }));
+    const response = await handleQuotePost(
+      postJson(validPayload),
+      claimedRepository(),
+      emailHandoff,
+      successfulHandoffFinalizer(),
+      emitters
+    );
+
+    expect(response.status).toBe(503);
+    expect(emitters.quoteHandoffFinalizationFailed).toHaveBeenCalledTimes(1);
+    expect(emitters.quoteHandoffDisabled).not.toHaveBeenCalled();
+  });
+
+  it("emits the rate-limit denial event with the server request ID", async () => {
+    resetQuoteRouteStateForTests();
+    process.env.QUOTE_TRUSTED_CLIENT_IP_HEADER = "x-real-ip";
+    const emitters = eventEmitters();
+    const rateLimitedRequest = () =>
+      new Request("http://localhost/api/quote", {
+        method: "POST",
+        body: JSON.stringify(validPayload),
+        headers: {
+          "content-type": "application/json",
+          "x-real-ip": "198.51.100.9"
+        }
+      });
+
+    for (let index = 0; index < 5; index += 1) {
+      await handleQuotePost(
+        rateLimitedRequest(),
+        claimedRepository(),
+        successfulEmailHandoff(),
+        successfulHandoffFinalizer()
+      );
+    }
+
+    const response = await handleQuotePost(
+      rateLimitedRequest(),
+      claimedRepository(),
+      vi.fn(),
+      vi.fn(),
+      emitters
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(429);
+    expect(body.error.code).toBe("RATE_LIMITED");
+    expect(emitters.quoteRateLimitDenied).toHaveBeenCalledTimes(1);
+    expect(emitters.quoteRateLimitDenied).toHaveBeenCalledWith(body.requestId);
+  });
+
+  it("does not emit any event on a successful submission", async () => {
+    const emitters = eventEmitters();
+    const response = await handleQuotePost(
+      postJson(validPayload),
+      claimedRepository(),
+      successfulEmailHandoff(),
+      successfulHandoffFinalizer(),
+      emitters
+    );
+
+    expect(response.status).toBe(201);
+    for (const emitter of Object.values(emitters)) {
+      expect(emitter).not.toHaveBeenCalled();
+    }
+  });
+
+  it("keeps the product response unchanged when an emitter fails", async () => {
+    const emitters = eventEmitters({
+      quoteSubmissionValidationDenied: vi.fn(async () => {
+        throw new Error("sink exploded");
+      })
+    });
+    const response = await handleQuotePost(
+      postJson({ ...validPayload, requestId: "" }),
+      vi.fn(),
+      vi.fn(),
+      vi.fn(),
+      emitters
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error.code).toBe("VALIDATION_FAILED");
+    expect(body.requestId).toEqual(expect.any(String));
+  });
+});
+
+describe("POST /api/quote synchronous-throw emission preservation", () => {
+  afterEach(() => {
+    resetQuoteRouteStateForTests();
+    const originalClientIpHeader = originalEnv.get(
+      "QUOTE_TRUSTED_CLIENT_IP_HEADER"
+    );
+
+    if (originalClientIpHeader === undefined) {
+      delete process.env.QUOTE_TRUSTED_CLIENT_IP_HEADER;
+    } else {
+      process.env.QUOTE_TRUSTED_CLIENT_IP_HEADER = originalClientIpHeader;
+    }
+  });
+
+  function syncThrowEmitters(
+    overrides: Partial<AppOperationEventRouteEmitters> = {}
+  ) {
+    const emitters: AppOperationEventRouteEmitters = {
+      quoteSubmissionDisabled: vi.fn(() => {
+        throw new Error("sync emitter burst: quote_submission_disabled");
+      }),
+      quoteSubmissionValidationDenied: vi.fn(() => {
+        throw new Error("sync emitter burst: validation_failed");
+      }),
+      quoteSubmissionPersistenceFailed: vi.fn(() => {
+        throw new Error("sync emitter burst: quote_persistence_unavailable");
+      }),
+      quoteHandoffPending: vi.fn(() => {
+        throw new Error("sync emitter burst: handoff_pending");
+      }),
+      quoteHandoffExceptionFailed: vi.fn(() => {
+        throw new Error("sync emitter burst: handoff_exception");
+      }),
+      quoteHandoffFinalizationFailed: vi.fn(() => {
+        throw new Error("sync emitter burst: handoff_finalization_failed");
+      }),
+      quoteHandoffDisabled: vi.fn(() => {
+        throw new Error("sync emitter burst: handoff_not_configured");
+      }),
+      quoteRateLimitDenied: vi.fn(() => {
+        throw new Error("sync emitter burst: rate_limited");
+      })
+    };
+
+    return { ...emitters, ...overrides };
+  }
+
+  function claimedRepository() {
+    return vi.fn(async () => ({
+      ok: true as const,
+      quoteRequestId: "70000000-0000-4000-8000-000000000001",
+      publicReference: "QR-20260527-ABC12345",
+      itemPersistenceStatus: "complete" as const,
+      wasCreated: true,
+      handoffClaimStatus: "claimed" as const,
+      handoffClaimToken: "71000000-0000-4000-8000-000000000001"
+    }));
+  }
+
+  it("preserves the disabled 503 when the submission-disabled emitter throws synchronously", async () => {
+    const emitters = syncThrowEmitters();
+    const response = await handleDisabledQuotePost(
+      postRaw("{malformed"),
+      vi.fn(),
+      vi.fn(),
+      vi.fn(),
+      emitters
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(503);
+    expect(body.error.code).toBe("QUOTE_SUBMISSION_DISABLED");
+    expect(body.reference).toEqual(expect.any(String));
+    expect(body.reference.length).toBeGreaterThan(0);
+    expect(emitters.quoteSubmissionDisabled).toHaveBeenCalledTimes(1);
+    for (const emitter of Object.values(emitters)) {
+      if (emitter !== emitters.quoteSubmissionDisabled) {
+        expect(emitter).not.toHaveBeenCalled();
+      }
+    }
+  });
+
+  it("preserves the validation 400 when the validation-denied emitter throws synchronously", async () => {
+    const emitters = syncThrowEmitters();
+    const response = await handleQuotePost(
+      postJson({ ...validPayload, requestId: "" }),
+      vi.fn(),
+      vi.fn(),
+      vi.fn(),
+      emitters
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error.code).toBe("VALIDATION_FAILED");
+    expect(body.requestId).toEqual(expect.any(String));
+    expect(emitters.quoteSubmissionValidationDenied).toHaveBeenCalledTimes(1);
+    expect(emitters.quoteSubmissionValidationDenied).toHaveBeenCalledWith(
+      body.requestId
+    );
+  });
+
+  it("preserves the persistence 503 when the persistence-failed emitter throws synchronously", async () => {
+    const emitters = syncThrowEmitters();
+    const failingRepository: Parameters<typeof handleQuotePost>[1] =
+      vi.fn(async () => ({
+        ok: false as const,
+        code: "QUOTE_PERSISTENCE_FAILED" as const
+      }));
+    const response = await handleQuotePost(
+      postJson(validPayload),
+      failingRepository,
+      vi.fn(),
+      vi.fn(),
+      emitters
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(503);
+    expect(body.error.code).toBe("QUOTE_PERSISTENCE_UNAVAILABLE");
+    expect(emitters.quoteSubmissionPersistenceFailed).toHaveBeenCalledTimes(1);
+    expect(emitters.quoteSubmissionPersistenceFailed).toHaveBeenCalledWith(
+      body.requestId
+    );
+  });
+
+  it("preserves the pending 503 when the handoff-pending emitter throws synchronously", async () => {
+    const emitters = syncThrowEmitters();
+    const repository = vi.fn(async () => ({
+      ok: true as const,
+      quoteRequestId: "70000000-0000-4000-8000-000000000001",
+      publicReference: "QR-20260527-ABC12345",
+      itemPersistenceStatus: "complete" as const,
+      wasCreated: true,
+      handoffClaimStatus: "in_progress" as const,
+      handoffClaimToken: null
+    }));
+    const response = await handleQuotePost(
+      postJson(validPayload),
+      repository,
+      vi.fn(),
+      vi.fn(),
+      emitters
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(503);
+    expect(body.error.code).toBe("QUOTE_HANDOFF_PENDING");
+    expect(response.headers.get("retry-after")).toBe("300");
+    expect(emitters.quoteHandoffPending).toHaveBeenCalledTimes(1);
+    expect(emitters.quoteHandoffPending).toHaveBeenCalledWith(body.requestId);
+  });
+
+  it("preserves the pending 503 when the handoff-exception emitter throws synchronously", async () => {
+    const emitters = syncThrowEmitters();
+    const emailHandoff = vi.fn(async () => {
+      throw new Error("provider exploded");
+    });
+    const response = await handleQuotePost(
+      postJson(validPayload),
+      claimedRepository(),
+      emailHandoff,
+      successfulHandoffFinalizer(),
+      emitters
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(503);
+    expect(body.error.code).toBe("QUOTE_HANDOFF_PENDING");
+    expect(emitters.quoteHandoffExceptionFailed).toHaveBeenCalledTimes(1);
+    expect(emitters.quoteHandoffExceptionFailed).toHaveBeenCalledWith(
+      body.requestId
+    );
+  });
+
+  it("preserves the pending 503 when the handoff-finalisation emitter throws synchronously", async () => {
+    const emitters = syncThrowEmitters();
+    const emailHandoff = vi.fn(async () => ({
+      ok: false as const,
+      status: "failed" as const,
+      provider: "n8n" as const,
+      code: "n8n_rejected",
+      idempotencyKey: "quote-enquiry:70000000-0000-4000-8000-000000000001"
+    }));
+    const response = await handleQuotePost(
+      postJson(validPayload),
+      claimedRepository(),
+      emailHandoff,
+      successfulHandoffFinalizer(),
+      emitters
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(503);
+    expect(body.error.code).toBe("QUOTE_HANDOFF_PENDING");
+    expect(emitters.quoteHandoffFinalizationFailed).toHaveBeenCalledTimes(1);
+    expect(emitters.quoteHandoffDisabled).not.toHaveBeenCalled();
+  });
+
+  it("preserves the pending 503 when the handoff-disabled emitter throws synchronously", async () => {
+    const emitters = syncThrowEmitters();
+    const emailHandoff = vi.fn(async () => ({
+      ok: false as const,
+      status: "not_configured" as const,
+      provider: "n8n" as const,
+      code: "n8n_handoff_not_configured",
+      idempotencyKey: "quote-enquiry:70000000-0000-4000-8000-000000000001"
+    }));
+    const response = await handleQuotePost(
+      postJson(validPayload),
+      claimedRepository(),
+      emailHandoff,
+      successfulHandoffFinalizer(),
+      emitters
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(503);
+    expect(body.error.code).toBe("QUOTE_HANDOFF_PENDING");
+    expect(emitters.quoteHandoffDisabled).toHaveBeenCalledTimes(1);
+    expect(emitters.quoteHandoffFinalizationFailed).not.toHaveBeenCalled();
+  });
+
+  it("preserves the rate-limit 429 when the rate-limit emitter throws synchronously", async () => {
+    resetQuoteRouteStateForTests();
+    process.env.QUOTE_TRUSTED_CLIENT_IP_HEADER = "x-real-ip";
+    const rateLimitedRequest = () =>
+      new Request("http://localhost/api/quote", {
+        method: "POST",
+        body: JSON.stringify(validPayload),
+        headers: {
+          "content-type": "application/json",
+          "x-real-ip": "198.51.100.9"
+        }
+      });
+
+    for (let index = 0; index < 5; index += 1) {
+      await handleQuotePost(
+        rateLimitedRequest(),
+        claimedRepository(),
+        successfulEmailHandoff(),
+        successfulHandoffFinalizer()
+      );
+    }
+
+    const emitters = syncThrowEmitters();
+    const response = await handleQuotePost(
+      rateLimitedRequest(),
+      claimedRepository(),
+      vi.fn(),
+      vi.fn(),
+      emitters
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(429);
+    expect(body.error.code).toBe("RATE_LIMITED");
+    expect(response.headers.get("retry-after")).toMatch(/^[1-9]\d*$/);
+    expect(emitters.quoteRateLimitDenied).toHaveBeenCalledTimes(1);
+    expect(emitters.quoteRateLimitDenied).toHaveBeenCalledWith(body.requestId);
+  });
+});

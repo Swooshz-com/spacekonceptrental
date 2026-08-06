@@ -41,9 +41,10 @@ Anonymous execution is limited to these exact signatures:
 - `public.submit_public_quote_request(uuid,uuid,text,text,text,text,text,date,text,text,text,text,jsonb,uuid,text,bigint,text)`
 
 Thirteen authenticated RPC signatures are allowlisted. Twelve have website
-call sites; the app-operation-event write RPC is M1 admission-foundation only
-and has no runtime call site yet. No public-schema `SECURITY DEFINER` function
-requires `service_role` execution: current server runtime
+call sites; the app-operation-event write RPC is called by the server-only M2A
+runtime sink through the anon server client with a mandatory short-lived HMAC
+admission proof and by no browser path. No public-schema `SECURITY DEFINER`
+function requires `service_role` execution: current server runtime
 uses either the server-only anon client for public flows or the session-bound
 authenticated client for admin flows. `PUBLIC` receives no execution grant.
 
@@ -215,8 +216,12 @@ for any of these functions.
   `anon` and `authenticated` after an explicit all-role revoke. The admission
   proof remains mandatory for every role, so browser possession of an
   `anon`/`authenticated` token cannot forge an event.
-- Server call site: none yet. This is M1 schema/admission foundation only; the
-  runtime sink (`logApplicationError`) is separate later work.
+- Server call site: the server-only M2A runtime sink in
+  `website/lib/application-events/app-operation-event-sink.ts` through the anon
+  server client with a mandatory short-lived HMAC admission proof. The browser
+  never calls the RPC directly; the proof remains mandatory for every role.
+  Emission is disabled by default (`APP_OPERATION_EVENTS_ENABLED` absent) and
+  never alters the originating product response.
 - Privacy: PostgreSQL receives only the bounded caller-controlled event fields,
   one typed safe reference, safe route/status/code values, the database-derived
   actor, timestamps, and a lowercase hexadecimal HMAC proof. It receives no

@@ -1,3 +1,40 @@
+## App Operation Event Runtime Sink (#324 M2A)
+
+Decision: Add the disabled-by-default, server-only typed runtime sink and HMAC
+signing path that writes the M1 bounded application-operation events through
+the existing `public.record_app_operation_event(...)` RPC, under Design Lock
+`DL-324-OBS-002`.
+
+Reference: `docs/architecture/OBSERVABILITY-RUNTIME-SINK.md`,
+`website/lib/application-events/`, `website/lib/server-runtime-config.ts`,
+`scripts/validate-app-operation-event-runtime-readiness.cjs`.
+
+Exactly `APP_OPERATION_EVENTS_ENABLED` (only the exact value `true` enables)
+and `APP_OPERATION_EVENT_ADMISSION_SECRET` (untrimmed UTF-8 byte length at
+least 32) were added. The payload digest reproduces the PostgreSQL-17
+`jsonb_build_object(...)::text` bytes in the helper's internal jsonb storage
+order, locked by fixed fixture vectors in the disposable RLS harness. Proofs
+have a 60-second lifetime inside the existing 120-second cap; the HMAC message
+is the newline-joined five-line sequence `skr.app_operation_event.v1`, the
+lowercase workspace UUID, the lowercase event UUID, the lowercase hex payload
+digest, and the epoch-seconds expiry.
+The sink enforces a 750 ms total budget, at most two RPC attempts with one
+100 ms backoff, a 60-second open circuit for transient failures, and closed
+`disabled | ready | unconfigured | temporarily_unavailable | misconfigured`
+states; duplicate `event_id` returns are idempotent success. Eleven locked call
+sites cover quote submission, quote handoff, admin gate denials and admin
+login/callback denials with only the bounded M1 fields, server-owned
+workspaces, and no client-supplied reference for admin events. Emission
+happens only after the product response decision is fixed and never changes
+that response; sink failures never recurse, never call `logApplicationError`
+(which remains byte-identical), and log only a fixed public-safe state/error
+code. No migration, RPC signature, grant, policy or index changed; no M2B read
+surface, HTTP sink-status route, generic success event, `quote.submission.created`,
+chat event, retry queue, outbox or worker exists.
+
+The M2A run releases no live secret, deployment, activation, retry, read
+surface or production configuration authority.
+
 ## App Operation Event Observability Foundation (#307 M1)
 
 Decision: Add one internal-alpha append-only `public.app_operation_events`

@@ -11,6 +11,17 @@ vi.mock(
   })
 );
 
+const { mockEmitAdminLoginCallbackDenied } = vi.hoisted(() => ({
+  mockEmitAdminLoginCallbackDenied: vi.fn(async () => ({ kind: "skipped" }))
+}));
+
+vi.mock(
+  "../../../../../lib/application-events/app-operation-event-call-sites",
+  () => ({
+    emitAdminLoginCallbackDenied: mockEmitAdminLoginCallbackDenied
+  })
+);
+
 describe("GET /api/admin/login/callback", () => {
   afterEach(() => {
     vi.clearAllMocks();
@@ -91,5 +102,151 @@ describe("GET /api/admin/login/callback", () => {
     expect(response.status).toBe(503);
     expect(response.headers.get("location")).toBeNull();
     expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(mockEmitAdminLoginCallbackDenied).not.toHaveBeenCalled();
+  });
+
+  it("emits the callback denied event when the code exchange fails", async () => {
+    setTrustedAdminOrigin();
+    vi.mocked(exchangeSupabaseAdminAuthCodeForSession).mockResolvedValueOnce({
+      ok: false,
+      reason: "auth_session_invalid"
+    });
+
+    const response = await GET(createCallbackRequest("bad-code"));
+
+    expect(mockEmitAdminLoginCallbackDenied).toHaveBeenCalledTimes(1);
+    expect(mockEmitAdminLoginCallbackDenied).toHaveBeenCalledWith(
+      "callback_unauthenticated",
+      {}
+    );
+    expect(response.status).toBe(303);
+  });
+
+  it("emits the callback unavailable event when server auth env is missing", async () => {
+    setTrustedAdminOrigin();
+    vi.mocked(exchangeSupabaseAdminAuthCodeForSession).mockResolvedValueOnce({
+      ok: false,
+      reason: "supabase_server_env_missing"
+    });
+
+    await GET(createCallbackRequest("bad-code"));
+
+    expect(mockEmitAdminLoginCallbackDenied).toHaveBeenCalledTimes(1);
+    expect(mockEmitAdminLoginCallbackDenied).toHaveBeenCalledWith(
+      "callback_unavailable",
+      {}
+    );
+  });
+
+  it("emits the callback denied event on an unexpected host before session creation", async () => {
+    setTrustedAdminOrigin();
+
+    await GET(createCallbackRequest("auth-code", "evil.example"));
+
+    expect(exchangeSupabaseAdminAuthCodeForSession).not.toHaveBeenCalled();
+    expect(mockEmitAdminLoginCallbackDenied).toHaveBeenCalledTimes(1);
+    expect(mockEmitAdminLoginCallbackDenied).toHaveBeenCalledWith(
+      "callback_unauthenticated",
+      {}
+    );
+  });
+
+  it("does not emit a callback denied event on a successful exchange", async () => {
+    setTrustedAdminOrigin();
+    vi.mocked(exchangeSupabaseAdminAuthCodeForSession).mockResolvedValueOnce({
+      ok: true
+    });
+
+    const response = await GET(createCallbackRequest("auth-code"));
+
+    expect(mockEmitAdminLoginCallbackDenied).not.toHaveBeenCalled();
+    expect(response.status).toBe(303);
+  });
+
+  it("preserves the callback 303 redirect when the callback denied emitter throws", async () => {
+    setTrustedAdminOrigin();
+    vi.mocked(exchangeSupabaseAdminAuthCodeForSession).mockResolvedValueOnce({
+      ok: false,
+      reason: "auth_session_invalid"
+    });
+    mockEmitAdminLoginCallbackDenied.mockRejectedValueOnce(
+      new Error("sink exploded")
+    );
+
+    const response = await GET(createCallbackRequest("bad-code"));
+
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe(
+      "https://space.example/admin/login?state=unauthenticated"
+    );
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(mockEmitAdminLoginCallbackDenied).toHaveBeenCalledTimes(1);
+  });
+
+  it("preserves the callback unavailable redirect when the emitter throws", async () => {
+    setTrustedAdminOrigin();
+    vi.mocked(exchangeSupabaseAdminAuthCodeForSession).mockResolvedValueOnce({
+      ok: false,
+      reason: "supabase_server_env_missing"
+    });
+    mockEmitAdminLoginCallbackDenied.mockRejectedValueOnce(
+      new Error("sink exploded")
+    );
+
+    const response = await GET(createCallbackRequest("bad-code"));
+
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe(
+      "https://space.example/admin/login?state=unavailable"
+    );
+    expect(mockEmitAdminLoginCallbackDenied).toHaveBeenCalledTimes(1);
+  });
+
+  it("preserves the callback 303 redirect when the callback denied emitter throws synchronously", async () => {
+    setTrustedAdminOrigin();
+    vi.mocked(exchangeSupabaseAdminAuthCodeForSession).mockResolvedValueOnce({
+      ok: false,
+      reason: "auth_session_invalid"
+    });
+    mockEmitAdminLoginCallbackDenied.mockImplementationOnce(() => {
+      throw new Error("sync emitter burst: callback_unauthenticated");
+    });
+
+    const response = await GET(createCallbackRequest("bad-code"));
+
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe(
+      "https://space.example/admin/login?state=unauthenticated"
+    );
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(mockEmitAdminLoginCallbackDenied).toHaveBeenCalledTimes(1);
+    expect(mockEmitAdminLoginCallbackDenied).toHaveBeenCalledWith(
+      "callback_unauthenticated",
+      {}
+    );
+  });
+
+  it("preserves the callback unavailable redirect when the callback emitter throws synchronously", async () => {
+    setTrustedAdminOrigin();
+    vi.mocked(exchangeSupabaseAdminAuthCodeForSession).mockResolvedValueOnce({
+      ok: false,
+      reason: "supabase_server_env_missing"
+    });
+    mockEmitAdminLoginCallbackDenied.mockImplementationOnce(() => {
+      throw new Error("sync emitter burst: callback_unavailable");
+    });
+
+    const response = await GET(createCallbackRequest("bad-code"));
+
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe(
+      "https://space.example/admin/login?state=unavailable"
+    );
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(mockEmitAdminLoginCallbackDenied).toHaveBeenCalledTimes(1);
+    expect(mockEmitAdminLoginCallbackDenied).toHaveBeenCalledWith(
+      "callback_unavailable",
+      {}
+    );
   });
 });

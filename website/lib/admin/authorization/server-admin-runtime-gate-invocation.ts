@@ -1,5 +1,6 @@
 import "server-only";
 
+import { emitAdminAuthDenied } from "../../application-events/app-operation-event-call-sites";
 import {
   resolveServerAdminAuthorizationGate,
   type ServerAdminAuthorizationGateDependencies,
@@ -32,6 +33,10 @@ export type ServerAdminRuntimeGateInvocationDependencies = {
     input: ServerAdminAuthorizationGateInput,
     dependencies?: ServerAdminAuthorizationGateDependencies
   ) => Promise<ServerAdminAuthorizationGateResult>;
+  emitAdminAuthDenied?: (input: {
+    reason: string;
+    statusCode: number;
+  }) => Promise<unknown>;
 };
 
 function unavailable(
@@ -57,7 +62,10 @@ export async function resolveServerAdminRuntimeGateInvocation(
     );
 
     if (!requestMetadata.configured) {
-      return unavailable();
+      const result = unavailable();
+      await emitDenied(dependencies, result.reason, result.statusCode);
+
+      return result;
     }
 
     const gateInput: ServerAdminAuthorizationGateInput = {
@@ -68,12 +76,44 @@ export async function resolveServerAdminRuntimeGateInvocation(
     try {
       const resolveGate =
         dependencies.resolveGate ?? resolveServerAdminAuthorizationGate;
+      const result = await resolveGate(gateInput, dependencies.gate ?? {});
 
-      return await resolveGate(gateInput, dependencies.gate ?? {});
+      if (!result.allowed) {
+        await emitDenied(dependencies, result.reason, result.statusCode);
+      }
+
+      return result;
     } catch {
-      return unavailable(requestMetadata.metadata.requestId);
+      const result = unavailable(requestMetadata.metadata.requestId);
+      await emitDenied(dependencies, result.reason, result.statusCode);
+
+      return result;
     }
   } catch {
-    return unavailable();
+    const result = unavailable();
+    await emitDenied(dependencies, result.reason, result.statusCode);
+
+    return result;
   }
+}
+
+async function emitDenied(
+  dependencies: ServerAdminRuntimeGateInvocationDependencies,
+  reason: string,
+  statusCode: number
+) {
+  const emit = dependencies.emitAdminAuthDenied ?? defaultEmitAdminAuthDenied;
+
+  try {
+    await emit({ reason, statusCode });
+  } catch {
+    // Sink failures must never change the admin authorization decision.
+  }
+}
+
+async function defaultEmitAdminAuthDenied(input: {
+  reason: string;
+  statusCode: number;
+}) {
+  await emitAdminAuthDenied(input.reason, input.statusCode, {});
 }

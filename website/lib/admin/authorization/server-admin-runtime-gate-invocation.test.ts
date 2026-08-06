@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   resolveServerAdminRuntimeGateInvocation,
@@ -276,5 +276,191 @@ describe("server admin runtime gate invocation", () => {
     expect(source).not.toContain(".delete(");
     expect(source).not.toContain('"use server"');
     expect(source).not.toMatch(/from ["'][^"']*app\//m);
+  });
+});
+describe("server admin runtime gate invocation app operation event emission", () => {
+  function metadataResult() {
+    return {
+      configured: true as const,
+      metadata: {
+        requestMethod: "GET" as const,
+        requestOrigin: "https://admin.space.test",
+        requestHost: "admin.space.test",
+        expectedOrigin: "https://admin.space.test",
+        expectedHost: "admin.space.test",
+        requestId: "request-1"
+      }
+    };
+  }
+
+  it("emits the admin auth denied event after a gate deny decision", async () => {
+    const calls: string[] = [];
+    const emit = vi.fn(async () => {
+      calls.push("emit");
+    });
+
+    const result = await resolveServerAdminRuntimeGateInvocation(
+      { requestedOperation: "catalogue.read" },
+      {
+        requestMetadata: {
+          expectedOrigin: "https://admin.space.test",
+          expectedHost: "admin.space.test",
+          requestMethod: "GET"
+        },
+        async readRequestMetadata() {
+          calls.push("metadata");
+          return metadataResult();
+        },
+        async resolveGate() {
+          calls.push("gate");
+          return {
+            allowed: false,
+            reason: "role_not_allowed",
+            statusCode: 403,
+            requestId: "request-1"
+          };
+        },
+        emitAdminAuthDenied: emit
+      }
+    );
+
+    expect(result).toEqual({
+      allowed: false,
+      reason: "role_not_allowed",
+      statusCode: 403,
+      requestId: "request-1"
+    });
+    expect(calls).toEqual(["metadata", "gate", "emit"]);
+    expect(emit).toHaveBeenCalledTimes(1);
+    expect(emit).toHaveBeenCalledWith({
+      reason: "role_not_allowed",
+      statusCode: 403
+    });
+  });
+
+  it("does not emit when the gate allows", async () => {
+    const emit = vi.fn(async () => {});
+    const result = await resolveServerAdminRuntimeGateInvocation(
+      { requestedOperation: "catalogue.read" },
+      {
+        requestMetadata: {
+          expectedOrigin: "https://admin.space.test",
+          expectedHost: "admin.space.test",
+          requestMethod: "GET"
+        },
+        async readRequestMetadata() {
+          return metadataResult();
+        },
+        async resolveGate() {
+          return {
+            allowed: true,
+            reason: "allowed",
+            statusCode: 200,
+            workspaceId: "workspace-1",
+            requestId: "request-1"
+          };
+        },
+        emitAdminAuthDenied: emit
+      }
+    );
+
+    expect(result.allowed).toBe(true);
+    expect(emit).not.toHaveBeenCalled();
+  });
+
+  it("emits the unavailable denied event when request metadata is missing", async () => {
+    const emit = vi.fn(async () => {});
+    const result = await resolveServerAdminRuntimeGateInvocation(
+      { requestedOperation: "product.write" },
+      {
+        requestMetadata: {
+          expectedOrigin: "https://admin.space.test",
+          expectedHost: "admin.space.test",
+          requestMethod: "POST"
+        },
+        async readRequestMetadata() {
+          return {
+            configured: false,
+            metadata: null,
+            reason: "request_headers_unavailable"
+          };
+        },
+        emitAdminAuthDenied: emit
+      }
+    );
+
+    expectUnavailable(result);
+    expect(emit).toHaveBeenCalledTimes(1);
+    expect(emit).toHaveBeenCalledWith({
+      reason: "admin_authorization_gate_unavailable",
+      statusCode: 503
+    });
+  });
+
+  it("emits the unavailable denied event when the gate throws", async () => {
+    const emit = vi.fn(async () => {});
+    const result = await resolveServerAdminRuntimeGateInvocation(
+      { requestedOperation: "product.write" },
+      {
+        requestMetadata: {
+          expectedOrigin: "https://admin.space.test",
+          expectedHost: "admin.space.test",
+          requestMethod: "POST"
+        },
+        async readRequestMetadata() {
+          return metadataResult();
+        },
+        async resolveGate() {
+          throw new Error("gate failure");
+        },
+        emitAdminAuthDenied: emit
+      }
+    );
+
+    expect(result).toEqual({
+      allowed: false,
+      reason: "admin_authorization_gate_unavailable",
+      statusCode: 503,
+      requestId: "request-1"
+    });
+    expect(emit).toHaveBeenCalledTimes(1);
+    expect(emit).toHaveBeenCalledWith({
+      reason: "admin_authorization_gate_unavailable",
+      statusCode: 503
+    });
+  });
+
+  it("never lets an emission failure change the gate decision", async () => {
+    const result = await resolveServerAdminRuntimeGateInvocation(
+      { requestedOperation: "catalogue.read" },
+      {
+        requestMetadata: {
+          expectedOrigin: "https://admin.space.test",
+          expectedHost: "admin.space.test",
+          requestMethod: "GET"
+        },
+        async readRequestMetadata() {
+          return metadataResult();
+        },
+        async resolveGate() {
+          return {
+            allowed: false,
+            reason: "unauthenticated",
+            statusCode: 401,
+            requestId: "request-1"
+          };
+        },
+        async emitAdminAuthDenied() {
+          throw new Error("sink failure must not change the decision");
+        }
+      }
+    );
+
+    expect(result).toEqual({
+      allowed: false,
+      reason: "unauthenticated",
+      statusCode: 401,
+      requestId: "request-1"
+    });
   });
 });

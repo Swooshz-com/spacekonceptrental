@@ -131,12 +131,25 @@ updating the existing row. A different occurrence uses a new UUID. Direct
 - `docs/SUPABASE-SECURITY-DEFINER-PRIVILEGE-INVENTORY.md` documents the exact
   privilege and SECURITY DEFINER inventory.
 
+## M2A runtime sink (implemented)
+
+The M2A runtime sink and HMAC signing path is implemented under Design Lock
+`DL-324-OBS-002` (see `docs/architecture/OBSERVABILITY-RUNTIME-SINK.md`). It
+adds exactly `APP_OPERATION_EVENTS_ENABLED` and
+`APP_OPERATION_EVENT_ADMISSION_SECRET`, the typed modules in
+`website/lib/application-events/`, the eleven locked call sites, the 750 ms
+budget/two-attempt/60-second-circuit sink, the canonical PostgreSQL-17 digest
+serializer with fixed fixture vectors, and the repository readiness validator.
+No migration, RPC signature, grant, policy or index changed; `website/lib/
+application-error-logging.ts` remains byte-identical; no generic success
+events, `quote.submission.created`, chat events, setup-recipe events or
+repository/RPC-side duplicate emission exist. Emission is disabled by default
+and no live secret was configured.
+
 ## Later internal-alpha work (separately authorised)
 
-- Runtime sink: make `logApplicationError` attempt a durable event write while
-  preserving the truthful business response and console fallback.
 - Protected `/admin/operations` read surface: bounded last-200 workspace rows,
-  strict allowlisted mapping, and safe-reference search.
+  strict allowlisted mapping, and safe-reference search (M2B).
 - Sink health shown by a bounded live read/probe state; do not create recursive
   `SINK_UNAVAILABLE` event rows.
 - Quote handoff read/retry before public quote submission is enabled, using its
@@ -154,6 +167,6 @@ protected-evidence reads remain production acceptance work.
 
 No Supabase Cloud, provider, Coolify, Google, n8n, email, DNS, production
 database, credential, customer-data, content, deployment, or browser-login
-access. No admission secret is configured or displayed. The first
-implementation run releases no runtime sink, retry, deployment, or live
-configuration authority.
+access. No admission secret is configured or displayed. The M2A runtime sink
+releases no retry, deployment, live-secret configuration, operations read
+surface (M2B) or activation authority.

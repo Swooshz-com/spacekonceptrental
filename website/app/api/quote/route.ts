@@ -1,6 +1,16 @@
 import "server-only";
 
 import { logApplicationError } from "../../../lib/application-error-logging";
+import {
+  emitQuoteHandoffDisabled,
+  emitQuoteHandoffExceptionFailed,
+  emitQuoteHandoffFinalizationFailed,
+  emitQuoteHandoffPending,
+  emitQuoteRateLimitDenied,
+  emitQuoteSubmissionDisabled,
+  emitQuoteSubmissionPersistenceFailed,
+  emitQuoteSubmissionValidationDenied
+} from "../../../lib/application-events/app-operation-event-call-sites";
 import { getTrustedClientIpHeader as getConfiguredTrustedClientIpHeader } from "../../../lib/server-runtime-config";
 import {
   sendQuoteEnquiryEmailHandoff,
@@ -44,7 +54,36 @@ const FALLBACK_MESSAGE =
 const SUBMISSION_DISABLED_MESSAGE =
   "Quote submission is unavailable while this service is under review.";
 
-function submissionDisabledResponse(request: Request) {
+export type AppOperationEventRouteEmitters = {
+  quoteSubmissionDisabled: () => Promise<unknown>;
+  quoteSubmissionValidationDenied: (requestId: string) => Promise<unknown>;
+  quoteSubmissionPersistenceFailed: (requestId: string) => Promise<unknown>;
+  quoteHandoffPending: (requestId: string) => Promise<unknown>;
+  quoteHandoffExceptionFailed: (requestId: string) => Promise<unknown>;
+  quoteHandoffFinalizationFailed: (requestId: string) => Promise<unknown>;
+  quoteHandoffDisabled: (requestId: string) => Promise<unknown>;
+  quoteRateLimitDenied: (requestId: string) => Promise<unknown>;
+};
+
+const defaultRouteEmitters: AppOperationEventRouteEmitters = {
+  quoteSubmissionDisabled: () => emitQuoteSubmissionDisabled({}),
+  quoteSubmissionValidationDenied: (requestId) =>
+    emitQuoteSubmissionValidationDenied(requestId, {}),
+  quoteSubmissionPersistenceFailed: (requestId) =>
+    emitQuoteSubmissionPersistenceFailed(requestId, {}),
+  quoteHandoffPending: (requestId) => emitQuoteHandoffPending(requestId, {}),
+  quoteHandoffExceptionFailed: (requestId) =>
+    emitQuoteHandoffExceptionFailed(requestId, {}),
+  quoteHandoffFinalizationFailed: (requestId) =>
+    emitQuoteHandoffFinalizationFailed(requestId, {}),
+  quoteHandoffDisabled: (requestId) => emitQuoteHandoffDisabled(requestId, {}),
+  quoteRateLimitDenied: (requestId) => emitQuoteRateLimitDenied(requestId, {})
+};
+
+async function submissionDisabledResponse(
+  request: Request,
+  emitters: AppOperationEventRouteEmitters
+) {
   const reference = createRequestId();
   const response = Response.json(
     {
@@ -65,7 +104,17 @@ function submissionDisabledResponse(request: Request) {
     statusCode: 503
   });
 
+  await safeEmit(() => emitters.quoteSubmissionDisabled());
+
   return response;
+}
+
+async function safeEmit(emit: () => Promise<unknown>) {
+  try {
+    await emit();
+  } catch {
+    // Observability emission failures must never change the product response.
+  }
 }
 
 function createRequestId() {
@@ -438,17 +487,19 @@ export async function handleQuotePost(
   request: Request,
   repository: QuoteRepository = createQuoteRequest,
   emailHandoff: QuoteEmailHandoff = sendQuoteEnquiryEmailHandoff,
-  handoffFinalizer: QuoteHandoffFinalizer = finalizeQuoteHandoff
+  handoffFinalizer: QuoteHandoffFinalizer = finalizeQuoteHandoff,
+  emitters: AppOperationEventRouteEmitters = defaultRouteEmitters
 ): Promise<Response> {
   if (!QUOTE_SUBMISSION_ENABLED) {
-    return submissionDisabledResponse(request);
+    return submissionDisabledResponse(request, emitters);
   }
 
   return handleQuotePostEnabledForTests(
     request,
     repository,
     emailHandoff,
-    handoffFinalizer
+    handoffFinalizer,
+    emitters
   );
 }
 
@@ -461,7 +512,8 @@ export async function handleQuotePostEnabledForTests(
   request: Request,
   repository: QuoteRepository = createQuoteRequest,
   emailHandoff: QuoteEmailHandoff = sendQuoteEnquiryEmailHandoff,
-  handoffFinalizer: QuoteHandoffFinalizer = finalizeQuoteHandoff
+  handoffFinalizer: QuoteHandoffFinalizer = finalizeQuoteHandoff,
+  emitters: AppOperationEventRouteEmitters = defaultRouteEmitters
 ): Promise<Response> {
   const requestId = createRequestId();
   const bodyRead = await parseBoundedJsonBody(request, requestId);
@@ -473,12 +525,16 @@ export async function handleQuotePostEnabledForTests(
   const validation = validateQuoteSubmission(bodyRead.payload);
 
   if (!validation.ok) {
+    await safeEmit(() => emitters.quoteSubmissionValidationDenied(requestId));
+
     return validationError(validation.message, requestId);
   }
 
   const rateLimit = consumeQuoteRateLimit(request, validation.value);
 
   if (!rateLimit.allowed) {
+    await safeEmit(() => emitters.quoteRateLimitDenied(requestId));
+
     return rateLimitError(rateLimit, requestId);
   }
 
@@ -487,19 +543,27 @@ export async function handleQuotePostEnabledForTests(
   try {
     result = await repository(validation.value);
   } catch {
+    await safeEmit(() => emitters.quoteSubmissionPersistenceFailed(requestId));
+
     return persistenceError(requestId, request);
   }
 
   if (!result.ok) {
+    await safeEmit(() => emitters.quoteSubmissionPersistenceFailed(requestId));
+
     return persistenceError(requestId, request);
   }
 
   if (result.handoffClaimStatus === "in_progress") {
+    await safeEmit(() => emitters.quoteHandoffPending(requestId));
+
     return handoffPendingError(requestId, 300);
   }
 
   if (result.handoffClaimStatus === "claimed") {
     if (!result.handoffClaimToken) {
+      await safeEmit(() => emitters.quoteSubmissionPersistenceFailed(requestId));
+
       return persistenceError(requestId, request);
     }
 
@@ -525,6 +589,8 @@ export async function handleQuotePostEnabledForTests(
           errorCode: "handoff_exception"
         }
       }).catch(() => ({ ok: false as const }));
+      await safeEmit(() => emitters.quoteHandoffExceptionFailed(requestId));
+
       return handoffPendingError(requestId);
     }
 
@@ -548,7 +614,14 @@ export async function handleQuotePostEnabledForTests(
     }).catch(() => ({ ok: false as const }));
 
     if (!handoffResult.ok || !finalization.ok) {
+      if (handoffResult.status === "not_configured") {
+        await safeEmit(() => emitters.quoteHandoffDisabled(requestId));
+      } else {
+        await safeEmit(() => emitters.quoteHandoffFinalizationFailed(requestId));
+      }
+
       recordEmailHandoffApplicationError(requestId, request);
+
       return handoffPendingError(requestId);
     }
   }

@@ -1,3 +1,25 @@
+## App Operation Event Runtime Sink (#324 M2A)
+
+References: `docs/architecture/OBSERVABILITY-RUNTIME-SINK.md`, `docs/architecture/OBSERVABILITY-FOUNDATION.md`, `website/lib/application-events/`, `website/lib/server-runtime-config.ts`, and `scripts/validate-app-operation-event-runtime-readiness.cjs`.
+
+The M2A runtime sink and HMAC signing path writes the M1 bounded
+failure/denial/disabled/pending edge events through the unchanged
+`public.record_app_operation_event(...)` RPC. Emission is disabled by default
+(`APP_OPERATION_EVENTS_ENABLED` absent), uses a 60-second proof inside the
+existing 120-second cap, a 750 ms total budget with at most two attempts and a
+60-second circuit, and covers eleven locked call sites (quote submission, quote
+handoff, admin gate, admin login/callback). No migration, RPC signature, grant,
+policy or index changed; no generic success events, `quote.submission.created`,
+chat events, retry queue, outbox, worker, HTTP sink-status route, M2B read
+surface, live secret or deployment authority exists. The protected operations
+read surface (M2B) remains blocked; live activation remains separately
+authorised.
+
+- [x] M2A server-only runtime sink and HMAC signing path is implemented and
+  tested (disabled by default, bounded fields only, PostgreSQL-17 canonical
+  digest vectors locked, emission never alters the product response and never
+  recurses), with the wired deploy-readiness validator; live activation, M2B
+  operations reads and handoff retry remain unchecked/blocked.
 ## Protected Admin HubSpot Sync Dry-Run Contract Foundation
 
 References: `docs/architecture/PROTECTED-ADMIN-HUBSPOT-SYNC-DRY-RUN-CONTRACT-FOUNDATION.md`, `website/lib/quote/admin-read/admin-quote-request-hubspot-sync-dry-run-contract.ts`, `website/lib/quote/admin-read/admin-quote-request-hubspot-sync-dry-run-contract-route.ts`, `website/app/api/admin/quote-requests/crm-handoff-packet/hubspot-sync-dry-run-contract/route.ts`, `website/components/admin/quote-request-inbox-panel.tsx`, and `scripts/validate-protected-admin-hubspot-sync-dry-run-contract-foundation.cjs`.

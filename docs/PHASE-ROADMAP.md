@@ -1,3 +1,18 @@
+## App Operation Event Runtime Sink (#324 M2A)
+
+Reference: `docs/architecture/OBSERVABILITY-RUNTIME-SINK.md`.
+
+Disabled-by-default M2A runtime sink and HMAC signing path writing the M1
+bounded events through the unchanged `public.record_app_operation_event(...)`
+RPC. Adds `APP_OPERATION_EVENTS_ENABLED` and
+`APP_OPERATION_EVENT_ADMISSION_SECRET` (server-only, presence/byte-length
+validated), the typed signer/sink/call-site modules, PostgreSQL-17 canonical
+digest serialization locked by fixed fixture vectors, an 750 ms budget with two
+attempts and a 60-second circuit, eleven locked call sites, and the wired
+runtime-readiness validator. No migration, RPC signature, grant, policy or
+index change; no M2B read surface, HTTP sink-status route, generic success
+event, retry queue, outbox, worker, live secret or deployment authority.
+
 ## App Operation Event Observability Foundation (#307 M1)
 
 Reference: `docs/architecture/OBSERVABILITY-FOUNDATION.md`.
