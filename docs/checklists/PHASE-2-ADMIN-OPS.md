@@ -1,4 +1,4 @@
-﻿## App Operation Event Runtime Sink (#324 M2A)
+## App Operation Event Runtime Sink (#324 M2A)
 
 References: `docs/architecture/OBSERVABILITY-RUNTIME-SINK.md`, `docs/architecture/OBSERVABILITY-FOUNDATION.md`, `website/lib/application-events/`, `website/lib/server-runtime-config.ts`, and `scripts/validate-app-operation-event-runtime-readiness.cjs`.
 

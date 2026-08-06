@@ -1,4 +1,4 @@
-﻿import { NextRequest } from "next/server";
+import { NextRequest } from "next/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { signInSupabaseAdminGoogleAuthSession } from "../../../../lib/admin/authorization/supabase-admin-auth-identity-adapter";
@@ -223,5 +223,40 @@ describe("POST /api/admin/login", () => {
 
     expect(mockEmitAdminLoginDenied).not.toHaveBeenCalled();
     expect(response.status).toBe(303);
+  });
+
+  it("preserves the 303 redirect when the login denied emitter throws", async () => {
+    setTrustedAdminOrigin();
+    vi.mocked(signInSupabaseAdminGoogleAuthSession).mockResolvedValueOnce({
+      ok: false,
+      reason: "auth_session_invalid"
+    });
+    mockEmitAdminLoginDenied.mockRejectedValueOnce(new Error("sink exploded"));
+
+    const response = await POST(createLoginRequest());
+
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe(
+      "https://space.example/admin/login?state=unauthenticated"
+    );
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(mockEmitAdminLoginDenied).toHaveBeenCalledTimes(1);
+  });
+
+  it("preserves the unavailable redirect when the login denied emitter throws", async () => {
+    setTrustedAdminOrigin();
+    vi.mocked(signInSupabaseAdminGoogleAuthSession).mockResolvedValueOnce({
+      ok: false,
+      reason: "supabase_server_env_missing"
+    });
+    mockEmitAdminLoginDenied.mockRejectedValueOnce(new Error("sink exploded"));
+
+    const response = await POST(createLoginRequest());
+
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe(
+      "https://space.example/admin/login?state=unavailable"
+    );
+    expect(mockEmitAdminLoginDenied).toHaveBeenCalledTimes(1);
   });
 });

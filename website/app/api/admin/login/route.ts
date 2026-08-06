@@ -34,6 +34,14 @@ function unavailable() {
   });
 }
 
+async function safeEmitLoginDenied(emission: Promise<unknown>) {
+  try {
+    await emission;
+  } catch {
+    // Observability emission failures must never change the login redirect.
+  }
+}
+
 export async function POST(request: NextRequest) {
   const routeConfig = getCanonicalAdminAuthRouteConfig();
 
@@ -42,7 +50,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (!isSameOriginAdminAuthRequest(request, routeConfig)) {
-    await emitAdminLoginDenied("login_unauthenticated", {});
+    await safeEmitLoginDenied(emitAdminLoginDenied("login_unauthenticated", {}));
 
     return redirectTo(routeConfig, "/admin/login", "unauthenticated");
   }
@@ -74,9 +82,11 @@ export async function POST(request: NextRequest) {
   const failureReason = result.ok ? "auth_session_invalid" : result.reason;
 
   if (failureReason === "supabase_server_env_missing") {
-    await emitAdminLoginDenied("login_unavailable", {});
+    await safeEmitLoginDenied(emitAdminLoginDenied("login_unavailable", {}));
   } else {
-    await emitAdminLoginDenied("login_unauthenticated", {});
+    await safeEmitLoginDenied(
+      emitAdminLoginDenied("login_unauthenticated", {})
+    );
   }
 
   return redirectTo(

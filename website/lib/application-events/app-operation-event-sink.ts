@@ -38,6 +38,8 @@ export type AppOperationEventSinkDependencies = {
     args: Record<string, unknown>
   ) => Promise<AppOperationEventRpcOutcome>;
   console?: Pick<Console, "error">;
+  setTimer?: (fn: () => void, ms: number) => unknown;
+  clearTimer?: (handle: unknown) => void;
 };
 
 export type AppOperationEventSinkStatus = {
@@ -83,6 +85,68 @@ function defaultSleep(ms: number) {
   return new Promise<void>((resolve) => {
     setTimeout(resolve, ms);
   });
+}
+
+function defaultSetTimer(fn: () => void, ms: number) {
+  return setTimeout(fn, ms);
+}
+
+function defaultClearTimer(handle: unknown) {
+  clearTimeout(handle as ReturnType<typeof setTimeout>);
+}
+
+type BoundedAttemptResult =
+  | { kind: "outcome"; outcome: AppOperationEventRpcOutcome }
+  | { kind: "expired" };
+
+async function attemptWithinBudget(
+  rpc: (
+    args: Record<string, unknown>
+  ) => Promise<AppOperationEventRpcOutcome>,
+  args: Record<string, unknown>,
+  budgetMs: number,
+  dependencies: AppOperationEventSinkDependencies
+): Promise<BoundedAttemptResult> {
+  if (budgetMs <= 0) {
+    return { kind: "expired" };
+  }
+
+  const setTimer = dependencies.setTimer ?? defaultSetTimer;
+  const clearTimer = dependencies.clearTimer ?? defaultClearTimer;
+  let timerHandle: unknown | undefined;
+
+  const expiredSignal = new Promise<"expired">((resolve) => {
+    timerHandle = setTimer(() => resolve("expired"), budgetMs);
+  });
+
+  const outcomePromise = Promise.resolve()
+    .then(() => rpc(args))
+    .then(
+      (outcome): BoundedAttemptResult => ({ kind: "outcome", outcome }),
+      (): BoundedAttemptResult => ({
+        kind: "outcome",
+        outcome: { kind: "transient", code: "rpc_exception" }
+      })
+    );
+
+  const settled = await Promise.race([outcomePromise, expiredSignal]);
+
+  if (settled === "expired") {
+    // Quarantine the late RPC settlement: consume it without mutating sink
+    // state, retrying, recursing or producing an unhandled rejection.
+    outcomePromise.then(
+      () => undefined,
+      () => undefined
+    );
+
+    return { kind: "expired" };
+  }
+
+  if (timerHandle !== undefined) {
+    clearTimer(timerHandle);
+  }
+
+  return settled;
 }
 
 function classifyRpcOutcome(
@@ -218,18 +282,22 @@ export async function emitAppOperationEvent(
   while (true) {
     attempts += 1;
 
-    if (now() >= deadline) {
+    const remaining = deadline - now();
+
+    if (remaining <= 0) {
       break;
     }
 
-    let outcome: AppOperationEventRpcOutcome;
+    const attempt = await attemptWithinBudget(rpc, args, remaining, {
+      ...dependencies
+    });
 
-    try {
-      outcome = await rpc(args);
-    } catch {
-      outcome = { kind: "transient", code: "rpc_exception" };
+    if (attempt.kind === "expired") {
+      lastTransientCode = fixedConsoleCodes.rpcUnavailable;
+      break;
     }
 
+    const outcome = attempt.outcome;
     const classification = classifyRpcOutcome(outcome);
 
     if (classification === "success") {

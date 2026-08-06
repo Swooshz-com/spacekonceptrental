@@ -162,4 +162,43 @@ describe("GET /api/admin/login/callback", () => {
     expect(mockEmitAdminLoginCallbackDenied).not.toHaveBeenCalled();
     expect(response.status).toBe(303);
   });
+
+  it("preserves the callback 303 redirect when the callback denied emitter throws", async () => {
+    setTrustedAdminOrigin();
+    vi.mocked(exchangeSupabaseAdminAuthCodeForSession).mockResolvedValueOnce({
+      ok: false,
+      reason: "auth_session_invalid"
+    });
+    mockEmitAdminLoginCallbackDenied.mockRejectedValueOnce(
+      new Error("sink exploded")
+    );
+
+    const response = await GET(createCallbackRequest("bad-code"));
+
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe(
+      "https://space.example/admin/login?state=unauthenticated"
+    );
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(mockEmitAdminLoginCallbackDenied).toHaveBeenCalledTimes(1);
+  });
+
+  it("preserves the callback unavailable redirect when the emitter throws", async () => {
+    setTrustedAdminOrigin();
+    vi.mocked(exchangeSupabaseAdminAuthCodeForSession).mockResolvedValueOnce({
+      ok: false,
+      reason: "supabase_server_env_missing"
+    });
+    mockEmitAdminLoginCallbackDenied.mockRejectedValueOnce(
+      new Error("sink exploded")
+    );
+
+    const response = await GET(createCallbackRequest("bad-code"));
+
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe(
+      "https://space.example/admin/login?state=unavailable"
+    );
+    expect(mockEmitAdminLoginCallbackDenied).toHaveBeenCalledTimes(1);
+  });
 });

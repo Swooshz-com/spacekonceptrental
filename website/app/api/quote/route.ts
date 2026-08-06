@@ -1,4 +1,4 @@
-﻿import "server-only";
+import "server-only";
 
 import { logApplicationError } from "../../../lib/application-error-logging";
 import {
