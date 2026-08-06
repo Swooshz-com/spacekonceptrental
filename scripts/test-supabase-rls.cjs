@@ -1,4 +1,4 @@
-const assert = require('node:assert/strict');
+﻿const assert = require('node:assert/strict');
 const { spawn, spawnSync } = require('node:child_process');
 const fs = require('node:fs');
 const os = require('node:os');
@@ -972,6 +972,9 @@ function assertNoRuntimeSupabaseUse() {
     'website/lib/admin/authorization/supabase-admin-profile-membership-adapters.ts',
     'website/lib/admin/authorization/server-admin-csrf-proof-replay-repository.ts',
   ]);
+  const approvedAppOperationEventSinkFiles = new Set([
+    'website/lib/application-events/app-operation-event-sink.ts',
+  ]);
   const approvedCatalogueReadFiles = new Set([
     'website/lib/catalogue/catalogue-repository.ts',
   ]);
@@ -1111,6 +1114,32 @@ function assertNoRuntimeSupabaseUse() {
           `${relativePath} must be marked server-only.`,
         );
         assertNoMatches(filePath, content, serverBlockedPatterns);
+        return;
+      }
+
+      if (approvedAppOperationEventSinkFiles.has(relativePath)) {
+        assert.match(
+          content,
+          /import\s+["']server-only["'];/,
+          `${relativePath} must be marked server-only.`,
+        );
+        assert.match(
+          content,
+          /createServerSupabaseClient/,
+          `${relativePath} must use the approved server Supabase wrapper.`,
+        );
+        assert.match(
+          content,
+          /rpc\(\s*["']record_app_operation_event["']/,
+          `${relativePath} must write only through the approved HMAC-admitted write RPC.`,
+        );
+        assert.doesNotMatch(
+          content,
+          /\.from\(/,
+          `${relativePath} must not access base tables directly.`,
+        );
+        assertNoMatches(filePath, content, serverBlockedPatterns);
+        assertNoMatches(filePath, content, blockedQuoteWriteTablePatterns);
         return;
       }
 
@@ -6441,6 +6470,106 @@ check('service-only tables expose no broad anonymous or authenticated client acc
 
 check('runtime website Supabase code stays server-only', () => {
   assertNoRuntimeSupabaseUse();
+});
+
+check('app operation event M1 contract stays unchanged and canonical digest vectors lock', () => {
+  const writeSignature =
+    'public.record_app_operation_event(uuid,uuid,text,text,text,text,text,text,integer,bigint,text,bigint,text)';
+  const digestSignature =
+    'private.app_operation_event_payload_digest(uuid,uuid,text,text,text,text,text,text,integer,bigint)';
+  const configTable = 'private.app_operation_event_admission_config';
+
+  assert.equal(
+    psql(`select pg_catalog.string_agg(attname, ',' order by attnum) from pg_catalog.pg_attribute where attrelid = 'public.app_operation_events'::pg_catalog.regclass and attnum > 0 and not attisdropped`),
+    'event_id,workspace_id,category,outcome,reference_type,reference_value,error_code,route_key,http_status,actor_admin_user_id,occurred_at,created_at,retention_eligible_at',
+    'M1 app_operation_events column contract must remain unchanged',
+  );
+  assert.equal(
+    psql(`select count(*)::text from pg_catalog.pg_constraint where conrelid = 'public.app_operation_events'::pg_catalog.regclass`),
+    '11',
+    'M1 app_operation_events constraint count must remain 11',
+  );
+  assert.equal(
+    psql(`select count(*)::text from pg_catalog.pg_indexes where schemaname = 'public' and tablename = 'app_operation_events'`),
+    '2',
+    'M1 app_operation_events index count must remain exactly 2',
+  );
+  assert.equal(
+    psql(`select pg_catalog.pg_get_userbyid(proowner) || ':' || prosecdef::text || ':' || pg_catalog.array_to_string(proconfig, ',') from pg_catalog.pg_proc where oid = '${writeSignature}'::pg_catalog.regprocedure`),
+    'postgres:true:search_path=""',
+    'M1 write RPC owner, SECURITY DEFINER and empty search_path must remain unchanged',
+  );
+  assert.equal(
+    psql(`select pg_catalog.pg_get_userbyid(proowner) || ':' || prosecdef::text || ':' || pg_catalog.array_to_string(proconfig, ',') from pg_catalog.pg_proc where oid = '${digestSignature}'::pg_catalog.regprocedure`),
+    'postgres:false:search_path=""',
+    'M1 digest helper owner and SECURITY INVOKER empty search_path must remain unchanged',
+  );
+  for (const role of ['anon', 'authenticated']) {
+    assert.equal(
+      psql(`select pg_catalog.has_function_privilege('${role}', '${writeSignature}', 'EXECUTE')::text`),
+      'true',
+      `${role} must retain M1 write RPC execution`,
+    );
+  }
+  assert.equal(
+    psql(`select pg_catalog.has_function_privilege('service_role', '${writeSignature}', 'EXECUTE')::text`),
+    'false',
+    'service_role must not gain M1 write RPC execution',
+  );
+  assert.equal(
+    psql(`select exists (select 1 from pg_catalog.pg_policies where schemaname = 'public' and tablename = 'app_operation_events' and policyname = 'app_operation_events_admin_read')::text`),
+    'true',
+    'M1 admin-read policy must remain present',
+  );
+  assert.equal(
+    psql(`select count(*)::text from ${configTable}`),
+    '0',
+    'M1 admission config must remain unseeded',
+  );
+
+  const digestSql = (eventId, workspaceId, category, outcome, referenceType, referenceValue, errorCode, routeKey, httpStatus, occurredAtMs) => `
+    select private.app_operation_event_payload_digest(
+      '${eventId}', '${workspaceId}', '${category}', '${outcome}', '${referenceType}',
+      ${referenceValue === null ? 'null' : `'${referenceValue}'`},
+      ${errorCode === null ? 'null' : `'${errorCode}'`},
+      '${routeKey}', ${httpStatus === null ? 'null' : httpStatus}, ${occurredAtMs}
+    )
+  `;
+
+  assert.equal(
+    psql(digestSql('c0000000-0000-4000-8000-000000000100', ids.workspaceA, 'quote.submission', 'failed', 'request_id', 'app-op-request-a', 'provider_unavailable', '/api/quote', 502, 1712345678000)),
+    'fd95ff0da574293e492fbfe0dd5e3920c1d4c49b90a7f716d482480178884b00',
+    'PostgreSQL-17 canonical digest vector A must match the locked Node vector',
+  );
+  assert.equal(
+    psql(digestSql('c0000000-0000-4000-8000-000000000101', ids.workspaceA, 'admin.auth', 'denied', 'none', null, null, 'admin.gate', 403, 1712345678123)),
+    '30fc2f5956abc1d30de7f1b0add81d91ab49904c8e9b91e7fd28aca917e89208',
+    'PostgreSQL-17 canonical digest vector B must match the locked Node vector',
+  );
+  assert.equal(
+    psql(digestSql('c0000000-0000-4000-8000-000000000102', ids.workspaceA, 'quote.submission', 'denied', 'request_id', 'app-op-request-c', 'validation_failed', '/api/quote', null, 1712345678900)),
+    '4b42338bfd9cd89a5f4e5eac1c56375c1cc0ce3a51ad1236d1a31ab9035146ed',
+    'PostgreSQL-17 canonical digest vector C must match the locked Node vector',
+  );
+
+  const reorderedDigest = psql(`
+    select pg_catalog.encode(
+      extensions.digest(
+        convert_to(
+          '{"event_id": "c0000000-0000-4000-8000-000000000100", "workspace_id": "${ids.workspaceA}", "category": "quote.submission", "outcome": "failed", "reference_type": "request_id", "reference_value": "app-op-request-a", "error_code": "provider_unavailable", "route_key": "/api/quote", "http_status": 502, "occurred_at_ms": 1712345678000}',
+          'UTF8'
+        ),
+        'sha256'
+      ),
+      'hex'
+    )
+  `);
+
+  assert.notEqual(
+    reorderedDigest,
+    'fd95ff0da574293e492fbfe0dd5e3920c1d4c49b90a7f716d482480178884b00',
+    'field-order mutation must change the canonical digest',
+  );
 });
 
 check('app operation event admission foundation enforces schema, RLS, HMAC proof, and idempotency', () => {

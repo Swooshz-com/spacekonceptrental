@@ -1,3 +1,23 @@
+## App Operation Event Runtime Sink (#324 M2A)
+
+References: `docs/architecture/OBSERVABILITY-RUNTIME-SINK.md`,
+`docs/architecture/OBSERVABILITY-FOUNDATION.md`, `website/lib/application-events/`,
+`website/lib/server-runtime-config.ts`, `scripts/validate-app-operation-event-runtime-readiness.cjs`,
+and `scripts/test-supabase-rls.cjs`.
+
+The M2A runtime sink and HMAC signing path is implemented under Design Lock
+`DL-324-OBS-002`. The disabled-by-default server-only sink signs bounded events
+with a 60-second proof and writes them through the unchanged M1
+`public.record_app_operation_event(...)` RPC with a 750 ms budget, at most two
+attempts and a 60-second circuit, covering the eleven locked call sites
+(quote submission, quote handoff, admin gate, admin login/callback). The
+PostgreSQL-17 canonical digest bytes are locked by fixed fixture vectors in the
+disposable RLS harness. Emission never changes the product response and never
+recurses. No migration, RPC signature, grant, policy or index changed; no live
+secret was configured; M2B (protected operations read surface) remains
+separately blocked. Deploy readiness is enforced by the wired
+`validate:app-operation-event-runtime-readiness` validator.
+
 ## App Operation Event Observability Foundation (#307 M1)
 
 References: `docs/architecture/OBSERVABILITY-FOUNDATION.md`, `supabase/migrations/20260805141500_app_operation_events_foundation.sql`, `scripts/validate-supabase-migrations.cjs`, `scripts/validate-supabase-migrations.test.cjs`, `scripts/test-supabase-rls.cjs`, `scripts/security-definer-privilege-contract.cjs`, `scripts/security-remediation-rls-checks.cjs`, `docs/SUPABASE-MVP-SCHEMA.md`, `docs/SUPABASE-RLS-STRATEGY.md`, and `docs/SUPABASE-SECURITY-DEFINER-PRIVILEGE-INVENTORY.md`.

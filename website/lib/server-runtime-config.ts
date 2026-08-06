@@ -17,7 +17,9 @@ export const serverRuntimeEnvNames = [
   "N8N_ENQUIRY_HANDOFF_SHARED_SECRET",
   "N8N_ENQUIRY_HANDOFF_TIMEOUT_MS",
   "CHAT_TRUSTED_CLIENT_IP_HEADER",
-  "QUOTE_TRUSTED_CLIENT_IP_HEADER"
+  "QUOTE_TRUSTED_CLIENT_IP_HEADER",
+  "APP_OPERATION_EVENTS_ENABLED",
+  "APP_OPERATION_EVENT_ADMISSION_SECRET"
 ] as const;
 
 export type ServerRuntimeEnvName = (typeof serverRuntimeEnvNames)[number];
@@ -38,7 +40,8 @@ export type ServerRuntimeConfigIssue = {
     | "invalid_host"
     | "unsupported_provider"
     | "invalid_timeout"
-    | "unsupported_header";
+    | "unsupported_header"
+    | "invalid_secret_length";
 };
 
 export type ServerRuntimeConfigValues = Partial<{
@@ -59,6 +62,8 @@ export type ServerRuntimeConfigValues = Partial<{
   n8nEnquiryHandoffTimeoutMs: number;
   chatTrustedClientIpHeader: TrustedClientIpHeader;
   quoteTrustedClientIpHeader: TrustedClientIpHeader;
+  appOperationEventsEnabled: boolean;
+  appOperationEventAdmissionSecret?: string;
 }>;
 
 export type ServerRuntimeConfig = {
@@ -532,6 +537,10 @@ export function parseServerRuntimeConfig(
     }
   }
 
+  const appOperationEventsEnabledValue = env.APP_OPERATION_EVENTS_ENABLED;
+  const appOperationEventAdmissionSecretRaw =
+    env.APP_OPERATION_EVENT_ADMISSION_SECRET;
+
   if (quoteTrustedClientIpHeader) {
     const normalized = normalizeTrustedClientIpHeader(
       quoteTrustedClientIpHeader
@@ -541,6 +550,26 @@ export function parseServerRuntimeConfig(
       values.quoteTrustedClientIpHeader = normalized;
     } else {
       addInvalid(issues, "QUOTE_TRUSTED_CLIENT_IP_HEADER", "unsupported_header");
+    }
+  }
+
+  values.appOperationEventsEnabled =
+    appOperationEventsEnabledValue === "true";
+  if (
+    typeof appOperationEventAdmissionSecretRaw === "string" &&
+    appOperationEventAdmissionSecretRaw.length > 0
+  ) {
+    if (
+      Buffer.byteLength(appOperationEventAdmissionSecretRaw, "utf8") < 32
+    ) {
+      addInvalid(
+        issues,
+        "APP_OPERATION_EVENT_ADMISSION_SECRET",
+        "invalid_secret_length"
+      );
+    } else {
+      values.appOperationEventAdmissionSecret =
+        appOperationEventAdmissionSecretRaw;
     }
   }
 
@@ -719,4 +748,31 @@ export function getPublicSafeServerRuntimeConfigSummary(
       reason: issue.reason
     }))
   };
+}
+
+export type AppOperationEventRuntimeConfig = {
+  enabled: boolean;
+  admissionSecretConfigured: boolean;
+  supabaseConfigured: boolean;
+};
+
+export function getAppOperationEventRuntimeConfig(
+  env: ServerRuntimeEnv = process.env
+): AppOperationEventRuntimeConfig {
+  const config = parseServerRuntimeConfig(env);
+  const supabase = getSupabaseServerRuntimeConfig(env);
+
+  return {
+    enabled: config.values.appOperationEventsEnabled === true,
+    admissionSecretConfigured:
+      typeof config.values.appOperationEventAdmissionSecret === "string",
+    supabaseConfigured: supabase.configured
+  };
+}
+
+export function getAppOperationEventAdmissionSecret(
+  env: ServerRuntimeEnv = process.env
+): string | null {
+  return parseServerRuntimeConfig(env).values
+    .appOperationEventAdmissionSecret ?? null;
 }

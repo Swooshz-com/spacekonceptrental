@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+import { emitAdminLoginCallbackDenied } from "../../../../../lib/application-events/app-operation-event-call-sites";
 import {
   createCanonicalAdminAuthUrl,
   getCanonicalAdminAuthRouteConfig,
@@ -41,6 +42,8 @@ export async function GET(request: NextRequest) {
   }
 
   if (!hasExpectedAdminAuthHost(request, routeConfig)) {
+    await emitAdminLoginCallbackDenied("callback_unauthenticated", {});
+
     return redirectTo(routeConfig, "/admin/login", "unauthenticated");
   }
 
@@ -58,6 +61,12 @@ export async function GET(request: NextRequest) {
 
   if (result.ok) {
     return response;
+  }
+
+  if (result.reason === "supabase_server_env_missing") {
+    await emitAdminLoginCallbackDenied("callback_unavailable", {});
+  } else {
+    await emitAdminLoginCallbackDenied("callback_unauthenticated", {});
   }
 
   return redirectTo(

@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+import { emitAdminLoginDenied } from "../../../../lib/application-events/app-operation-event-call-sites";
 import {
   createCanonicalAdminAuthUrl,
   getCanonicalAdminAuthRouteConfig,
@@ -41,6 +42,8 @@ export async function POST(request: NextRequest) {
   }
 
   if (!isSameOriginAdminAuthRequest(request, routeConfig)) {
+    await emitAdminLoginDenied("login_unauthenticated", {});
+
     return redirectTo(routeConfig, "/admin/login", "unauthenticated");
   }
 
@@ -69,6 +72,12 @@ export async function POST(request: NextRequest) {
   }
 
   const failureReason = result.ok ? "auth_session_invalid" : result.reason;
+
+  if (failureReason === "supabase_server_env_missing") {
+    await emitAdminLoginDenied("login_unavailable", {});
+  } else {
+    await emitAdminLoginDenied("login_unauthenticated", {});
+  }
 
   return redirectTo(
     routeConfig,

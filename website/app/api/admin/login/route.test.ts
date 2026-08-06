@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+﻿import { NextRequest } from "next/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { signInSupabaseAdminGoogleAuthSession } from "../../../../lib/admin/authorization/supabase-admin-auth-identity-adapter";
@@ -8,6 +8,17 @@ vi.mock(
   "../../../../lib/admin/authorization/supabase-admin-auth-identity-adapter",
   () => ({
     signInSupabaseAdminGoogleAuthSession: vi.fn()
+  })
+);
+
+const { mockEmitAdminLoginDenied } = vi.hoisted(() => ({
+  mockEmitAdminLoginDenied: vi.fn(async () => ({ kind: "skipped" }))
+}));
+
+vi.mock(
+  "../../../../lib/application-events/app-operation-event-call-sites",
+  () => ({
+    emitAdminLoginDenied: mockEmitAdminLoginDenied
   })
 );
 
@@ -152,5 +163,65 @@ describe("POST /api/admin/login", () => {
     expect(response.status).toBe(503);
     expect(response.headers.get("location")).toBeNull();
     expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(mockEmitAdminLoginDenied).not.toHaveBeenCalled();
+  });
+
+  it("emits a bounded admin auth login denied event on sign-in failure", async () => {
+    setTrustedAdminOrigin();
+    vi.mocked(signInSupabaseAdminGoogleAuthSession).mockResolvedValueOnce({
+      ok: false,
+      reason: "auth_session_invalid"
+    });
+
+    const response = await POST(createLoginRequest());
+
+    expect(mockEmitAdminLoginDenied).toHaveBeenCalledTimes(1);
+    expect(mockEmitAdminLoginDenied).toHaveBeenCalledWith(
+      "login_unauthenticated",
+      {}
+    );
+    expect(response.status).toBe(303);
+  });
+
+  it("emits the unavailable login denied event when server auth env is missing", async () => {
+    setTrustedAdminOrigin();
+    vi.mocked(signInSupabaseAdminGoogleAuthSession).mockResolvedValueOnce({
+      ok: false,
+      reason: "supabase_server_env_missing"
+    });
+
+    await POST(createLoginRequest());
+
+    expect(mockEmitAdminLoginDenied).toHaveBeenCalledTimes(1);
+    expect(mockEmitAdminLoginDenied).toHaveBeenCalledWith(
+      "login_unavailable",
+      {}
+    );
+  });
+
+  it("emits the login denied event when the request is not same-origin", async () => {
+    setTrustedAdminOrigin();
+
+    await POST(createLoginRequest({ origin: "https://evil.example" }));
+
+    expect(signInSupabaseAdminGoogleAuthSession).not.toHaveBeenCalled();
+    expect(mockEmitAdminLoginDenied).toHaveBeenCalledTimes(1);
+    expect(mockEmitAdminLoginDenied).toHaveBeenCalledWith(
+      "login_unauthenticated",
+      {}
+    );
+  });
+
+  it("does not emit a login denied event on a successful Google sign-in start", async () => {
+    setTrustedAdminOrigin();
+    vi.mocked(signInSupabaseAdminGoogleAuthSession).mockResolvedValueOnce({
+      ok: true,
+      redirectUrl: "https://accounts.google.example/o/oauth2/v2/auth"
+    });
+
+    const response = await POST(createLoginRequest());
+
+    expect(mockEmitAdminLoginDenied).not.toHaveBeenCalled();
+    expect(response.status).toBe(303);
   });
 });

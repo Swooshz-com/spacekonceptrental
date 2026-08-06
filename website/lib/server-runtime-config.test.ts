@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
+  getAppOperationEventRuntimeConfig,
   getChatProviderRuntimeConfig,
   getN8nChatRuntimeConfig,
   getPublicSafeServerRuntimeConfigSummary,
@@ -32,7 +33,9 @@ const expectedServerRuntimeEnvNames = [
   "N8N_ENQUIRY_HANDOFF_SHARED_SECRET",
   "N8N_ENQUIRY_HANDOFF_TIMEOUT_MS",
   "CHAT_TRUSTED_CLIENT_IP_HEADER",
-  "QUOTE_TRUSTED_CLIENT_IP_HEADER"
+  "QUOTE_TRUSTED_CLIENT_IP_HEADER",
+  "APP_OPERATION_EVENTS_ENABLED",
+  "APP_OPERATION_EVENT_ADMISSION_SECRET"
 ] as const;
 
 const validEnv = {
@@ -52,7 +55,9 @@ const validEnv = {
   N8N_ENQUIRY_HANDOFF_SHARED_SECRET: "n8n-shared-secret-for-tests",
   N8N_ENQUIRY_HANDOFF_TIMEOUT_MS: "45000",
   CHAT_TRUSTED_CLIENT_IP_HEADER: "CF-Connecting-IP",
-  QUOTE_TRUSTED_CLIENT_IP_HEADER: "X-Real-IP"
+  QUOTE_TRUSTED_CLIENT_IP_HEADER: "X-Real-IP",
+  APP_OPERATION_EVENTS_ENABLED: "true",
+  APP_OPERATION_EVENT_ADMISSION_SECRET: "app-operation-event-test-secret-0123456789abcdef"
 };
 
 const quoteEmailEnv = {
@@ -256,5 +261,101 @@ describe("server runtime config contract", () => {
       reason: "invalid_url"
     });
     expect(JSON.stringify(result.issues)).not.toContain("secret-webhook");
+  });
+
+  it("enables app operation events only when the flag value is exactly true", () => {
+    const runtimeConfig = parseServerRuntimeConfig(validEnv);
+
+    expect(runtimeConfig.values.appOperationEventsEnabled).toBe(true);
+    expect(
+      parseServerRuntimeConfig({
+        ...validEnv,
+        APP_OPERATION_EVENTS_ENABLED: "1"
+      }).values.appOperationEventsEnabled
+    ).toBe(false);
+    expect(
+      parseServerRuntimeConfig({
+        ...validEnv,
+        APP_OPERATION_EVENTS_ENABLED: " TRUE "
+      }).values.appOperationEventsEnabled
+    ).toBe(false);
+    expect(
+      parseServerRuntimeConfig({
+        ...validEnv,
+        APP_OPERATION_EVENTS_ENABLED: undefined
+      }).values.appOperationEventsEnabled
+    ).toBe(false);
+  });
+
+  it("keeps the admission secret untrimmed and byte-length validated", () => {
+    const untrimmed = parseServerRuntimeConfig({
+      ...validEnv,
+      APP_OPERATION_EVENT_ADMISSION_SECRET: "  padded-secret-0123456789abcdefghij  "
+    });
+
+    expect(untrimmed.issues).toEqual([]);
+    expect(untrimmed.values.appOperationEventAdmissionSecret).toBe(
+      "  padded-secret-0123456789abcdefghij  "
+    );
+
+    const short = parseServerRuntimeConfig({
+      ...validEnv,
+      APP_OPERATION_EVENT_ADMISSION_SECRET: "too-short"
+    });
+
+    expect(short.issues).toEqual([
+      {
+        name: "APP_OPERATION_EVENT_ADMISSION_SECRET",
+        kind: "invalid",
+        reason: "invalid_secret_length"
+      }
+    ]);
+    expect(short.values.appOperationEventAdmissionSecret).toBeUndefined();
+
+    const empty = parseServerRuntimeConfig({
+      ...validEnv,
+      APP_OPERATION_EVENT_ADMISSION_SECRET: ""
+    });
+
+    expect(empty.issues).toEqual([]);
+    expect(empty.values.appOperationEventAdmissionSecret).toBeUndefined();
+  });
+
+  it("never exposes the admission secret in public-safe summaries", () => {
+    const summary = getPublicSafeServerRuntimeConfigSummary(validEnv);
+
+    expect(summary.ok).toBe(true);
+    expect(JSON.stringify(summary)).not.toContain(
+      "app-operation-event-test-secret"
+    );
+    expect(JSON.stringify(summary)).not.toContain("0123456789abcdef");
+  });
+
+  it("reports app operation event runtime readiness presence without values", () => {
+    expect(
+      getAppOperationEventRuntimeConfig(validEnv)
+    ).toEqual({
+      enabled: true,
+      admissionSecretConfigured: true,
+      supabaseConfigured: true
+    });
+    expect(
+      getAppOperationEventRuntimeConfig({
+        ...validEnv,
+        APP_OPERATION_EVENTS_ENABLED: "false"
+      }).enabled
+    ).toBe(false);
+    expect(
+      getAppOperationEventRuntimeConfig({
+        ...validEnv,
+        APP_OPERATION_EVENT_ADMISSION_SECRET: undefined
+      }).admissionSecretConfigured
+    ).toBe(false);
+    expect(
+      getAppOperationEventRuntimeConfig({
+        ...validEnv,
+        SUPABASE_URL: undefined
+      }).supabaseConfigured
+    ).toBe(false);
   });
 });

@@ -72,6 +72,12 @@ jobs:
       - name: Test Supabase migration validator
         run: npm run test:supabase-migrations
 
+      - name: Validate app operation event runtime readiness
+        run: npm run validate:app-operation-event-runtime-readiness
+
+      - name: Test app operation event runtime readiness validator
+        run: npm run test:app-operation-event-runtime-readiness
+
       - name: Run Supabase RLS/schema tests
         run: npm run test:supabase-rls
 
