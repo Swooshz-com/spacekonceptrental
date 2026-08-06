@@ -104,14 +104,14 @@ async function submissionDisabledResponse(
     statusCode: 503
   });
 
-  await safeEmit(emitters.quoteSubmissionDisabled());
+  await safeEmit(() => emitters.quoteSubmissionDisabled());
 
   return response;
 }
 
-async function safeEmit(emission: Promise<unknown>) {
+async function safeEmit(emit: () => Promise<unknown>) {
   try {
-    await emission;
+    await emit();
   } catch {
     // Observability emission failures must never change the product response.
   }
@@ -525,7 +525,7 @@ export async function handleQuotePostEnabledForTests(
   const validation = validateQuoteSubmission(bodyRead.payload);
 
   if (!validation.ok) {
-    await safeEmit(emitters.quoteSubmissionValidationDenied(requestId));
+    await safeEmit(() => emitters.quoteSubmissionValidationDenied(requestId));
 
     return validationError(validation.message, requestId);
   }
@@ -533,7 +533,7 @@ export async function handleQuotePostEnabledForTests(
   const rateLimit = consumeQuoteRateLimit(request, validation.value);
 
   if (!rateLimit.allowed) {
-    await safeEmit(emitters.quoteRateLimitDenied(requestId));
+    await safeEmit(() => emitters.quoteRateLimitDenied(requestId));
 
     return rateLimitError(rateLimit, requestId);
   }
@@ -543,26 +543,26 @@ export async function handleQuotePostEnabledForTests(
   try {
     result = await repository(validation.value);
   } catch {
-    await safeEmit(emitters.quoteSubmissionPersistenceFailed(requestId));
+    await safeEmit(() => emitters.quoteSubmissionPersistenceFailed(requestId));
 
     return persistenceError(requestId, request);
   }
 
   if (!result.ok) {
-    await safeEmit(emitters.quoteSubmissionPersistenceFailed(requestId));
+    await safeEmit(() => emitters.quoteSubmissionPersistenceFailed(requestId));
 
     return persistenceError(requestId, request);
   }
 
   if (result.handoffClaimStatus === "in_progress") {
-    await safeEmit(emitters.quoteHandoffPending(requestId));
+    await safeEmit(() => emitters.quoteHandoffPending(requestId));
 
     return handoffPendingError(requestId, 300);
   }
 
   if (result.handoffClaimStatus === "claimed") {
     if (!result.handoffClaimToken) {
-      await safeEmit(emitters.quoteSubmissionPersistenceFailed(requestId));
+      await safeEmit(() => emitters.quoteSubmissionPersistenceFailed(requestId));
 
       return persistenceError(requestId, request);
     }
@@ -589,7 +589,7 @@ export async function handleQuotePostEnabledForTests(
           errorCode: "handoff_exception"
         }
       }).catch(() => ({ ok: false as const }));
-      await safeEmit(emitters.quoteHandoffExceptionFailed(requestId));
+      await safeEmit(() => emitters.quoteHandoffExceptionFailed(requestId));
 
       return handoffPendingError(requestId);
     }
@@ -615,9 +615,9 @@ export async function handleQuotePostEnabledForTests(
 
     if (!handoffResult.ok || !finalization.ok) {
       if (handoffResult.status === "not_configured") {
-        await safeEmit(emitters.quoteHandoffDisabled(requestId));
+        await safeEmit(() => emitters.quoteHandoffDisabled(requestId));
       } else {
-        await safeEmit(emitters.quoteHandoffFinalizationFailed(requestId));
+        await safeEmit(() => emitters.quoteHandoffFinalizationFailed(requestId));
       }
 
       recordEmailHandoffApplicationError(requestId, request);

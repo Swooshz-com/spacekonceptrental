@@ -259,4 +259,52 @@ describe("POST /api/admin/login", () => {
     );
     expect(mockEmitAdminLoginDenied).toHaveBeenCalledTimes(1);
   });
+
+  it("preserves the 303 redirect when the login denied emitter throws synchronously", async () => {
+    setTrustedAdminOrigin();
+    vi.mocked(signInSupabaseAdminGoogleAuthSession).mockResolvedValueOnce({
+      ok: false,
+      reason: "auth_session_invalid"
+    });
+    mockEmitAdminLoginDenied.mockImplementationOnce(() => {
+      throw new Error("sync emitter burst: login_unauthenticated");
+    });
+
+    const response = await POST(createLoginRequest());
+
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe(
+      "https://space.example/admin/login?state=unauthenticated"
+    );
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(mockEmitAdminLoginDenied).toHaveBeenCalledTimes(1);
+    expect(mockEmitAdminLoginDenied).toHaveBeenCalledWith(
+      "login_unauthenticated",
+      {}
+    );
+  });
+
+  it("preserves the unavailable redirect when the login denied emitter throws synchronously", async () => {
+    setTrustedAdminOrigin();
+    vi.mocked(signInSupabaseAdminGoogleAuthSession).mockResolvedValueOnce({
+      ok: false,
+      reason: "supabase_server_env_missing"
+    });
+    mockEmitAdminLoginDenied.mockImplementationOnce(() => {
+      throw new Error("sync emitter burst: login_unavailable");
+    });
+
+    const response = await POST(createLoginRequest());
+
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe(
+      "https://space.example/admin/login?state=unavailable"
+    );
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(mockEmitAdminLoginDenied).toHaveBeenCalledTimes(1);
+    expect(mockEmitAdminLoginDenied).toHaveBeenCalledWith(
+      "login_unavailable",
+      {}
+    );
+  });
 });

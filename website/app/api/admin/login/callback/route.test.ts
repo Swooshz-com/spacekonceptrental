@@ -201,4 +201,52 @@ describe("GET /api/admin/login/callback", () => {
     );
     expect(mockEmitAdminLoginCallbackDenied).toHaveBeenCalledTimes(1);
   });
+
+  it("preserves the callback 303 redirect when the callback denied emitter throws synchronously", async () => {
+    setTrustedAdminOrigin();
+    vi.mocked(exchangeSupabaseAdminAuthCodeForSession).mockResolvedValueOnce({
+      ok: false,
+      reason: "auth_session_invalid"
+    });
+    mockEmitAdminLoginCallbackDenied.mockImplementationOnce(() => {
+      throw new Error("sync emitter burst: callback_unauthenticated");
+    });
+
+    const response = await GET(createCallbackRequest("bad-code"));
+
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe(
+      "https://space.example/admin/login?state=unauthenticated"
+    );
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(mockEmitAdminLoginCallbackDenied).toHaveBeenCalledTimes(1);
+    expect(mockEmitAdminLoginCallbackDenied).toHaveBeenCalledWith(
+      "callback_unauthenticated",
+      {}
+    );
+  });
+
+  it("preserves the callback unavailable redirect when the callback emitter throws synchronously", async () => {
+    setTrustedAdminOrigin();
+    vi.mocked(exchangeSupabaseAdminAuthCodeForSession).mockResolvedValueOnce({
+      ok: false,
+      reason: "supabase_server_env_missing"
+    });
+    mockEmitAdminLoginCallbackDenied.mockImplementationOnce(() => {
+      throw new Error("sync emitter burst: callback_unavailable");
+    });
+
+    const response = await GET(createCallbackRequest("bad-code"));
+
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe(
+      "https://space.example/admin/login?state=unavailable"
+    );
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(mockEmitAdminLoginCallbackDenied).toHaveBeenCalledTimes(1);
+    expect(mockEmitAdminLoginCallbackDenied).toHaveBeenCalledWith(
+      "callback_unavailable",
+      {}
+    );
+  });
 });

@@ -34,9 +34,9 @@ function unavailable() {
   });
 }
 
-async function safeEmitCallbackDenied(emission: Promise<unknown>) {
+async function safeEmitCallbackDenied(emit: () => Promise<unknown>) {
   try {
-    await emission;
+    await emit();
   } catch {
     // Observability emission failures must never change the callback redirect.
   }
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
 
   if (!hasExpectedAdminAuthHost(request, routeConfig)) {
     await safeEmitCallbackDenied(
-      emitAdminLoginCallbackDenied("callback_unauthenticated", {})
+      () => emitAdminLoginCallbackDenied("callback_unauthenticated", {})
     );
 
     return redirectTo(routeConfig, "/admin/login", "unauthenticated");
@@ -75,11 +75,11 @@ export async function GET(request: NextRequest) {
 
   if (result.reason === "supabase_server_env_missing") {
     await safeEmitCallbackDenied(
-      emitAdminLoginCallbackDenied("callback_unavailable", {})
+      () => emitAdminLoginCallbackDenied("callback_unavailable", {})
     );
   } else {
     await safeEmitCallbackDenied(
-      emitAdminLoginCallbackDenied("callback_unauthenticated", {})
+      () => emitAdminLoginCallbackDenied("callback_unauthenticated", {})
     );
   }
 
