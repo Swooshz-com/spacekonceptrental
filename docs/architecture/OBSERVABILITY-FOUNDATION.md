@@ -156,6 +156,20 @@ and no live secret was configured.
   own server-side capability, the existing admin gate, operation-bound CSRF,
   and the existing claim/finalisation contract.
 
+## M2B protected operations review (implemented)
+
+The M2B read-only `/admin/operations` surface is implemented under Design Lock
+`DL-326-OBS-003` (see
+`docs/architecture/OBSERVABILITY-OPERATIONS-REVIEW.md`). It reuses the
+existing protected admin shell gate, the session-bound authenticated read
+client, the trusted workspace from `ADMIN_TRUSTED_WORKSPACE_ID`, and the
+existing RLS-protected direct `SELECT`. It adds a server-only query parser,
+typed read repository, strict allowlisted row mapper, bounded summary, sink
+state display adaptation and one protected page. Maximum 200 rows, exact
+filters, paired safe-reference exact search, whole-result failure on malformed
+rows, no public status route, no event emission while reading, and no
+migration, RPC, RLS, grant or privilege change.
+
 ## Production-only additions (not in this run)
 
 Chat outcome events (`#315`), auth-rate limiting, hero/page-media audit rows and

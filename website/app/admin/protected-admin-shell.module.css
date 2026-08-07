@@ -873,6 +873,119 @@
   line-height: 1.4;
 }
 
+.operationsFilterStack {
+  display: grid;
+  gap: 16px;
+}
+
+.operationsFilterGroup {
+  display: grid;
+  gap: 8px;
+}
+
+.operationsFilterLabel {
+  color: var(--admin-secondary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.operationsFilterLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.operationsFilterLink {
+  align-items: center;
+  border: 1px solid var(--admin-line);
+  border-radius: 999px;
+  color: var(--admin-secondary);
+  display: inline-flex;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1;
+  min-height: 30px;
+  padding: 0 12px;
+}
+
+.operationsFilterLink:hover,
+.operationsFilterLink:focus-visible {
+  background: var(--admin-surface-low);
+  color: var(--admin-ink);
+  outline: none;
+}
+
+.operationsFilterLink:focus-visible {
+  outline: 2px solid var(--admin-ink);
+  outline-offset: 2px;
+}
+
+.operationsFilterLinkActive,
+.operationsFilterLinkActive:hover,
+.operationsFilterLinkActive:focus-visible {
+  background: var(--admin-active-nav);
+  color: var(--admin-ink);
+  font-weight: 700;
+}
+
+.operationsSearchForm {
+  align-items: end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.operationsSearchField {
+  display: grid;
+  gap: 6px;
+}
+
+.operationsSearchField label {
+  color: var(--admin-secondary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.operationsSearchField select,
+.operationsSearchField input {
+  background: var(--admin-surface-low);
+  border: 1px solid var(--admin-line);
+  border-radius: var(--admin-radius);
+  color: var(--admin-ink);
+  font-size: 0.875rem;
+  min-height: 38px;
+  padding: 0 10px;
+}
+
+.operationsSearchField select:focus,
+.operationsSearchField input:focus {
+  border-color: var(--admin-ink);
+  outline: none;
+}
+
+.operationsTable [role="row"] {
+  grid-template-columns:
+    minmax(130px, 1fr) minmax(90px, 0.7fr) minmax(150px, 1.1fr)
+    minmax(110px, 0.9fr) minmax(110px, 0.8fr) 56px minmax(150px, 1fr)
+    minmax(150px, 1fr) 70px;
+}
+
+.srOnly {
+  border: 0;
+  clip: rect(0 0 0 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
 .emptyStatePanel {
   justify-items: center;
   min-height: 280px;

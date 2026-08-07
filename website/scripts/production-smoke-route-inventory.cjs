@@ -18,6 +18,7 @@ const protectedAdminPageRoutes = new Set([
   '/admin/delivery-log',
   '/admin/enquiry-email',
   '/admin/hero',
+  '/admin/operations',
   '/admin/setups',
 ]);
 const dynamicRouteProbeContracts = new Map([
