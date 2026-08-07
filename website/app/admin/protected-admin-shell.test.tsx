@@ -1195,7 +1195,8 @@ describe("protected admin shell", () => {
       "app/admin/catalogue/page.tsx",
       "app/admin/setups/page.tsx",
       "app/admin/enquiry-email/page.tsx",
-      "app/admin/delivery-log/page.tsx"
+      "app/admin/delivery-log/page.tsx",
+      "app/admin/operations/page.tsx"
     ]) {
       const source = readAppFile(path);
 
@@ -1204,7 +1205,7 @@ describe("protected admin shell", () => {
     }
   });
 
-  it("keeps protected admin navigation aligned to the approved six-page workspace IA", () => {
+  it("keeps protected admin navigation aligned to the approved seven-page workspace IA", () => {
     render(
       <AdminShellContent
         view={{ kind: "home" }}
@@ -1250,6 +1251,9 @@ describe("protected admin shell", () => {
       screen.getAllByRole("link", { name: /delivery log/i })[0]
     ).toHaveAttribute("href", "/admin/delivery-log");
     expect(
+      screen.getAllByRole("link", { name: /^operations$/i })[0]
+    ).toHaveAttribute("href", "/admin/operations");
+    expect(
       screen.queryByRole("link", { name: /quote inbox/i })
     ).not.toBeInTheDocument();
     expect(
@@ -1282,7 +1286,8 @@ describe("protected admin shell", () => {
       "/admin/catalogue",
       "/admin/setups",
       "/admin/enquiry-email",
-      "/admin/delivery-log"
+      "/admin/delivery-log",
+      "/admin/operations"
     ];
     const blockedStates = [
       {
@@ -1687,5 +1692,353 @@ describe("protected admin shell", () => {
     expect(
       screen.queryByRole("button", { name: /follow-up|archive|review|send/i })
     ).not.toBeInTheDocument();
+  });
+
+  it("renders the bounded operations event review with labelled filter and search controls", () => {
+    const baseState = {
+      status: "authorised_admin" as const,
+
+      workspaceId: "99999999-9999-4999-8999-999999999999",
+      dashboard: {
+        status: "loaded" as const,
+        data: {
+          categories: [],
+          products: [],
+          setupRecipeProductIds: [],
+          setupRecipeChildProductIds: [],
+          images: [],
+          imageSummary: {
+            totalImages: 0,
+            activeImages: 0,
+            primaryImages: 0
+          }
+        }
+      }
+    };
+
+    render(
+      <AdminShellContent
+        state={baseState}
+        view={{
+          kind: "operations",
+          sinkState: "ready",
+          read: {
+            status: "loaded",
+            query: {
+              category: "quote.handoff",
+              outcome: "pending"
+            },
+            records: [
+              {
+                eventId: "22222222-2222-4222-8222-222222222222",
+                category: "quote.handoff",
+                outcome: "pending",
+                referenceType: "request_id",
+                referenceValue: "123e4567-e89b-42d3-a456-426614174000",
+                errorCode: "handoff_pending",
+                routeKey: "/api/quote",
+                httpStatus: 503,
+                occurredAt: "2026-08-07T01:02:03.000Z",
+                createdAt: "2026-08-07T01:02:03.500Z",
+                retentionEligibleAt: "2026-11-05T01:02:03.500Z",
+                actorExists: false
+              }
+            ],
+            summary: {
+              total: 1,
+              byCategory: {
+                "quote.submission": 0,
+                "quote.handoff": 1,
+                "admin.auth": 0,
+                "rate.limit": 0
+              },
+              byOutcome: {
+                failed: 0,
+                denied: 0,
+                disabled: 0,
+                pending: 1
+              }
+            }
+          }
+        }}
+      />
+    );
+
+    expect(
+      screen.getByRole("heading", { name: /^operations$/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText(/^ready$/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /clear filters/i })
+    ).toHaveAttribute("href", "/admin/operations");
+    expect(
+      screen.getByRole("link", { name: /all categories/i })
+    ).toHaveAttribute("href", "/admin/operations?outcome=pending");
+    expect(
+      screen.getByRole("link", { name: /^rate limit$/i })
+    ).toHaveAttribute("href", "/admin/operations?category=rate.limit&outcome=pending");
+    expect(
+      screen.getByRole("link", { name: /all outcomes/i })
+    ).toHaveAttribute("href", "/admin/operations?category=quote.handoff");
+    expect(
+      screen.getByRole("link", { name: /^failed$/i })
+    ).toHaveAttribute("href", "/admin/operations?category=quote.handoff&outcome=failed");
+    expect(
+      screen.getByRole("link", { name: /current category filter: quote handoff/i })
+    ).toHaveAttribute("aria-current", "page");
+    expect(
+      screen.getByRole("link", { name: /current outcome filter: pending/i })
+    ).toHaveAttribute("aria-current", "page");
+    expect(
+      screen.getByLabelText(/reference type/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByLabelText(/reference value/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("table", { name: /operation events/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText("handoff_pending")).toBeInTheDocument();
+    expect(screen.getByText("503")).toBeInTheDocument();
+    expect(screen.getByText("2026-08-07T01:02:03.000Z")).toBeInTheDocument();
+    expect(screen.queryByText("22222222-2222-4222-8222-222222222222")).not.toBeInTheDocument();
+    expect(document.body.textContent).not.toContain("99999999-9999-4999-8999-999999999999");
+    expect(document.body.textContent).not.toContain("actor_admin_user_id");
+    expect(document.body.textContent).not.toContain("customer@example.com");
+  });
+
+  it("renders the operations empty state explicitly", () => {
+    const baseState = {
+      status: "authorised_admin" as const,
+
+      workspaceId: "99999999-9999-4999-8999-999999999999",
+      dashboard: {
+        status: "loaded" as const,
+        data: {
+          categories: [],
+          products: [],
+          setupRecipeProductIds: [],
+          setupRecipeChildProductIds: [],
+          images: [],
+          imageSummary: {
+            totalImages: 0,
+            activeImages: 0,
+            primaryImages: 0
+          }
+        }
+      }
+    };
+
+    render(
+      <AdminShellContent
+        state={baseState}
+        view={{
+          kind: "operations",
+          sinkState: "disabled",
+          read: {
+            status: "loaded",
+            query: {},
+            records: [],
+            summary: {
+              total: 0,
+              byCategory: {
+                "quote.submission": 0,
+                "quote.handoff": 0,
+                "admin.auth": 0,
+                "rate.limit": 0
+              },
+              byOutcome: {
+                failed: 0,
+                denied: 0,
+                disabled: 0,
+                pending: 0
+              }
+            }
+          }
+        }}
+      />
+    );
+
+    expect(
+      screen.getByText(/no operation events have been recorded yet/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
+  });
+
+  it("renders an explicit invalid-filter state without echoing supplied values", () => {
+    const baseState = {
+      status: "authorised_admin" as const,
+
+      workspaceId: "99999999-9999-4999-8999-999999999999",
+      dashboard: {
+        status: "loaded" as const,
+        data: {
+          categories: [],
+          products: [],
+          setupRecipeProductIds: [],
+          setupRecipeChildProductIds: [],
+          images: [],
+          imageSummary: {
+            totalImages: 0,
+            activeImages: 0,
+            primaryImages: 0
+          }
+        }
+      }
+    };
+
+    render(
+      <AdminShellContent
+        state={baseState}
+        view={{ kind: "operations", sinkState: "unconfigured", read: { status: "invalid_filter" } }}
+      />
+    );
+
+    expect(
+      screen.getByText(/filter is not supported/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /clear filters/i })
+    ).toHaveAttribute("href", "/admin/operations");
+    expect(document.body.textContent).not.toContain("not.locked");
+    expect(document.body.textContent).not.toContain("DROP");
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
+  });
+
+  it("renders a public-safe operations unavailable state", () => {
+    const baseState = {
+      status: "authorised_admin" as const,
+
+      workspaceId: "99999999-9999-4999-8999-999999999999",
+      dashboard: {
+        status: "loaded" as const,
+        data: {
+          categories: [],
+          products: [],
+          setupRecipeProductIds: [],
+          setupRecipeChildProductIds: [],
+          images: [],
+          imageSummary: {
+            totalImages: 0,
+            activeImages: 0,
+            primaryImages: 0
+          }
+        }
+      }
+    };
+
+    render(
+      <AdminShellContent
+        state={baseState}
+        view={{ kind: "operations", sinkState: "misconfigured", read: { status: "unavailable" } }}
+      />
+    );
+
+    expect(
+      screen.getByText(/operation events are temporarily unavailable/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/^misconfigured$/i)).toBeInTheDocument();
+    expect(screen.queryByText(/sql|supabase|exception|stack/i)).toBeNull();
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
+  });
+
+  it("renders all five bounded sink states as public-safe labels", () => {
+    const baseState = {
+      status: "authorised_admin" as const,
+
+      workspaceId: "99999999-9999-4999-8999-999999999999",
+      dashboard: {
+        status: "loaded" as const,
+        data: {
+          categories: [],
+          products: [],
+          setupRecipeProductIds: [],
+          setupRecipeChildProductIds: [],
+          images: [],
+          imageSummary: {
+            totalImages: 0,
+            activeImages: 0,
+            primaryImages: 0
+          }
+        }
+      }
+    };
+
+    const states = [
+      "disabled",
+      "ready",
+      "unconfigured",
+      "temporarily_unavailable",
+      "misconfigured"
+    ] as const;
+
+    for (const sinkState of states) {
+      const { unmount } = render(
+        <AdminShellContent
+          state={baseState}
+          view={{ kind: "operations", sinkState, read: { status: "invalid_filter" } }}
+        />
+      );
+
+      const label = sinkState.replaceAll("_", " ");
+      expect(screen.getByText(new RegExp(`^${label}$`, "i"))).toBeInTheDocument();
+      unmount();
+    }
+  });
+
+  it("keeps the operations page and read model free of forbidden rendering fields", () => {
+    const shellSource = readAppFile("app/admin/protected-admin-shell.tsx");
+    const pageSource = readAppFile("app/admin/operations/page.tsx");
+    const readSource = readAppFile(
+      "lib/application-events/app-operation-event-operations-read.ts"
+    );
+    const mapperSource = readAppFile(
+      "lib/application-events/app-operation-event-operations-mapper.ts"
+    );
+
+    expect(shellSource).toContain('href="/admin/operations"');
+    expect(pageSource).toContain('redirect("/admin/login?state=unauthenticated")');
+    expect(readSource).not.toContain('select("*")');
+    expect(mapperSource).not.toContain("customer_email");
+    expect(mapperSource).not.toContain("prompt");
+    expect(mapperSource).not.toContain("payload");
+    expect(shellSource).not.toContain("actor_email");
+    expect(shellSource).not.toContain("actorName");
+    expect(shellSource).not.toContain("quoteContent");
+    expect(shellSource).not.toContain("providerBody");
+  });
+
+  it("marks the operations navigation item active for the operations view", () => {
+    const baseState = {
+      status: "authorised_admin" as const,
+
+      workspaceId: "99999999-9999-4999-8999-999999999999",
+      dashboard: {
+        status: "loaded" as const,
+        data: {
+          categories: [],
+          products: [],
+          setupRecipeProductIds: [],
+          setupRecipeChildProductIds: [],
+          images: [],
+          imageSummary: {
+            totalImages: 0,
+            activeImages: 0,
+            primaryImages: 0
+          }
+        }
+      }
+    };
+
+    render(
+      <AdminShellContent
+        state={baseState}
+        view={{ kind: "operations", sinkState: "ready", read: { status: "invalid_filter" } }}
+      />
+    );
+
+    const operationsLink = screen.getAllByRole("link", { name: /^operations$/i })[0];
+
+    expect(operationsLink).toHaveAttribute("aria-current", "page");
   });
 });

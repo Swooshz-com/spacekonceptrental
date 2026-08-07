@@ -13,6 +13,8 @@ Protected admin routes stay exactly:
 - `/admin/setups`
 - `/admin/enquiry-email`
 - `/admin/delivery-log`
+- `/admin/operations` (read-only bounded application operation event review,
+  added under #326 / Design Lock `DL-326-OBS-003`)
 
 SpaceKonceptRental remains a furniture and event rental enquiry/catalogue site.
 Admin UX must not introduce cart, checkout, payment, order, booking,

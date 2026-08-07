@@ -77,6 +77,8 @@ describe("Phase 2H-A/B admin operations UI MVP", () => {
       "website/app/admin/login/page.tsx",
       "website/app/admin/logout/route.test.ts",
       "website/app/admin/logout/route.ts",
+      "website/app/admin/operations/page.test.tsx",
+      "website/app/admin/operations/page.tsx",
       "website/app/admin/page.tsx",
       "website/app/admin/protected-admin-shell.module.css",
       "website/app/admin/protected-admin-shell.test.tsx",
@@ -90,7 +92,8 @@ describe("Phase 2H-A/B admin operations UI MVP", () => {
       "website/app/admin/catalogue/page.tsx",
       "website/app/admin/setups/page.tsx",
       "website/app/admin/enquiry-email/page.tsx",
-      "website/app/admin/delivery-log/page.tsx"
+      "website/app/admin/delivery-log/page.tsx",
+      "website/app/admin/operations/page.tsx"
     ]) {
       const source = readRepoFile(page);
 

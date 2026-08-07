@@ -28,7 +28,13 @@ const applicationEventFiles = [
   "lib/application-events/app-operation-event-types.ts",
   "lib/application-events/app-operation-event-signer.ts",
   "lib/application-events/app-operation-event-sink.ts",
-  "lib/application-events/app-operation-event-call-sites.ts"
+  "lib/application-events/app-operation-event-call-sites.ts",
+  "lib/application-events/app-operation-event-operations-query.ts",
+  "lib/application-events/app-operation-event-operations-mapper.ts",
+  "lib/application-events/app-operation-event-operations-repository.ts",
+  "lib/application-events/app-operation-event-operations-summary.ts",
+  "lib/application-events/app-operation-event-operations-read.ts",
+  "lib/application-events/app-operation-event-sink-display.ts"
 ];
 
 describe("M2A observability runtime boundaries", () => {
@@ -114,7 +120,7 @@ describe("M2A observability runtime boundaries", () => {
     );
   });
 
-  it("contains no M2B read surface, sink-status route or read flag", () => {
+  it("keeps the protected M2B admin read surface bounded and free of public sink routes or read flags", () => {
     const apiRoutes = readdirSync(resolve(websiteRoot, "app/api"), {
       recursive: true
     })
@@ -128,11 +134,31 @@ describe("M2A observability runtime boundaries", () => {
       apiRoutes.some((entry) => entry.includes("operations"))
     ).toBe(false);
     expect(existsSync(resolve(websiteRoot, "app/admin/operations"))).toBe(
-      false
+      true
     );
+    expect(
+      existsSync(resolve(websiteRoot, "app/admin/operations/page.tsx"))
+    ).toBe(true);
     expect(read("lib/server-runtime-config.ts")).not.toContain(
       "APP_OPERATION_EVENTS_READ_ENABLED"
     );
+  });
+
+  it("reads sink state without emitting events or probing through an RPC", () => {
+    const readSource = read(
+      "lib/application-events/app-operation-event-operations-read.ts"
+    );
+    const displaySource = read(
+      "lib/application-events/app-operation-event-sink-display.ts"
+    );
+    const pageSource = read("app/admin/operations/page.tsx");
+
+    expect(readSource).not.toContain("emitAppOperationEvent");
+    expect(readSource).not.toContain(".rpc(");
+    expect(displaySource).not.toContain("emitAppOperationEvent");
+    expect(displaySource).not.toContain(".rpc(");
+    expect(pageSource).not.toContain("emitAppOperationEvent");
+    expect(pageSource).not.toContain("record_app_operation_event");
   });
 
   it("keeps every M1 migration and its exact count unchanged", () => {

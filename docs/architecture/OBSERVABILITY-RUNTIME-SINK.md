@@ -78,7 +78,10 @@ Closed states: `disabled`, `ready`, `unconfigured`,
   (`app_operation_event_sink`) with a bounded state/error code only. No raw
   exception, payload, field value, response body or credential is printed.
 - No HTTP sink-status route exists in M2A; only an internal typed status
-  accessor is exported for tests and future M2B.
+  accessor is exported for tests and future M2B. M2B (Design Lock
+  `DL-326-OBS-003`, see `docs/architecture/OBSERVABILITY-OPERATIONS-REVIEW.md`)
+  surfaces that accessor through the protected `/admin/operations` page as one
+  bounded label, with no event emission while reading state.
 
 ## Timeout and retry
 

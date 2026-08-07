@@ -24,6 +24,18 @@ import {
 import type { AdminHomepageHeroReadResult } from "../../lib/hero/admin-homepage-hero-read";
 import type { AdminQuoteEmailDeliveryLogReadResult } from "../../lib/quote/admin-read/admin-quote-email-delivery-log";
 import type { QuoteEnquiryEmailConfigStatus } from "../../lib/quote/email-handoff";
+import type { AdminAppOperationEventOperationsReadResult } from "../../lib/application-events/app-operation-event-operations-read";
+import type { AppOperationEventOperationsQuery } from "../../lib/application-events/app-operation-event-operations-query";
+import type {
+  AppOperationEventCategory,
+  AppOperationEventOutcome,
+  AppOperationEventSinkState
+} from "../../lib/application-events/app-operation-event-types";
+import {
+  appOperationEventCategories,
+  appOperationEventOutcomes
+} from "../../lib/application-events/app-operation-event-types";
+import { appOperationEventSinkStateLabel } from "../../lib/application-events/app-operation-event-sink-display";
 import styles from "./protected-admin-shell.module.css";
 
 export type ProtectedAdminShellState =
@@ -65,6 +77,11 @@ export type AdminShellView =
   | {
       kind: "delivery-log";
       deliveryLog?: AdminQuoteEmailDeliveryLogReadResult;
+    }
+  | {
+      kind: "operations";
+      read?: AdminAppOperationEventOperationsReadResult;
+      sinkState?: AppOperationEventSinkState;
     };
 
 type ProtectedAdminShellGateState =
@@ -125,6 +142,12 @@ const adminNavigationItems = [
     href: "/admin/delivery-log",
     label: "Delivery Log",
     meta: "Technical"
+  },
+  {
+    kind: "operations",
+    href: "/admin/operations",
+    label: "Operations",
+    meta: "Events"
   }
 ] as const;
 
@@ -212,6 +235,18 @@ const adminNavigationIcons: Record<AdminNavigationKind, ReactNode> = {
       <path d="M15 10h3l2 2.5V16h-5z" />
       <circle cx="7" cy="18" r="1.8" />
       <circle cx="17" cy="18" r="1.8" />
+    </svg>
+  ),
+  operations: (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M3.5 12h3l2-6 3.5 12 3-8 1.5 2h4.5" />
     </svg>
   )
 };
@@ -332,7 +367,9 @@ function workspaceDescription(view: AdminShellView) {
     setups:
       "Manage setup recipes for editable unpublished parents and existing recipe parents.",
     "enquiry-email": "Check the server-side n8n enquiry handoff status.",
-    "delivery-log": "Review technical enquiry handoff delivery attempts."
+    "delivery-log": "Review technical enquiry handoff delivery attempts.",
+    operations:
+      "Review bounded application operation events recorded for the trusted workspace."
   };
 
   return descriptions[activeNavigationKind(view)];
@@ -374,6 +411,9 @@ function AdminWorkspaceRecoveryLinks() {
       </a>
       <a className={styles.secondaryButton} href="/admin/delivery-log">
         Open delivery log
+      </a>
+      <a className={styles.secondaryButton} href="/admin/operations">
+        Open operations
       </a>
     </nav>
   );
@@ -1060,6 +1100,388 @@ function AdminDeliveryLogTableOperations({
   );
 }
 
+const operationCategoryLabels: Record<AppOperationEventCategory, string> = {
+  "quote.submission": "Quote submission",
+  "quote.handoff": "Quote handoff",
+  "admin.auth": "Admin auth",
+  "rate.limit": "Rate limit"
+};
+
+const operationOutcomeLabels: Record<AppOperationEventOutcome, string> = {
+  failed: "Failed",
+  denied: "Denied",
+  disabled: "Disabled",
+  pending: "Pending"
+};
+
+function operationsHref(
+  base: AppOperationEventOperationsQuery,
+  patch: {
+    category?: string;
+    outcome?: string;
+  }
+) {
+  const params = new URLSearchParams();
+
+  if (patch.category) {
+    params.set("category", patch.category);
+  }
+
+  if (patch.outcome) {
+    params.set("outcome", patch.outcome);
+  }
+
+  if (base.search) {
+    params.set("referenceType", base.search.referenceType);
+    params.set("referenceValue", base.search.referenceValue);
+  }
+
+  const queryString = params.toString();
+
+  return queryString ? `/admin/operations?${queryString}` : "/admin/operations";
+}
+
+function sinkPillClassName(state: AppOperationEventSinkState) {
+  if (state === "ready") {
+    return styles.statusPillReady;
+  }
+
+  if (state === "temporarily_unavailable" || state === "misconfigured") {
+    return styles.statusPillWarning;
+  }
+
+  return styles.statusPillMuted;
+}
+
+function OperationsFilterLink({
+  active,
+  activeLabel,
+  children,
+  href
+}: {
+  active: boolean;
+  activeLabel: string;
+  children: ReactNode;
+  href: string;
+}) {
+  return (
+    <a
+      aria-current={active ? "page" : undefined}
+      className={`${styles.operationsFilterLink} ${
+        active ? styles.operationsFilterLinkActive : ""
+      }`}
+      href={href}
+    >
+      {children}
+      {active ? <span className={styles.srOnly}> - {activeLabel}</span> : null}
+    </a>
+  );
+}
+
+function AdminOperationEventsSinkStatus({
+  sinkState
+}: {
+  sinkState: AppOperationEventSinkState;
+}) {
+  return (
+    <section
+      aria-label="Operation event sink status"
+      className={styles.statusSummaryPanel}
+    >
+      <div className={styles.statusSummaryHeader}>
+        <div>
+          <p className={styles.eyebrow}>Operations</p>
+          <h2>Operation event sink</h2>
+        </div>
+        <span className={`${styles.statusPill} ${sinkPillClassName(sinkState)}`}>
+          {appOperationEventSinkStateLabel(sinkState)}
+        </span>
+      </div>
+      <p className={styles.statusSummaryCopy}>
+        Bounded application operation events are recorded for the trusted
+        workspace when the internal event sink is active. This surface shows
+        stored public-safe values only; configuration and admission material
+        stay out of the admin UI.
+      </p>
+    </section>
+  );
+}
+
+function AdminOperationEventsInvalidFilterPanel() {
+  return (
+    <section
+      aria-label="Operation events filter invalid"
+      className={styles.unavailablePanel}
+    >
+      <p className={styles.eyebrow}>Filter not supported</p>
+      <h2>Operation events filter is not supported</h2>
+      <p>
+        The supplied category, outcome or safe-reference search does not match
+        the supported values. Filters must use exact allowlisted categories and
+        outcomes, or a valid paired request ID or public reference.
+      </p>
+      <nav
+        className={styles.inlineActions}
+        aria-label="Operation events filter recovery"
+      >
+        <a className={styles.primaryButton} href="/admin/operations">
+          Clear filters
+        </a>
+      </nav>
+      <AdminWorkspaceRecoveryLinks />
+    </section>
+  );
+}
+
+function AdminOperationEventsEmptyPanel() {
+  return (
+    <AdminEmptyState
+      eyebrow="Operations"
+      title="No operation events recorded yet"
+      message="No operation events have been recorded yet for the trusted workspace. Recorded edge outcomes appear here once the internal event sink is active."
+      icon={emptyStateIcons.log}
+    />
+  );
+}
+
+function AdminOperationEventsLoadedPanel({
+  read
+}: {
+  read: Extract<
+    AdminAppOperationEventOperationsReadResult,
+    { status: "loaded" }
+  >;
+}) {
+  const { query, records, summary } = read;
+
+  return (
+    <section className={styles.managementStack}>
+      <section className={styles.rowPanel} aria-label="Operation event filters">
+        <div className={styles.panelTitleRow}>
+          <div>
+            <h2>Filter operation events</h2>
+            <p>
+              Exact category and outcome filters and paired safe-reference
+              search apply to the latest 200 stored events for the trusted
+              workspace.
+            </p>
+          </div>
+          <nav
+            className={styles.inlineActions}
+            aria-label="Operation events filter recovery"
+          >
+            <a className={styles.secondaryButton} href="/admin/operations">
+              Clear filters
+            </a>
+          </nav>
+        </div>
+        <div className={styles.operationsFilterStack}>
+          <div
+            aria-label="Filter by category"
+            className={styles.operationsFilterGroup}
+            role="group"
+          >
+            <span className={styles.operationsFilterLabel}>Category</span>
+            <div className={styles.operationsFilterLinks}>
+              <OperationsFilterLink
+                active={!query.category}
+                activeLabel="current category filter: all categories"
+                href={operationsHref(query, { outcome: query.outcome })}
+              >
+                All categories
+              </OperationsFilterLink>
+              {appOperationEventCategories.map((category) => (
+                <OperationsFilterLink
+                  active={query.category === category}
+                  activeLabel={`current category filter: ${operationCategoryLabels[category]}`}
+                  href={operationsHref(query, {
+                    category,
+                    outcome: query.outcome
+                  })}
+                  key={category}
+                >
+                  {operationCategoryLabels[category]}
+                </OperationsFilterLink>
+              ))}
+            </div>
+          </div>
+          <div
+            aria-label="Filter by outcome"
+            className={styles.operationsFilterGroup}
+            role="group"
+          >
+            <span className={styles.operationsFilterLabel}>Outcome</span>
+            <div className={styles.operationsFilterLinks}>
+              <OperationsFilterLink
+                active={!query.outcome}
+                activeLabel="current outcome filter: all outcomes"
+                href={operationsHref(query, { category: query.category })}
+              >
+                All outcomes
+              </OperationsFilterLink>
+              {appOperationEventOutcomes.map((outcome) => (
+                <OperationsFilterLink
+                  active={query.outcome === outcome}
+                  activeLabel={`current outcome filter: ${operationOutcomeLabels[outcome]}`}
+                  href={operationsHref(query, {
+                    category: query.category,
+                    outcome
+                  })}
+                  key={outcome}
+                >
+                  {operationOutcomeLabels[outcome]}
+                </OperationsFilterLink>
+              ))}
+            </div>
+          </div>
+          <form
+            action="/admin/operations"
+            aria-label="Search operation events by reference"
+            className={styles.operationsSearchForm}
+            method="get"
+          >
+            {query.category ? (
+              <input type="hidden" name="category" value={query.category} />
+            ) : null}
+            {query.outcome ? (
+              <input type="hidden" name="outcome" value={query.outcome} />
+            ) : null}
+            <div className={styles.operationsSearchField}>
+              <label htmlFor="operationsReferenceType">Reference type</label>
+              <select
+                defaultValue={query.search?.referenceType ?? ""}
+                id="operationsReferenceType"
+                name="referenceType"
+                required
+              >
+                <option value="">Reference type</option>
+                <option value="request_id">Request ID</option>
+                <option value="public_reference">Public reference</option>
+              </select>
+            </div>
+            <div className={styles.operationsSearchField}>
+              <label htmlFor="operationsReferenceValue">Reference value</label>
+              <input
+                defaultValue={query.search?.referenceValue ?? ""}
+                id="operationsReferenceValue"
+                maxLength={128}
+                name="referenceValue"
+                type="text"
+                required
+              />
+            </div>
+            <button className={styles.primaryButton} type="submit">
+              Search
+            </button>
+          </form>
+        </div>
+      </section>
+
+      <section
+        aria-label="Derived operation event summary"
+        className={styles.metricGridThree}
+      >
+        <dl className={styles.metricCard}>
+          <dt>Events loaded</dt>
+          <dd>{summary.total}</dd>
+          <p>Latest stored events for the trusted workspace, capped at 200.</p>
+        </dl>
+        {appOperationEventOutcomes.map((outcome) => (
+          <dl className={styles.metricCard} key={outcome}>
+            <dt>{operationOutcomeLabels[outcome]}</dt>
+            <dd>{summary.byOutcome[outcome]}</dd>
+            <p>Outcome count within the loaded events.</p>
+          </dl>
+        ))}
+        {appOperationEventCategories.map((category) => (
+          <dl className={styles.metricCard} key={category}>
+            <dt>{operationCategoryLabels[category]}</dt>
+            <dd>{summary.byCategory[category]}</dd>
+            <p>Category count within the loaded events.</p>
+          </dl>
+        ))}
+      </section>
+
+      {records.length === 0 ? (
+        <AdminOperationEventsEmptyPanel />
+      ) : (
+        <section className={styles.tablePanel} aria-label="Operation events review">
+          <div className={styles.tableHeader}>
+            <h2>Operation events</h2>
+          </div>
+          <div
+            aria-label="Operation events"
+            className={`${styles.dataTable} ${styles.operationsTable}`}
+            role="table"
+          >
+            <div role="row">
+              <strong role="columnheader">Category</strong>
+              <strong role="columnheader">Outcome</strong>
+              <strong role="columnheader">Reference</strong>
+              <strong role="columnheader">Error code</strong>
+              <strong role="columnheader">Route</strong>
+              <strong role="columnheader">HTTP</strong>
+              <strong role="columnheader">Occurred at</strong>
+              <strong role="columnheader">Created at</strong>
+              <strong role="columnheader">Actor</strong>
+            </div>
+            {records.map((record) => (
+              <div role="row" key={record.eventId}>
+                <span role="cell">
+                  {operationCategoryLabels[record.category]}
+                </span>
+                <span role="cell">
+                  {operationOutcomeLabels[record.outcome]}
+                </span>
+                <span role="cell" title={record.referenceType}>
+                  {record.referenceValue ?? "—"}
+                </span>
+                <span role="cell">{record.errorCode ?? "—"}</span>
+                <span role="cell">{record.routeKey}</span>
+                <span role="cell">{record.httpStatus ?? "—"}</span>
+                <span role="cell">{record.occurredAt}</span>
+                <span role="cell">{record.createdAt}</span>
+                <span role="cell">
+                  {record.actorExists ? "Recorded" : "None"}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+    </section>
+  );
+}
+
+function AdminOperationEventsReview({
+  read,
+  sinkState
+}: {
+  read?: AdminAppOperationEventOperationsReadResult;
+  sinkState?: AppOperationEventSinkState;
+}) {
+  const state = sinkState ?? "disabled";
+
+  return (
+    <section
+      aria-label="Operation events review"
+      className={styles.managementStack}
+    >
+      <AdminOperationEventsSinkStatus sinkState={state} />
+      {read?.status === "loaded" ? (
+        <AdminOperationEventsLoadedPanel read={read} />
+      ) : read?.status === "invalid_filter" ? (
+        <AdminOperationEventsInvalidFilterPanel />
+      ) : (
+        <AdminUnavailableWorkspace
+          title="Operations"
+          description="Operation events are temporarily unavailable. The protected operations route remains in place while existing reads recover."
+        />
+      )}
+    </section>
+  );
+}
+
 function AdminOperationsView({
   state,
   view
@@ -1090,6 +1512,15 @@ function AdminOperationsView({
 
   if (view.kind === "delivery-log") {
     return <AdminDeliveryLogTableOperations deliveryLog={view.deliveryLog} />;
+  }
+
+  if (view.kind === "operations") {
+    return (
+      <AdminOperationEventsReview
+        read={view.read}
+        sinkState={view.sinkState}
+      />
+    );
   }
 
   return (
